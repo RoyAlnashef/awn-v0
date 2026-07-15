@@ -1,0 +1,140 @@
+import {
+  Radio,
+  Briefcase,
+  Users,
+  MessagesSquare,
+  Compass,
+  UserCheck,
+  Building2,
+  Store,
+  Settings,
+  ClipboardList,
+  UsersRound,
+  MailPlus,
+  Handshake,
+  MessageSquareText,
+  ListChecks,
+  Mail,
+  type LucideIcon,
+} from "lucide-react"
+
+export type NavItem = {
+  title: string
+  href: string
+  description: string
+  icon: LucideIcon
+  badge?: string
+  live?: boolean
+}
+
+export const mainNav: NavItem[] = [
+  {
+    title: "Now",
+    href: "/now",
+    description:
+      "Live availability, Help Now callouts, and who's on the road right now.",
+    icon: Radio,
+    live: true,
+  },
+  {
+    title: "Jobs",
+    href: "/jobs",
+    description:
+      "Open calls, tour gigs, and one-off shifts matched to your skills.",
+    icon: Briefcase,
+    badge: "12",
+  },
+  {
+    title: "People",
+    href: "/people",
+    description:
+      "Find and connect with trusted touring crew across every department.",
+    icon: Users,
+  },
+  {
+    title: "Messages",
+    href: "/messages",
+    description: "Direct messages, gig threads, and crew group chats.",
+    icon: MessagesSquare,
+    badge: "4",
+  },
+  {
+    title: "Intel",
+    href: "/intel",
+    description:
+      "Venue notes, route intel, and the word on the street from the road.",
+    icon: Compass,
+  },
+]
+
+export const adminNav: NavItem[] = [
+  {
+    title: "Users",
+    href: "/users",
+    description: "Review, verify, and manage member accounts and invites.",
+    icon: UserCheck,
+    badge: "6",
+  },
+  {
+    title: "Employers",
+    href: "/employers",
+    description: "Production companies and promoters posting work on AWN.",
+    icon: Building2,
+  },
+  {
+    title: "Vendors",
+    href: "/vendors",
+    description: "Gear houses, transport, and service providers on the network.",
+    icon: Store,
+  },
+  {
+    title: "Applications",
+    href: "/applications",
+    description: "Review membership applications and verify new crew.",
+    icon: ClipboardList,
+  },
+  {
+    title: "Groups",
+    href: "/groups",
+    description: "Manage crew rooms, departments, and community groups.",
+    icon: UsersRound,
+  },
+  {
+    title: "Invites",
+    href: "/invites",
+    description: "Track sent invitations and manage pending referrals.",
+    icon: MailPlus,
+  },
+  {
+    title: "Partnerships",
+    href: "/partnerships",
+    description: "Brand deals, sponsorships, and industry partnerships.",
+    icon: Handshake,
+  },
+  {
+    title: "Feedback",
+    href: "/feedback",
+    description: "Member feedback, feature requests, and bug reports.",
+    icon: MessageSquareText,
+  },
+  {
+    title: "The List",
+    href: "/the-list",
+    description: "The curated shortlist of vetted, top-tier touring crew.",
+    icon: ListChecks,
+  },
+  {
+    title: "Email",
+    href: "/email",
+    description: "Compose and manage broadcast emails to the network.",
+    icon: Mail,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    description: "Manage your profile, availability, and account preferences.",
+    icon: Settings,
+  },
+]
+
+export const allNav: NavItem[] = [...mainNav, ...adminNav]
