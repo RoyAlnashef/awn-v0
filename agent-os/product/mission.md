@@ -24,3 +24,5 @@ AWN is a private, invite-only professional network built exclusively for touring
 - **Private messaging** — DMs and discipline-specific rooms (audio, lighting, video, etc.) for the real conversations
 
 The strategic moat is trust: every member is manually approved, credits require peer vouches, and the community stays invite-only. Crew are free forever. Employers pay to access the talent.
+
+This rebuild preserves that product vision while establishing a codebase and design system that can scale as the product grows — modular architecture, clear coding standards, and industry best practices — rather than inheriting the previous app's monolithic structure.
