@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { Loader2, Mail, KeyRound } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
+import { PasswordField } from "@/components/auth/password-field"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -175,19 +177,22 @@ export function LoginForm({
         </div>
 
         {mode === "password" ? (
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={pending}
-            />
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            disabled={pending}
+            labelExtra={
+              <Link
+                href="/login/forgot-password"
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Forgot password?
+              </Link>
+            }
+          />
         ) : (
           <p className="text-sm text-muted-foreground text-pretty">
             We’ll email you a one-time link. No password needed.

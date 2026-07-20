@@ -4,11 +4,19 @@ import { NextResponse, type NextRequest } from "next/server"
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 
 const PUBLIC_PREFIXES = ["/login", "/auth/callback"]
+const PUBLIC_PATHS = ["/login/forgot-password"]
 
 function isPublicPath(pathname: string) {
-  return PUBLIC_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  )
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return true
+  }
+
+  return PUBLIC_PREFIXES.some((prefix) => {
+    if (prefix === "/login") {
+      return pathname === "/login"
+    }
+    return pathname === prefix || pathname.startsWith(`${prefix}/`)
+  })
 }
 
 export async function updateSession(request: NextRequest) {

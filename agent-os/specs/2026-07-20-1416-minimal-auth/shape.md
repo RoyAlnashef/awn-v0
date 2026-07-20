@@ -10,7 +10,6 @@
 
 ## Deferred
 
-- Forgot password UI
 - Approval / pending gate
 - Onboarding, apply, waitlist
 - Public signup
