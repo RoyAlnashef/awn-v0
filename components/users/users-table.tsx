@@ -3,12 +3,7 @@
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {
-  MoreHorizontal,
-  Search,
-  ShieldCheck,
-  UserPlus,
-} from "lucide-react"
+import { MoreHorizontal, Search, ShieldCheck } from "lucide-react"
 
 import {
   initials,
@@ -29,7 +24,6 @@ import {
 } from "@/lib/users/actions"
 import { cn } from "@/lib/utils"
 import { EditUserDialog } from "@/components/users/edit-user-dialog"
-import { InviteUserDialog } from "@/components/users/invite-user-dialog"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -88,7 +82,6 @@ export function UsersTable({
   const [roleFilter, setRoleFilter] = useState<UserRole | typeof ALL>(ALL)
   const [statusFilter, setStatusFilter] = useState<UserStatus | typeof ALL>(ALL)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [inviteOpen, setInviteOpen] = useState(false)
   const [editUser, setEditUser] = useState<AdminUser | null>(null)
   const [bulkRole, setBulkRole] = useState<UserRole | "">("")
   const [confirm, setConfirm] = useState<ConfirmState>(null)
@@ -189,68 +182,58 @@ export function UsersTable({
         </div>
       ) : null}
 
-      {/* Toolbar: search, filters, and primary action */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative sm:w-64">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search users…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={roleFilter}
-              onValueChange={(v) => setRoleFilter(v as UserRole | typeof ALL)}
-            >
-              <SelectTrigger className="w-36" aria-label="Filter by role">
-                <SelectValue>
-                  {(value) => (value === ALL ? "All roles" : value)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All roles</SelectItem>
-                {userRoles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) =>
-                setStatusFilter(v as UserStatus | typeof ALL)
-              }
-            >
-              <SelectTrigger className="w-36" aria-label="Filter by status">
-                <SelectValue>
-                  {(value) => (value === ALL ? "All statuses" : value)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All statuses</SelectItem>
-                {userStatuses.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Toolbar: search and filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative sm:w-64">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search users…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
-        <Button
-          className="shrink-0"
-          onClick={() => setInviteOpen(true)}
-          disabled={Boolean(loadError)}
-        >
-          <UserPlus data-icon="inline-start" />
-          Add user
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select
+            value={roleFilter}
+            onValueChange={(v) => setRoleFilter(v as UserRole | typeof ALL)}
+          >
+            <SelectTrigger className="w-36" aria-label="Filter by role">
+              <SelectValue>
+                {(value) => (value === ALL ? "All roles" : value)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All roles</SelectItem>
+              {userRoles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) =>
+              setStatusFilter(v as UserStatus | typeof ALL)
+            }
+          >
+            <SelectTrigger className="w-36" aria-label="Filter by status">
+              <SelectValue>
+                {(value) => (value === ALL ? "All statuses" : value)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All statuses</SelectItem>
+              {userStatuses.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Selection summary / bulk bar */}
@@ -407,8 +390,6 @@ export function UsersTable({
           </TableBody>
         </Table>
       </div>
-
-      <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
       <EditUserDialog
         user={editUser}

@@ -15,6 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,14 +44,9 @@ function FieldLabel({
   )
 }
 
-export function InviteUserDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function InviteUserDialog({ disabled }: { disabled?: boolean }) {
   const router = useRouter()
+  const [open, setOpen] = React.useState(false)
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
@@ -75,7 +71,7 @@ export function InviteUserDialog({
       }
       toast.success(`Created account for ${email.trim()}`)
       reset()
-      onOpenChange(false)
+      setOpen(false)
       router.refresh()
     } finally {
       setPending(false)
@@ -86,10 +82,18 @@ export function InviteUserDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
+        setOpen(next)
         if (!next) reset()
-        onOpenChange(next)
       }}
     >
+      <DialogTrigger
+        render={
+          <Button size="sm" disabled={disabled}>
+            <UserPlus />
+            Add user
+          </Button>
+        }
+      />
       <DialogContent>
         <form onSubmit={handleSubmit} className="grid gap-6">
           <DialogHeader>
@@ -161,7 +165,7 @@ export function InviteUserDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => setOpen(false)}
               disabled={pending}
             >
               Cancel
