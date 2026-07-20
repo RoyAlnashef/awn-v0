@@ -1,14 +1,18 @@
-import { people, initials, type Person } from "@/lib/people-data"
-
-/** System-level access role for the admin users table. */
+/** System-level access role for the admin users table (UI labels). */
 export type UserRole = "Owner" | "Admin" | "Manager" | "Member"
 
 export const userRoles: UserRole[] = ["Owner", "Admin", "Manager", "Member"]
 
-/** Account lifecycle status. */
+/** Account lifecycle status (UI labels). */
 export type UserStatus = "Active" | "Invited" | "Suspended"
 
 export const userStatuses: UserStatus[] = ["Active", "Invited", "Suspended"]
+
+/** DB enum values for `public.user_role`. */
+export type DbUserRole = "owner" | "admin" | "manager" | "member"
+
+/** DB enum values for `public.user_status`. */
+export type DbUserStatus = "active" | "invited" | "suspended"
 
 /**
  * Visual treatment for each status badge, kept within the app palette:
@@ -38,69 +42,118 @@ export const roleConfig: Record<
 export interface AdminUser {
   id: string
   name: string
-  /** Derived login email. */
   email: string
   role: UserRole
   status: UserStatus
-  /** Job title carried over from the member's profile. */
+  /** Job title / profile title. */
   title: string
-  /** Relative last-active label for placeholder display. */
+  /** Relative last-active label for display. */
   lastActive: string
   /** Whether two-factor auth is enabled on the account. */
   twoFactor: boolean
   avatar?: string
 }
 
-/** Deterministic pick from a list based on an index (stable placeholder data). */
-function pick<T>(list: T[], index: number): T {
-  return list[index % list.length]
+const roleToDb: Record<UserRole, DbUserRole> = {
+  Owner: "owner",
+  Admin: "admin",
+  Manager: "manager",
+  Member: "member",
 }
 
-const lastActiveLabels = [
-  "Just now",
-  "5m ago",
-  "1h ago",
-  "3h ago",
-  "Yesterday",
-  "2d ago",
-  "1w ago",
-  "3w ago",
-]
-
-function emailFor(person: Person): string {
-  const handle = person.name.toLowerCase().replace(/[^a-z]+/g, ".")
-  return `${handle}@awright.network`
+const roleFromDb: Record<DbUserRole, UserRole> = {
+  owner: "Owner",
+  admin: "Admin",
+  manager: "Manager",
+  member: "Member",
 }
 
-/**
- * Admin users derived from the member directory so avatars and names stay in
- * sync, with admin-only fields (role, status, last active, 2FA) layered on.
- */
-export const adminUsers: AdminUser[] = people.map((person, i) => {
-  // First member is the Owner; sprinkle a couple of admins/managers, rest members.
-  const role: UserRole =
-    i === 0
-      ? "Owner"
-      : i % 7 === 1
-        ? "Admin"
-        : i % 5 === 2
-          ? "Manager"
-          : "Member"
+const statusToDb: Record<UserStatus, DbUserStatus> = {
+  Active: "active",
+  Invited: "invited",
+  Suspended: "suspended",
+}
 
-  const status: UserStatus =
-    i % 9 === 4 ? "Invited" : i % 11 === 7 ? "Suspended" : "Active"
+const statusFromDb: Record<DbUserStatus, UserStatus> = {
+  active: "Active",
+  invited: "Invited",
+  suspended: "Suspended",
+}
+
+export function toDbRole(role: UserRole): DbUserRole {
+  return roleToDb[role]
+}
+
+export function fromDbRole(role: string): UserRole {
+  return roleFromDb[role as DbUserRole] ?? "Member"
+}
+
+export function toDbStatus(status: UserStatus): DbUserStatus {
+  return statusToDb[status]
+}
+
+export function fromDbStatus(status: string): UserStatus {
+  return statusFromDb[status as DbUserStatus] ?? "Active"
+}
+
+export function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase()
+}
+
+/** Format a relative last-active label for the admin table. */
+export function formatLastActiveLabel(
+  status: UserStatus,
+  lastActiveAt: string | null | undefined,
+): string {
+  if (status === "Invited") return "Pending"
+  if (!lastActiveAt) return "—"
+
+  const then = new Date(lastActiveAt).getTime()
+  if (Number.isNaN(then)) return "—"
+
+  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000))
+  if (seconds < 60) return "Just now"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  const weeks = Math.floor(days / 7)
+  if (weeks < 5) return `${weeks}w ago`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months}mo ago`
+  return `${Math.floor(days / 365)}y ago`
+}
+
+export interface ProfileRow {
+  id: string
+  full_name: string | null
+  email: string
+  avatar_url: string | null
+  title: string | null
+  role: string
+  status: string
+  two_factor_enabled: boolean
+  last_active_at: string | null
+}
+
+export function profileToAdminUser(row: ProfileRow): AdminUser {
+  const status = fromDbStatus(row.status)
+  const name = row.full_name?.trim() || row.email
 
   return {
-    id: person.id,
-    name: person.name,
-    email: emailFor(person),
-    role,
+    id: row.id,
+    name,
+    email: row.email,
+    role: fromDbRole(row.role),
     status,
-    title: person.role,
-    lastActive: status === "Invited" ? "Pending" : pick(lastActiveLabels, i),
-    twoFactor: i % 3 !== 0,
-    avatar: person.avatar,
+    title: row.title?.trim() || "",
+    lastActive: formatLastActiveLabel(status, row.last_active_at),
+    twoFactor: row.two_factor_enabled,
+    avatar: row.avatar_url ?? undefined,
   }
-})
-
-export { initials }
+}

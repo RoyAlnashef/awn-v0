@@ -1,15 +1,32 @@
 import type { ReactNode } from "react"
+import { redirect } from "next/navigation"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
+import { getSessionUser } from "@/lib/auth/get-session-user"
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const sessionUser = await getSessionUser()
+
+  // Middleware should redirect first; this is a server-side safety net.
+  if (!sessionUser) {
+    redirect("/login")
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <SiteHeader />
+        <SiteHeader
+          user={{
+            name: sessionUser.name,
+            title: sessionUser.title,
+            email: sessionUser.email,
+            avatarUrl: sessionUser.avatarUrl,
+            initials: sessionUser.initials,
+          }}
+        />
         {children}
       </SidebarInset>
     </SidebarProvider>

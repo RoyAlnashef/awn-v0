@@ -1,6 +1,16 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { safeRedirectPath } from "@/lib/auth/safe-redirect"
+
+const PUBLIC_PREFIXES = ["/login", "/auth/callback"]
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -35,6 +45,33 @@ export async function updateSession(request: NextRequest) {
   // Refresh the auth token. Do not add logic between createServerClient and
   // getClaims() — it can cause intermittent logouts.
   await supabase.auth.getClaims()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const hasSession = Boolean(user)
+
+  const { pathname, search } = request.nextUrl
+
+  if (!hasSession && !isPublicPath(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    const nextPath = `${pathname}${search}`
+    if (nextPath !== "/") {
+      url.searchParams.set("next", nextPath)
+    } else {
+      url.search = ""
+    }
+    return NextResponse.redirect(url)
+  }
+
+  if (hasSession && pathname === "/login") {
+    const url = request.nextUrl.clone()
+    const next = safeRedirectPath(request.nextUrl.searchParams.get("next"))
+    url.pathname = next
+    url.search = ""
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }

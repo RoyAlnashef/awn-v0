@@ -1,6 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   MoreHorizontal,
   Search,
@@ -9,7 +11,6 @@ import {
 } from "lucide-react"
 
 import {
-  adminUsers,
   initials,
   roleConfig,
   statusConfig,
@@ -19,12 +20,39 @@ import {
   type UserRole,
   type UserStatus,
 } from "@/lib/users-data"
+import {
+  bulkDeleteUsers,
+  bulkUpdateRole,
+  bulkUpdateStatus,
+  deleteUser,
+  updateUserRole,
+  updateUserStatus,
+} from "@/lib/users/actions"
 import { cn } from "@/lib/utils"
+import { InviteUserDialog } from "@/components/users/invite-user-dialog"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,16 +80,34 @@ import {
 
 const ALL = "all"
 
-export function UsersTable() {
+type ConfirmState =
+  | { type: "delete"; ids: string[]; names: string[] }
+  | { type: "suspend"; ids: string[] }
+  | null
+
+export function UsersTable({
+  initialUsers,
+  loadError,
+}: {
+  initialUsers: AdminUser[]
+  loadError?: string | null
+}) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [query, setQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<UserRole | typeof ALL>(ALL)
   const [statusFilter, setStatusFilter] = useState<UserStatus | typeof ALL>(ALL)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [editRoleUser, setEditRoleUser] = useState<AdminUser | null>(null)
+  const [editRoleValue, setEditRoleValue] = useState<UserRole>("Member")
+  const [bulkRole, setBulkRole] = useState<UserRole | "">("")
+  const [confirm, setConfirm] = useState<ConfirmState>(null)
 
   const q = query.trim().toLowerCase()
 
   const filtered = useMemo(() => {
-    return adminUsers.filter((u) => {
+    return initialUsers.filter((u) => {
       if (roleFilter !== ALL && u.role !== roleFilter) return false
       if (statusFilter !== ALL && u.status !== statusFilter) return false
       if (!q) return true
@@ -71,7 +117,7 @@ export function UsersTable() {
         u.title.toLowerCase().includes(q)
       )
     })
-  }, [q, roleFilter, statusFilter])
+  }, [initialUsers, q, roleFilter, statusFilter])
 
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((u) => selected.has(u.id))
@@ -98,8 +144,67 @@ export function UsersTable() {
     })
   }
 
+  function clearSelection() {
+    setSelected(new Set())
+  }
+
+  function runAction(
+    promise: Promise<{ ok: true } | { ok: false; error: string }>,
+    successMessage: string,
+  ) {
+    startTransition(async () => {
+      const result = await promise
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(successMessage)
+      clearSelection()
+      setConfirm(null)
+      setEditRoleUser(null)
+      router.refresh()
+    })
+  }
+
+  function openEditRole(user: AdminUser) {
+    setEditRoleUser(user)
+    setEditRoleValue(user.role)
+  }
+
+  function handleConfirm() {
+    if (!confirm) return
+    if (confirm.type === "delete") {
+      const ids = confirm.ids
+      runAction(
+        ids.length === 1 ? deleteUser(ids[0]!) : bulkDeleteUsers(ids),
+        ids.length === 1 ? "User deleted" : `${ids.length} users deleted`,
+      )
+      return
+    }
+    runAction(
+      confirm.ids.length === 1
+        ? updateUserStatus(confirm.ids[0]!, "Suspended")
+        : bulkUpdateStatus(confirm.ids, "Suspended"),
+      confirm.ids.length === 1
+        ? "User suspended"
+        : `${confirm.ids.length} users suspended`,
+    )
+  }
+
+  const selectedIds = [...selected]
+
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
+      {loadError ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {loadError} Sign in as an Owner or Admin after applying the profiles
+          migration and promoting your account.
+        </div>
+      ) : null}
+
       {/* Toolbar: search, filters, and primary action */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
@@ -154,21 +259,100 @@ export function UsersTable() {
             </Select>
           </div>
         </div>
-        <Button className="shrink-0">
+        <Button
+          className="shrink-0"
+          onClick={() => setInviteOpen(true)}
+          disabled={Boolean(loadError)}
+        >
           <UserPlus data-icon="inline-start" />
-          Invite user
+          Add user
         </Button>
       </div>
 
-      {/* Selection summary */}
-      <div className="flex h-5 items-center text-sm text-muted-foreground">
+      {/* Selection summary / bulk bar */}
+      <div className="flex min-h-5 flex-wrap items-center gap-2 text-sm text-muted-foreground">
         {selected.size > 0 ? (
-          <span>
-            {selected.size} selected of {adminUsers.length} users
-          </span>
+          <>
+            <span>
+              {selected.size} selected of {initialUsers.length} users
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select
+                value={bulkRole || undefined}
+                onValueChange={(v) => {
+                  const role = v as UserRole
+                  setBulkRole(role)
+                  runAction(
+                    bulkUpdateRole(selectedIds, role),
+                    `Updated role to ${role}`,
+                  )
+                  setBulkRole("")
+                }}
+              >
+                <SelectTrigger
+                  className="h-8 w-36"
+                  aria-label="Bulk set role"
+                  disabled={isPending}
+                >
+                  <SelectValue placeholder="Set role…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userRoles.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isPending}
+                onClick={() =>
+                  setConfirm({ type: "suspend", ids: selectedIds })
+                }
+              >
+                Suspend
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isPending}
+                onClick={() =>
+                  runAction(
+                    bulkUpdateStatus(selectedIds, "Active"),
+                    "Users reactivated",
+                  )
+                }
+              >
+                Reactivate
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={isPending}
+                onClick={() => {
+                  const names = initialUsers
+                    .filter((u) => selected.has(u.id))
+                    .map((u) => u.name)
+                  setConfirm({ type: "delete", ids: selectedIds, names })
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearSelection}
+                disabled={isPending}
+              >
+                Clear
+              </Button>
+            </div>
+          </>
         ) : (
           <span>
-            {filtered.length} of {adminUsers.length} users
+            {filtered.length} of {initialUsers.length} users
           </span>
         )}
       </div>
@@ -184,6 +368,7 @@ export function UsersTable() {
                   indeterminate={!allVisibleSelected && someVisibleSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Select all users"
+                  disabled={filtered.length === 0}
                 />
               </TableHead>
               <TableHead>User</TableHead>
@@ -203,6 +388,24 @@ export function UsersTable() {
                 user={user}
                 selected={selected.has(user.id)}
                 onToggle={() => toggleOne(user.id)}
+                disabled={isPending}
+                onEditRole={() => openEditRole(user)}
+                onSuspend={() =>
+                  setConfirm({ type: "suspend", ids: [user.id] })
+                }
+                onReactivate={() =>
+                  runAction(
+                    updateUserStatus(user.id, "Active"),
+                    "User reactivated",
+                  )
+                }
+                onDelete={() =>
+                  setConfirm({
+                    type: "delete",
+                    ids: [user.id],
+                    names: [user.name],
+                  })
+                }
               />
             ))}
             {filtered.length === 0 ? (
@@ -211,13 +414,105 @@ export function UsersTable() {
                   colSpan={7}
                   className="h-24 text-center text-sm text-muted-foreground"
                 >
-                  No users match your filters.
+                  {initialUsers.length === 0
+                    ? "No users yet. Add someone to get started."
+                    : "No users match your filters."}
                 </TableCell>
               </TableRow>
             ) : null}
           </TableBody>
         </Table>
       </div>
+
+      <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+
+      <Dialog
+        open={Boolean(editRoleUser)}
+        onOpenChange={(open) => {
+          if (!open) setEditRoleUser(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit role</DialogTitle>
+            <DialogDescription>
+              {editRoleUser
+                ? `Change system role for ${editRoleUser.name}.`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <Select
+            value={editRoleValue}
+            onValueChange={(v) => setEditRoleValue(v as UserRole)}
+          >
+            <SelectTrigger className="w-full" aria-label="User role">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {userRoles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditRoleUser(null)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={isPending || !editRoleUser}
+              onClick={() => {
+                if (!editRoleUser) return
+                runAction(
+                  updateUserRole(editRoleUser.id, editRoleValue),
+                  `Role updated to ${editRoleValue}`,
+                )
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={Boolean(confirm)}
+        onOpenChange={(open) => {
+          if (!open) setConfirm(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.type === "delete" ? "Delete users?" : "Suspend users?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.type === "delete"
+                ? confirm.names.length === 1
+                  ? `Permanently delete ${confirm.names[0]}? This removes their auth account and profile.`
+                  : `Permanently delete ${confirm.names.length} users? This removes their auth accounts and profiles.`
+                : confirm?.ids.length === 1
+                  ? "Suspend this user? They will lose access until reactivated."
+                  : `Suspend ${confirm?.ids.length ?? 0} users? They will lose access until reactivated.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant={confirm?.type === "delete" ? "destructive" : "default"}
+              disabled={isPending}
+              onClick={handleConfirm}
+            >
+              {confirm?.type === "delete" ? "Delete" : "Suspend"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -226,10 +521,20 @@ function UserRowItem({
   user,
   selected,
   onToggle,
+  disabled,
+  onEditRole,
+  onSuspend,
+  onReactivate,
+  onDelete,
 }: {
   user: AdminUser
   selected: boolean
   onToggle: () => void
+  disabled?: boolean
+  onEditRole: () => void
+  onSuspend: () => void
+  onReactivate: () => void
+  onDelete: () => void
 }) {
   return (
     <TableRow data-state={selected ? "selected" : undefined}>
@@ -238,6 +543,7 @@ function UserRowItem({
           checked={selected}
           onCheckedChange={onToggle}
           aria-label={`Select ${user.name}`}
+          disabled={disabled}
         />
       </TableCell>
       <TableCell>
@@ -274,14 +580,17 @@ function UserRowItem({
       <TableCell className="hidden md:table-cell">
         {user.twoFactor ? (
           <span className="flex items-center gap-1.5 text-sm">
-            <ShieldCheck data-icon="inline-start" className="size-4 text-primary" />
+            <ShieldCheck
+              data-icon="inline-start"
+              className="size-4 text-primary"
+            />
             On
           </span>
         ) : (
           <span className="text-sm text-muted-foreground">Off</span>
         )}
       </TableCell>
-      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+      <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
         {user.lastActive}
       </TableCell>
       <TableCell className="text-right">
@@ -292,6 +601,7 @@ function UserRowItem({
                 variant="ghost"
                 size="icon"
                 aria-label={`Actions for ${user.name}`}
+                disabled={disabled}
               >
                 <MoreHorizontal />
               </Button>
@@ -299,14 +609,37 @@ function UserRowItem({
           />
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-            <DropdownMenuItem>View profile</DropdownMenuItem>
-            <DropdownMenuItem>Edit role</DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                toast.message("Profile view coming soon", {
+                  description: "Member profiles are not wired yet.",
+                })
+              }
+            >
+              View profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEditRole}>Edit role</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                toast.message("2FA admin tools coming soon", {
+                  description: "Reset / require 2FA is deferred.",
+                })
+              }
+            >
               {user.twoFactor ? "Reset 2FA" : "Require 2FA"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
-              {user.status === "Suspended" ? "Reactivate" : "Suspend"} user
+            {user.status === "Suspended" ? (
+              <DropdownMenuItem onClick={onReactivate}>
+                Reactivate user
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem variant="destructive" onClick={onSuspend}>
+                Suspend user
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem variant="destructive" onClick={onDelete}>
+              Delete user
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

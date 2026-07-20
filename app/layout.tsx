@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito_Sans, EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const fontSans = Nunito_Sans({subsets:['latin'],variable:'--font-sans'});
 
@@ -22,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={fontSans.variable + " " + fontHeading.variable + " bg-background"}>
       <body className="antialiased">
-        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
