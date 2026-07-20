@@ -3,6 +3,7 @@ import {
   Briefcase,
   Users,
   MessagesSquare,
+  Hash,
   Compass,
   UserCheck,
   Building2,
@@ -54,9 +55,17 @@ export const mainNav: NavItem[] = [
   {
     title: "Messages",
     href: "/messages",
-    description: "Direct messages, gig threads, and crew group chats.",
+    description: "Direct messages and private 1:1 conversations.",
     icon: MessagesSquare,
     badge: "4",
+  },
+  {
+    title: "Rooms",
+    href: "/rooms",
+    description:
+      "Discipline-specific community channels for touring crew.",
+    icon: Hash,
+    badge: "2",
   },
   {
     title: "Intel",

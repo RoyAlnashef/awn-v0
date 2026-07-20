@@ -35,17 +35,19 @@ export interface DirectConversation {
   isNew?: boolean
 }
 
-/** A single message within a direct-conversation thread. */
+/** A single message within a conversation or room thread. */
 export interface ThreadMessage {
   id: string
-  /** "me" is the signed-in user (right-aligned); "them" is the contact. */
+  /** "me" is the signed-in user (right-aligned); "them" is everyone else. */
   from: "me" | "them"
   text: string
   /** Clock label for placeholder display, e.g. "9:41 AM". */
   time: string
+  /** Display name for room messages from other members. */
+  author?: string
 }
 
-/** A joinable community room shown under the "Rooms" tab. */
+/** A joinable community room. */
 export interface Room {
   id: string
   name: string
@@ -53,6 +55,11 @@ export interface Room {
   icon: LucideIcon
   /** Whether the current user has already joined this room. */
   joined: boolean
+  /** Preview of the latest message in the room. */
+  preview: string
+  /** Relative time label for the latest activity. */
+  time: string
+  unread?: boolean
 }
 
 export const directConversations: DirectConversation[] = [
@@ -137,6 +144,9 @@ export const rooms: Room[] = [
     description: "The main AWN channel — introductions and announcements.",
     icon: Hash,
     joined: true,
+    preview: "Welcome to AWN — introduce yourself when you join!",
+    time: "2h",
+    unread: true,
   },
   {
     id: "r2",
@@ -144,6 +154,8 @@ export const rooms: Room[] = [
     description: "Musical directors · Session musicians · Deps.",
     icon: Music,
     joined: false,
+    preview: "Anyone know a dep keys player for a festival slot next month?",
+    time: "4h",
   },
   {
     id: "r3",
@@ -151,6 +163,8 @@ export const rooms: Room[] = [
     description: "Personal assistants to musicians and management.",
     icon: HandHelping,
     joined: false,
+    preview: "Best practices for managing artist schedules on the road?",
+    time: "6h",
   },
   {
     id: "r4",
@@ -158,6 +172,9 @@ export const rooms: Room[] = [
     description: "FOH · Monitors · RF · Systems engineering.",
     icon: Speaker,
     joined: false,
+    preview: "What's everyone running for in-ear monitoring these days?",
+    time: "1h",
+    unread: true,
   },
   {
     id: "r5",
@@ -165,6 +182,8 @@ export const rooms: Room[] = [
     description: "Guitar · Bass · Drum · Keys · Riggers.",
     icon: Guitar,
     joined: false,
+    preview: "Tips for quick string changes between songs?",
+    time: "8h",
   },
   {
     id: "r6",
@@ -172,6 +191,9 @@ export const rooms: Room[] = [
     description: "Need something? Post here for last-minute cover.",
     icon: LifeBuoy,
     joined: false,
+    preview: "URGENT: Monitor engineer needed for Nashville show Friday.",
+    time: "30m",
+    unread: true,
   },
   {
     id: "r7",
@@ -179,6 +201,8 @@ export const rooms: Room[] = [
     description: "LDs · Programmers · LED · IMAG.",
     icon: Lightbulb,
     joined: false,
+    preview: "Looking for recommendations on LED wall processors.",
+    time: "12h",
   },
   {
     id: "r8",
@@ -186,6 +210,8 @@ export const rooms: Room[] = [
     description: "Road life is hard. Talk about it here.",
     icon: Brain,
     joined: false,
+    preview: "Checking in — how is everyone holding up mid-tour?",
+    time: "1d",
   },
   {
     id: "r9",
@@ -193,6 +219,8 @@ export const rooms: Room[] = [
     description: "Balancing touring and family life.",
     icon: Baby,
     joined: false,
+    preview: "School schedules vs. routing — how do you manage it?",
+    time: "2d",
   },
   {
     id: "r10",
@@ -200,6 +228,8 @@ export const rooms: Room[] = [
     description: "Tour photographers · Videographers · Editors.",
     icon: Camera,
     joined: false,
+    preview: "Best camera settings for low-light arena shoots?",
+    time: "3d",
   },
   {
     id: "r11",
@@ -207,6 +237,8 @@ export const rooms: Room[] = [
     description: "Tour managers · Production managers · Coordinators.",
     icon: ClipboardList,
     joined: false,
+    preview: "Advance checklist template that actually works?",
+    time: "5h",
   },
   {
     id: "r12",
@@ -214,6 +246,8 @@ export const rooms: Room[] = [
     description: "The daily reality of being on the road.",
     icon: Truck,
     joined: false,
+    preview: "Favorite green rooms in the Midwest?",
+    time: "1d",
   },
   {
     id: "r13",
@@ -221,6 +255,8 @@ export const rooms: Room[] = [
     description: "Road life, routes, venues, and travel tips.",
     icon: Route,
     joined: false,
+    preview: "Best routing tips for avoiding back-to-back red-eyes?",
+    time: "2d",
   },
   {
     id: "r14",
@@ -228,6 +264,8 @@ export const rooms: Room[] = [
     description: "A space for women working in live touring.",
     icon: Sparkles,
     joined: false,
+    preview: "Networking event at PLASA — who's going?",
+    time: "4d",
   },
 ]
 
@@ -299,6 +337,71 @@ const messageThreads: Record<string, ThreadMessage[]> = {
   ],
 }
 
+const roomThreads: Record<string, ThreadMessage[]> = {
+  r1: [
+    {
+      id: "r1-1",
+      from: "them",
+      author: "AWN Team",
+      text: "Welcome to AWN! This is the main channel for introductions and announcements.",
+      time: "10:00 AM",
+    },
+    {
+      id: "r1-2",
+      from: "them",
+      author: "Marcus Bell",
+      text: "Hey everyone — Marcus here, LD based out of Nashville. Just joined!",
+      time: "11:30 AM",
+    },
+    {
+      id: "r1-3",
+      from: "them",
+      author: "Priya Anand",
+      text: "Welcome to AWN — introduce yourself when you join!",
+      time: "2:15 PM",
+    },
+  ],
+  r4: [
+    {
+      id: "r4-1",
+      from: "them",
+      author: "Theo Nakamura",
+      text: "Curious what everyone is running for in-ear monitoring these days.",
+      time: "9:00 AM",
+    },
+    {
+      id: "r4-2",
+      from: "them",
+      author: "Liam O'Connor",
+      text: "Sennheiser IE 500 Pro here — solid isolation without breaking the bank.",
+      time: "9:45 AM",
+    },
+    {
+      id: "r4-3",
+      from: "them",
+      author: "Priya Anand",
+      text: "Shure SE535 for me on most tours. What's everyone running for in-ear monitoring these days?",
+      time: "10:02 AM",
+    },
+  ],
+  r6: [
+    {
+      id: "r6-1",
+      from: "them",
+      author: "Sofia Marín",
+      text: "URGENT: Monitor engineer needed for Nashville show this Friday. DM me if available.",
+      time: "3:30 PM",
+    },
+    {
+      id: "r6-2",
+      from: "them",
+      author: "Elliot Shaw",
+      text: "Posting here in case anyone on the bench can cover — show pays well.",
+      time: "3:45 PM",
+    },
+  ],
+}
+
 /** The signed-in user, used for right-aligned messages in a thread. */
 export const currentUser = {
   name: "Jordan Ellis",
@@ -335,6 +438,70 @@ export function getThread(conversation: DirectConversation): ThreadMessage[] {
       time: conversation.time,
     },
   ]
+}
+
+/**
+ * Returns the transcript for a room, generating a believable fallback from the
+ * room preview when no explicit thread exists.
+ */
+export function getRoomThread(room: Room): ThreadMessage[] {
+  const explicit = roomThreads[room.id]
+  if (explicit) return explicit
+
+  return [
+    {
+      id: `${room.id}-1`,
+      from: "them",
+      author: "AWN Member",
+      text: room.preview,
+      time: room.time,
+    },
+  ]
+}
+
+/** The default room every member is auto-joined to — always pinned first. */
+export const GENERAL_ROOM_ID = "r1"
+
+/**
+ * Orders rooms for the inbox: General first, then joined rooms (most recently
+ * joined nearest the top), then unjoined rooms in catalog order.
+ */
+export function sortRoomsForInbox(
+  roomList: Room[],
+  joinOrder: string[],
+): Room[] {
+  const byId = new Map(roomList.map((r) => [r.id, r]))
+  const catalogOrder = roomList.map((r) => r.id)
+
+  const general = byId.get(GENERAL_ROOM_ID)
+  const joinedIds = joinOrder.filter(
+    (id) => id !== GENERAL_ROOM_ID && byId.get(id)?.joined,
+  )
+  const joinedRooms = joinedIds
+    .map((id) => byId.get(id))
+    .filter((r): r is Room => r != null)
+
+  const accounted = new Set([GENERAL_ROOM_ID, ...joinedIds])
+  const extraJoined = roomList.filter(
+    (r) => r.joined && r.id !== GENERAL_ROOM_ID && !accounted.has(r.id),
+  )
+  const unjoined = roomList
+    .filter((r) => !r.joined)
+    .sort(
+      (a, b) => catalogOrder.indexOf(a.id) - catalogOrder.indexOf(b.id),
+    )
+
+  return [
+    ...(general ? [general] : []),
+    ...joinedRooms,
+    ...extraJoined,
+    ...unjoined,
+  ]
+}
+
+/** Count of unread rooms the current user has joined (for nav badges). */
+export function joinedRoomUnreadCount(roomList: Room[] = rooms): number {
+  return roomList.filter((r) => r.joined && r.unread).length
 }
 
 /** Names that are shown as online in the existing Direct conversations. */
