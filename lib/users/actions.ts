@@ -119,6 +119,86 @@ export async function createUser(input: {
   }
 }
 
+export async function updateUser(
+  userId: string,
+  input: {
+    name: string
+    email: string
+    title: string
+    role: UserRole
+    password?: string
+  },
+): Promise<ActionResult> {
+  try {
+    const { supabase, userId: actorId } = await requireAdmin()
+
+    const name = input.name.trim()
+    const email = input.email.trim().toLowerCase()
+    const title = input.title.trim()
+    const role = input.role
+    const password = input.password?.trim() ?? ""
+
+    if (!name) return { ok: false, error: "Name is required." }
+    if (!email || !email.includes("@")) {
+      return { ok: false, error: "A valid email is required." }
+    }
+    if (password && password.length < 8) {
+      return { ok: false, error: "Password must be at least 8 characters." }
+    }
+
+    if (userId === actorId && role !== "Owner" && role !== "Admin") {
+      return {
+        ok: false,
+        error: "You cannot remove your own admin access.",
+      }
+    }
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .single()
+
+    if (fetchError) return { ok: false, error: fetchError.message }
+
+    const emailChanged = existing?.email?.toLowerCase() !== email
+
+    const admin = createAdminClient()
+    const authUpdate: {
+      email?: string
+      password?: string
+      user_metadata: { full_name: string }
+    } = {
+      user_metadata: { full_name: name },
+    }
+    if (emailChanged) authUpdate.email = email
+    if (password) authUpdate.password = password
+
+    const { error: authError } = await admin.auth.admin.updateUserById(
+      userId,
+      authUpdate,
+    )
+    if (authError) return { ok: false, error: authError.message }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: name,
+        email,
+        title: title || null,
+        role: toDbRole(role),
+      })
+      .eq("id", userId)
+
+    if (error) return { ok: false, error: error.message }
+
+    revalidatePath("/users")
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
 export async function updateUserRole(
   userId: string,
   role: UserRole,

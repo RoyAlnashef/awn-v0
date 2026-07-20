@@ -25,10 +25,10 @@ import {
   bulkUpdateRole,
   bulkUpdateStatus,
   deleteUser,
-  updateUserRole,
   updateUserStatus,
 } from "@/lib/users/actions"
 import { cn } from "@/lib/utils"
+import { EditUserDialog } from "@/components/users/edit-user-dialog"
 import { InviteUserDialog } from "@/components/users/invite-user-dialog"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -46,19 +46,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -99,8 +89,7 @@ export function UsersTable({
   const [statusFilter, setStatusFilter] = useState<UserStatus | typeof ALL>(ALL)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [editRoleUser, setEditRoleUser] = useState<AdminUser | null>(null)
-  const [editRoleValue, setEditRoleValue] = useState<UserRole>("Member")
+  const [editUser, setEditUser] = useState<AdminUser | null>(null)
   const [bulkRole, setBulkRole] = useState<UserRole | "">("")
   const [confirm, setConfirm] = useState<ConfirmState>(null)
 
@@ -161,14 +150,9 @@ export function UsersTable({
       toast.success(successMessage)
       clearSelection()
       setConfirm(null)
-      setEditRoleUser(null)
+      setEditUser(null)
       router.refresh()
     })
-  }
-
-  function openEditRole(user: AdminUser) {
-    setEditRoleUser(user)
-    setEditRoleValue(user.role)
   }
 
   function handleConfirm() {
@@ -389,7 +373,7 @@ export function UsersTable({
                 selected={selected.has(user.id)}
                 onToggle={() => toggleOne(user.id)}
                 disabled={isPending}
-                onEditRole={() => openEditRole(user)}
+                onEdit={() => setEditUser(user)}
                 onSuspend={() =>
                   setConfirm({ type: "suspend", ids: [user.id] })
                 }
@@ -426,59 +410,13 @@ export function UsersTable({
 
       <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
-      <Dialog
-        open={Boolean(editRoleUser)}
+      <EditUserDialog
+        user={editUser}
+        open={Boolean(editUser)}
         onOpenChange={(open) => {
-          if (!open) setEditRoleUser(null)
+          if (!open) setEditUser(null)
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit role</DialogTitle>
-            <DialogDescription>
-              {editRoleUser
-                ? `Change system role for ${editRoleUser.name}.`
-                : null}
-            </DialogDescription>
-          </DialogHeader>
-          <Select
-            value={editRoleValue}
-            onValueChange={(v) => setEditRoleValue(v as UserRole)}
-          >
-            <SelectTrigger className="w-full" aria-label="User role">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {userRoles.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditRoleUser(null)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={isPending || !editRoleUser}
-              onClick={() => {
-                if (!editRoleUser) return
-                runAction(
-                  updateUserRole(editRoleUser.id, editRoleValue),
-                  `Role updated to ${editRoleValue}`,
-                )
-              }}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
 
       <AlertDialog
         open={Boolean(confirm)}
@@ -522,7 +460,7 @@ function UserRowItem({
   selected,
   onToggle,
   disabled,
-  onEditRole,
+  onEdit,
   onSuspend,
   onReactivate,
   onDelete,
@@ -531,7 +469,7 @@ function UserRowItem({
   selected: boolean
   onToggle: () => void
   disabled?: boolean
-  onEditRole: () => void
+  onEdit: () => void
   onSuspend: () => void
   onReactivate: () => void
   onDelete: () => void
@@ -608,38 +546,18 @@ function UserRowItem({
             }
           />
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() =>
-                toast.message("Profile view coming soon", {
-                  description: "Member profiles are not wired yet.",
-                })
-              }
-            >
-              View profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEditRole}>Edit role</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                toast.message("2FA admin tools coming soon", {
-                  description: "Reset / require 2FA is deferred.",
-                })
-              }
-            >
-              {user.twoFactor ? "Reset 2FA" : "Require 2FA"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
             {user.status === "Suspended" ? (
               <DropdownMenuItem onClick={onReactivate}>
-                Reactivate user
+                Reactivate
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem variant="destructive" onClick={onSuspend}>
-                Suspend user
+                Suspend
               </DropdownMenuItem>
             )}
             <DropdownMenuItem variant="destructive" onClick={onDelete}>
-              Delete user
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

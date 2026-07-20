@@ -20,6 +20,7 @@ export function PasswordField({
   autoComplete = "current-password",
   minLength,
   labelExtra,
+  required = true,
 }: {
   id: string
   label: string
@@ -29,6 +30,7 @@ export function PasswordField({
   autoComplete?: "current-password" | "new-password"
   minLength?: number
   labelExtra?: React.ReactNode
+  required?: boolean
 }) {
   const [visible, setVisible] = React.useState(false)
 
@@ -47,7 +49,7 @@ export function PasswordField({
           id={id}
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
-          required
+          required={required}
           minLength={minLength}
           value={value}
           onChange={(e) => onChange(e.target.value)}
