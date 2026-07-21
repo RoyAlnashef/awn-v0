@@ -236,6 +236,7 @@ export function PersonProfileDrawer({
               variant="outline"
               size="sm"
               className="self-start"
+              nativeButton={false}
               render={
                 <a
                   href={`https://${profile.website}`}
