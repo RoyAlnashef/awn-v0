@@ -48,7 +48,8 @@ export function NavUser({ user }: { user: NavUserData }) {
         </span>
         <ChevronDown className="hidden size-4 text-muted-foreground sm:inline-block" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-60 gap-0 p-0">
+      {open ? (
+        <PopoverContent align="end" className="w-60 gap-0 p-0">
         <div className="flex items-center gap-2.5 p-3">
           <Avatar className="size-9">
             {user.avatarUrl ? (
@@ -92,7 +93,8 @@ export function NavUser({ user }: { user: NavUserData }) {
             {isPending ? "Signing out…" : "Log out"}
           </button>
         </div>
-      </PopoverContent>
+        </PopoverContent>
+      ) : null}
     </Popover>
   )
 }

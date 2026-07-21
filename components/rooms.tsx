@@ -68,27 +68,29 @@ export function Rooms() {
         ) : null}
       </SheetTrigger>
 
-      <SheetContent
-        side="right"
-        className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
-      >
-        <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b p-4 pr-14">
-          <div className="flex items-center gap-2">
-            <SheetTitle>Rooms</SheetTitle>
-            {unreadCount > 0 ? (
-              <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
-                {unreadCount} new
-              </span>
-            ) : null}
-          </div>
-        </SheetHeader>
+      {open ? (
+        <SheetContent
+          side="right"
+          className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
+        >
+          <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b p-4 pr-14">
+            <div className="flex items-center gap-2">
+              <SheetTitle>Rooms</SheetTitle>
+              {unreadCount > 0 ? (
+                <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
+                  {unreadCount} new
+                </span>
+              ) : null}
+            </div>
+          </SheetHeader>
 
-        <RoomsInbox
-          rooms={sortedRooms}
-          onSelectRoom={handleSelectRoom}
-          onToggleJoin={handleToggleJoin}
-        />
-      </SheetContent>
+          <RoomsInbox
+            rooms={sortedRooms}
+            onSelectRoom={handleSelectRoom}
+            onToggleJoin={handleToggleJoin}
+          />
+        </SheetContent>
+      ) : null}
     </Sheet>
   )
 }

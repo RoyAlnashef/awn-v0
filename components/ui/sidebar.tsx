@@ -518,7 +518,6 @@ function SidebarMenuButton({
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar()
   const hydrated = useHydrated()
-  const enableTooltip = Boolean(tooltip) && hydrated
 
   const comp = useRender({
     defaultTagName: "button",
@@ -528,7 +527,7 @@ function SidebarMenuButton({
       },
       props
     ),
-    render: !enableTooltip ? render : <TooltipTrigger render={render} />,
+    render: tooltip ? <TooltipTrigger render={render} /> : render,
     state: {
       slot: "sidebar-menu-button",
       sidebar: "menu-button",
@@ -537,15 +536,12 @@ function SidebarMenuButton({
     },
   })
 
-  if (!enableTooltip) {
+  if (!tooltip) {
     return comp
   }
 
-  if (typeof tooltip === "string") {
-    tooltip = {
-      children: tooltip,
-    }
-  }
+  const tooltipContent =
+    typeof tooltip === "string" ? { children: tooltip } : tooltip
 
   return (
     <Tooltip>
@@ -553,8 +549,8 @@ function SidebarMenuButton({
       <TooltipContent
         side="right"
         align="center"
-        hidden={state !== "collapsed" || isMobile}
-        {...tooltip}
+        hidden={!hydrated || state !== "collapsed" || isMobile}
+        {...tooltipContent}
       />
     </Tooltip>
   )
