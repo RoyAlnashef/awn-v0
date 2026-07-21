@@ -10,7 +10,7 @@ const fontHeading = EB_Garamond({subsets:['latin'],variable:'--font-heading'});
 
 
 export const metadata: Metadata = {
-  title: "A. Wright Network",
+  title: "A Wright Network",
   description:
     "The private, invite-only professional network for touring live entertainment crew.",
 };

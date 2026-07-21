@@ -38,7 +38,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="font-heading text-base font-semibold tracking-tight">
-              A. Wright Network
+              A Wright Network
             </span>
             <span className="text-xs text-sidebar-foreground/60">
               Touring crew, connected

@@ -4,7 +4,7 @@ const DEFAULT_FOOTER =
   "Invite-only. Need access? Ask a member for an invite."
 
 export function AuthShell({
-  title = "A. Wright Network",
+  title = "A Wright Network",
   subtitle = "Touring crew, connected. Sign in to continue.",
   children,
   footer = DEFAULT_FOOTER,
