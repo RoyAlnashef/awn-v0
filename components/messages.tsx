@@ -1,6 +1,6 @@
 "use client"
 
-import { MessageCircle } from "lucide-react"
+import { MessagesSquare } from "lucide-react"
 
 import { directConversations } from "@/lib/messages-data"
 import { Button } from "@/components/ui/button"
@@ -30,7 +30,7 @@ export function Messages() {
           />
         }
       >
-        <MessageCircle className="size-5" />
+        <MessagesSquare className="size-5" />
         {unreadCount > 0 ? (
           <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background">
             {unreadCount}
