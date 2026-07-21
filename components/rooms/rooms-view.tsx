@@ -1,14 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Hash } from "lucide-react"
 
-import {
-  GENERAL_ROOM_ID,
-  rooms as initialRooms,
-  sortRoomsForInbox,
-  type Room,
-} from "@/lib/messages-data"
+import { type Room } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
 import {
   Empty,
@@ -19,66 +14,59 @@ import {
 } from "@/components/ui/empty"
 import { RoomsInbox } from "@/components/rooms/rooms-inbox"
 import { RoomThread } from "@/components/rooms/room-thread"
+import { useRooms } from "@/components/rooms/rooms-provider"
 
 export function RoomsView({
   title,
   description,
+  initialRoomId,
 }: {
   title: string
   description?: string
+  initialRoomId?: string
 }) {
-  const [rooms, setRooms] = useState<Room[]>(initialRooms)
-  const [joinOrder, setJoinOrder] = useState<string[]>(() =>
-    initialRooms.filter((r) => r.joined).map((r) => r.id),
-  )
+  const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom } = useRooms()
   const [active, setActive] = useState<Room | null>(null)
 
-  const sortedRooms = useMemo(
-    () => sortRoomsForInbox(rooms, joinOrder),
-    [rooms, joinOrder],
-  )
-
-  function toggleJoin(id: string) {
-    const room = rooms.find((r) => r.id === id)
+  function handleToggleJoin(id: string) {
+    const room = getRoom(id)
     if (!room) return
+
     const joining = !room.joined
-
-    const updatedRoom: Room = joining
-      ? { ...room, joined: true, unread: false }
-      : { ...room, joined: false }
-
-    setRooms((prev) =>
-      prev.map((r) => (r.id === id ? updatedRoom : r)),
-    )
-    setJoinOrder((order) => {
-      if (joining) {
-        const without = order.filter((roomId) => roomId !== id)
-        const general = without.filter((roomId) => roomId === GENERAL_ROOM_ID)
-        const rest = without.filter((roomId) => roomId !== GENERAL_ROOM_ID)
-        return [...general, id, ...rest]
-      }
-      return order.filter((roomId) => roomId !== id)
-    })
+    toggleJoin(id)
 
     if (joining) {
-      setActive(updatedRoom)
+      setActive({ ...room, joined: true, unread: false })
     } else {
-      setActive((prev) => (prev?.id === id ? updatedRoom : prev))
-    }
-  }
-
-  function selectRoom(room: Room) {
-    const next = room.joined && room.unread ? { ...room, unread: false } : room
-    setActive(next)
-    if (room.joined && room.unread) {
-      setRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, unread: false } : r)),
+      setActive((prev) =>
+        prev?.id === id ? { ...room, joined: false } : prev,
       )
     }
   }
 
+  function selectRoom(room: Room) {
+    if (room.joined && room.unread) {
+      markRoomRead(room.id)
+    }
+
+    setActive(getRoom(room.id) ?? room)
+  }
+
+  useEffect(() => {
+    if (!initialRoomId) return
+
+    const room = rooms.find((r) => r.id === initialRoomId)
+    if (!room) return
+
+    if (room.joined && room.unread) {
+      markRoomRead(initialRoomId)
+    }
+
+    setActive(room)
+  }, [initialRoomId, rooms, markRoomRead])
+
   const activeRoom = active
-    ? (rooms.find((r) => r.id === active.id) ?? active)
+    ? (getRoom(active.id) ?? active)
     : null
 
   return (
@@ -107,7 +95,7 @@ export function RoomsView({
             activeId={activeRoom?.id}
             rooms={sortedRooms}
             onSelectRoom={selectRoom}
-            onToggleJoin={toggleJoin}
+            onToggleJoin={handleToggleJoin}
           />
         </div>
 
@@ -122,7 +110,7 @@ export function RoomsView({
               key={activeRoom.id}
               room={activeRoom}
               onBack={() => setActive(null)}
-              onJoin={() => toggleJoin(activeRoom.id)}
+              onJoin={() => handleToggleJoin(activeRoom.id)}
             />
           ) : (
             <Empty className="flex-1 border-none">

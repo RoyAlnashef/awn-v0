@@ -3,10 +3,20 @@ import { RoomsView } from "@/components/rooms/rooms-view"
 
 const item = mainNav.find((i) => i.href === "/rooms")!
 
-export default function RoomsPage() {
+export default async function RoomsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ room?: string }>
+}) {
+  const params = await searchParams
+
   return (
     <div className="flex h-[calc(100svh-4rem)] flex-col p-4 md:p-6">
-      <RoomsView title={item.title} description={item.description} />
+      <RoomsView
+        title={item.title}
+        description={item.description}
+        initialRoomId={params.room}
+      />
     </div>
   )
 }

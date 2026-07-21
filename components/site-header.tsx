@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { NavUser, type NavUserData } from "@/components/nav-user"
 import { Messages } from "@/components/messages"
 import { Notifications } from "@/components/notifications"
+import { Rooms } from "@/components/rooms"
 
 export function SiteHeader({ user }: { user: NavUserData }) {
   return (
@@ -25,6 +26,7 @@ export function SiteHeader({ user }: { user: NavUserData }) {
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <Rooms />
         <Messages />
         <Notifications />
         <Separator

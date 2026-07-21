@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
+import { RoomsProvider } from "@/components/rooms/rooms-provider"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -16,19 +17,21 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <SiteHeader
-          user={{
-            name: sessionUser.name,
-            title: sessionUser.title,
-            email: sessionUser.email,
-            avatarUrl: sessionUser.avatarUrl,
-            initials: sessionUser.initials,
-          }}
-        />
-        {children}
-      </SidebarInset>
+      <RoomsProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <SiteHeader
+            user={{
+              name: sessionUser.name,
+              title: sessionUser.title,
+              email: sessionUser.email,
+              avatarUrl: sessionUser.avatarUrl,
+              initials: sessionUser.initials,
+            }}
+          />
+          {children}
+        </SidebarInset>
+      </RoomsProvider>
     </SidebarProvider>
   )
 }
