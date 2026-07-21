@@ -2,11 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
-import { mutate as mutateSwr } from "swr"
-
-import { createClient } from "@/lib/supabase/client"
 import {
-  formatMessageTime,
   isPersistedConversation,
   isUuid,
 } from "@/lib/messages/format"
@@ -15,7 +11,6 @@ import {
   sendMessage as sendMessageAction,
 } from "@/lib/messages/actions"
 import { useThread } from "@/lib/messages/hooks/use-thread"
-import { inboxKey, unreadCountKey } from "@/lib/messages/swr-keys"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import {
   getThread,
@@ -51,6 +46,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group"
 import { useMessages } from "@/components/messages/messages-provider"
+import { createClient } from "@/lib/supabase/client"
 
 function initials(name: string) {
   return name
@@ -184,56 +180,7 @@ export function MessageThread({
 
     const supabase = createClient()
     const channel = supabase
-      .channel(`dm-messages:${persistedConversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "dm_messages",
-          filter: `conversation_id=eq.${persistedConversationId}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            id: string
-            sender_id: string
-            body: string
-            created_at: string
-          }
-
-          void mutate(
-            (current) => {
-              if (!current) return current
-              if (current.messages.some((message) => message.id === row.id)) {
-                return current
-              }
-
-              const incoming: ThreadMessage = {
-                id: row.id,
-                from: row.sender_id === currentUser.id ? "me" : "them",
-                text: row.body,
-                time: formatMessageTime(row.created_at),
-                createdAt: row.created_at,
-                readReceipt:
-                  row.sender_id === currentUser.id ? "delivered" : undefined,
-              }
-
-              return {
-                ...current,
-                messages: [...current.messages, incoming],
-              }
-            },
-            { revalidate: false },
-          )
-
-          if (row.sender_id !== currentUser.id) {
-            bumpConversation(persistedConversationId, row.body)
-            markRead(persistedConversationId)
-            void mutateSwr(unreadCountKey)
-            void mutateSwr(inboxKey)
-          }
-        },
-      )
+      .channel(`dm-read-receipts:${persistedConversationId}`)
       .on(
         "postgres_changes",
         {
@@ -263,14 +210,7 @@ export function MessageThread({
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [
-    bumpConversation,
-    currentUser.id,
-    isPersisted,
-    markRead,
-    mutate,
-    persistedConversationId,
-  ])
+  }, [currentUser.id, isPersisted, mutate, persistedConversationId])
 
   async function handleLoadOlder() {
     if (loadingOlder) return
@@ -306,7 +246,7 @@ export function MessageThread({
         { revalidate: false },
       )
 
-      bumpConversation(persistedConversationId, text)
+      bumpConversation(persistedConversationId, text, { from: "me" })
       setDraft("")
       setSending(true)
 
@@ -343,7 +283,6 @@ export function MessageThread({
         { revalidate: false },
       )
 
-      void mutateSwr(inboxKey)
       return
     }
 
@@ -357,7 +296,7 @@ export function MessageThread({
         readReceipt: "delivered",
       },
     ])
-    bumpConversation(conversation.id, text)
+    bumpConversation(conversation.id, text, { from: "me" })
     setDraft("")
   }
 

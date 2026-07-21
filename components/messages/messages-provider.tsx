@@ -17,12 +17,12 @@ import {
 import { isPersistedConversation, isUuid } from "@/lib/messages/format"
 import { unreadCountKey } from "@/lib/messages/swr-keys"
 import {
-  directConversationUnreadCount,
   memberToConversation,
   sortConversationsForInbox,
   type DirectConversation,
   type MessageableMember,
 } from "@/lib/messages-data"
+import { MessagesRealtimeBridge } from "@/lib/messages/hooks/use-inbox-realtime"
 
 export type MessagesCurrentUser = {
   id: string
@@ -34,14 +34,25 @@ type EnsureConversationResult =
   | { ok: true; conversation: DirectConversation }
   | { ok: false; error: string }
 
+type BumpConversationOptions = {
+  from?: "me" | "them"
+  unread?: boolean
+}
+
 type MessagesContextValue = {
   conversations: DirectConversation[]
   currentUser: MessagesCurrentUser
+  activeConversationId: string | null
+  setActiveConversationId: (id: string | null) => void
   markConversationRead: (id: string) => void
   getConversation: (id: string) => DirectConversation | undefined
   startConversation: (member: MessageableMember) => DirectConversation
   ensureConversation: (member: MessageableMember) => Promise<EnsureConversationResult>
-  bumpConversation: (id: string, messageText: string) => void
+  bumpConversation: (
+    id: string,
+    messageText: string,
+    options?: BumpConversationOptions,
+  ) => void
   upsertConversation: (conversation: DirectConversation) => void
   syncConversationsFromInbox: (conversations: DirectConversation[]) => void
 }
@@ -63,6 +74,9 @@ export function MessagesProvider({
     [],
   )
   const [activityOrder, setActivityOrder] = useState<string[]>([])
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    null,
+  )
 
   const conversations = useMemo(
     () => sortConversationsForInbox(conversationList, activityOrder),
@@ -76,13 +90,14 @@ export function MessagesProvider({
         const merged = incoming.map((server) => {
           const local = byId.get(server.id)
           if (!local) return server
+
+          const locallyTouched = local.time === "Now"
+
           return {
             ...server,
-            preview: local.preview.startsWith("You:")
-              ? local.preview
-              : server.preview,
-            time: local.time === "Now" ? local.time : server.time,
-            unread: local.unread === false ? false : server.unread,
+            preview: locallyTouched ? local.preview : server.preview,
+            time: locallyTouched ? local.time : server.time,
+            unread: locallyTouched ? local.unread : server.unread,
           }
         })
 
@@ -92,13 +107,24 @@ export function MessagesProvider({
           }
         }
 
-        return merged
-      })
+        const bumpedNow = merged
+          .filter((conversation) => conversation.time === "Now")
+          .map((conversation) => conversation.id)
+        const serverIds = incoming.map((conversation) => conversation.id)
+        const order = [
+          ...bumpedNow,
+          ...serverIds.filter((id) => !bumpedNow.includes(id)),
+          ...prev
+            .filter(
+              (conversation) =>
+                !conversation.isPersisted &&
+                !serverIds.includes(conversation.id),
+            )
+            .map((conversation) => conversation.id),
+        ]
 
-      setActivityOrder((prev) => {
-        const serverIds = incoming.map((c) => c.id)
-        const localOnly = prev.filter((id) => !serverIds.includes(id))
-        return [...localOnly, ...serverIds]
+        setActivityOrder(order)
+        return merged
       })
     },
     [],
@@ -195,27 +221,46 @@ export function MessagesProvider({
     [conversationList, startConversation, upsertConversation],
   )
 
-  const bumpConversation = useCallback((id: string, messageText: string) => {
-    setConversationList((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              preview: `You: ${messageText}`,
-              time: "Now",
-              isNew: false,
-            }
-          : c,
-      ),
-    )
-    setActivityOrder((prev) => touchActivityOrder(prev, id))
-  }, [])
+  const bumpConversation = useCallback(
+    (
+      id: string,
+      messageText: string,
+      options?: BumpConversationOptions,
+    ) => {
+      const from = options?.from ?? "me"
+      const trimmed = messageText.trim()
+      const preview =
+        from === "me"
+          ? trimmed.startsWith("You:")
+            ? trimmed
+            : `You: ${trimmed}`
+          : trimmed
+
+      setConversationList((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                preview,
+                time: "Now",
+                unread: options?.unread ?? false,
+                isNew: false,
+              }
+            : c,
+        ),
+      )
+      setActivityOrder((prev) => touchActivityOrder(prev, id))
+    },
+    [],
+  )
 
   return (
     <MessagesContext.Provider
       value={{
         conversations,
         currentUser,
+        activeConversationId,
+        setActiveConversationId,
         markConversationRead,
         getConversation,
         startConversation,
@@ -225,6 +270,7 @@ export function MessagesProvider({
         syncConversationsFromInbox,
       }}
     >
+      <MessagesRealtimeBridge />
       {children}
     </MessagesContext.Provider>
   )

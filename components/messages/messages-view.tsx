@@ -47,6 +47,7 @@ export function MessagesView({
     markConversationRead,
     getConversation,
     ensureConversation,
+    setActiveConversationId,
   } = useMessages()
   useInbox({ enabled: true })
   const [active, setActive] = useState<DirectConversation | null>(null)
@@ -168,6 +169,11 @@ export function MessagesView({
   const activeConversation = active
     ? (getConversation(active.id) ?? active)
     : null
+
+  useEffect(() => {
+    setActiveConversationId(activeConversation?.id ?? null)
+    return () => setActiveConversationId(null)
+  }, [activeConversation?.id, setActiveConversationId])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
