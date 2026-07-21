@@ -34,7 +34,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             avatarUrl: sessionUser.avatarUrl,
           }}
         >
-          <AppSidebar />
+          <AppSidebar showAdminNav={sessionUser.canAccessAdmin} />
           <SidebarInset>
             <SiteHeader
               user={{

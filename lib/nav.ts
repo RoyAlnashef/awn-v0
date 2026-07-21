@@ -8,7 +8,6 @@ import {
   UserCheck,
   Building2,
   Store,
-  Settings,
   ClipboardList,
   UsersRound,
   MailPlus,
@@ -139,12 +138,6 @@ export const adminNav: NavItem[] = [
     href: "/email",
     description: "Compose and manage broadcast emails to the network.",
     icon: Mail,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    description: "Manage your profile, availability, and account preferences.",
-    icon: Settings,
   },
 ]
 

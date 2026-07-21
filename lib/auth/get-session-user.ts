@@ -1,6 +1,7 @@
 import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
+import { canAccessAdmin } from "@/lib/auth/require-admin"
 import { initials } from "@/lib/users-data"
 
 export type SessionUser = {
@@ -10,6 +11,7 @@ export type SessionUser = {
   title: string
   avatarUrl?: string
   initials: string
+  canAccessAdmin: boolean
 }
 
 /**
@@ -26,7 +28,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, title, avatar_url")
+    .select("full_name, email, title, avatar_url, role, status")
     .eq("id", user.id)
     .maybeSingle()
 
@@ -44,5 +46,6 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     title: profile?.title?.trim() || "",
     avatarUrl: profile?.avatar_url ?? undefined,
     initials: initials(name),
+    canAccessAdmin: canAccessAdmin(profile),
   }
 })

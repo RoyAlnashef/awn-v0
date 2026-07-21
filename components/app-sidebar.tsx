@@ -21,7 +21,10 @@ import { AvailabilityCard } from "@/components/availability-card"
 import { useMessages } from "@/components/messages/messages-provider"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  showAdminNav,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { showAdminNav: boolean }) {
   const pathname = usePathname()
   const { unreadCount: messagesUnreadCount } = useMessages()
 
@@ -82,28 +85,30 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Admin</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminNav.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    isActive={isActive(item)}
-                    tooltip={item.title}
-                    render={<Link href={item.href} />}
-                  >
-                    <item.icon className="text-sidebar-foreground/70" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                  {item.badge ? (
-                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                  ) : null}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {showAdminNav ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNav.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      isActive={isActive(item)}
+                      tooltip={item.title}
+                      render={<Link href={item.href} />}
+                    >
+                      <item.icon className="text-sidebar-foreground/70" />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                    {item.badge ? (
+                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                    ) : null}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       <SidebarFooter>

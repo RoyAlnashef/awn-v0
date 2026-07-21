@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import Link from "next/link"
-import { ChevronDown, User, Settings, LifeBuoy, LogOut } from "lucide-react"
+import { ChevronDown, LifeBuoy, LogOut } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
 import { cn } from "@/lib/utils"
@@ -21,11 +21,7 @@ export type NavUserData = {
   initials: string
 }
 
-const links = [
-  { label: "My profile", href: "/settings", icon: User },
-  { label: "Account settings", href: "/settings", icon: Settings },
-  { label: "Support", href: "/intel", icon: LifeBuoy },
-]
+const links = [{ label: "Support", href: "/intel", icon: LifeBuoy }]
 
 export function NavUser({ user }: { user: NavUserData }) {
   const [open, setOpen] = useState(false)

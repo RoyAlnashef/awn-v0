@@ -18,6 +18,22 @@ export class AuthError extends Error {
   }
 }
 
+export function canAccessAdmin(
+  profile:
+    | {
+        role: DbUserRole
+        status: DbUserStatus
+      }
+    | null
+    | undefined,
+): boolean {
+  return (
+    !!profile &&
+    profile.status === "active" &&
+    (profile.role === "owner" || profile.role === "admin")
+  )
+}
+
 /**
  * Ensures the current session belongs to an active Owner or Admin.
  * Uses the cookie-based server client (RLS applies).
@@ -47,11 +63,7 @@ export async function requireAdmin(): Promise<{
     throw new AuthError(profileError.message, "forbidden")
   }
 
-  if (
-    !profile ||
-    profile.status !== "active" ||
-    (profile.role !== "owner" && profile.role !== "admin")
-  ) {
+  if (!canAccessAdmin(profile)) {
     throw new AuthError(
       "Only active Owners and Admins can manage users.",
       "forbidden",
