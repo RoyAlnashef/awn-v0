@@ -1,13 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { MessagesSquare, SquarePen } from "lucide-react"
 
-import {
-  directConversations,
-  personToConversation,
-  type DirectConversation,
-} from "@/lib/messages-data"
+import { type DirectConversation } from "@/lib/messages-data"
 import { type Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -21,32 +17,57 @@ import {
 import { MessagesInbox } from "@/components/messages/messages-inbox"
 import { MessageThread } from "@/components/messages/message-thread"
 import { NewMessageDrawer } from "@/components/messages/new-message-drawer"
+import { useMessages } from "@/components/messages/messages-provider"
 
 export function MessagesView({
   title,
   description,
+  initialConversationId,
 }: {
   title: string
   description?: string
+  initialConversationId?: string
 }) {
-  const [conversations, setConversations] =
-    useState<DirectConversation[]>(directConversations)
+  const {
+    conversations,
+    markConversationRead,
+    getConversation,
+    startConversation,
+  } = useMessages()
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
 
-  function startConversation(person: Person) {
-    // Reuse an existing conversation with this person when one exists,
-    // otherwise create a fresh one and drop it at the top of the list.
-    const existing = conversations.find((c) => c.name === person.name)
-    if (existing) {
-      setActive(existing)
-      return
+  function selectConversation(conversation: DirectConversation) {
+    if (conversation.unread) {
+      markConversationRead(conversation.id)
     }
 
-    const conversation = personToConversation(person)
-    setConversations((prev) => [conversation, ...prev])
+    setActive(getConversation(conversation.id) ?? conversation)
+  }
+
+  function handleStartConversation(person: Person) {
+    const conversation = startConversation(person)
     setActive(conversation)
   }
+
+  useEffect(() => {
+    if (!initialConversationId) return
+
+    const conversation = conversations.find(
+      (c) => c.id === initialConversationId,
+    )
+    if (!conversation) return
+
+    if (conversation.unread) {
+      markConversationRead(initialConversationId)
+    }
+
+    setActive(conversation)
+  }, [initialConversationId, conversations, markConversationRead])
+
+  const activeConversation = active
+    ? (getConversation(active.id) ?? active)
+    : null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -75,13 +96,13 @@ export function MessagesView({
           className={cn(
             "flex w-full min-h-0 flex-col md:w-80 lg:w-96",
             // On mobile, hide the list once a conversation is open.
-            active && "hidden md:flex",
+            activeConversation && "hidden md:flex",
           )}
         >
           <MessagesInbox
-            activeId={active?.id}
+            activeId={activeConversation?.id}
             conversations={conversations}
-            onSelectConversation={setActive}
+            onSelectConversation={selectConversation}
           />
         </div>
 
@@ -89,13 +110,13 @@ export function MessagesView({
         <div
           className={cn(
             "min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
-            active ? "flex" : "hidden md:flex",
+            activeConversation ? "flex" : "hidden md:flex",
           )}
         >
-          {active ? (
+          {activeConversation ? (
             <MessageThread
-              key={active.id}
-              conversation={active}
+              key={activeConversation.id}
+              conversation={activeConversation}
               onBack={() => setActive(null)}
             />
           ) : (
@@ -122,7 +143,7 @@ export function MessagesView({
       <NewMessageDrawer
         open={newOpen}
         onOpenChange={setNewOpen}
-        onSelectPerson={startConversation}
+        onSelectPerson={handleStartConversation}
       />
     </div>
   )

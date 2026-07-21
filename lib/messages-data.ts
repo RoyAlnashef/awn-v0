@@ -504,6 +504,36 @@ export function joinedRoomUnreadCount(roomList: Room[] = rooms): number {
   return roomList.filter((r) => r.joined && r.unread).length
 }
 
+/** Count of unread direct conversations (for nav badges). */
+export function directConversationUnreadCount(
+  conversationList: DirectConversation[] = directConversations,
+): number {
+  return conversationList.filter((c) => c.unread).length
+}
+
+/**
+ * Orders conversations for the inbox: most recently active first, then any
+ * conversations not yet tracked in activity order (catalog order).
+ */
+export function sortConversationsForInbox(
+  conversationList: DirectConversation[],
+  activityOrder: string[],
+): DirectConversation[] {
+  const byId = new Map(conversationList.map((c) => [c.id, c]))
+  const catalogOrder = conversationList.map((c) => c.id)
+
+  const ordered = activityOrder
+    .map((id) => byId.get(id))
+    .filter((c): c is DirectConversation => c !== undefined)
+
+  const orderedIds = new Set(activityOrder)
+  const rest = catalogOrder
+    .filter((id) => !orderedIds.has(id))
+    .map((id) => byId.get(id)!)
+
+  return [...ordered, ...rest]
+}
+
 /** Names that are shown as online in the existing Direct conversations. */
 const onlineConversationNames = new Set(
   directConversations.filter((c) => c.online).map((c) => c.name),

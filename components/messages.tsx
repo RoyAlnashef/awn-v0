@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { MessagesSquare } from "lucide-react"
 
-import { directConversations } from "@/lib/messages-data"
+import { type DirectConversation } from "@/lib/messages-data"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -12,12 +14,28 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { MessagesInbox } from "@/components/messages/messages-inbox"
+import { useMessages } from "@/components/messages/messages-provider"
 
 export function Messages() {
-  const unreadCount = directConversations.filter((c) => c.unread).length
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const { conversations, unreadCount, markConversationRead } = useMessages()
+
+  function navigateToConversation(conversationId: string) {
+    setOpen(false)
+    router.push(`/messages?conversation=${conversationId}`)
+  }
+
+  function handleSelectConversation(conversation: DirectConversation) {
+    if (conversation.unread) {
+      markConversationRead(conversation.id)
+    }
+
+    navigateToConversation(conversation.id)
+  }
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
           <Button
@@ -53,7 +71,10 @@ export function Messages() {
           </div>
         </SheetHeader>
 
-        <MessagesInbox />
+        <MessagesInbox
+          conversations={conversations}
+          onSelectConversation={handleSelectConversation}
+        />
       </SheetContent>
     </Sheet>
   )

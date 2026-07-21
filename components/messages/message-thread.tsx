@@ -36,6 +36,7 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
+import { useMessages } from "@/components/messages/messages-provider"
 
 function initials(name: string) {
   return name
@@ -52,6 +53,7 @@ export function MessageThread({
   conversation: DirectConversation
   onBack?: () => void
 }) {
+  const { bumpConversation } = useMessages()
   const baseThread = useMemo(() => getThread(conversation), [conversation])
   const [messages, setMessages] = useState<ThreadMessage[]>(baseThread)
   const [draft, setDraft] = useState("")
@@ -74,6 +76,7 @@ export function MessageThread({
         time: "Now",
       },
     ])
+    bumpConversation(conversation.id, text)
     setDraft("")
   }
 
