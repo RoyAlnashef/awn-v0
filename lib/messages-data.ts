@@ -31,6 +31,10 @@ export interface DirectConversation {
   unread: boolean
   online: boolean
   avatar?: string
+  /** Profile id of the other participant (UUID when persisted). */
+  otherProfileId?: string
+  /** True when loaded from Supabase rather than mock data. */
+  isPersisted?: boolean
   /** True for a conversation just started from "New message" (empty transcript). */
   isNew?: boolean
 }
@@ -43,6 +47,10 @@ export interface ThreadMessage {
   text: string
   /** Clock label for placeholder display, e.g. "9:41 AM". */
   time: string
+  /** ISO timestamp when loaded from the server. */
+  createdAt?: string
+  /** Read receipt for sent messages (direct messages only). */
+  readReceipt?: "sent" | "delivered" | "read"
   /** Display name for room messages from other members. */
   author?: string
 }
@@ -554,17 +562,45 @@ export function isPersonOnline(person: Person): boolean {
 /** People that can be searched and messaged from the "New message" drawer. */
 export const messageablePeople: Person[] = people
 
-/** Builds a fresh, empty Direct conversation from a person. */
-export function personToConversation(person: Person): DirectConversation {
+/** A member surfaced in the "New message" people picker. */
+export type MessageableMember = {
+  id: string
+  name: string
+  role: string
+  homeBase: string
+  avatar?: string
+  online: boolean
+}
+
+/** Builds a fresh, empty Direct conversation from a messageable member. */
+export function memberToConversation(member: MessageableMember): DirectConversation {
   return {
-    id: `person-${person.id}`,
-    name: person.name,
-    role: person.role,
+    id: `person-${member.id}`,
+    name: member.name,
+    role: member.role,
     preview: "New conversation",
     time: "Now",
     unread: false,
-    online: isPersonOnline(person),
-    avatar: person.avatar,
+    online: member.online,
+    avatar: member.avatar,
+    otherProfileId: member.id,
     isNew: true,
   }
+}
+
+/** @deprecated Use memberToConversation — kept for mock People profiles. */
+export function personToConversation(person: Person): DirectConversation {
+  return memberToConversation({
+    id: person.id,
+    name: person.name,
+    role: person.role,
+    homeBase: person.homeBase,
+    avatar: person.avatar,
+    online: isPersonOnline(person),
+  })
+}
+
+/** Resolves a person from mock people data by id. */
+export function getPersonById(personId: string): Person | undefined {
+  return people.find((p) => p.id === personId)
 }

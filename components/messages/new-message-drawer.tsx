@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 
-import { messageablePeople, isPersonOnline } from "@/lib/messages-data"
-import { type Person, initials } from "@/lib/people-data"
+import { searchMessageableUsers } from "@/lib/messages/actions"
+import { type MessageableMember } from "@/lib/messages-data"
+import { initials } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,39 +18,57 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 
+function memberSubtitle(member: MessageableMember) {
+  if (member.homeBase) {
+    return `${member.role} · ${member.homeBase}`
+  }
+  return member.role
+}
+
 export function NewMessageDrawer({
   open,
   onOpenChange,
-  onSelectPerson,
+  onSelectMember,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSelectPerson: (person: Person) => void
+  onSelectMember: (member: MessageableMember) => void
 }) {
   const [query, setQuery] = useState("")
-  const q = query.trim().toLowerCase()
+  const [members, setMembers] = useState<MessageableMember[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const results = useMemo(() => {
-    if (!q) return messageablePeople
-    return messageablePeople.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.role.toLowerCase().includes(q) ||
-        p.homeBase.toLowerCase().includes(q),
-    )
-  }, [q])
+  useEffect(() => {
+    if (!open) return
 
-  // Sort online members to the top so available people are easy to find.
-  const sorted = useMemo(
-    () =>
-      [...results].sort(
-        (a, b) => Number(isPersonOnline(b)) - Number(isPersonOnline(a)),
-      ),
-    [results],
-  )
+    let cancelled = false
+    const timeout = window.setTimeout(() => {
+      setLoading(true)
+      setError(null)
 
-  function handleSelect(person: Person) {
-    onSelectPerson(person)
+      void searchMessageableUsers(query).then((result) => {
+        if (cancelled) return
+
+        if (result.ok) {
+          setMembers(result.users)
+          setError(null)
+        } else {
+          setMembers([])
+          setError(result.error)
+        }
+        setLoading(false)
+      })
+    }, query ? 250 : 0)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+    }
+  }, [open, query])
+
+  function handleSelect(member: MessageableMember) {
+    onSelectMember(member)
     onOpenChange(false)
     setQuery("")
   }
@@ -87,66 +106,75 @@ export function NewMessageDrawer({
         </SheetHeader>
 
         <ScrollArea className="min-h-0 flex-1">
-          {sorted.length > 0 ? (
+          {loading ? (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+              Loading members…
+            </p>
+          ) : error ? (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+              {error}
+            </p>
+          ) : members.length > 0 ? (
             <ul className="flex flex-col">
-              {sorted.map((person) => {
-                const online = isPersonOnline(person)
-                return (
-                  <li key={person.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(person)}
-                      className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60"
-                    >
-                      <div className="relative shrink-0">
-                        <Avatar className="size-10">
-                          <AvatarImage src={person.avatar || undefined} alt="" />
-                          <AvatarFallback>
-                            {initials(person.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {online ? (
-                          <span
-                            aria-hidden="true"
-                            className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
-                          />
-                        ) : null}
-                      </div>
-
-                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {person.name}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {person.role} · {person.homeBase}
-                        </p>
-                      </div>
-
-                      <span
-                        className={cn(
-                          "flex shrink-0 items-center gap-1.5 text-xs",
-                          online
-                            ? "text-primary"
-                            : "text-muted-foreground/80",
-                        )}
-                      >
+              {members.map((member) => (
+                <li key={member.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(member)}
+                    className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60"
+                  >
+                    <div className="relative shrink-0">
+                      <Avatar className="size-10">
+                        <AvatarImage src={member.avatar || undefined} alt="" />
+                        <AvatarFallback>
+                          {initials(member.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      {member.online ? (
                         <span
                           aria-hidden="true"
-                          className={cn(
-                            "size-1.5 rounded-full",
-                            online ? "bg-primary" : "bg-muted-foreground/40",
-                          )}
+                          className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
                         />
-                        {online ? "Online" : "Offline"}
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
+                      ) : null}
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {member.name}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {memberSubtitle(member)}
+                      </p>
+                    </div>
+
+                    <span
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 text-xs",
+                        member.online
+                          ? "text-primary"
+                          : "text-muted-foreground/80",
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          member.online
+                            ? "bg-primary"
+                            : "bg-muted-foreground/40",
+                        )}
+                      />
+                      {member.online ? "Online" : "Offline"}
+                    </span>
+                  </button>
+                </li>
+              ))}
             </ul>
           ) : (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-              No people match “{query}”.
+              {query.trim()
+                ? `No people match “${query}”.`
+                : "No members found on AWN yet."}
             </p>
           )}
         </ScrollArea>

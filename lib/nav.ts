@@ -25,6 +25,8 @@ export type NavItem = {
   description: string
   icon: LucideIcon
   badge?: string
+  /** When set, sidebar reads a live count from the matching provider. */
+  liveBadge?: "messages"
   live?: boolean
 }
 
@@ -57,7 +59,7 @@ export const mainNav: NavItem[] = [
     href: "/messages",
     description: "Direct messages and private 1:1 conversations.",
     icon: MessagesSquare,
-    badge: "4",
+    liveBadge: "messages",
   },
   {
     title: "Rooms",

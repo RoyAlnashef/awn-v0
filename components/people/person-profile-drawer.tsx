@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   BadgeCheck,
   CalendarClock,
@@ -58,12 +59,18 @@ export function PersonProfileDrawer({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const router = useRouter()
   const profile = getPersonProfile(person)
   const availability = availabilityConfig[person.availability]
   const [connected, setConnected] = useState(person.connected)
   // Focus the hero on open so the panel starts scrolled to the top rather than
   // jumping to the first focusable control deeper in the content.
   const heroRef = useRef<HTMLDivElement>(null)
+
+  function handleMessage() {
+    onOpenChange(false)
+    router.push(`/messages?person=${person.id}`)
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -254,7 +261,7 @@ export function PersonProfileDrawer({
         {/* Footer actions */}
         <div className="flex shrink-0 flex-col gap-2 border-t p-4">
           <div className="flex items-center gap-2">
-            <Button className="flex-1">
+            <Button className="flex-1" onClick={handleMessage}>
               <MessageSquare />
               Message
             </Button>

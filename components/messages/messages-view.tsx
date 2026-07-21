@@ -1,10 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { MessagesSquare, SquarePen } from "lucide-react"
 
-import { type DirectConversation } from "@/lib/messages-data"
-import { type Person } from "@/lib/people-data"
+import { parsePersonConversationId } from "@/lib/messages/format"
+import {
+  getPersonById,
+  type DirectConversation,
+  type MessageableMember,
+} from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,31 +28,76 @@ export function MessagesView({
   title,
   description,
   initialConversationId,
+  initialPersonId,
+  initialDraft,
 }: {
   title: string
   description?: string
   initialConversationId?: string
+  initialPersonId?: string
+  initialDraft?: string
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const {
     conversations,
     markConversationRead,
     getConversation,
-    startConversation,
+    ensureConversation,
   } = useMessages()
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
+  const [composerDraft, setComposerDraft] = useState(initialDraft ?? "")
+  const [startError, setStartError] = useState<string | null>(null)
+  const resolvingPerson = useRef<string | null>(null)
 
-  function selectConversation(conversation: DirectConversation) {
-    if (conversation.unread) {
-      markConversationRead(conversation.id)
-    }
+  const replaceSearchParams = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString())
+      mutate(params)
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams],
+  )
 
-    setActive(getConversation(conversation.id) ?? conversation)
-  }
+  const selectConversation = useCallback(
+    (conversation: DirectConversation) => {
+      if (conversation.unread) {
+        markConversationRead(conversation.id)
+      }
 
-  function handleStartConversation(person: Person) {
-    const conversation = startConversation(person)
-    setActive(conversation)
+      setActive(getConversation(conversation.id) ?? conversation)
+
+      replaceSearchParams((params) => {
+        params.set("conversation", conversation.id)
+        params.delete("person")
+        params.delete("draft")
+      })
+    },
+    [getConversation, markConversationRead, replaceSearchParams],
+  )
+
+  const clearActiveConversation = useCallback(() => {
+    setActive(null)
+    setComposerDraft("")
+    replaceSearchParams((params) => {
+      params.delete("conversation")
+      params.delete("person")
+      params.delete("draft")
+    })
+  }, [replaceSearchParams])
+
+  function handleStartConversation(member: MessageableMember) {
+    setStartError(null)
+    void ensureConversation(member).then((result) => {
+      if (result.ok) {
+        selectConversation(result.conversation)
+        return
+      }
+      setStartError(result.error)
+    })
   }
 
   useEffect(() => {
@@ -56,14 +106,61 @@ export function MessagesView({
     const conversation = conversations.find(
       (c) => c.id === initialConversationId,
     )
-    if (!conversation) return
-
-    if (conversation.unread) {
-      markConversationRead(initialConversationId)
+    if (conversation) {
+      if (conversation.unread) {
+        markConversationRead(initialConversationId)
+      }
+      setActive(conversation)
+      return
     }
 
-    setActive(conversation)
-  }, [initialConversationId, conversations, markConversationRead])
+    const profileId = parsePersonConversationId(initialConversationId)
+    if (!profileId) return
+
+    void ensureConversation({
+      id: profileId,
+      name: "Member",
+      role: "AWN Member",
+      homeBase: "",
+      online: false,
+    }).then((result) => {
+      if (result.ok) selectConversation(result.conversation)
+    })
+  }, [
+    initialConversationId,
+    conversations,
+    markConversationRead,
+    ensureConversation,
+    selectConversation,
+  ])
+
+  useEffect(() => {
+    if (!initialPersonId) return
+    if (resolvingPerson.current === initialPersonId) return
+
+    resolvingPerson.current = initialPersonId
+
+    void (async () => {
+      const mockPerson = getPersonById(initialPersonId)
+      const member: MessageableMember = mockPerson
+        ? {
+            id: mockPerson.id,
+            name: mockPerson.name,
+            role: mockPerson.role,
+            homeBase: mockPerson.homeBase,
+            avatar: mockPerson.avatar,
+            online: mockPerson.availability === "Available Now",
+          }
+        : { id: initialPersonId, name: "Member", role: "AWN Member", homeBase: "", online: false }
+
+      const conversation = await ensureConversation(member)
+      if (conversation.ok) {
+        selectConversation(conversation.conversation)
+      } else {
+        setStartError(conversation.error)
+      }
+    })()
+  }, [initialPersonId, ensureConversation, selectConversation])
 
   const activeConversation = active
     ? (getConversation(active.id) ?? active)
@@ -71,7 +168,6 @@ export function MessagesView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {/* Title bar with the "New" action aligned to the right. */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -89,13 +185,14 @@ export function MessagesView({
         </Button>
       </div>
 
+      {startError ? (
+        <p className="text-sm text-destructive">{startError}</p>
+      ) : null}
+
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-        {/* Left column — inbox navigation, sits on the app background as part
-            of the inner page shell (no surrounding panel). */}
         <div
           className={cn(
             "flex w-full min-h-0 flex-col md:w-80 lg:w-96",
-            // On mobile, hide the list once a conversation is open.
             activeConversation && "hidden md:flex",
           )}
         >
@@ -106,7 +203,6 @@ export function MessagesView({
           />
         </div>
 
-        {/* Right column — thread or empty state, contained in a card-like panel. */}
         <div
           className={cn(
             "min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
@@ -117,7 +213,9 @@ export function MessagesView({
             <MessageThread
               key={activeConversation.id}
               conversation={activeConversation}
-              onBack={() => setActive(null)}
+              initialDraft={composerDraft}
+              onDraftConsumed={() => setComposerDraft("")}
+              onBack={clearActiveConversation}
             />
           ) : (
             <Empty className="flex-1 border-none">
@@ -143,7 +241,7 @@ export function MessagesView({
       <NewMessageDrawer
         open={newOpen}
         onOpenChange={setNewOpen}
-        onSelectPerson={handleStartConversation}
+        onSelectMember={handleStartConversation}
       />
     </div>
   )

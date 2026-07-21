@@ -10,21 +10,39 @@ import {
 } from "react"
 
 import {
+  getOrCreateConversation,
+  markConversationRead as markConversationReadAction,
+} from "@/lib/messages/actions"
+import { isPersistedConversation, isUuid } from "@/lib/messages/format"
+import {
   directConversationUnreadCount,
-  directConversations as initialConversations,
-  personToConversation,
+  directConversations as fallbackConversations,
+  memberToConversation,
   sortConversationsForInbox,
   type DirectConversation,
+  type MessageableMember,
 } from "@/lib/messages-data"
-import { type Person } from "@/lib/people-data"
+
+export type MessagesCurrentUser = {
+  id: string
+  name: string
+  avatarUrl?: string
+}
+
+type EnsureConversationResult =
+  | { ok: true; conversation: DirectConversation }
+  | { ok: false; error: string }
 
 type MessagesContextValue = {
   conversations: DirectConversation[]
   unreadCount: number
+  currentUser: MessagesCurrentUser
   markConversationRead: (id: string) => void
   getConversation: (id: string) => DirectConversation | undefined
-  startConversation: (person: Person) => DirectConversation
+  startConversation: (member: MessageableMember) => DirectConversation
+  ensureConversation: (member: MessageableMember) => Promise<EnsureConversationResult>
   bumpConversation: (id: string, messageText: string) => void
+  upsertConversation: (conversation: DirectConversation) => void
 }
 
 const MessagesContext = createContext<MessagesContextValue | null>(null)
@@ -33,11 +51,21 @@ function touchActivityOrder(order: string[], id: string) {
   return [id, ...order.filter((conversationId) => conversationId !== id)]
 }
 
-export function MessagesProvider({ children }: { children: ReactNode }) {
+export function MessagesProvider({
+  children,
+  initialConversations,
+  currentUser,
+}: {
+  children: ReactNode
+  initialConversations?: DirectConversation[]
+  currentUser: MessagesCurrentUser
+}) {
+  const seed = initialConversations ?? fallbackConversations
+
   const [conversationList, setConversationList] =
-    useState<DirectConversation[]>(initialConversations)
+    useState<DirectConversation[]>(seed)
   const [activityOrder, setActivityOrder] = useState<string[]>(() =>
-    initialConversations.map((c) => c.id),
+    seed.map((c) => c.id),
   )
 
   const conversations = useMemo(
@@ -47,10 +75,39 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
 
   const unreadCount = directConversationUnreadCount(conversationList)
 
+  const upsertConversation = useCallback((conversation: DirectConversation) => {
+    setConversationList((prev) => {
+      const withoutLocalStub = conversation.otherProfileId
+        ? prev.filter(
+            (c) =>
+              !(
+                c.id !== conversation.id &&
+                c.otherProfileId === conversation.otherProfileId &&
+                !isPersistedConversation(c)
+              ),
+          )
+        : prev
+
+      const existingIndex = withoutLocalStub.findIndex(
+        (c) => c.id === conversation.id,
+      )
+      if (existingIndex === -1) return [conversation, ...withoutLocalStub]
+
+      const next = [...withoutLocalStub]
+      next[existingIndex] = { ...next[existingIndex], ...conversation }
+      return next
+    })
+    setActivityOrder((prev) => touchActivityOrder(prev, conversation.id))
+  }, [])
+
   const markConversationRead = useCallback((id: string) => {
     setConversationList((prev) =>
       prev.map((c) => (c.id === id && c.unread ? { ...c, unread: false } : c)),
     )
+
+    if (isUuid(id)) {
+      void markConversationReadAction(id)
+    }
   }, [])
 
   const getConversation = useCallback(
@@ -58,17 +115,22 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     [conversationList],
   )
 
-  const startConversation = useCallback((person: Person) => {
+  const startConversation = useCallback((member: MessageableMember) => {
     let conversation!: DirectConversation
 
     setConversationList((prev) => {
-      const existing = prev.find((c) => c.name === person.name)
+      const existing = prev.find(
+        (c) =>
+          c.otherProfileId === member.id ||
+          c.name === member.name ||
+          c.id === `person-${member.id}`,
+      )
       if (existing) {
         conversation = existing
         return prev
       }
 
-      conversation = personToConversation(person)
+      conversation = memberToConversation(member)
       return [conversation, ...prev]
     })
 
@@ -76,11 +138,42 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     return conversation
   }, [])
 
+  const ensureConversation = useCallback(
+    async (member: MessageableMember): Promise<EnsureConversationResult> => {
+      const existing = conversationList.find(
+        (c) =>
+          c.otherProfileId === member.id ||
+          c.name === member.name ||
+          c.id === `person-${member.id}`,
+      )
+      if (existing && isPersistedConversation(existing)) {
+        return { ok: true, conversation: existing }
+      }
+
+      if (isUuid(member.id)) {
+        const result = await getOrCreateConversation(member.id)
+        if (result.ok) {
+          upsertConversation(result.conversation)
+          return { ok: true, conversation: result.conversation }
+        }
+        return { ok: false, error: result.error }
+      }
+
+      return { ok: true, conversation: startConversation(member) }
+    },
+    [conversationList, startConversation, upsertConversation],
+  )
+
   const bumpConversation = useCallback((id: string, messageText: string) => {
     setConversationList((prev) =>
       prev.map((c) =>
         c.id === id
-          ? { ...c, preview: `You: ${messageText}`, time: "Now" }
+          ? {
+              ...c,
+              preview: `You: ${messageText}`,
+              time: "Now",
+              isNew: false,
+            }
           : c,
       ),
     )
@@ -92,10 +185,13 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       value={{
         conversations,
         unreadCount,
+        currentUser,
         markConversationRead,
         getConversation,
         startConversation,
+        ensureConversation,
         bumpConversation,
+        upsertConversation,
       }}
     >
       {children}

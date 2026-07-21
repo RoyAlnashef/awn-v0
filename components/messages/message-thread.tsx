@@ -1,14 +1,22 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, Phone, Send, Video } from "lucide-react"
+import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
 
+import { createClient } from "@/lib/supabase/client"
+import { formatMessageTime, isPersistedConversation, isUuid } from "@/lib/messages/format"
 import {
-  currentUser,
+  getConversationThread,
+  getOrCreateConversation,
+  markConversationRead,
+  sendMessage as sendMessageAction,
+} from "@/lib/messages/actions"
+import {
   getThread,
   type DirectConversation,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -46,27 +54,247 @@ function initials(name: string) {
     .join("")
 }
 
+function ReadReceipt({
+  status,
+}: {
+  status: NonNullable<ThreadMessage["readReceipt"]>
+}) {
+  if (status === "read") {
+    return (
+      <CheckCheck
+        className="size-3 text-primary"
+        aria-label="Read"
+      />
+    )
+  }
+
+  if (status === "delivered") {
+    return (
+      <CheckCheck
+        className="size-3 text-muted-foreground/70"
+        aria-label="Delivered"
+      />
+    )
+  }
+
+  return (
+    <Check className="size-3 text-muted-foreground/70" aria-label="Sent" />
+  )
+}
+
+function deriveReadReceipt(
+  message: ThreadMessage,
+  otherLastReadAt: string | null,
+): ThreadMessage["readReceipt"] | undefined {
+  if (message.from !== "me") return undefined
+  if (message.readReceipt) return message.readReceipt
+  if (!message.createdAt) return "sent"
+  if (
+    otherLastReadAt &&
+    new Date(otherLastReadAt) >= new Date(message.createdAt)
+  ) {
+    return "read"
+  }
+  return "delivered"
+}
+
 export function MessageThread({
   conversation,
+  initialDraft,
+  onDraftConsumed,
   onBack,
 }: {
   conversation: DirectConversation
+  initialDraft?: string
+  onDraftConsumed?: () => void
   onBack?: () => void
 }) {
-  const { bumpConversation } = useMessages()
-  const baseThread = useMemo(() => getThread(conversation), [conversation])
+  const { bumpConversation, currentUser, markConversationRead: markRead } =
+    useMessages()
+  const [persistedConversationId, setPersistedConversationId] = useState<
+    string | null
+  >(isUuid(conversation.id) ? conversation.id : null)
+  const isPersisted = Boolean(persistedConversationId)
+  const baseThread = useMemo(
+    () => (isPersisted ? [] : getThread(conversation)),
+    [conversation, isPersisted],
+  )
   const [messages, setMessages] = useState<ThreadMessage[]>(baseThread)
-  const [draft, setDraft] = useState("")
+  const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null)
+  const [draft, setDraft] = useState(initialDraft ?? "")
+  const [loading, setLoading] = useState(isPersisted)
+  const [sending, setSending] = useState(false)
 
-  // Reset the transcript whenever a different conversation is opened.
   useEffect(() => {
-    setMessages(baseThread)
-    setDraft("")
-  }, [baseThread])
+    if (!initialDraft) return
+    setDraft(initialDraft)
+    onDraftConsumed?.()
+  }, [initialDraft, onDraftConsumed])
 
-  function sendMessage() {
+  useEffect(() => {
+    if (isUuid(conversation.id)) {
+      setPersistedConversationId(conversation.id)
+      return
+    }
+
+    if (!isPersistedConversation(conversation) || !conversation.otherProfileId) {
+      setPersistedConversationId(null)
+      return
+    }
+
+    let cancelled = false
+
+    void getOrCreateConversation(conversation.otherProfileId).then((result) => {
+      if (cancelled || !result.ok) return
+      setPersistedConversationId(result.conversationId)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [conversation])
+
+  useEffect(() => {
+    if (!isPersisted || !persistedConversationId) {
+      setMessages(getThread(conversation))
+      setOtherLastReadAt(null)
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+
+    void (async () => {
+      markRead(persistedConversationId)
+
+      const result = await getConversationThread(persistedConversationId)
+      if (cancelled) return
+
+      if (result.ok) {
+        setMessages(result.messages)
+        setOtherLastReadAt(result.otherLastReadAt)
+      } else {
+        setMessages([])
+      }
+      setLoading(false)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [conversation, isPersisted, markRead, persistedConversationId])
+
+  useEffect(() => {
+    if (!isPersisted || !persistedConversationId) return
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`dm-messages:${persistedConversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "dm_messages",
+          filter: `conversation_id=eq.${persistedConversationId}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            id: string
+            sender_id: string
+            body: string
+            created_at: string
+          }
+
+          setMessages((prev) => {
+            if (prev.some((message) => message.id === row.id)) return prev
+
+            const incoming: ThreadMessage = {
+              id: row.id,
+              from: row.sender_id === currentUser.id ? "me" : "them",
+              text: row.body,
+              time: formatMessageTime(row.created_at),
+              createdAt: row.created_at,
+              readReceipt:
+                row.sender_id === currentUser.id ? "delivered" : undefined,
+            }
+
+            if (incoming.from === "them") {
+              bumpConversation(persistedConversationId, row.body)
+              markRead(persistedConversationId)
+            }
+
+            return [...prev, incoming]
+          })
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "dm_participants",
+          filter: `conversation_id=eq.${persistedConversationId}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            profile_id: string
+            last_read_at: string | null
+          }
+          if (row.profile_id === currentUser.id) return
+          setOtherLastReadAt(row.last_read_at)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [
+    bumpConversation,
+    currentUser.id,
+    isPersisted,
+    markRead,
+    persistedConversationId,
+  ])
+
+  async function sendMessage() {
     const text = draft.trim()
-    if (!text) return
+    if (!text || sending) return
+
+    if (isPersisted && persistedConversationId) {
+      const optimisticId = `optimistic-${Date.now()}`
+      const optimisticMessage: ThreadMessage = {
+        id: optimisticId,
+        from: "me",
+        text,
+        time: "Now",
+        readReceipt: "sent",
+      }
+
+      setMessages((prev) => [...prev, optimisticMessage])
+      bumpConversation(persistedConversationId, text)
+      setDraft("")
+      setSending(true)
+
+      const result = await sendMessageAction(persistedConversationId, text)
+      setSending(false)
+
+      if (!result.ok) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+        setDraft(text)
+        return
+      }
+
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === optimisticId ? result.message : message,
+        ),
+      )
+      return
+    }
+
     setMessages((prev) => [
       ...prev,
       {
@@ -74,6 +302,7 @@ export function MessageThread({
         from: "me",
         text,
         time: "Now",
+        readReceipt: "delivered",
       },
     ])
     bumpConversation(conversation.id, text)
@@ -82,7 +311,6 @@ export function MessageThread({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Thread header */}
       <header className="flex shrink-0 items-center gap-3 border-b p-3">
         {onBack ? (
           <Button
@@ -125,63 +353,81 @@ export function MessageThread({
         </div>
       </header>
 
-      {/* Transcript */}
       <MessageScrollerProvider autoScroll>
         <MessageScroller className="flex-1">
           <MessageScrollerViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
-              <MessageScrollerItem messageId="start">
-                <Marker variant="separator">
-                  <MarkerContent>Today</MarkerContent>
-                </Marker>
-              </MessageScrollerItem>
-
-              {messages.map((message) => {
-                const mine = message.from === "me"
-                return (
-                  <MessageScrollerItem
-                    key={message.id}
-                    messageId={message.id}
-                    scrollAnchor={mine}
-                  >
-                    <Message align={mine ? "end" : "start"}>
-                      <MessageAvatar>
-                        <Avatar className="size-8">
-                          <AvatarImage
-                            src={
-                              mine
-                                ? currentUser.avatar
-                                : conversation.avatar || undefined
-                            }
-                            alt=""
-                          />
-                          <AvatarFallback>
-                            {initials(
-                              mine ? currentUser.name : conversation.name,
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                      </MessageAvatar>
-                      <MessageContent>
-                        <Bubble
-                          variant={mine ? "default" : "muted"}
-                          align={mine ? "end" : "start"}
-                        >
-                          <BubbleContent>{message.text}</BubbleContent>
-                        </Bubble>
-                        <MessageFooter>{message.time}</MessageFooter>
-                      </MessageContent>
-                    </Message>
+              {loading ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Loading messages…
+                </p>
+              ) : (
+                <>
+                  <MessageScrollerItem messageId="start">
+                    <Marker variant="separator">
+                      <MarkerContent>Today</MarkerContent>
+                    </Marker>
                   </MessageScrollerItem>
-                )
-              })}
+
+                  {messages.map((message) => {
+                    const mine = message.from === "me"
+                    const readReceipt = deriveReadReceipt(
+                      message,
+                      otherLastReadAt,
+                    )
+
+                    return (
+                      <MessageScrollerItem
+                        key={message.id}
+                        messageId={message.id}
+                        scrollAnchor={mine}
+                      >
+                        <Message align={mine ? "end" : "start"}>
+                          <MessageAvatar>
+                            <Avatar className="size-8">
+                              <AvatarImage
+                                src={
+                                  mine
+                                    ? currentUser.avatarUrl
+                                    : conversation.avatar || undefined
+                                }
+                                alt=""
+                              />
+                              <AvatarFallback>
+                                {initials(
+                                  mine ? currentUser.name : conversation.name,
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                          </MessageAvatar>
+                          <MessageContent>
+                            <Bubble
+                              variant={mine ? "default" : "muted"}
+                              align={mine ? "end" : "start"}
+                            >
+                              <BubbleContent>{message.text}</BubbleContent>
+                            </Bubble>
+                            <MessageFooter
+                              className={cn(mine && "justify-end gap-1")}
+                            >
+                              <span>{message.time}</span>
+                              {mine && readReceipt ? (
+                                <ReadReceipt status={readReceipt} />
+                              ) : null}
+                            </MessageFooter>
+                          </MessageContent>
+                        </Message>
+                      </MessageScrollerItem>
+                    )
+                  })}
+                </>
+              )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
         </MessageScroller>
       </MessageScrollerProvider>
 
-      {/* Composer */}
       <div className="shrink-0 border-t p-3">
         <InputGroup>
           <InputGroupTextarea
@@ -197,7 +443,7 @@ export function MessageThread({
                 e.keyCode !== 229
               ) {
                 e.preventDefault()
-                sendMessage()
+                void sendMessage()
               }
             }}
           />
@@ -206,8 +452,8 @@ export function MessageThread({
               variant="default"
               size="icon-sm"
               aria-label="Send message"
-              disabled={!draft.trim()}
-              onClick={sendMessage}
+              disabled={!draft.trim() || sending}
+              onClick={() => void sendMessage()}
             >
               <Send />
             </InputGroupButton>

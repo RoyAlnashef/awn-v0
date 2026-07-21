@@ -18,10 +18,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { AvailabilityCard } from "@/components/availability-card"
+import { useMessages } from "@/components/messages/messages-provider"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const { unreadCount: messagesUnreadCount } = useMessages()
 
   const isActive = (item: NavItem) =>
     pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -69,7 +71,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                       </span>
                     ) : null}
                   </SidebarMenuButton>
-                  {item.badge ? (
+                  {item.liveBadge === "messages" && messagesUnreadCount > 0 ? (
+                    <SidebarMenuBadge>{messagesUnreadCount}</SidebarMenuBadge>
+                  ) : item.badge ? (
                     <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
                   ) : null}
                 </SidebarMenuItem>
