@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { AvailabilityCard } from "@/components/availability-card"
-import { useMessages } from "@/components/messages/messages-provider"
+import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
 
 export function AppSidebar({
@@ -26,7 +26,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { showAdminNav: boolean }) {
   const pathname = usePathname()
-  const { unreadCount: messagesUnreadCount } = useMessages()
+  const { unreadCount: messagesUnreadCount } = useUnreadCount()
 
   const isActive = (item: NavItem) =>
     pathname === item.href || pathname.startsWith(`${item.href}/`)

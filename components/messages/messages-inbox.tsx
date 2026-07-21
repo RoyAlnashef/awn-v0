@@ -7,6 +7,8 @@ import {
   directConversations,
   type DirectConversation,
 } from "@/lib/messages-data"
+import { isPersistedConversation } from "@/lib/messages/format"
+import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -24,11 +26,13 @@ export function MessagesInbox({
   activeId,
   conversations = directConversations,
   onSelectConversation,
+  onPrefetchConversation,
   className,
 }: {
   activeId?: string
   conversations?: DirectConversation[]
   onSelectConversation?: (conversation: DirectConversation) => void
+  onPrefetchConversation?: (conversationId: string) => void
   className?: string
 }) {
   const [query, setQuery] = useState("")
@@ -70,6 +74,16 @@ export function MessagesInbox({
                   <button
                     type="button"
                     onClick={() => onSelectConversation?.(c)}
+                    onMouseEnter={() => {
+                      if (isPersistedConversation(c)) {
+                        onPrefetchConversation?.(c.id)
+                      }
+                    }}
+                    onFocus={() => {
+                      if (isPersistedConversation(c)) {
+                        onPrefetchConversation?.(c.id)
+                      }
+                    }}
                     aria-current={active ? "true" : undefined}
                     className={cn(
                       "relative flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60",

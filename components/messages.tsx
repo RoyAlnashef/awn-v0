@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { MessagesSquare } from "lucide-react"
 
 import { type DirectConversation } from "@/lib/messages-data"
+import { useInbox } from "@/lib/messages/hooks/use-inbox"
+import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -15,11 +17,14 @@ import {
 } from "@/components/ui/sheet"
 import { MessagesInbox } from "@/components/messages/messages-inbox"
 import { useMessages } from "@/components/messages/messages-provider"
+import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 
 export function Messages() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const { conversations, unreadCount, markConversationRead } = useMessages()
+  const { conversations, markConversationRead } = useMessages()
+  const { unreadCount } = useUnreadCount()
+  useInbox({ enabled: open })
 
   function navigateToConversation(conversationId: string) {
     setOpen(false)
@@ -75,6 +80,7 @@ export function Messages() {
           <MessagesInbox
             conversations={conversations}
             onSelectConversation={handleSelectConversation}
+            onPrefetchConversation={prefetchThread}
           />
         </SheetContent>
       ) : null}

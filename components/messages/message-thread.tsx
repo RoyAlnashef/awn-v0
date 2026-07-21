@@ -2,15 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
+import { mutate as mutateSwr } from "swr"
 
 import { createClient } from "@/lib/supabase/client"
-import { formatMessageTime, isPersistedConversation, isUuid } from "@/lib/messages/format"
 import {
-  getConversationThread,
+  formatMessageTime,
+  isPersistedConversation,
+  isUuid,
+} from "@/lib/messages/format"
+import {
   getOrCreateConversation,
-  markConversationRead,
   sendMessage as sendMessageAction,
 } from "@/lib/messages/actions"
+import { useThread } from "@/lib/messages/hooks/use-thread"
+import { inboxKey, unreadCountKey } from "@/lib/messages/swr-keys"
+import type { ThreadCache } from "@/lib/messages/thread-cache"
 import {
   getThread,
   type DirectConversation,
@@ -119,11 +125,21 @@ export function MessageThread({
     () => (isPersisted ? [] : getThread(conversation)),
     [conversation, isPersisted],
   )
-  const [messages, setMessages] = useState<ThreadMessage[]>(baseThread)
-  const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null)
+  const [localMessages, setLocalMessages] = useState<ThreadMessage[]>(baseThread)
   const [draft, setDraft] = useState(initialDraft ?? "")
-  const [loading, setLoading] = useState(isPersisted)
   const [sending, setSending] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+
+  const {
+    messages: cachedMessages,
+    otherLastReadAt,
+    hasMore,
+    isLoading,
+    loadOlder,
+    mutate,
+  } = useThread(persistedConversationId)
+
+  const messages = isPersisted ? cachedMessages : localMessages
 
   useEffect(() => {
     if (!initialDraft) return
@@ -156,33 +172,11 @@ export function MessageThread({
 
   useEffect(() => {
     if (!isPersisted || !persistedConversationId) {
-      setMessages(getThread(conversation))
-      setOtherLastReadAt(null)
-      setLoading(false)
+      setLocalMessages(getThread(conversation))
       return
     }
 
-    let cancelled = false
-    setLoading(true)
-
-    void (async () => {
-      markRead(persistedConversationId)
-
-      const result = await getConversationThread(persistedConversationId)
-      if (cancelled) return
-
-      if (result.ok) {
-        setMessages(result.messages)
-        setOtherLastReadAt(result.otherLastReadAt)
-      } else {
-        setMessages([])
-      }
-      setLoading(false)
-    })()
-
-    return () => {
-      cancelled = true
-    }
+    markRead(persistedConversationId)
   }, [conversation, isPersisted, markRead, persistedConversationId])
 
   useEffect(() => {
@@ -207,26 +201,37 @@ export function MessageThread({
             created_at: string
           }
 
-          setMessages((prev) => {
-            if (prev.some((message) => message.id === row.id)) return prev
+          void mutate(
+            (current) => {
+              if (!current) return current
+              if (current.messages.some((message) => message.id === row.id)) {
+                return current
+              }
 
-            const incoming: ThreadMessage = {
-              id: row.id,
-              from: row.sender_id === currentUser.id ? "me" : "them",
-              text: row.body,
-              time: formatMessageTime(row.created_at),
-              createdAt: row.created_at,
-              readReceipt:
-                row.sender_id === currentUser.id ? "delivered" : undefined,
-            }
+              const incoming: ThreadMessage = {
+                id: row.id,
+                from: row.sender_id === currentUser.id ? "me" : "them",
+                text: row.body,
+                time: formatMessageTime(row.created_at),
+                createdAt: row.created_at,
+                readReceipt:
+                  row.sender_id === currentUser.id ? "delivered" : undefined,
+              }
 
-            if (incoming.from === "them") {
-              bumpConversation(persistedConversationId, row.body)
-              markRead(persistedConversationId)
-            }
+              return {
+                ...current,
+                messages: [...current.messages, incoming],
+              }
+            },
+            { revalidate: false },
+          )
 
-            return [...prev, incoming]
-          })
+          if (row.sender_id !== currentUser.id) {
+            bumpConversation(persistedConversationId, row.body)
+            markRead(persistedConversationId)
+            void mutateSwr(unreadCountKey)
+            void mutateSwr(inboxKey)
+          }
         },
       )
       .on(
@@ -243,7 +248,14 @@ export function MessageThread({
             last_read_at: string | null
           }
           if (row.profile_id === currentUser.id) return
-          setOtherLastReadAt(row.last_read_at)
+
+          void mutate(
+            (current) =>
+              current
+                ? { ...current, otherLastReadAt: row.last_read_at }
+                : current,
+            { revalidate: false },
+          )
         },
       )
       .subscribe()
@@ -256,8 +268,19 @@ export function MessageThread({
     currentUser.id,
     isPersisted,
     markRead,
+    mutate,
     persistedConversationId,
   ])
+
+  async function handleLoadOlder() {
+    if (loadingOlder) return
+    setLoadingOlder(true)
+    try {
+      await loadOlder()
+    } finally {
+      setLoadingOlder(false)
+    }
+  }
 
   async function sendMessage() {
     const text = draft.trim()
@@ -273,7 +296,16 @@ export function MessageThread({
         readReceipt: "sent",
       }
 
-      setMessages((prev) => [...prev, optimisticMessage])
+      void mutate(
+        (current: ThreadCache | undefined) => ({
+          messages: [...(current?.messages ?? []), optimisticMessage],
+          otherLastReadAt: current?.otherLastReadAt ?? null,
+          hasMore: current?.hasMore ?? false,
+          oldestCursor: current?.oldestCursor ?? null,
+        }),
+        { revalidate: false },
+      )
+
       bumpConversation(persistedConversationId, text)
       setDraft("")
       setSending(true)
@@ -282,20 +314,40 @@ export function MessageThread({
       setSending(false)
 
       if (!result.ok) {
-        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+        void mutate(
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  messages: current.messages.filter(
+                    (m) => m.id !== optimisticId,
+                  ),
+                }
+              : current,
+          { revalidate: false },
+        )
         setDraft(text)
         return
       }
 
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.id === optimisticId ? result.message : message,
-        ),
+      void mutate(
+        (current) =>
+          current
+            ? {
+                ...current,
+                messages: current.messages.map((message) =>
+                  message.id === optimisticId ? result.message : message,
+                ),
+              }
+            : current,
+        { revalidate: false },
       )
+
+      void mutateSwr(inboxKey)
       return
     }
 
-    setMessages((prev) => [
+    setLocalMessages((prev) => [
       ...prev,
       {
         id: `${conversation.id}-local-${prev.length}`,
@@ -357,12 +409,27 @@ export function MessageThread({
         <MessageScroller className="flex-1">
           <MessageScrollerViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
-              {loading ? (
+              {isLoading ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   Loading messages…
                 </p>
               ) : (
                 <>
+                  {hasMore ? (
+                    <div className="flex justify-center pb-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={loadingOlder}
+                        onClick={() => void handleLoadOlder()}
+                      >
+                        {loadingOlder
+                          ? "Loading…"
+                          : "Load earlier messages"}
+                      </Button>
+                    </div>
+                  ) : null}
+
                   <MessageScrollerItem messageId="start">
                     <Marker variant="separator">
                       <MarkerContent>Today</MarkerContent>

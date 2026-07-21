@@ -24,8 +24,38 @@ export type ConversationThreadResult =
       ok: true
       messages: ThreadMessage[]
       otherLastReadAt: string | null
+      hasMore: boolean
     }
   | ActionError
+
+export type UnreadCountResult = { ok: true; count: number } | ActionError
+
+type InboxRow = {
+  conversation_id: string
+  other_profile_id: string
+  other_name: string
+  other_title: string
+  other_avatar_url: string | null
+  other_last_active_at: string | null
+  last_message_body: string | null
+  last_message_sender_id: string | null
+  last_message_at: string | null
+  my_last_read_at: string | null
+  conversation_updated_at: string
+}
+
+type ThreadRpcMessage = {
+  id: string
+  sender_id: string
+  body: string
+  created_at: string
+}
+
+type ThreadRpcResult = {
+  messages: ThreadRpcMessage[]
+  other_last_read_at: string | null
+  has_more: boolean
+}
 
 export type SendMessageResult =
   | { ok: true; message: ThreadMessage }
@@ -54,12 +84,6 @@ type MessageRow = {
   sender_id: string
   body: string
   created_at: string
-}
-
-type ParticipantRow = {
-  conversation_id: string
-  profile_id: string
-  last_read_at: string | null
 }
 
 function actionError(error: unknown): ActionError {
@@ -162,92 +186,82 @@ function profileToConversation(
   }
 }
 
+function inboxRowToConversation(
+  row: InboxRow,
+  currentUserId: string,
+): DirectConversation {
+  const online = profileIsOnline(row.other_last_active_at)
+  const preview = row.last_message_body
+    ? buildPreview(
+        row.last_message_body,
+        row.last_message_sender_id ?? currentUserId,
+        currentUserId,
+      )
+    : "New conversation"
+  const updatedAt =
+    row.last_message_at ?? row.conversation_updated_at
+  const unread = row.last_message_at
+    ? row.last_message_sender_id !== currentUserId &&
+      (!row.my_last_read_at ||
+        new Date(row.last_message_at) > new Date(row.my_last_read_at))
+    : false
+
+  return {
+    id: row.conversation_id,
+    name: row.other_name,
+    role: row.other_title,
+    preview,
+    time: formatRelativeTime(updatedAt),
+    unread,
+    online,
+    avatar: row.other_avatar_url ?? undefined,
+    otherProfileId: row.other_profile_id,
+    isPersisted: true,
+  }
+}
+
 export async function listConversations(): Promise<ListConversationsResult> {
   try {
     const userId = await requireUserId()
     const supabase = await createClient()
 
-    const { data: memberships, error: membershipError } = await supabase
-      .from("dm_participants")
-      .select("conversation_id, last_read_at")
-      .eq("profile_id", userId)
+    const { data, error } = await supabase.rpc("list_dm_inbox")
 
-    if (membershipError) {
-      if (membershipError.code === "42P01") {
+    if (error) {
+      if (error.code === "42883" || error.code === "PGRST202") {
+        return { ok: false, error: "DM performance migration not applied." }
+      }
+      if (error.code === "42P01") {
         return { ok: false, error: "DM tables not migrated." }
       }
-      return { ok: false, error: membershipError.message }
+      return { ok: false, error: error.message }
     }
 
-    if (!memberships?.length) {
-      return { ok: true, conversations: [] }
-    }
-
-    const conversationIds = memberships.map((m) => m.conversation_id)
-    const readMap = new Map(
-      memberships.map((m) => [m.conversation_id, m.last_read_at]),
+    const conversations = ((data ?? []) as InboxRow[]).map((row) =>
+      inboxRowToConversation(row, userId),
     )
 
-    const { data: conversations, error: conversationsError } = await supabase
-      .from("dm_conversations")
-      .select("id, updated_at")
-      .in("id", conversationIds)
-      .order("updated_at", { ascending: false })
+    return { ok: true, conversations }
+  } catch (error) {
+    return actionError(error)
+  }
+}
 
-    if (conversationsError) {
-      return { ok: false, error: conversationsError.message }
-    }
+export async function getUnreadCount(): Promise<UnreadCountResult> {
+  try {
+    await requireUserId()
+    const supabase = await createClient()
 
-    const { data: latestMessages, error: messagesError } = await supabase
-      .from("dm_messages")
-      .select("id, conversation_id, sender_id, body, created_at")
-      .in("conversation_id", conversationIds)
-      .order("created_at", { ascending: false })
+    const { data, error } = await supabase.rpc("get_dm_unread_count")
 
-    if (messagesError) {
-      return { ok: false, error: messagesError.message }
-    }
-
-    const latestByConversation = new Map<string, MessageRow>()
-    for (const row of latestMessages ?? []) {
-      if (!latestByConversation.has(row.conversation_id)) {
-        latestByConversation.set(row.conversation_id, row as MessageRow)
+    if (error) {
+      if (error.code === "42883" || error.code === "PGRST202") {
+        return { ok: true, count: 0 }
       }
+      return { ok: false, error: error.message }
     }
 
-    const results: DirectConversation[] = []
-
-    for (const conversation of conversations ?? []) {
-      const profile = await fetchOtherParticipant(
-        supabase,
-        conversation.id,
-        userId,
-      )
-      if (!profile) continue
-
-      const latest = latestByConversation.get(conversation.id)
-      const preview = latest
-        ? buildPreview(latest.body, latest.sender_id, userId)
-        : "New conversation"
-      const lastReadAt = readMap.get(conversation.id)
-      const unread = latest
-        ? latest.sender_id !== userId &&
-          (!lastReadAt ||
-            new Date(latest.created_at) > new Date(lastReadAt))
-        : false
-
-      results.push(
-        profileToConversation(
-          conversation.id,
-          profile,
-          preview,
-          latest?.created_at ?? conversation.updated_at,
-          unread,
-        ),
-      )
-    }
-
-    return { ok: true, conversations: results }
+    return { ok: true, count: typeof data === "number" ? data : 0 }
   } catch (error) {
     return actionError(error)
   }
@@ -255,6 +269,7 @@ export async function listConversations(): Promise<ListConversationsResult> {
 
 export async function getConversationThread(
   conversationId: string,
+  options?: { limit?: number; before?: string },
 ): Promise<ConversationThreadResult> {
   try {
     if (!isUuid(conversationId)) {
@@ -264,26 +279,23 @@ export async function getConversationThread(
     const userId = await requireUserId()
     const supabase = await createClient()
 
-    const { data: messages, error } = await supabase
-      .from("dm_messages")
-      .select("id, sender_id, body, created_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
-      .limit(200)
+    const { data, error } = await supabase.rpc("get_dm_thread", {
+      p_conversation_id: conversationId,
+      p_page_limit: options?.limit ?? 50,
+      p_before: options?.before ?? null,
+    })
 
-    if (error) return { ok: false, error: error.message }
+    if (error) {
+      if (error.code === "42883" || error.code === "PGRST202") {
+        return { ok: false, error: "DM performance migration not applied." }
+      }
+      return { ok: false, error: error.message }
+    }
 
-    const { data: participants } = await supabase
-      .from("dm_participants")
-      .select("profile_id, last_read_at")
-      .eq("conversation_id", conversationId)
+    const payload = data as ThreadRpcResult
+    const otherLastReadAt = payload.other_last_read_at ?? null
 
-    const otherParticipant = (participants as ParticipantRow[] | null)?.find(
-      (p) => p.profile_id !== userId,
-    )
-    const otherLastReadAt = otherParticipant?.last_read_at ?? null
-
-    const thread: ThreadMessage[] = (messages ?? []).map((row) => {
+    const thread: ThreadMessage[] = (payload.messages ?? []).map((row) => {
       const message = row as MessageRow
       return {
         id: message.id,
@@ -295,7 +307,12 @@ export async function getConversationThread(
       }
     })
 
-    return { ok: true, messages: thread, otherLastReadAt }
+    return {
+      ok: true,
+      messages: thread,
+      otherLastReadAt,
+      hasMore: Boolean(payload.has_more),
+    }
   } catch (error) {
     return actionError(error)
   }
@@ -407,12 +424,12 @@ export async function getOrCreateConversation(
       return { ok: false, error: "Conversation participant not found." }
     }
 
-    const { data: latestMessage } = await supabase
-      .from("dm_messages")
-      .select("sender_id, body, created_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(1)
+    const { data: conversationRow } = await supabase
+      .from("dm_conversations")
+      .select(
+        "updated_at, last_message_body, last_message_sender_id, last_message_at",
+      )
+      .eq("id", conversationId)
       .maybeSingle()
 
     const { data: membership } = await supabase
@@ -422,14 +439,22 @@ export async function getOrCreateConversation(
       .eq("profile_id", userId)
       .maybeSingle()
 
-    const preview = latestMessage
-      ? buildPreview(latestMessage.body, latestMessage.sender_id, userId)
+    const preview = conversationRow?.last_message_body
+      ? buildPreview(
+          conversationRow.last_message_body,
+          conversationRow.last_message_sender_id ?? userId,
+          userId,
+        )
       : "New conversation"
-    const updatedAt = latestMessage?.created_at ?? new Date().toISOString()
-    const unread = latestMessage
-      ? latestMessage.sender_id !== userId &&
+    const updatedAt =
+      conversationRow?.last_message_at ??
+      conversationRow?.updated_at ??
+      new Date().toISOString()
+    const unread = conversationRow?.last_message_at
+      ? conversationRow.last_message_sender_id !== userId &&
         (!membership?.last_read_at ||
-          new Date(latestMessage.created_at) > new Date(membership.last_read_at))
+          new Date(conversationRow.last_message_at) >
+            new Date(membership.last_read_at))
       : false
 
     const conversation = profileToConversation(

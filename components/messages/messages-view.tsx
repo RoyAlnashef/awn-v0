@@ -23,6 +23,8 @@ import { MessagesInbox } from "@/components/messages/messages-inbox"
 import { MessageThread } from "@/components/messages/message-thread"
 import { NewMessageDrawer } from "@/components/messages/new-message-drawer"
 import { useMessages } from "@/components/messages/messages-provider"
+import { useInbox } from "@/lib/messages/hooks/use-inbox"
+import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 
 export function MessagesView({
   title,
@@ -46,6 +48,7 @@ export function MessagesView({
     getConversation,
     ensureConversation,
   } = useMessages()
+  useInbox({ enabled: true })
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
   const [composerDraft, setComposerDraft] = useState(initialDraft ?? "")
@@ -200,6 +203,7 @@ export function MessagesView({
             activeId={activeConversation?.id}
             conversations={conversations}
             onSelectConversation={selectConversation}
+            onPrefetchConversation={prefetchThread}
           />
         </div>
 

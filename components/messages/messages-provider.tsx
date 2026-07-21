@@ -8,15 +8,16 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { mutate as mutateSwr } from "swr"
 
 import {
   getOrCreateConversation,
   markConversationRead as markConversationReadAction,
 } from "@/lib/messages/actions"
 import { isPersistedConversation, isUuid } from "@/lib/messages/format"
+import { unreadCountKey } from "@/lib/messages/swr-keys"
 import {
   directConversationUnreadCount,
-  directConversations as fallbackConversations,
   memberToConversation,
   sortConversationsForInbox,
   type DirectConversation,
@@ -35,7 +36,6 @@ type EnsureConversationResult =
 
 type MessagesContextValue = {
   conversations: DirectConversation[]
-  unreadCount: number
   currentUser: MessagesCurrentUser
   markConversationRead: (id: string) => void
   getConversation: (id: string) => DirectConversation | undefined
@@ -43,6 +43,7 @@ type MessagesContextValue = {
   ensureConversation: (member: MessageableMember) => Promise<EnsureConversationResult>
   bumpConversation: (id: string, messageText: string) => void
   upsertConversation: (conversation: DirectConversation) => void
+  syncConversationsFromInbox: (conversations: DirectConversation[]) => void
 }
 
 const MessagesContext = createContext<MessagesContextValue | null>(null)
@@ -53,27 +54,55 @@ function touchActivityOrder(order: string[], id: string) {
 
 export function MessagesProvider({
   children,
-  initialConversations,
   currentUser,
 }: {
   children: ReactNode
-  initialConversations?: DirectConversation[]
   currentUser: MessagesCurrentUser
 }) {
-  const seed = initialConversations ?? fallbackConversations
-
-  const [conversationList, setConversationList] =
-    useState<DirectConversation[]>(seed)
-  const [activityOrder, setActivityOrder] = useState<string[]>(() =>
-    seed.map((c) => c.id),
+  const [conversationList, setConversationList] = useState<DirectConversation[]>(
+    [],
   )
+  const [activityOrder, setActivityOrder] = useState<string[]>([])
 
   const conversations = useMemo(
     () => sortConversationsForInbox(conversationList, activityOrder),
     [conversationList, activityOrder],
   )
 
-  const unreadCount = directConversationUnreadCount(conversationList)
+  const syncConversationsFromInbox = useCallback(
+    (incoming: DirectConversation[]) => {
+      setConversationList((prev) => {
+        const byId = new Map(prev.map((c) => [c.id, c]))
+        const merged = incoming.map((server) => {
+          const local = byId.get(server.id)
+          if (!local) return server
+          return {
+            ...server,
+            preview: local.preview.startsWith("You:")
+              ? local.preview
+              : server.preview,
+            time: local.time === "Now" ? local.time : server.time,
+            unread: local.unread === false ? false : server.unread,
+          }
+        })
+
+        for (const local of prev) {
+          if (!local.isPersisted && !merged.some((c) => c.id === local.id)) {
+            merged.unshift(local)
+          }
+        }
+
+        return merged
+      })
+
+      setActivityOrder((prev) => {
+        const serverIds = incoming.map((c) => c.id)
+        const localOnly = prev.filter((id) => !serverIds.includes(id))
+        return [...localOnly, ...serverIds]
+      })
+    },
+    [],
+  )
 
   const upsertConversation = useCallback((conversation: DirectConversation) => {
     setConversationList((prev) => {
@@ -106,7 +135,9 @@ export function MessagesProvider({
     )
 
     if (isUuid(id)) {
-      void markConversationReadAction(id)
+      void markConversationReadAction(id).then(() => {
+        void mutateSwr(unreadCountKey)
+      })
     }
   }, [])
 
@@ -184,7 +215,6 @@ export function MessagesProvider({
     <MessagesContext.Provider
       value={{
         conversations,
-        unreadCount,
         currentUser,
         markConversationRead,
         getConversation,
@@ -192,6 +222,7 @@ export function MessagesProvider({
         ensureConversation,
         bumpConversation,
         upsertConversation,
+        syncConversationsFromInbox,
       }}
     >
       {children}
