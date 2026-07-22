@@ -4,15 +4,16 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 
 import {
-  currentUser,
+  currentUser as mockCurrentUser,
   getRoomThread,
   type Room,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import { applyLocalReaction } from "@/lib/messages/reactions"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bubble, BubbleContent } from "@/components/ui/bubble"
+import { MessageBubbleWithReactions } from "@/components/messages/message-bubble-with-reactions"
 import {
   Message,
   MessageAvatar,
@@ -78,6 +79,15 @@ export function RoomThread({
     setDraft("")
   }
 
+  function handleReact(messageId: string, emoji: string | null) {
+    setMessages((prev) =>
+      applyLocalReaction(prev, messageId, emoji, {
+        id: "local-user",
+        name: mockCurrentUser.name,
+      }),
+    )
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b p-3">
@@ -123,7 +133,7 @@ export function RoomThread({
               {messages.map((message) => {
                 const mine = message.from === "me"
                 const displayName = mine
-                  ? currentUser.name
+                  ? mockCurrentUser.name
                   : message.author ?? "Member"
                 return (
                   <MessageScrollerItem
@@ -135,7 +145,7 @@ export function RoomThread({
                       <MessageAvatar>
                         <Avatar className="size-8">
                           <AvatarImage
-                            src={mine ? currentUser.avatar : undefined}
+                            src={mine ? mockCurrentUser.avatar : undefined}
                             alt=""
                           />
                           <AvatarFallback>{initials(displayName)}</AvatarFallback>
@@ -147,12 +157,14 @@ export function RoomThread({
                             {message.author}
                           </p>
                         ) : null}
-                        <Bubble
+                        <MessageBubbleWithReactions
                           variant={mine ? "default" : "muted"}
                           align={mine ? "end" : "start"}
+                          reactions={message.reactions}
+                          onReact={(emoji) => handleReact(message.id, emoji)}
                         >
-                          <BubbleContent>{message.text}</BubbleContent>
-                        </Bubble>
+                          {message.text}
+                        </MessageBubbleWithReactions>
                         <MessageFooter>{message.time}</MessageFooter>
                       </MessageContent>
                     </Message>

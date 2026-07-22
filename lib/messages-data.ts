@@ -39,6 +39,15 @@ export interface DirectConversation {
   isNew?: boolean
 }
 
+/** A single emoji reaction aggregate on a message. */
+export type MessageReaction = {
+  emoji: string
+  count: number
+  reactedByMe: boolean
+  /** For tooltip; cap at ~10 names then "+N more" */
+  reactors: { id: string; name: string }[]
+}
+
 /** A single message within a conversation or room thread. */
 export interface ThreadMessage {
   id: string
@@ -53,6 +62,8 @@ export interface ThreadMessage {
   readReceipt?: "sent" | "delivered" | "read"
   /** Display name for room messages from other members. */
   author?: string
+  /** Aggregated emoji reactions on this message. */
+  reactions?: MessageReaction[]
 }
 
 /** A joinable community room. */
@@ -301,6 +312,14 @@ const messageThreads: Record<string, ThreadMessage[]> = {
       from: "them",
       text: "Amazing. Are you around for the Ultraviolet stadium run in September?",
       time: "9:41 AM",
+      reactions: [
+        {
+          emoji: "👍",
+          count: 1,
+          reactedByMe: true,
+          reactors: [{ id: "local-user", name: "Jordan Ellis" }],
+        },
+      ],
     },
   ],
   d2: [
@@ -341,6 +360,28 @@ const messageThreads: Record<string, ThreadMessage[]> = {
       from: "me",
       text: "Noted, thanks Aisha. I'll let the backline team know.",
       time: "8:45 AM",
+    },
+  ],
+  d5: [
+    {
+      id: "d5-1",
+      from: "me",
+      text: "The advance for Nashville is ready whenever you want to review it.",
+      time: "2:10 PM",
+      reactions: [
+        {
+          emoji: "😆",
+          count: 1,
+          reactedByMe: false,
+          reactors: [{ id: "theo", name: "Theo Nakamura" }],
+        },
+      ],
+    },
+    {
+      id: "d5-2",
+      from: "them",
+      text: "Perfect timing — I'll take a look tonight.",
+      time: "2:12 PM",
     },
   ],
 }
@@ -390,6 +431,23 @@ const roomThreads: Record<string, ThreadMessage[]> = {
       author: "Priya Anand",
       text: "Shure SE535 for me on most tours. What's everyone running for in-ear monitoring these days?",
       time: "10:02 AM",
+      reactions: [
+        {
+          emoji: "👍",
+          count: 2,
+          reactedByMe: false,
+          reactors: [
+            { id: "theo", name: "Theo Nakamura" },
+            { id: "liam", name: "Liam O'Connor" },
+          ],
+        },
+        {
+          emoji: "❤️",
+          count: 1,
+          reactedByMe: false,
+          reactors: [{ id: "marcus", name: "Marcus Bell" }],
+        },
+      ],
     },
   ],
   r6: [

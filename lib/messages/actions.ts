@@ -9,6 +9,7 @@ import {
 import type {
   DirectConversation,
   MessageableMember,
+  MessageReaction,
   ThreadMessage,
 } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/server"
@@ -49,6 +50,14 @@ type ThreadRpcMessage = {
   sender_id: string
   body: string
   created_at: string
+  reactions?: ThreadRpcReaction[]
+}
+
+type ThreadRpcReaction = {
+  emoji: string
+  count: number
+  reacted_by_me: boolean
+  reactors: { id: string; name: string }[]
 }
 
 type ThreadRpcResult = {
@@ -69,6 +78,10 @@ export type MarkReadResult = { ok: true } | ActionError
 
 export type SearchMessageableUsersResult =
   | { ok: true; users: MessageableMember[] }
+  | ActionError
+
+export type SetMessageReactionResult =
+  | { ok: true; reactions: MessageReaction[] }
   | ActionError
 
 type ProfileRow = {
@@ -118,6 +131,72 @@ function readReceiptForMessage(
   if (!otherLastReadAt) return "delivered"
   if (new Date(otherLastReadAt) >= new Date(message.created_at)) return "read"
   return "delivered"
+}
+
+function mapRpcReactions(
+  reactions: ThreadRpcReaction[] | undefined,
+): MessageReaction[] | undefined {
+  if (!reactions?.length) return undefined
+  return reactions.map((reaction) => ({
+    emoji: reaction.emoji,
+    count: reaction.count,
+    reactedByMe: reaction.reacted_by_me,
+    reactors: reaction.reactors ?? [],
+  }))
+}
+
+async function fetchMessageReactions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  messageId: string,
+  currentUserId: string,
+): Promise<MessageReaction[]> {
+  const { data, error } = await supabase
+    .from("dm_message_reactions")
+    .select("emoji, profile_id, created_at, profiles(full_name)")
+    .eq("message_id", messageId)
+
+  if (error || !data?.length) return []
+
+  const grouped = new Map<
+    string,
+    { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
+  >()
+
+  for (const row of data) {
+    const profileId = row.profile_id as string
+    const emoji = row.emoji as string
+    const profiles = row.profiles as
+      | { full_name: string | null }
+      | { full_name: string | null }[]
+      | null
+    const profile = Array.isArray(profiles) ? profiles[0] : profiles
+    const name = profile?.full_name?.trim() || "Member"
+
+    const existing = grouped.get(emoji)
+    if (existing) {
+      existing.count += 1
+      existing.reactedByMe ||= profileId === currentUserId
+      existing.reactors.push({ id: profileId, name })
+    } else {
+      grouped.set(emoji, {
+        count: 1,
+        reactedByMe: profileId === currentUserId,
+        reactors: [{ id: profileId, name }],
+      })
+    }
+  }
+
+  return [...grouped.entries()]
+    .map(([emoji, value]) => ({
+      emoji,
+      count: value.count,
+      reactedByMe: value.reactedByMe,
+      reactors: value.reactors,
+    }))
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count
+      return a.emoji.localeCompare(b.emoji)
+    })
 }
 
 async function fetchOtherParticipant(
@@ -296,7 +375,7 @@ export async function getConversationThread(
     const otherLastReadAt = payload.other_last_read_at ?? null
 
     const thread: ThreadMessage[] = (payload.messages ?? []).map((row) => {
-      const message = row as MessageRow
+      const message = row as ThreadRpcMessage
       return {
         id: message.id,
         from: message.sender_id === userId ? "me" : "them",
@@ -304,6 +383,7 @@ export async function getConversationThread(
         time: formatMessageTime(message.created_at),
         createdAt: message.created_at,
         readReceipt: readReceiptForMessage(message, userId, otherLastReadAt),
+        reactions: mapRpcReactions(message.reactions),
       }
     })
 
@@ -512,6 +592,77 @@ export async function searchMessageableUsers(
     users.sort((a, b) => Number(b.online) - Number(a.online))
 
     return { ok: true, users }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function setMessageReaction(
+  messageId: string,
+  emoji: string | null,
+): Promise<SetMessageReactionResult> {
+  try {
+    if (!isUuid(messageId)) {
+      return { ok: false, error: "Invalid message id." }
+    }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: messageRow, error: messageError } = await supabase
+      .from("dm_messages")
+      .select("id, conversation_id")
+      .eq("id", messageId)
+      .maybeSingle()
+
+    if (messageError) return { ok: false, error: messageError.message }
+    if (!messageRow) return { ok: false, error: "Message not found." }
+
+    const { data: participant } = await supabase
+      .from("dm_participants")
+      .select("profile_id")
+      .eq("conversation_id", messageRow.conversation_id)
+      .eq("profile_id", userId)
+      .maybeSingle()
+
+    if (!participant) {
+      return { ok: false, error: "Not a participant in this conversation." }
+    }
+
+    const trimmedEmoji = emoji?.trim() ?? null
+
+    const { data: existing } = await supabase
+      .from("dm_message_reactions")
+      .select("emoji")
+      .eq("message_id", messageId)
+      .eq("profile_id", userId)
+      .maybeSingle()
+
+    if (!trimmedEmoji || existing?.emoji === trimmedEmoji) {
+      const { error: deleteError } = await supabase
+        .from("dm_message_reactions")
+        .delete()
+        .eq("message_id", messageId)
+        .eq("profile_id", userId)
+
+      if (deleteError) return { ok: false, error: deleteError.message }
+    } else {
+      const { error: upsertError } = await supabase
+        .from("dm_message_reactions")
+        .upsert(
+          {
+            message_id: messageId,
+            profile_id: userId,
+            emoji: trimmedEmoji,
+          },
+          { onConflict: "message_id,profile_id" },
+        )
+
+      if (upsertError) return { ok: false, error: upsertError.message }
+    }
+
+    const reactions = await fetchMessageReactions(supabase, messageId, userId)
+    return { ok: true, reactions }
   } catch (error) {
     return actionError(error)
   }

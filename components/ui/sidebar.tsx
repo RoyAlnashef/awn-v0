@@ -24,7 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useHydrated } from "@/hooks/use-hydrated"
 import { PanelLeftIcon } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
@@ -517,8 +516,6 @@ function SidebarMenuButton({
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar()
-  const hydrated = useHydrated()
-  const showTooltip = Boolean(tooltip && hydrated)
 
   const comp = useRender({
     defaultTagName: "button",
@@ -528,7 +525,7 @@ function SidebarMenuButton({
       },
       props
     ),
-    render: showTooltip ? <TooltipTrigger render={render} /> : render,
+    render: tooltip ? <TooltipTrigger render={render} /> : render,
     state: {
       slot: "sidebar-menu-button",
       sidebar: "menu-button",
@@ -537,7 +534,7 @@ function SidebarMenuButton({
     },
   })
 
-  if (!showTooltip) {
+  if (!tooltip) {
     return comp
   }
 

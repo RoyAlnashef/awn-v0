@@ -9,8 +9,13 @@ import {
 import {
   getOrCreateConversation,
   sendMessage as sendMessageAction,
+  setMessageReaction,
 } from "@/lib/messages/actions"
 import { useThread } from "@/lib/messages/hooks/use-thread"
+import {
+  applyLocalReaction,
+  patchMessageReactions,
+} from "@/lib/messages/reactions"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import {
   getThread,
@@ -21,15 +26,12 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  Bubble,
-  BubbleContent,
-} from "@/components/ui/bubble"
-import {
   Message,
   MessageAvatar,
   MessageContent,
   MessageFooter,
 } from "@/components/ui/message"
+import { MessageBubbleWithReactions } from "@/components/messages/message-bubble-with-reactions"
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
   MessageScroller,
@@ -222,6 +224,71 @@ export function MessageThread({
       void supabase.removeChannel(channel)
     }
   }, [currentUser.id, isPersisted, mutate, persistedConversationId])
+
+  useEffect(() => {
+    if (!isPersisted || !persistedConversationId) return
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`dm-reactions:${persistedConversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "dm_message_reactions",
+        },
+        () => {
+          void mutate()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [isPersisted, mutate, persistedConversationId])
+
+  async function handleReact(messageId: string, emoji: string | null) {
+    const reactionUser = { id: currentUser.id, name: currentUser.name }
+
+    if (isPersisted && persistedConversationId) {
+      void mutate(
+        (current) =>
+          current
+            ? {
+                ...current,
+                messages: applyLocalReaction(
+                  current.messages,
+                  messageId,
+                  emoji,
+                  reactionUser,
+                ),
+              }
+            : current,
+        { revalidate: false },
+      )
+
+      const result = await setMessageReaction(messageId, emoji)
+      if (!result.ok) {
+        void mutate()
+        return
+      }
+
+      void mutate(
+        (current) =>
+          current
+            ? patchMessageReactions(current, messageId, result.reactions)
+            : current,
+        { revalidate: false },
+      )
+      return
+    }
+
+    setLocalMessages((prev) =>
+      applyLocalReaction(prev, messageId, emoji, reactionUser),
+    )
+  }
 
   async function handleLoadOlder() {
     if (loadingOlder) return
@@ -416,12 +483,16 @@ export function MessageThread({
                             </Avatar>
                           </MessageAvatar>
                           <MessageContent>
-                            <Bubble
+                            <MessageBubbleWithReactions
                               variant={mine ? "default" : "muted"}
                               align={mine ? "end" : "start"}
+                              reactions={message.reactions}
+                              onReact={(emoji) =>
+                                void handleReact(message.id, emoji)
+                              }
                             >
-                              <BubbleContent>{message.text}</BubbleContent>
-                            </Bubble>
+                              {message.text}
+                            </MessageBubbleWithReactions>
                             <MessageFooter
                               className={cn(mine && "justify-end gap-1")}
                             >
