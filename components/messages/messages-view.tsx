@@ -1,7 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { MessagesSquare, SquarePen } from "lucide-react"
 
 import { parsePersonConversationId } from "@/lib/messages/format"
@@ -25,6 +31,7 @@ import { NewMessageDrawer } from "@/components/messages/new-message-drawer"
 import { useMessages } from "@/components/messages/messages-provider"
 import { useInbox } from "@/lib/messages/hooks/use-inbox"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
+import { useHydrated } from "@/hooks/use-hydrated"
 
 export function MessagesView({
   title,
@@ -41,7 +48,6 @@ export function MessagesView({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const {
     conversations,
     markConversationRead,
@@ -50,20 +56,24 @@ export function MessagesView({
     setActiveConversationId,
   } = useMessages()
   useInbox({ enabled: true })
+  const hydrated = useHydrated()
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
   const [composerDraft, setComposerDraft] = useState(initialDraft ?? "")
   const [startError, setStartError] = useState<string | null>(null)
   const resolvingPerson = useRef<string | null>(null)
+  const selectionEpochRef = useRef(0)
+  const lastSyncedUrlIdRef = useRef<string | undefined>(initialConversationId)
 
   const replaceSearchParams = useCallback(
     (mutate: (params: URLSearchParams) => void) => {
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams()
       mutate(params)
       const qs = params.toString()
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
     },
-    [pathname, router, searchParams],
+    [pathname, router],
   )
 
   const selectConversation = useCallback(
@@ -72,24 +82,34 @@ export function MessagesView({
         markConversationRead(conversation.id)
       }
 
+      const epoch = ++selectionEpochRef.current
+      setSelectedId(conversation.id)
       setActive(getConversation(conversation.id) ?? conversation)
 
-      replaceSearchParams((params) => {
-        params.set("conversation", conversation.id)
-        params.delete("person")
-        params.delete("draft")
+      startTransition(() => {
+        if (selectionEpochRef.current !== epoch) return
+
+        replaceSearchParams((params) => {
+          params.set("conversation", conversation.id)
+          params.delete("person")
+          params.delete("draft")
+        })
       })
     },
     [getConversation, markConversationRead, replaceSearchParams],
   )
 
   const clearActiveConversation = useCallback(() => {
+    setSelectedId(null)
     setActive(null)
     setComposerDraft("")
-    replaceSearchParams((params) => {
-      params.delete("conversation")
-      params.delete("person")
-      params.delete("draft")
+    lastSyncedUrlIdRef.current = undefined
+    startTransition(() => {
+      replaceSearchParams((params) => {
+        params.delete("conversation")
+        params.delete("person")
+        params.delete("draft")
+      })
     })
   }, [replaceSearchParams])
 
@@ -105,7 +125,32 @@ export function MessagesView({
   }
 
   useEffect(() => {
-    if (!initialConversationId) return
+    if (!initialConversationId) {
+      if (lastSyncedUrlIdRef.current) {
+        lastSyncedUrlIdRef.current = undefined
+        setSelectedId(null)
+        setActive(null)
+      }
+      return
+    }
+
+    const urlChangedExternally =
+      initialConversationId !== lastSyncedUrlIdRef.current
+
+    if (
+      !urlChangedExternally &&
+      selectedId &&
+      selectedId !== initialConversationId
+    ) {
+      return
+    }
+
+    lastSyncedUrlIdRef.current = initialConversationId
+    if (urlChangedExternally && selectedId !== initialConversationId) {
+      selectionEpochRef.current++
+    }
+
+    setSelectedId(initialConversationId)
 
     const conversation = conversations.find(
       (c) => c.id === initialConversationId,
@@ -133,6 +178,7 @@ export function MessagesView({
   }, [
     initialConversationId,
     conversations,
+    selectedId,
     markConversationRead,
     ensureConversation,
     selectConversation,
@@ -170,6 +216,11 @@ export function MessagesView({
     ? (getConversation(active.id) ?? active)
     : null
 
+  const visibleSelectedId = hydrated
+    ? (selectedId ?? activeConversation?.id)
+    : null
+  const visibleActiveConversation = hydrated ? activeConversation : null
+
   useEffect(() => {
     setActiveConversationId(activeConversation?.id ?? null)
     return () => setActiveConversationId(null)
@@ -202,11 +253,11 @@ export function MessagesView({
         <div
           className={cn(
             "flex w-full min-h-0 flex-col md:w-80 lg:w-96",
-            activeConversation && "hidden md:flex",
+            visibleActiveConversation && "hidden md:flex",
           )}
         >
           <MessagesInbox
-            activeId={activeConversation?.id}
+            activeId={visibleSelectedId ?? undefined}
             conversations={conversations}
             onSelectConversation={selectConversation}
             onPrefetchConversation={prefetchThread}
@@ -216,13 +267,13 @@ export function MessagesView({
         <div
           className={cn(
             "min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
-            activeConversation ? "flex" : "hidden md:flex",
+            visibleActiveConversation ? "flex" : "hidden md:flex",
           )}
         >
-          {activeConversation ? (
+          {visibleActiveConversation ? (
             <MessageThread
-              key={activeConversation.id}
-              conversation={activeConversation}
+              key={visibleActiveConversation.id}
+              conversation={visibleActiveConversation}
               initialDraft={composerDraft}
               onDraftConsumed={() => setComposerDraft("")}
               onBack={clearActiveConversation}

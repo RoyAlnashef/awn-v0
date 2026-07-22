@@ -46,6 +46,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group"
 import { useMessages } from "@/components/messages/messages-provider"
+import { MessageThreadSkeleton } from "@/components/messages/message-thread-skeleton"
 import { createClient } from "@/lib/supabase/client"
 
 function initials(name: string) {
@@ -131,11 +132,21 @@ export function MessageThread({
     otherLastReadAt,
     hasMore,
     isLoading,
+    isValidating,
     loadOlder,
     mutate,
   } = useThread(persistedConversationId)
 
   const messages = isPersisted ? cachedMessages : localMessages
+
+  const isResolvingConversation =
+    !isPersisted &&
+    isPersistedConversation(conversation) &&
+    Boolean(conversation.otherProfileId)
+
+  const isThreadPending =
+    isResolvingConversation ||
+    (isPersisted && (isLoading || (isValidating && cachedMessages.length === 0)))
 
   useEffect(() => {
     if (!initialDraft) return
@@ -348,10 +359,8 @@ export function MessageThread({
         <MessageScroller className="flex-1">
           <MessageScrollerViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
-              {isLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Loading messages…
-                </p>
+              {isThreadPending ? (
+                <MessageThreadSkeleton />
               ) : (
                 <>
                   {hasMore ? (
