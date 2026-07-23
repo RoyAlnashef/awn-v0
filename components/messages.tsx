@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { MessagesSquare } from "lucide-react"
 
 import { type DirectConversation } from "@/lib/messages-data"
@@ -21,6 +21,7 @@ import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 
 export function Messages() {
   const router = useRouter()
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { conversations, markConversationRead } = useMessages()
   const { unreadCount } = useUnreadCount()
@@ -28,7 +29,12 @@ export function Messages() {
 
   function navigateToConversation(conversationId: string) {
     setOpen(false)
-    router.push(`/messages?conversation=${conversationId}`)
+    const url = `/messages?conversation=${encodeURIComponent(conversationId)}`
+    if (pathname === "/messages") {
+      router.replace(url, { scroll: false })
+      return
+    }
+    router.push(url)
   }
 
   function handleSelectConversation(conversation: DirectConversation) {

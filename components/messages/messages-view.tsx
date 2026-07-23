@@ -103,7 +103,6 @@ export function MessagesView({
       startTransition(() => {
         if (selectionEpochRef.current !== epoch) return
 
-        lastSyncedUrlIdRef.current = conversation.id
         replaceSearchParams((params) => {
           params.set("conversation", conversation.id)
           params.delete("person")
@@ -155,26 +154,21 @@ export function MessagesView({
       return
     }
 
-    const urlChangedExternally =
-      initialConversationId !== lastSyncedUrlIdRef.current
+    const pendingId = pendingUrlConversationIdRef.current
 
+    // Ignore a lagging URL only when it still matches the last synced id while
+    // an in-page selection is waiting for router.replace to catch up. Any URL
+    // change to a new id (drawer, back/forward) is authoritative.
     if (
-      pendingUrlConversationIdRef.current &&
-      initialConversationId !== pendingUrlConversationIdRef.current
+      pendingId &&
+      pendingId !== initialConversationId &&
+      initialConversationId === lastSyncedUrlIdRef.current
     ) {
       return
     }
 
-    if (pendingUrlConversationIdRef.current === initialConversationId) {
+    if (pendingId) {
       pendingUrlConversationIdRef.current = null
-    }
-
-    if (
-      selectedIdRef.current &&
-      selectedIdRef.current !== initialConversationId
-    ) {
-      if (pendingUrlConversationIdRef.current) return
-      if (!urlChangedExternally) return
     }
 
     lastSyncedUrlIdRef.current = initialConversationId
@@ -206,18 +200,7 @@ export function MessagesView({
       online: false,
     }).then((result) => {
       if (selectionEpochRef.current !== requestEpoch) return
-      if (
-        pendingUrlConversationIdRef.current &&
-        pendingUrlConversationIdRef.current !== targetConversationId
-      ) {
-        return
-      }
-      if (
-        selectedIdRef.current &&
-        selectedIdRef.current !== targetConversationId
-      ) {
-        return
-      }
+      if (lastSyncedUrlIdRef.current !== targetConversationId) return
       if (!result.ok) return
       selectConversation(result.conversation)
     })
