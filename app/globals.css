@@ -49,6 +49,9 @@
 --radius-2xl: calc(var(--radius) * 1.8);
 --radius-3xl: calc(var(--radius) * 2.2);
 --radius-4xl: calc(var(--radius) * 2.6);
+--animate-typing-dot: typing-dot 1.4s ease-in-out infinite;
+--animate-message-enter: message-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+--animate-message-exit: message-exit 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 :root {
@@ -127,4 +130,46 @@
 body {
   @apply bg-background text-foreground;
 }
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes message-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-message-enter,
+  .animate-message-exit {
+    animation: none !important;
+  }
 }

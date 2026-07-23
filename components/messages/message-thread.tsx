@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
 import {
   isPersistedConversation,
@@ -12,6 +12,11 @@ import {
   setMessageReaction,
 } from "@/lib/messages/actions"
 import { useThread } from "@/lib/messages/hooks/use-thread"
+import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
+import {
+  useTypingBroadcast,
+  useTypingIndicator,
+} from "@/lib/messages/hooks/use-typing-indicator"
 import {
   applyLocalReaction,
   patchMessageReactions,
@@ -35,11 +40,11 @@ import { MessageBubbleWithReactions } from "@/components/messages/message-bubble
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
   MessageScroller,
-  MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
 } from "@/components/ui/message-scroller"
 import {
   InputGroup,
@@ -49,6 +54,9 @@ import {
 } from "@/components/ui/input-group"
 import { useMessages } from "@/components/messages/messages-provider"
 import { MessageThreadSkeleton } from "@/components/messages/message-thread-skeleton"
+import { AnimatedMessageScrollerItem } from "@/components/messages/animated-message-scroller-item"
+import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
+import { TypingIndicator } from "@/components/messages/typing-indicator"
 import { createClient } from "@/lib/supabase/client"
 
 function initials(name: string) {
@@ -85,6 +93,17 @@ function ReadReceipt({
   return (
     <Check className="size-3 text-muted-foreground/70" aria-label="Sent" />
   )
+}
+
+function ScrollToEndAfterSend({ token }: { token: number }) {
+  const { scrollToEnd } = useMessageScroller()
+
+  useLayoutEffect(() => {
+    if (token === 0) return
+    scrollToEnd({ behavior: "auto" })
+  }, [scrollToEnd, token])
+
+  return null
 }
 
 function deriveReadReceipt(
@@ -128,6 +147,11 @@ export function MessageThread({
   const [draft, setDraft] = useState(initialDraft ?? "")
   const [sending, setSending] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
+  const [sentScrollToken, setSentScrollToken] = useState(0)
+
+  function requestScrollToEnd() {
+    setSentScrollToken((token) => token + 1)
+  }
 
   const {
     messages: cachedMessages,
@@ -140,6 +164,16 @@ export function MessageThread({
   } = useThread(persistedConversationId)
 
   const messages = isPersisted ? cachedMessages : localMessages
+  const isOtherTyping = useTypingIndicator(
+    isPersisted ? persistedConversationId : null,
+    currentUser.id,
+  )
+  const { onComposerBlur } = useTypingBroadcast(
+    isPersisted ? persistedConversationId : null,
+    currentUser.id,
+    draft,
+    sending,
+  )
 
   const isResolvingConversation =
     !isPersisted &&
@@ -149,6 +183,10 @@ export function MessageThread({
   const isThreadPending =
     isResolvingConversation ||
     (isPersisted && (isLoading || (isValidating && cachedMessages.length === 0)))
+  const newMessageIds = useNewMessageIds(
+    messages.map((message) => message.id),
+    !isThreadPending,
+  )
 
   useEffect(() => {
     if (!initialDraft) return
@@ -327,6 +365,7 @@ export function MessageThread({
       bumpConversation(persistedConversationId, text, { from: "me" })
       setDraft("")
       setSending(true)
+      requestScrollToEnd()
 
       const result = await sendMessageAction(persistedConversationId, text)
       setSending(false)
@@ -361,6 +400,7 @@ export function MessageThread({
         { revalidate: false },
       )
 
+      requestScrollToEnd()
       return
     }
 
@@ -376,6 +416,7 @@ export function MessageThread({
     ])
     bumpConversation(conversation.id, text, { from: "me" })
     setDraft("")
+    requestScrollToEnd()
   }
 
   return (
@@ -423,6 +464,7 @@ export function MessageThread({
       </header>
 
       <MessageScrollerProvider autoScroll>
+        <ScrollToEndAfterSend token={sentScrollToken} />
         <MessageScroller className="flex-1">
           <MessageScrollerViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
@@ -462,7 +504,10 @@ export function MessageThread({
                       <MessageScrollerItem
                         key={message.id}
                         messageId={message.id}
-                        scrollAnchor={mine}
+                        className={cn(
+                          newMessageIds.has(message.id) &&
+                            "animate-message-enter [content-visibility:visible]",
+                        )}
                       >
                         <Message align={mine ? "end" : "start"}>
                           <MessageAvatar>
@@ -506,11 +551,21 @@ export function MessageThread({
                       </MessageScrollerItem>
                     )
                   })}
+
+                  <AnimatedMessageScrollerItem
+                    visible={isOtherTyping}
+                    messageId="typing"
+                  >
+                    <TypingIndicator
+                      name={conversation.name}
+                      avatarUrl={conversation.avatar}
+                    />
+                  </AnimatedMessageScrollerItem>
                 </>
               )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton />
+          <MessageThreadScrollButton messages={messages} />
         </MessageScroller>
       </MessageScrollerProvider>
 
@@ -519,6 +574,7 @@ export function MessageThread({
           <InputGroupTextarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onBlur={onComposerBlur}
             placeholder={`Message ${conversation.name.split(" ")[0]}…`}
             rows={1}
             onKeyDown={(e) => {
