@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { MessagesProvider } from "@/components/messages/messages-provider"
+import { PresenceHeartbeat } from "@/components/presence-heartbeat"
 import { RoomsProvider } from "@/components/rooms/rooms-provider"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             avatarUrl: sessionUser.avatarUrl,
           }}
         >
+          <PresenceHeartbeat />
           <AppSidebar showAdminNav={sessionUser.canAccessAdmin} />
           <SidebarInset>
             <SiteHeader

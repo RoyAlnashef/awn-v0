@@ -6,10 +6,14 @@ import { Search } from "lucide-react"
 import { searchMessageableUsers } from "@/lib/messages/actions"
 import { type MessageableMember } from "@/lib/messages-data"
 import { initials } from "@/lib/people-data"
-import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
 import {
   Sheet,
   SheetContent,
@@ -123,20 +127,16 @@ export function NewMessageDrawer({
                     onClick={() => handleSelect(member)}
                     className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60"
                   >
-                    <div className="relative shrink-0">
-                      <Avatar className="size-10">
-                        <AvatarImage src={member.avatar || undefined} alt="" />
-                        <AvatarFallback>
-                          {initials(member.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {member.online ? (
-                        <span
-                          aria-hidden="true"
-                          className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
-                        />
-                      ) : null}
-                    </div>
+                    <Avatar
+                      className="size-10 shrink-0"
+                      aria-label={
+                        member.online ? `${member.name}, online` : member.name
+                      }
+                    >
+                      <AvatarImage src={member.avatar || undefined} alt="" />
+                      <AvatarFallback>{initials(member.name)}</AvatarFallback>
+                      <AvatarBadge online={member.online} className="size-2.5" />
+                    </Avatar>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <p className="truncate text-sm font-medium text-foreground">
@@ -146,26 +146,6 @@ export function NewMessageDrawer({
                         {memberSubtitle(member)}
                       </p>
                     </div>
-
-                    <span
-                      className={cn(
-                        "flex shrink-0 items-center gap-1.5 text-xs",
-                        member.online
-                          ? "text-primary"
-                          : "text-muted-foreground/80",
-                      )}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          "size-1.5 rounded-full",
-                          member.online
-                            ? "bg-primary"
-                            : "bg-muted-foreground/40",
-                        )}
-                      />
-                      {member.online ? "Online" : "Offline"}
-                    </span>
                   </button>
                 </li>
               ))}

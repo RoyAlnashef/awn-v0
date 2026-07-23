@@ -12,7 +12,12 @@ import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
 
 function initials(name: string) {
   return name
@@ -87,7 +92,7 @@ export function MessagesInbox({
                     aria-current={active ? "true" : undefined}
                     className={cn(
                       "relative flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                      c.unread && "bg-primary/[0.06]",
+                      c.unread && "bg-primary/6",
                       active && "bg-accent",
                     )}
                   >
@@ -98,18 +103,14 @@ export function MessagesInbox({
                       />
                     ) : null}
 
-                    <div className="relative shrink-0">
-                      <Avatar className="size-10">
-                        <AvatarImage src={c.avatar || undefined} alt="" />
-                        <AvatarFallback>{initials(c.name)}</AvatarFallback>
-                      </Avatar>
-                      {c.online ? (
-                        <span
-                          aria-hidden="true"
-                          className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
-                        />
-                      ) : null}
-                    </div>
+                    <Avatar
+                      className="size-10 shrink-0"
+                      aria-label={c.online ? `${c.name}, online` : c.name}
+                    >
+                      <AvatarImage src={c.avatar || undefined} alt="" />
+                      <AvatarFallback>{initials(c.name)}</AvatarFallback>
+                      <AvatarBadge online={c.online} className="size-2.5" />
+                    </Avatar>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <div className="flex items-center justify-between gap-2">

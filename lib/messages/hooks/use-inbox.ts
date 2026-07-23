@@ -18,7 +18,8 @@ export function useInbox({ enabled = true }: { enabled?: boolean } = {}) {
 
   const swr = useSWR(enabled ? inboxKey : null, fetchInbox, {
     dedupingInterval: 2000,
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
+    refreshInterval: enabled ? 30_000 : 0,
   })
 
   useEffect(() => {

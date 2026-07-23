@@ -32,7 +32,12 @@ import {
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
 import {
   Message,
   MessageAvatar,
@@ -456,21 +461,18 @@ export function MessageThread({
         <button
           type="button"
           className="group flex max-w-full min-w-0 shrink cursor-pointer items-center gap-3 rounded-lg text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-          aria-label={`View ${conversation.name}'s profile`}
+          aria-label={
+            conversation.online
+              ? `View ${conversation.name}'s profile, online`
+              : `View ${conversation.name}'s profile`
+          }
           onClick={() => setProfileOpen(true)}
         >
-          <div className="relative shrink-0">
-            <Avatar className="size-9">
-              <AvatarImage src={conversation.avatar || undefined} alt="" />
-              <AvatarFallback>{initials(conversation.name)}</AvatarFallback>
-            </Avatar>
-            {conversation.online ? (
-              <span
-                aria-hidden="true"
-                className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
-              />
-            ) : null}
-          </div>
+          <Avatar className="size-9 shrink-0">
+            <AvatarImage src={conversation.avatar || undefined} alt="" />
+            <AvatarFallback>{initials(conversation.name)}</AvatarFallback>
+            <AvatarBadge online={conversation.online} className="size-2.5" />
+          </Avatar>
           <div className="flex min-w-0 flex-col">
             <p className="truncate text-sm font-semibold text-foreground group-hover:underline">
               {conversation.name}

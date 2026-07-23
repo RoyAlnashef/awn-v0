@@ -12,6 +12,7 @@ import type {
   MessageReaction,
   ThreadMessage,
 } from "@/lib/messages-data"
+import { profileIsOnline } from "@/lib/presence/is-online"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -224,11 +225,6 @@ async function fetchOtherParticipant(
   return profile as ProfileRow | null
 }
 
-function profileIsOnline(lastActiveAt: string | null): boolean {
-  if (!lastActiveAt) return false
-  return Date.now() - new Date(lastActiveAt).getTime() < 15 * 60_000
-}
-
 function profileToMessageableMember(profile: ProfileRow): MessageableMember {
   return {
     id: profile.id,
@@ -247,10 +243,6 @@ function profileToConversation(
   updatedAt: string,
   unread: boolean,
 ): DirectConversation {
-  const online = profile.last_active_at
-    ? Date.now() - new Date(profile.last_active_at).getTime() < 15 * 60_000
-    : false
-
   return {
     id: conversationId,
     name: profile.full_name?.trim() || "Member",
@@ -258,7 +250,7 @@ function profileToConversation(
     preview,
     time: formatRelativeTime(updatedAt),
     unread,
-    online,
+    online: profileIsOnline(profile.last_active_at),
     avatar: profile.avatar_url ?? undefined,
     otherProfileId: profile.id,
     isPersisted: true,
