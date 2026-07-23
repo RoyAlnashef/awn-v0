@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useState, Fragment } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
 import {
+  groupThreadMessagesByDate,
   isPersistedConversation,
   isUuid,
 } from "@/lib/messages/format"
@@ -187,6 +188,10 @@ export function MessageThread({
     messages.map((message) => message.id),
     !isThreadPending,
   )
+  const messageGroups = useMemo(
+    () => groupThreadMessagesByDate(messages),
+    [messages],
+  )
 
   useEffect(() => {
     if (!initialDraft) return
@@ -349,6 +354,7 @@ export function MessageThread({
         from: "me",
         text,
         time: "Now",
+        createdAt: new Date().toISOString(),
         readReceipt: "sent",
       }
 
@@ -411,6 +417,7 @@ export function MessageThread({
         from: "me",
         text,
         time: "Now",
+        createdAt: new Date().toISOString(),
         readReceipt: "delivered",
       },
     ])
@@ -487,13 +494,15 @@ export function MessageThread({
                     </div>
                   ) : null}
 
-                  <MessageScrollerItem messageId="start">
-                    <Marker variant="separator">
-                      <MarkerContent>Today</MarkerContent>
-                    </Marker>
-                  </MessageScrollerItem>
+                  {messageGroups.map((group) => (
+                    <Fragment key={group.key}>
+                      <MessageScrollerItem messageId={`date-${group.key}`}>
+                        <Marker variant="separator">
+                          <MarkerContent>{group.label}</MarkerContent>
+                        </Marker>
+                      </MessageScrollerItem>
 
-                  {messages.map((message) => {
+                      {group.messages.map((message) => {
                     const mine = message.from === "me"
                     const readReceipt = deriveReadReceipt(
                       message,
@@ -550,7 +559,9 @@ export function MessageThread({
                         </Message>
                       </MessageScrollerItem>
                     )
-                  })}
+                      })}
+                    </Fragment>
+                  ))}
 
                   <AnimatedMessageScrollerItem
                     visible={isOtherTyping}
