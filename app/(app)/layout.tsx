@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -16,8 +17,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/login")
   }
 
+  const cookieStore = await cookies()
+  const sidebarState = cookieStore.get("sidebar_state")?.value
+  const defaultOpen = sidebarState !== "false"
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <RoomsProvider>
         <MessagesProvider
           currentUser={{
