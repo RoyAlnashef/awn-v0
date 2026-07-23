@@ -60,7 +60,7 @@ export function MessageBubbleWithReactions({
 
       <div
         className={cn(
-          "absolute top-1/2 z-20 flex -translate-y-1/2 items-center rounded-full border border-border/60 bg-popover/95 p-0.5 opacity-0 shadow-md backdrop-blur-sm transition-opacity",
+          "message-reaction-surface absolute top-1/2 z-20 flex -translate-y-1/2 items-center rounded-full border border-border/60 bg-secondary p-0.5 opacity-0 shadow-md backdrop-blur-sm transition-opacity",
           "pointer-events-none group-hover/bubble-wrap:pointer-events-auto group-hover/bubble-wrap:opacity-100 group-focus-within/bubble-wrap:pointer-events-auto group-focus-within/bubble-wrap:opacity-100",
           align === "end" ? "right-full mr-1" : "left-full ml-1",
         )}

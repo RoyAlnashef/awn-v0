@@ -50,7 +50,7 @@ export function MessageReactionBadge({
               }
             }}
           >
-            <BubbleReactions align={align} side="bottom">
+            <BubbleReactions align={align} side="bottom" className="ring-secondary">
               <span className="flex items-center gap-0.5 px-0.5">
                 {emojis.length === 1 ? (
                   <span className="text-base leading-none">{emojis[0]}</span>
@@ -60,7 +60,7 @@ export function MessageReactionBadge({
                       {emojis.slice(0, 3).map((emoji) => (
                         <span
                           key={emoji}
-                          className="inline-flex size-5 items-center justify-center rounded-full bg-card text-xs leading-none ring-2 ring-card"
+                          className="inline-flex size-5 items-center justify-center rounded-full bg-secondary text-xs leading-none ring-2 ring-secondary"
                         >
                           {emoji}
                         </span>
@@ -81,7 +81,7 @@ export function MessageReactionBadge({
       <HoverCardContent
         side="top"
         align={align === "end" ? "end" : "start"}
-        className="w-auto max-w-56 px-3 py-2 text-xs whitespace-pre-line"
+        className="w-auto max-w-56 bg-secondary px-3 py-2 text-xs whitespace-pre-line"
       >
         {tooltip || formatReactorNames(reactions)}
       </HoverCardContent>
