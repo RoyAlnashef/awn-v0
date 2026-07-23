@@ -24,10 +24,12 @@ import {
 } from "@/lib/messages/reactions"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import {
+  getPersonForConversation,
   getThread,
   type DirectConversation,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -149,6 +151,11 @@ export function MessageThread({
   const [sending, setSending] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profilePerson = useMemo(
+    () => getPersonForConversation(conversation),
+    [conversation],
+  )
 
   function requestScrollToEnd() {
     setSentScrollToken((token) => token + 1)
@@ -446,27 +453,34 @@ export function MessageThread({
             <ArrowLeft className="size-5" />
           </Button>
         ) : null}
-        <div className="relative shrink-0">
-          <Avatar className="size-9">
-            <AvatarImage src={conversation.avatar || undefined} alt="" />
-            <AvatarFallback>{initials(conversation.name)}</AvatarFallback>
-          </Avatar>
-          {conversation.online ? (
-            <span
-              aria-hidden="true"
-              className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
-            />
-          ) : null}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {conversation.name}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {conversation.online ? "Active now" : conversation.role}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          className="group flex max-w-full min-w-0 shrink cursor-pointer items-center gap-3 rounded-lg text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-label={`View ${conversation.name}'s profile`}
+          onClick={() => setProfileOpen(true)}
+        >
+          <div className="relative shrink-0">
+            <Avatar className="size-9">
+              <AvatarImage src={conversation.avatar || undefined} alt="" />
+              <AvatarFallback>{initials(conversation.name)}</AvatarFallback>
+            </Avatar>
+            {conversation.online ? (
+              <span
+                aria-hidden="true"
+                className="absolute right-0 bottom-0 size-2.5 rounded-full bg-primary ring-2 ring-background"
+              />
+            ) : null}
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <p className="truncate text-sm font-semibold text-foreground group-hover:underline">
+              {conversation.name}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {conversation.online ? "Active now" : conversation.role}
+            </p>
+          </div>
+        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <Button variant="ghost" size="icon" aria-label="Start voice call">
             <Phone className="size-5" />
           </Button>
@@ -475,6 +489,12 @@ export function MessageThread({
           </Button>
         </div>
       </header>
+
+      <PersonProfileDrawer
+        person={profilePerson}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+      />
 
       <MessageScrollerProvider autoScroll>
         <ScrollToEndAfterSend token={sentScrollToken} />

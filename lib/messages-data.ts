@@ -662,3 +662,37 @@ export function personToConversation(person: Person): DirectConversation {
 export function getPersonById(personId: string): Person | undefined {
   return people.find((p) => p.id === personId)
 }
+
+/** Resolves a full Person for the profile drawer from a direct conversation. */
+export function getPersonForConversation(
+  conversation: DirectConversation,
+): Person {
+  if (conversation.otherProfileId) {
+    const byId = getPersonById(conversation.otherProfileId)
+    if (byId) return byId
+  }
+
+  const byName = people.find((person) => person.name === conversation.name)
+  if (byName) return byName
+
+  return {
+    id: conversation.otherProfileId ?? conversation.id,
+    name: conversation.name,
+    role: conversation.role,
+    department: "Production",
+    homeBase: "",
+    city: "Nashville",
+    availability: conversation.online ? "Available Now" : "Between Tours",
+    availableFrom: "2026-08-01",
+    availableTo: "2026-12-20",
+    venueTiers: ["Arena"],
+    workAuth: ["USA"],
+    yearsExperience: 5,
+    credits: 10,
+    vouches: 5,
+    topTours: ["Live Events"],
+    skills: ["Collaboration"],
+    avatar: conversation.avatar,
+    connected: false,
+  }
+}
