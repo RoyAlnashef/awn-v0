@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -38,9 +39,14 @@ export function AppSidebar({
           href="/now"
           className="flex items-center gap-2.5 rounded-md px-1 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          <div className="flex aspect-square size-9 shrink-0 items-center justify-center rounded-lg bg-primary font-heading text-lg font-semibold text-primary-foreground group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:text-base">
-            A
-          </div>
+          <Image
+            src="/android-chrome-192x192.png"
+            alt="A Wright Network"
+            width={36}
+            height={36}
+            className="size-9 shrink-0 rounded-lg group-data-[collapsible=icon]:size-8"
+            priority
+          />
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="font-heading text-base font-semibold tracking-tight">
               A Wright Network

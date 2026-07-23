@@ -13,6 +13,14 @@ export const metadata: Metadata = {
   title: "A Wright Network",
   description:
     "The private, invite-only professional network for touring live entertainment crew.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
