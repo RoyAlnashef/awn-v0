@@ -64,6 +64,8 @@ export function MessagesView({
   const [startError, setStartError] = useState<string | null>(null)
   const resolvingPerson = useRef<string | null>(null)
   const selectionEpochRef = useRef(0)
+  const selectedIdRef = useRef<string | null>(null)
+  const pendingUrlConversationIdRef = useRef<string | null>(null)
   const lastSyncedUrlIdRef = useRef<string | undefined>(initialConversationId)
 
   const replaceSearchParams = useCallback(
@@ -76,6 +78,18 @@ export function MessagesView({
     [pathname, router],
   )
 
+  const applySelection = useCallback(
+    (epoch: number, conversation: DirectConversation) => {
+      if (selectionEpochRef.current !== epoch) return false
+
+      selectedIdRef.current = conversation.id
+      setSelectedId(conversation.id)
+      setActive(getConversation(conversation.id) ?? conversation)
+      return true
+    },
+    [getConversation],
+  )
+
   const selectConversation = useCallback(
     (conversation: DirectConversation) => {
       if (conversation.unread) {
@@ -83,12 +97,13 @@ export function MessagesView({
       }
 
       const epoch = ++selectionEpochRef.current
-      setSelectedId(conversation.id)
-      setActive(getConversation(conversation.id) ?? conversation)
+      pendingUrlConversationIdRef.current = conversation.id
+      applySelection(epoch, conversation)
 
       startTransition(() => {
         if (selectionEpochRef.current !== epoch) return
 
+        lastSyncedUrlIdRef.current = conversation.id
         replaceSearchParams((params) => {
           params.set("conversation", conversation.id)
           params.delete("person")
@@ -96,10 +111,13 @@ export function MessagesView({
         })
       })
     },
-    [getConversation, markConversationRead, replaceSearchParams],
+    [applySelection, markConversationRead, replaceSearchParams],
   )
 
   const clearActiveConversation = useCallback(() => {
+    ++selectionEpochRef.current
+    pendingUrlConversationIdRef.current = null
+    selectedIdRef.current = null
     setSelectedId(null)
     setActive(null)
     setComposerDraft("")
@@ -128,6 +146,9 @@ export function MessagesView({
     if (!initialConversationId) {
       if (lastSyncedUrlIdRef.current) {
         lastSyncedUrlIdRef.current = undefined
+        pendingUrlConversationIdRef.current = null
+        ++selectionEpochRef.current
+        selectedIdRef.current = null
         setSelectedId(null)
         setActive(null)
       }
@@ -138,19 +159,25 @@ export function MessagesView({
       initialConversationId !== lastSyncedUrlIdRef.current
 
     if (
-      !urlChangedExternally &&
-      selectedId &&
-      selectedId !== initialConversationId
+      pendingUrlConversationIdRef.current &&
+      initialConversationId !== pendingUrlConversationIdRef.current
     ) {
       return
     }
 
-    lastSyncedUrlIdRef.current = initialConversationId
-    if (urlChangedExternally && selectedId !== initialConversationId) {
-      selectionEpochRef.current++
+    if (pendingUrlConversationIdRef.current === initialConversationId) {
+      pendingUrlConversationIdRef.current = null
     }
 
-    setSelectedId(initialConversationId)
+    if (
+      selectedIdRef.current &&
+      selectedIdRef.current !== initialConversationId
+    ) {
+      if (pendingUrlConversationIdRef.current) return
+      if (!urlChangedExternally) return
+    }
+
+    lastSyncedUrlIdRef.current = initialConversationId
 
     const conversation = conversations.find(
       (c) => c.id === initialConversationId,
@@ -159,12 +186,17 @@ export function MessagesView({
       if (conversation.unread) {
         markConversationRead(initialConversationId)
       }
-      setActive(conversation)
+
+      const epoch = ++selectionEpochRef.current
+      applySelection(epoch, conversation)
       return
     }
 
     const profileId = parsePersonConversationId(initialConversationId)
     if (!profileId) return
+
+    const requestEpoch = selectionEpochRef.current
+    const targetConversationId = initialConversationId
 
     void ensureConversation({
       id: profileId,
@@ -173,15 +205,29 @@ export function MessagesView({
       homeBase: "",
       online: false,
     }).then((result) => {
-      if (result.ok) selectConversation(result.conversation)
+      if (selectionEpochRef.current !== requestEpoch) return
+      if (
+        pendingUrlConversationIdRef.current &&
+        pendingUrlConversationIdRef.current !== targetConversationId
+      ) {
+        return
+      }
+      if (
+        selectedIdRef.current &&
+        selectedIdRef.current !== targetConversationId
+      ) {
+        return
+      }
+      if (!result.ok) return
+      selectConversation(result.conversation)
     })
   }, [
     initialConversationId,
     conversations,
-    selectedId,
     markConversationRead,
     ensureConversation,
     selectConversation,
+    applySelection,
   ])
 
   useEffect(() => {
@@ -189,6 +235,7 @@ export function MessagesView({
     if (resolvingPerson.current === initialPersonId) return
 
     resolvingPerson.current = initialPersonId
+    const requestEpoch = selectionEpochRef.current
 
     void (async () => {
       const mockPerson = getPersonById(initialPersonId)
@@ -201,9 +248,16 @@ export function MessagesView({
             avatar: mockPerson.avatar,
             online: mockPerson.availability === "Available Now",
           }
-        : { id: initialPersonId, name: "Member", role: "AWN Member", homeBase: "", online: false }
+        : {
+            id: initialPersonId,
+            name: "Member",
+            role: "AWN Member",
+            homeBase: "",
+            online: false,
+          }
 
       const conversation = await ensureConversation(member)
+      if (selectionEpochRef.current !== requestEpoch) return
       if (conversation.ok) {
         selectConversation(conversation.conversation)
       } else {

@@ -200,21 +200,27 @@ export function MessageThread({
   }, [initialDraft, onDraftConsumed])
 
   useEffect(() => {
-    if (isUuid(conversation.id)) {
-      setPersistedConversationId(conversation.id)
+    const conversationId = conversation.id
+    const otherProfileId = conversation.otherProfileId
+
+    if (isUuid(conversationId)) {
+      setPersistedConversationId(conversationId)
       return
     }
 
-    if (!isPersistedConversation(conversation) || !conversation.otherProfileId) {
+    if (!isPersistedConversation(conversation) || !otherProfileId) {
       setPersistedConversationId(null)
       return
     }
 
     let cancelled = false
 
-    void getOrCreateConversation(conversation.otherProfileId).then((result) => {
+    void getOrCreateConversation(otherProfileId).then((result) => {
       if (cancelled || !result.ok) return
-      setPersistedConversationId(result.conversationId)
+      setPersistedConversationId((current) => {
+        if (cancelled) return current
+        return result.conversationId
+      })
     })
 
     return () => {
