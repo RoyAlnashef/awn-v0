@@ -20,7 +20,7 @@ const EMOJI_PICKER_WIDTH = 352
 const reactionPopoverSurface =
   "message-reaction-surface bg-secondary text-secondary-foreground ring-1 ring-border/60 shadow-lg"
 
-const reactionHover = "hover:bg-[var(--message-reaction-hover)]"
+const reactionHover = "hover:bg-(--message-reaction-hover)"
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
@@ -73,7 +73,7 @@ export function MessageReactionPicker({
           reactionPopoverSurface,
           "gap-0",
           showFullPicker
-            ? "w-[352px] max-w-[352px] rounded-2xl p-0"
+            ? "w-88 max-w-88 rounded-2xl p-0"
             : "w-auto overflow-hidden p-1.5",
         )}
       >
@@ -109,7 +109,7 @@ export function MessageReactionPicker({
               variant="ghost"
               size="icon-sm"
               className={cn(
-                "size-9 rounded-full bg-[var(--message-reaction-emphasis)] text-foreground",
+                "size-9 rounded-full bg-(--message-reaction-emphasis) text-foreground",
                 reactionHover,
               )}
               aria-label="More emojis"
@@ -134,7 +134,7 @@ export function MessageReactionTrigger({
       variant="ghost"
       size="icon-xs"
       className={cn(
-        "size-7 rounded-full text-muted-foreground hover:bg-[var(--message-reaction-hover)] hover:text-foreground",
+        "size-7 rounded-full text-muted-foreground hover:bg-(--message-reaction-hover) hover:text-foreground",
         className,
       )}
       aria-label="Add reaction"
