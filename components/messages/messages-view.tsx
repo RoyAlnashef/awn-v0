@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { MessagesSquare, SquarePen } from "lucide-react"
 
 import { parsePersonConversationId } from "@/lib/messages/format"
@@ -47,7 +47,6 @@ export function MessagesView({
   initialDraft?: string
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const {
     conversations,
     markConversationRead,
@@ -73,9 +72,9 @@ export function MessagesView({
       const params = new URLSearchParams()
       mutate(params)
       const qs = params.toString()
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+      router.replace(qs ? `/messages?${qs}` : "/messages", { scroll: false })
     },
-    [pathname, router],
+    [router],
   )
 
   const applySelection = useCallback(
