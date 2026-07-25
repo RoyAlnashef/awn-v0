@@ -24,7 +24,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <RoomsProvider>
+      <RoomsProvider
+          currentUser={{
+            id: sessionUser.id,
+            name: sessionUser.name,
+            avatarUrl: sessionUser.avatarUrl,
+          }}
+        >
         <MessagesProvider
           currentUser={{
             id: sessionUser.id,

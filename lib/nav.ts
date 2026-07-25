@@ -25,7 +25,7 @@ export type NavItem = {
   icon: LucideIcon
   badge?: string
   /** When set, sidebar reads a live count from the matching provider. */
-  liveBadge?: "messages"
+  liveBadge?: "messages" | "rooms"
   live?: boolean
 }
 
@@ -66,7 +66,7 @@ export const mainNav: NavItem[] = [
     description:
       "Discipline-specific community channels for touring crew.",
     icon: Hash,
-    badge: "2",
+    liveBadge: "rooms",
   },
   {
     title: "Intel",

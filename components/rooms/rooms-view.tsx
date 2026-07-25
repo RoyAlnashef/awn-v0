@@ -28,12 +28,12 @@ export function RoomsView({
   const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom } = useRooms()
   const [active, setActive] = useState<Room | null>(null)
 
-  function handleToggleJoin(id: string) {
+  function handleToggleJoin(id: string): Promise<void> {
     const room = getRoom(id)
-    if (!room) return
+    if (!room) return Promise.resolve()
 
     const joining = !room.joined
-    toggleJoin(id)
+    const togglePromise = toggleJoin(id)
 
     if (joining) {
       setActive({ ...room, joined: true, unread: false })
@@ -42,6 +42,8 @@ export function RoomsView({
         prev?.id === id ? { ...room, joined: false } : prev,
       )
     }
+
+    return togglePromise
   }
 
   function selectRoom(room: Room) {
@@ -111,6 +113,7 @@ export function RoomsView({
               room={activeRoom}
               onBack={() => setActive(null)}
               onJoin={() => handleToggleJoin(activeRoom.id)}
+              onLeave={() => handleToggleJoin(activeRoom.id)}
             />
           ) : (
             <Empty className="flex-1 border-none">

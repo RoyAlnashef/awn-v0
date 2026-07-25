@@ -1,15 +1,26 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, Send } from "lucide-react"
-
 import {
-  currentUser as mockCurrentUser,
-  getRoomThread,
-  type Room,
-  type ThreadMessage,
-} from "@/lib/messages-data"
+  useCallback,
+  useEffect,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react"
+import { ArrowLeft, Send } from "lucide-react"
+import { mutate as mutateSwr } from "swr"
+
+import type { Room, ThreadMessage } from "@/lib/messages-data"
 import { applyLocalReaction } from "@/lib/messages/reactions"
+import { isUuid } from "@/lib/messages/format"
+import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
+import { useRoomThread } from "@/lib/rooms/hooks/use-room-thread"
+import {
+  markRoomRead,
+  sendRoomMessage,
+  setRoomMessageReaction,
+} from "@/lib/rooms/actions"
+import { useRooms } from "@/components/rooms/rooms-provider"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -48,45 +59,185 @@ export function RoomThread({
   room,
   onBack,
   onJoin,
+  onLeave,
 }: {
   room: Room
   onBack?: () => void
-  onJoin?: () => void
+  onJoin?: () => void | Promise<void>
+  onLeave?: () => void | Promise<void>
 }) {
-  const baseThread = useMemo(() => getRoomThread(room), [room])
-  const [messages, setMessages] = useState<ThreadMessage[]>(baseThread)
-  const [draft, setDraft] = useState("")
+  const { currentUser, setActiveRoomId } = useRooms()
   const Icon = room.icon
 
-  useEffect(() => {
-    setMessages(baseThread)
-    setDraft("")
-  }, [baseThread])
+  const usesServer = isUuid(room.id)
 
-  function sendMessage() {
+  const {
+    messages: serverMessages,
+    isLoading,
+    mutate: mutateThread,
+  } = useRoomThread(usesServer ? room.id : null)
+
+  const [optimisticMessages, addOptimistic] = useOptimistic<
+    ThreadMessage[],
+    ThreadMessage
+  >(serverMessages, (state, msg) => [...state, msg])
+
+  const [draft, setDraft] = useState("")
+  const [isSending, startSend] = useTransition()
+  const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
+    null,
+  )
+
+  useEffect(() => {
+    setPendingAction(null)
+  }, [room.id])
+
+  async function handleJoin() {
+    if (pendingAction || !onJoin) return
+    setPendingAction("join")
+    try {
+      await onJoin()
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  async function handleLeave() {
+    if (pendingAction || !onLeave) return
+    setPendingAction("leave")
+    try {
+      await onLeave()
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  // Track active room so realtime bridge can mark messages read correctly
+  useEffect(() => {
+    if (!usesServer) return
+    setActiveRoomId(room.id)
+    return () => setActiveRoomId(null)
+  }, [room.id, usesServer, setActiveRoomId])
+
+  // Mark room as read when a joined thread is opened
+  useEffect(() => {
+    if (!usesServer || !room.joined) return
+    void markRoomRead(room.id).then(() => {
+      void mutateSwr(roomsListKey)
+      void mutateSwr(roomsUnreadCountKey)
+    })
+  }, [room.id, room.joined, usesServer])
+
+  const sendMessage = useCallback(() => {
     if (!room.joined) return
     const text = draft.trim()
     if (!text) return
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `${room.id}-local-${prev.length}`,
+
+    if (usesServer) {
+      const optimistic: ThreadMessage = {
+        id: `optimistic-${Date.now()}`,
         from: "me",
         text,
         time: "Now",
-      },
-    ])
-    setDraft("")
-  }
+      }
 
-  function handleReact(messageId: string, emoji: string | null) {
-    setMessages((prev) =>
-      applyLocalReaction(prev, messageId, emoji, {
-        id: "local-user",
-        name: mockCurrentUser.name,
-      }),
-    )
-  }
+      startSend(async () => {
+        addOptimistic(optimistic)
+        setDraft("")
+
+        const result = await sendRoomMessage(room.id, text)
+        if (result.ok) {
+          await mutateThread(
+            (current) => {
+              if (!current) return current
+              return {
+                ...current,
+                messages: current.messages
+                  .filter((m) => m.id !== optimistic.id)
+                  .concat(result.message),
+              }
+            },
+            { revalidate: false },
+          )
+        } else {
+          // Revert optimistic on error
+          await mutateThread()
+        }
+      })
+    } else {
+      // Mock path (pre-migration / dev fallback)
+      addOptimistic({
+        id: `local-${Date.now()}`,
+        from: "me",
+        text,
+        time: "Now",
+      })
+      setDraft("")
+    }
+  }, [
+    room.id,
+    room.joined,
+    draft,
+    usesServer,
+    addOptimistic,
+    mutateThread,
+    startSend,
+  ])
+
+  const handleReact = useCallback(
+    (messageId: string, emoji: string | null) => {
+      if (usesServer) {
+        void mutateThread(
+          (current) => {
+            if (!current) return current
+            return {
+              ...current,
+              messages: applyLocalReaction(current.messages, messageId, emoji, {
+                id: currentUser.id,
+                name: currentUser.name,
+              }),
+            }
+          },
+          { revalidate: false },
+        )
+        void setRoomMessageReaction(messageId, emoji).then((result) => {
+          if (result.ok) {
+            void mutateThread(
+              (current) => {
+                if (!current) return current
+                return {
+                  ...current,
+                  messages: current.messages.map((m) =>
+                    m.id === messageId
+                      ? { ...m, reactions: result.reactions }
+                      : m,
+                  ),
+                }
+              },
+              { revalidate: false },
+            )
+          }
+        })
+      } else {
+        void mutateThread(
+          (current) => {
+            if (!current) return current
+            return {
+              ...current,
+              messages: applyLocalReaction(current.messages, messageId, emoji, {
+                id: currentUser.id,
+                name: currentUser.name,
+              }),
+            }
+          },
+          { revalidate: false },
+        )
+      }
+    },
+    [usesServer, mutateThread, currentUser],
+  )
+
+  const messages = optimisticMessages
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -113,9 +264,26 @@ export function RoomThread({
             {room.description}
           </p>
         </div>
-        {!room.joined ? (
-          <Button size="sm" className="shrink-0" onClick={onJoin}>
-            Join room
+        {pendingAction === "join" ? (
+          <Button size="sm" className="shrink-0" disabled>
+            Joining…
+          </Button>
+        ) : pendingAction === "leave" ? (
+          <Button size="sm" variant="outline" className="shrink-0" disabled>
+            Leaving…
+          </Button>
+        ) : !room.joined ? (
+          <Button size="sm" className="shrink-0" onClick={handleJoin}>
+            Join
+          </Button>
+        ) : !room.isDefault ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={handleLeave}
+          >
+            Leave
           </Button>
         ) : null}
       </header>
@@ -126,15 +294,17 @@ export function RoomThread({
             <MessageScrollerContent className="gap-4 py-4">
               <MessageScrollerItem messageId="start">
                 <Marker variant="separator">
-                  <MarkerContent>Recent messages</MarkerContent>
+                  <MarkerContent>
+                    {isLoading ? "Loading…" : "Recent messages"}
+                  </MarkerContent>
                 </Marker>
               </MessageScrollerItem>
 
               {messages.map((message) => {
                 const mine = message.from === "me"
                 const displayName = mine
-                  ? mockCurrentUser.name
-                  : message.author ?? "Member"
+                  ? currentUser.name
+                  : (message.author ?? "Member")
                 return (
                   <MessageScrollerItem
                     key={message.id}
@@ -145,7 +315,11 @@ export function RoomThread({
                       <MessageAvatar>
                         <Avatar className="size-8">
                           <AvatarImage
-                            src={mine ? mockCurrentUser.avatar : undefined}
+                            src={
+                              mine
+                                ? (currentUser.avatarUrl ?? undefined)
+                                : undefined
+                            }
                             alt=""
                           />
                           <AvatarFallback>{initials(displayName)}</AvatarFallback>
@@ -202,7 +376,7 @@ export function RoomThread({
                 variant="default"
                 size="icon-sm"
                 aria-label="Send message"
-                disabled={!draft.trim()}
+                disabled={!draft.trim() || isSending}
                 onClick={sendMessage}
               >
                 <Send />

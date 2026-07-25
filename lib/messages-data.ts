@@ -79,6 +79,8 @@ export interface Room {
   /** Relative time label for the latest activity. */
   time: string
   unread?: boolean
+  /** True for rooms that all members are auto-joined to (e.g. General). Cannot be left. */
+  isDefault?: boolean
 }
 
 export const directConversations: DirectConversation[] = [

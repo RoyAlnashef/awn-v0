@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import { AvailabilityCard } from "@/components/availability-card"
 import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
+import { useRoomsUnreadCount } from "@/lib/rooms/hooks/use-rooms-unread-count"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
 
 export function AppSidebar({
@@ -28,6 +29,7 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & { showAdminNav: boolean }) {
   const pathname = usePathname()
   const { unreadCount: messagesUnreadCount } = useUnreadCount()
+  const { unreadCount: roomsUnreadCount } = useRoomsUnreadCount()
 
   const isActive = (item: NavItem) =>
     pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -82,6 +84,8 @@ export function AppSidebar({
                   </SidebarMenuButton>
                   {item.liveBadge === "messages" && messagesUnreadCount > 0 ? (
                     <SidebarMenuBadge>{messagesUnreadCount}</SidebarMenuBadge>
+                  ) : item.liveBadge === "rooms" && roomsUnreadCount > 0 ? (
+                    <SidebarMenuBadge>{roomsUnreadCount}</SidebarMenuBadge>
                   ) : item.badge ? (
                     <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
                   ) : null}
