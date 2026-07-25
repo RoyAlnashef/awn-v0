@@ -298,6 +298,7 @@ export function MessagesView({
             conversations={conversations}
             onSelectConversation={selectConversation}
             onPrefetchConversation={prefetchThread}
+            onNewMessage={() => setNewOpen(true)}
           />
         </div>
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { MessagesSquare, Search, SquarePen } from "lucide-react"
 
 import {
   directConversations,
@@ -10,6 +10,14 @@ import {
 import { isPersistedConversation } from "@/lib/messages/format"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -32,12 +40,14 @@ export function MessagesInbox({
   conversations = directConversations,
   onSelectConversation,
   onPrefetchConversation,
+  onNewMessage,
   className,
 }: {
   activeId?: string
   conversations?: DirectConversation[]
   onSelectConversation?: (conversation: DirectConversation) => void
   onPrefetchConversation?: (conversationId: string) => void
+  onNewMessage?: () => void
   className?: string
 }) {
   const [query, setQuery] = useState("")
@@ -152,6 +162,25 @@ export function MessagesInbox({
               )
             })}
           </ul>
+        ) : conversations.length === 0 && !q ? (
+          <Empty className="border-none p-6 py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <MessagesSquare />
+              </EmptyMedia>
+              <EmptyTitle>No conversations yet</EmptyTitle>
+              <EmptyDescription>
+                Start a direct message with someone on AWN to see your
+                conversations here.
+              </EmptyDescription>
+            </EmptyHeader>
+            {onNewMessage ? (
+              <Button variant="outline" onClick={onNewMessage}>
+                <SquarePen className="size-4" />
+                New message
+              </Button>
+            ) : null}
+          </Empty>
         ) : (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">
             No conversations match “{query}”.
