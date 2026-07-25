@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { NewMessageDrawerSkeleton } from "@/components/messages/new-message-drawer-skeleton"
 
 function memberSubtitle(member: MessageableMember) {
   if (member.homeBase) {
@@ -111,9 +112,7 @@ export function NewMessageDrawer({
 
         <ScrollArea className="min-h-0 flex-1">
           {loading ? (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-              Loading members…
-            </p>
+            <NewMessageDrawerSkeleton />
           ) : error ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
               {error}
