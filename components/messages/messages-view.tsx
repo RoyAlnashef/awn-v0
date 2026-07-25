@@ -66,6 +66,15 @@ export function MessagesView({
   const selectedIdRef = useRef<string | null>(null)
   const pendingUrlConversationIdRef = useRef<string | null>(null)
   const lastSyncedUrlIdRef = useRef<string | undefined>(initialConversationId)
+  const urlSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const supersededUrlIdsRef = useRef(new Set<string>())
+  const allowUrlOverrideRef = useRef(false)
+  const conversationsRef = useRef(conversations)
+  conversationsRef.current = conversations
+  const getConversationRef = useRef(getConversation)
+  getConversationRef.current = getConversation
+  const ensureConversationRef = useRef(ensureConversation)
+  ensureConversationRef.current = ensureConversation
 
   const replaceSearchParams = useCallback(
     (mutate: (params: URLSearchParams) => void) => {
@@ -77,16 +86,38 @@ export function MessagesView({
     [router],
   )
 
+  const cancelScheduledUrlSync = useCallback(() => {
+    if (urlSyncTimeoutRef.current) {
+      clearTimeout(urlSyncTimeoutRef.current)
+      urlSyncTimeoutRef.current = null
+    }
+  }, [])
+
+  const scheduleUrlSync = useCallback(
+    (mutate: (params: URLSearchParams) => void, epoch: number) => {
+      cancelScheduledUrlSync()
+      urlSyncTimeoutRef.current = setTimeout(() => {
+        urlSyncTimeoutRef.current = null
+        if (selectionEpochRef.current !== epoch) return
+
+        startTransition(() => {
+          replaceSearchParams(mutate)
+        })
+      }, 100)
+    },
+    [cancelScheduledUrlSync, replaceSearchParams],
+  )
+
   const applySelection = useCallback(
     (epoch: number, conversation: DirectConversation) => {
       if (selectionEpochRef.current !== epoch) return false
 
       selectedIdRef.current = conversation.id
       setSelectedId(conversation.id)
-      setActive(getConversation(conversation.id) ?? conversation)
+      setActive(getConversationRef.current(conversation.id) ?? conversation)
       return true
     },
-    [getConversation],
+    [],
   )
 
   const selectConversation = useCallback(
@@ -95,27 +126,35 @@ export function MessagesView({
         markConversationRead(conversation.id)
       }
 
+      if (selectedIdRef.current && selectedIdRef.current !== conversation.id) {
+        supersededUrlIdsRef.current.add(selectedIdRef.current)
+      }
+      if (pendingUrlConversationIdRef.current) {
+        supersededUrlIdsRef.current.add(pendingUrlConversationIdRef.current)
+      }
+      if (lastSyncedUrlIdRef.current) {
+        supersededUrlIdsRef.current.add(lastSyncedUrlIdRef.current)
+      }
+
       const epoch = ++selectionEpochRef.current
       pendingUrlConversationIdRef.current = conversation.id
       applySelection(epoch, conversation)
 
-      startTransition(() => {
-        if (selectionEpochRef.current !== epoch) return
-
-        replaceSearchParams((params) => {
-          params.set("conversation", conversation.id)
-          params.delete("person")
-          params.delete("draft")
-        })
-      })
+      scheduleUrlSync((params) => {
+        params.set("conversation", conversation.id)
+        params.delete("person")
+        params.delete("draft")
+      }, epoch)
     },
-    [applySelection, markConversationRead, replaceSearchParams],
+    [applySelection, markConversationRead, scheduleUrlSync],
   )
 
   const clearActiveConversation = useCallback(() => {
+    cancelScheduledUrlSync()
     ++selectionEpochRef.current
     pendingUrlConversationIdRef.current = null
     selectedIdRef.current = null
+    supersededUrlIdsRef.current.clear()
     setSelectedId(null)
     setActive(null)
     setComposerDraft("")
@@ -127,7 +166,7 @@ export function MessagesView({
         params.delete("draft")
       })
     })
-  }, [replaceSearchParams])
+  }, [cancelScheduledUrlSync, replaceSearchParams])
 
   function handleStartConversation(member: MessageableMember) {
     setStartError(null)
@@ -141,76 +180,134 @@ export function MessagesView({
   }
 
   useEffect(() => {
-    if (!initialConversationId) {
-      if (lastSyncedUrlIdRef.current) {
-        lastSyncedUrlIdRef.current = undefined
-        pendingUrlConversationIdRef.current = null
-        ++selectionEpochRef.current
-        selectedIdRef.current = null
-        setSelectedId(null)
-        setActive(null)
-      }
-      return
+    return () => {
+      cancelScheduledUrlSync()
     }
+  }, [cancelScheduledUrlSync])
 
-    const pendingId = pendingUrlConversationIdRef.current
-
-    // Ignore a lagging URL only when it still matches the last synced id while
-    // an in-page selection is waiting for router.replace to catch up. Any URL
-    // change to a new id (drawer, back/forward) is authoritative.
-    if (
-      pendingId &&
-      pendingId !== initialConversationId &&
-      initialConversationId === lastSyncedUrlIdRef.current
-    ) {
-      return
-    }
-
-    if (pendingId) {
+  useEffect(() => {
+    function onPopState() {
+      allowUrlOverrideRef.current = true
       pendingUrlConversationIdRef.current = null
+      supersededUrlIdsRef.current.clear()
+      cancelScheduledUrlSync()
     }
 
-    lastSyncedUrlIdRef.current = initialConversationId
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [cancelScheduledUrlSync])
 
-    const conversation = conversations.find(
-      (c) => c.id === initialConversationId,
-    )
-    if (conversation) {
-      if (conversation.unread) {
-        markConversationRead(initialConversationId)
+  const syncSelectionFromUrl = useCallback(
+    (conversationId: string | undefined) => {
+      if (!conversationId) {
+        if (pendingUrlConversationIdRef.current) {
+          return
+        }
+
+        if (selectedIdRef.current) {
+          return
+        }
+
+        if (lastSyncedUrlIdRef.current) {
+          lastSyncedUrlIdRef.current = undefined
+          pendingUrlConversationIdRef.current = null
+          ++selectionEpochRef.current
+          selectedIdRef.current = null
+          setSelectedId(null)
+          setActive(null)
+        }
+        return
       }
 
-      const epoch = ++selectionEpochRef.current
-      applySelection(epoch, conversation)
+      const pendingId = pendingUrlConversationIdRef.current
+      const localSelection = selectedIdRef.current
+      const urlOverride = allowUrlOverrideRef.current
+
+      if (urlOverride) {
+        allowUrlOverrideRef.current = false
+      } else if (localSelection && localSelection !== conversationId) {
+        if (pendingId && pendingId !== conversationId) {
+          return
+        }
+
+        if (supersededUrlIdsRef.current.has(conversationId)) {
+          return
+        }
+      }
+
+      if (pendingId && pendingId !== conversationId) {
+        return
+      }
+
+      if (supersededUrlIdsRef.current.has(conversationId)) {
+        return
+      }
+
+      if (pendingId === conversationId) {
+        pendingUrlConversationIdRef.current = null
+      }
+
+      if (localSelection === conversationId) {
+        lastSyncedUrlIdRef.current = conversationId
+        supersededUrlIdsRef.current.delete(conversationId)
+        return
+      }
+
+      lastSyncedUrlIdRef.current = conversationId
+      supersededUrlIdsRef.current.delete(conversationId)
+
+      const conversation = conversationsRef.current.find(
+        (c) => c.id === conversationId,
+      )
+      if (conversation) {
+        if (conversation.unread) {
+          markConversationRead(conversationId)
+        }
+
+        const epoch = ++selectionEpochRef.current
+        applySelection(epoch, conversation)
+        return
+      }
+
+      const profileId = parsePersonConversationId(conversationId)
+      if (!profileId) return
+
+      const requestEpoch = selectionEpochRef.current
+      const targetConversationId = conversationId
+
+      void ensureConversationRef.current({
+        id: profileId,
+        name: "Member",
+        role: "AWN Member",
+        homeBase: "",
+        online: false,
+      }).then((result) => {
+        if (selectionEpochRef.current !== requestEpoch) return
+        if (lastSyncedUrlIdRef.current !== targetConversationId) return
+        if (!result.ok) return
+        selectConversation(result.conversation)
+      })
+    },
+    [applySelection, markConversationRead, selectConversation],
+  )
+
+  useEffect(() => {
+    syncSelectionFromUrl(initialConversationId)
+  }, [initialConversationId, syncSelectionFromUrl])
+
+  useEffect(() => {
+    if (!initialConversationId) return
+    if (selectedIdRef.current) {
+      if (selectedIdRef.current !== initialConversationId) {
+        return
+      }
+
+      lastSyncedUrlIdRef.current = initialConversationId
       return
     }
 
-    const profileId = parsePersonConversationId(initialConversationId)
-    if (!profileId) return
-
-    const requestEpoch = selectionEpochRef.current
-    const targetConversationId = initialConversationId
-
-    void ensureConversation({
-      id: profileId,
-      name: "Member",
-      role: "AWN Member",
-      homeBase: "",
-      online: false,
-    }).then((result) => {
-      if (selectionEpochRef.current !== requestEpoch) return
-      if (lastSyncedUrlIdRef.current !== targetConversationId) return
-      if (!result.ok) return
-      selectConversation(result.conversation)
-    })
-  }, [
-    initialConversationId,
-    conversations,
-    markConversationRead,
-    ensureConversation,
-    selectConversation,
-    applySelection,
-  ])
+    syncSelectionFromUrl(initialConversationId)
+  }, [conversations, initialConversationId, syncSelectionFromUrl])
 
   useEffect(() => {
     if (!initialPersonId) return
