@@ -25,7 +25,7 @@ export function Messages() {
   const [open, setOpen] = useState(false)
   const { conversations, markConversationRead } = useMessages()
   const { unreadCount } = useUnreadCount()
-  useInbox({ enabled: open })
+  const { isLoading: isInboxLoading } = useInbox({ enabled: open })
 
   function navigateToConversation(conversationId: string) {
     setOpen(false)
@@ -87,6 +87,7 @@ export function Messages() {
             conversations={conversations}
             onSelectConversation={handleSelectConversation}
             onPrefetchConversation={prefetchThread}
+            isLoading={isInboxLoading}
           />
         </SheetContent>
       ) : null}

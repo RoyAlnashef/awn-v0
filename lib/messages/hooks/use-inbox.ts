@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useLayoutEffect } from "react"
 import useSWR from "swr"
 
 import { useMessages } from "@/components/messages/messages-provider"
@@ -22,13 +22,16 @@ export function useInbox({ enabled = true }: { enabled?: boolean } = {}) {
     refreshInterval: enabled ? 30_000 : 0,
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (swr.data) {
       syncConversationsFromInbox(swr.data)
     }
   }, [swr.data, syncConversationsFromInbox])
 
-  return swr
+  return {
+    ...swr,
+    isLoading: swr.isLoading && !swr.data,
+  }
 }
 
 export { fetchInbox }

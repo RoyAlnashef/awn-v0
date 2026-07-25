@@ -26,6 +26,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
+import { MessagesInboxSkeleton } from "@/components/messages/messages-inbox-skeleton"
 
 function initials(name: string) {
   return name
@@ -41,6 +42,7 @@ export function MessagesInbox({
   onSelectConversation,
   onPrefetchConversation,
   onNewMessage,
+  isLoading = false,
   className,
 }: {
   activeId?: string
@@ -48,6 +50,7 @@ export function MessagesInbox({
   onSelectConversation?: (conversation: DirectConversation) => void
   onPrefetchConversation?: (conversationId: string) => void
   onNewMessage?: () => void
+  isLoading?: boolean
   className?: string
 }) {
   const [query, setQuery] = useState("")
@@ -80,7 +83,9 @@ export function MessagesInbox({
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        {filteredConversations.length > 0 ? (
+        {isLoading ? (
+          <MessagesInboxSkeleton />
+        ) : filteredConversations.length > 0 ? (
           <ul className="flex flex-col">
             {filteredConversations.map((c) => {
               const active = activeId === c.id

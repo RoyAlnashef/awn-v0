@@ -55,7 +55,7 @@ export function MessagesView({
     ensureConversation,
     setActiveConversationId,
   } = useMessages()
-  useInbox({ enabled: true })
+  const { isLoading: isInboxLoading } = useInbox({ enabled: true })
   const hydrated = useHydrated()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [active, setActive] = useState<DirectConversation | null>(null)
@@ -299,6 +299,7 @@ export function MessagesView({
             onSelectConversation={selectConversation}
             onPrefetchConversation={prefetchThread}
             onNewMessage={() => setNewOpen(true)}
+            isLoading={isInboxLoading}
           />
         </div>
 
