@@ -104,9 +104,9 @@ export const adminNav: NavItem[] = [
     icon: ClipboardList,
   },
   {
-    title: "Groups",
+    title: "Communities",
     href: "/groups",
-    description: "Manage crew rooms, departments, and community groups.",
+    description: "Manage crew rooms, departments, and communities.",
     icon: UsersRound,
   },
   {
