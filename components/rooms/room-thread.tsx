@@ -6,6 +6,7 @@ import { mutate as mutateSwr } from "swr"
 
 import type { Room, ThreadMessage } from "@/lib/messages-data"
 import { applyLocalReaction } from "@/lib/messages/reactions"
+import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
 import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
 import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
@@ -50,6 +51,23 @@ function initials(name: string) {
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
+}
+
+const ROOM_AUTHOR_COLORS = [
+  "text-orange-400",
+  "text-emerald-400",
+  "text-sky-400",
+  "text-violet-400",
+  "text-rose-400",
+  "text-amber-400",
+] as const
+
+function roomAuthorColor(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return ROOM_AUTHOR_COLORS[Math.abs(hash) % ROOM_AUTHOR_COLORS.length]
 }
 
 function RoomThreadScrollEffects({
@@ -356,49 +374,74 @@ export function RoomThread({
                 </Marker>
               </MessageScrollerItem>
 
-              {messages.map((message) => {
+              {messages.map((message, index) => {
                 const mine = message.from === "me"
                 const displayName = mine
                   ? currentUser.name
                   : (message.author ?? "Member")
+                const previous = messages[index - 1]
+                const next = messages[index + 1]
+                const continuesPreviousGroup =
+                  previous !== undefined &&
+                  isSameRoomMessageGroup(previous, message)
+                const continuesNextGroup =
+                  next !== undefined && isSameRoomMessageGroup(message, next)
+                const showAuthor =
+                  !mine && message.author && !continuesPreviousGroup
+                const showAvatar = !continuesPreviousGroup
+                const showTimestamp = !continuesNextGroup
                 return (
                   <MessageScrollerItem
                     key={message.id}
                     messageId={message.id}
                     className={cn(
+                      continuesPreviousGroup && "-mt-3",
                       newMessageIds.has(message.id) &&
                         "animate-message-enter [content-visibility:visible]",
                     )}
                   >
                     <Message align={mine ? "end" : "start"}>
-                      <MessageAvatar>
-                        <Avatar className="size-8">
-                          <AvatarImage
-                            src={
-                              mine
-                                ? (currentUser.avatarUrl ?? undefined)
-                                : undefined
-                            }
-                            alt=""
-                          />
-                          <AvatarFallback>{initials(displayName)}</AvatarFallback>
-                        </Avatar>
-                      </MessageAvatar>
+                      {showAvatar ? (
+                        <MessageAvatar className="self-start">
+                          <Avatar className="size-8">
+                            <AvatarImage
+                              src={
+                                mine
+                                  ? (currentUser.avatarUrl ?? undefined)
+                                  : undefined
+                              }
+                              alt=""
+                            />
+                            <AvatarFallback>
+                              {initials(displayName)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </MessageAvatar>
+                      ) : (
+                        <div className="w-8 shrink-0" aria-hidden />
+                      )}
                       <MessageContent>
-                        {!mine && message.author ? (
-                          <p className="mb-0.5 text-xs font-medium text-muted-foreground">
-                            {message.author}
-                          </p>
-                        ) : null}
                         <MessageBubbleWithReactions
                           variant={mine ? "default" : "muted"}
                           align={mine ? "end" : "start"}
                           reactions={message.reactions}
                           onReact={(emoji) => handleReact(message.id, emoji)}
                         >
+                          {showAuthor ? (
+                            <p
+                              className={cn(
+                                "mb-0.5 text-xs font-semibold leading-tight",
+                                roomAuthorColor(message.author!),
+                              )}
+                            >
+                              {message.author!}
+                            </p>
+                          ) : null}
                           {message.text}
                         </MessageBubbleWithReactions>
-                        <MessageFooter>{message.time}</MessageFooter>
+                        {showTimestamp ? (
+                          <MessageFooter>{message.time}</MessageFooter>
+                        ) : null}
                       </MessageContent>
                     </Message>
                   </MessageScrollerItem>
