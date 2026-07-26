@@ -90,7 +90,7 @@ const bubbleReactionsVariants = cva(
   {
     variants: {
       side: {
-        top: "top-0 -translate-y-3/4",
+        top: "top-1.5",
         bottom: "bottom-0 translate-y-3/4",
       },
       align: {
@@ -125,4 +125,4 @@ function BubbleReactions({
   )
 }
 
-export { BubbleGroup, Bubble, BubbleContent, BubbleReactions }
+export { BubbleGroup, Bubble, BubbleContent, BubbleReactions, bubbleReactionsVariants }

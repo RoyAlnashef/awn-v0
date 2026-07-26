@@ -7,7 +7,7 @@ import {
   totalReactionCount,
 } from "@/lib/messages/reactions"
 import { cn } from "@/lib/utils"
-import { BubbleReactions } from "@/components/ui/bubble"
+import { bubbleReactionsVariants } from "@/components/ui/bubble"
 import {
   HoverCard,
   HoverCardContent,
@@ -39,8 +39,8 @@ export function MessageReactionBadge({
           <button
             type="button"
             className={cn(
-              "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-              mine && "ring-offset-1",
+              bubbleReactionsVariants({ side: "top", align }),
+              "ring-secondary cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-0",
             )}
             aria-label={`${total} reaction${total === 1 ? "" : "s"}`}
             onClick={(e) => {
@@ -50,37 +50,35 @@ export function MessageReactionBadge({
               }
             }}
           >
-            <BubbleReactions align={align} side="bottom" className="ring-secondary">
-              <span className="flex items-center gap-0.5 px-0.5">
-                {emojis.length === 1 ? (
-                  <span className="text-base leading-none">{emojis[0]}</span>
-                ) : (
-                  <>
-                    <span className="flex -space-x-1">
-                      {emojis.slice(0, 3).map((emoji) => (
-                        <span
-                          key={emoji}
-                          className="inline-flex size-5 items-center justify-center rounded-full bg-secondary text-xs leading-none ring-2 ring-secondary"
-                        >
-                          {emoji}
-                        </span>
-                      ))}
-                    </span>
-                    {total > 1 ? (
-                      <span className="pl-0.5 text-xs font-medium text-muted-foreground">
-                        {total}
+            <span className="flex items-center gap-0.5 px-0.5">
+              {emojis.length === 1 ? (
+                <span className="text-base leading-none">{emojis[0]}</span>
+              ) : (
+                <>
+                  <span className="flex -space-x-1">
+                    {emojis.slice(0, 3).map((emoji) => (
+                      <span
+                        key={emoji}
+                        className="inline-flex size-5 items-center justify-center rounded-full bg-secondary text-xs leading-none ring-2 ring-secondary"
+                      >
+                        {emoji}
                       </span>
-                    ) : null}
-                  </>
-                )}
-              </span>
-            </BubbleReactions>
+                    ))}
+                  </span>
+                  {total > 1 ? (
+                    <span className="pl-0.5 text-xs font-medium text-muted-foreground">
+                      {total}
+                    </span>
+                  ) : null}
+                </>
+              )}
+            </span>
           </button>
         }
       />
       <HoverCardContent
         side="top"
-        align={align === "end" ? "end" : "start"}
+        align="center"
         className="w-auto max-w-56 bg-secondary px-3 py-2 text-xs whitespace-pre-line"
       >
         {tooltip || formatReactorNames(reactions)}

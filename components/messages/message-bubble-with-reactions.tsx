@@ -36,10 +36,13 @@ export function MessageBubbleWithReactions({
     }
   }
 
+  const hasReactions = Boolean(reactions?.length)
+
   return (
     <div
       className={cn(
-        "group/bubble-wrap relative w-fit max-w-[80%] min-w-0",
+        "group/bubble-wrap relative w-fit max-w-[80%] min-w-0 overflow-visible",
+        hasReactions && "pt-6",
         "after:absolute after:top-0 after:bottom-0 after:w-9 after:content-['']",
         align === "end"
           ? "self-end after:right-full"
@@ -47,15 +50,15 @@ export function MessageBubbleWithReactions({
         className,
       )}
     >
+      {hasReactions ? (
+        <MessageReactionBadge
+          reactions={reactions!}
+          align={align === "end" ? "start" : "end"}
+          onToggleMine={() => onReact(null)}
+        />
+      ) : null}
       <Bubble variant={variant} align={align} className="max-w-full">
         <BubbleContent>{children}</BubbleContent>
-        {reactions?.length ? (
-          <MessageReactionBadge
-            reactions={reactions}
-            align={align === "end" ? "start" : "end"}
-            onToggleMine={() => onReact(null)}
-          />
-        ) : null}
       </Bubble>
 
       <div
