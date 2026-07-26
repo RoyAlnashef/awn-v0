@@ -19,7 +19,8 @@ import { useRooms } from "@/components/rooms/rooms-provider"
 export function Rooms() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const { sortedRooms, unreadCount, toggleJoin, markRoomRead } = useRooms()
+  const { sortedRooms, unreadCount, toggleJoin, markRoomRead, isLoading } =
+    useRooms()
 
   function navigateToRoom(roomId: string) {
     setOpen(false)
@@ -86,6 +87,7 @@ export function Rooms() {
 
           <RoomsInbox
             rooms={sortedRooms}
+            isLoading={isLoading}
             onSelectRoom={handleSelectRoom}
             onToggleJoin={handleToggleJoin}
           />

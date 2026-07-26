@@ -8,18 +8,22 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import { RoomsInboxSkeleton } from "@/components/rooms/rooms-inbox-skeleton"
 
 export function RoomsInbox({
   activeId,
   rooms,
   onSelectRoom,
   onToggleJoin,
+  isLoading = false,
   className,
 }: {
   activeId?: string
   rooms: Room[]
   onSelectRoom?: (room: Room) => void
   onToggleJoin?: (roomId: string) => void
+  isLoading?: boolean
   className?: string
 }) {
   const [query, setQuery] = useState("")
@@ -57,10 +61,16 @@ export function RoomsInbox({
             Rooms
           </span>
           <span className="text-xs text-muted-foreground/80">
-            {filteredRooms.length}
+            {isLoading ? (
+              <Skeleton className="inline-block h-3 w-4" />
+            ) : (
+              filteredRooms.length
+            )}
           </span>
         </div>
-        {filteredRooms.length > 0 ? (
+        {isLoading ? (
+          <RoomsInboxSkeleton />
+        ) : filteredRooms.length > 0 ? (
           <ul className="flex flex-col">
             {filteredRooms.map((room) => {
               const active = activeId === room.id

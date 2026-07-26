@@ -36,6 +36,7 @@ type RoomsContextValue = {
   rooms: Room[]
   sortedRooms: Room[]
   unreadCount: number
+  isLoading: boolean
   currentUser: RoomsCurrentUser
   activeRoomId: string | null
   setActiveRoomId: (id: string | null) => void
@@ -153,6 +154,7 @@ export function RoomsProvider({
         rooms,
         sortedRooms,
         unreadCount,
+        isLoading,
         currentUser,
         activeRoomId,
         setActiveRoomId,

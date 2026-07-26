@@ -25,7 +25,8 @@ export function RoomsView({
   description?: string
   initialRoomId?: string
 }) {
-  const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom } = useRooms()
+  const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom, isLoading } =
+    useRooms()
   const [active, setActive] = useState<Room | null>(null)
 
   function handleToggleJoin(id: string): Promise<void> {
@@ -96,6 +97,7 @@ export function RoomsView({
           <RoomsInbox
             activeId={activeRoom?.id}
             rooms={sortedRooms}
+            isLoading={isLoading}
             onSelectRoom={selectRoom}
             onToggleJoin={handleToggleJoin}
           />
