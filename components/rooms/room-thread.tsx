@@ -488,7 +488,7 @@ export function RoomThread({
                           {showAuthor ? (
                             <button
                               type="button"
-                              className="mb-0.5 block w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                              className="mb-0.5 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 openAuthorProfile(message)
