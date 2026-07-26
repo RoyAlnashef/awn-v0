@@ -388,7 +388,7 @@ export function RoomThread({
                   next !== undefined && isSameRoomMessageGroup(message, next)
                 const showAuthor =
                   !mine && message.author && !continuesPreviousGroup
-                const showAvatar = !continuesNextGroup
+                const showAvatar = !continuesPreviousGroup
                 const showTimestamp = !continuesNextGroup
                 return (
                   <MessageScrollerItem
@@ -402,7 +402,7 @@ export function RoomThread({
                   >
                     <Message align={mine ? "end" : "start"}>
                       {showAvatar ? (
-                        <MessageAvatar>
+                        <MessageAvatar className="self-start">
                           <Avatar className="size-8">
                             <AvatarImage
                               src={
