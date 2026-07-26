@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { EditRoomSheet } from "@/components/groups/edit-room-sheet"
+import { EditRoomDialog } from "@/components/groups/edit-room-dialog"
 import { CreateRoomDialog } from "@/components/groups/create-room-dialog"
 import type { AdminRoomRecord } from "@/lib/rooms/actions"
 
@@ -226,7 +226,7 @@ export function RoomsTable({
         </div>
       </div>
 
-      <EditRoomSheet
+      <EditRoomDialog
         room={editRoom}
         open={editOpen}
         onOpenChange={setEditOpen}

@@ -6,13 +6,13 @@ import { adminUpdateRoom } from "@/lib/rooms/actions"
 import { ROOM_ICON_OPTIONS } from "@/lib/rooms/icon-map"
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -33,7 +33,7 @@ type Props = {
   onUpdated: (room: AdminRoomRecord) => void
 }
 
-export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
+export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [icon, setIcon] = useState("hash")
@@ -75,17 +75,17 @@ export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <form onSubmit={handleSubmit} className="flex h-full flex-col">
-          <SheetHeader>
-            <SheetTitle>Edit room</SheetTitle>
-            <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Edit room</DialogTitle>
+            <DialogDescription>
               Update details for <strong>{room?.name}</strong>.
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
 
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4">
+          <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="edit-room-name">Name</Label>
               <Input
@@ -93,6 +93,7 @@ export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                autoFocus
               />
             </div>
 
@@ -102,6 +103,7 @@ export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
                 id="edit-room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder="What is this room for?"
                 rows={2}
               />
             </div>
@@ -144,7 +146,7 @@ export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
             ) : null}
           </div>
 
-          <SheetFooter className="flex gap-2 pt-4">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -152,15 +154,12 @@ export function EditRoomSheet({ room, open, onOpenChange, onUpdated }: Props) {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !name.trim()}
-            >
+            <Button type="submit" disabled={isPending || !name.trim()}>
               {isPending ? "Saving…" : "Save changes"}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
