@@ -98,16 +98,23 @@ export function RoomsInbox({
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xl leading-none">
                         {room.icon}
                       </span>
-                      <p
-                        className={cn(
-                          "min-w-0 flex-1 truncate text-sm",
-                          room.unread && room.joined
-                            ? "font-semibold text-foreground"
-                            : "font-medium text-foreground",
-                        )}
-                      >
-                        {room.name}
-                      </p>
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <p
+                          className={cn(
+                            "min-w-0 truncate text-sm",
+                            room.unread && room.joined
+                              ? "font-semibold text-foreground"
+                              : "font-medium text-foreground",
+                          )}
+                        >
+                          {room.name}
+                        </p>
+                        {room.unread && room.joined && (room.unreadCount ?? 0) > 0 ? (
+                          <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                            {room.unreadCount}
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
 
                     <Button

@@ -70,6 +70,7 @@ export function RoomsProvider({
         preview: r.preview,
         time: r.time,
         unread: r.unread,
+        unreadCount: r.unreadCount,
         isDefault: r.isDefault,
       }))
     }

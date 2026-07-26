@@ -62,6 +62,8 @@ export interface Room {
   /** Relative time label for the latest activity. */
   time: string
   unread?: boolean
+  /** Unread message count for joined rooms. */
+  unreadCount?: number
   /** True for rooms that all members are auto-joined to (e.g. General). Cannot be left. */
   isDefault?: boolean
 }
