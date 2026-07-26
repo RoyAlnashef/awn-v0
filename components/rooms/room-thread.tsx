@@ -106,7 +106,6 @@ export function RoomThread({
   onLeave?: () => void | Promise<void>
 }) {
   const { currentUser, setActiveRoomId } = useRooms()
-  const Icon = room.icon
 
   const usesServer = isUuid(room.id)
 
@@ -322,8 +321,8 @@ export function RoomThread({
             <ArrowLeft className="size-5" />
           </Button>
         ) : null}
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80">
-          <Icon className="size-5" />
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-xl leading-none">
+          {room.icon}
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
           <p className="truncate text-sm font-semibold text-foreground">

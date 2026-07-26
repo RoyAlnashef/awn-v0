@@ -73,7 +73,6 @@ export function RoomsInbox({
           <ul className="flex flex-col">
             {filteredRooms.map((room) => {
               const active = activeId === room.id
-              const Icon = room.icon
               return (
                 <li key={room.id}>
                   <div
@@ -96,8 +95,8 @@ export function RoomsInbox({
                       aria-current={active ? "true" : undefined}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:opacity-90"
                     >
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80">
-                        <Icon className="size-5" />
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xl leading-none">
+                        {room.icon}
                       </span>
                       <p
                         className={cn(

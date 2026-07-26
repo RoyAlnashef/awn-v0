@@ -1,6 +1,7 @@
 "use server"
 
 import { requireAdmin } from "@/lib/auth/require-admin"
+import { DEFAULT_ROOM_EMOJI } from "@/lib/rooms/emoji"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { formatMessageTime, formatRelativeTime, isUuid } from "@/lib/messages/format"
 import type { MessageReaction, ThreadMessage } from "@/lib/messages-data"
@@ -15,7 +16,7 @@ export type RoomRecord = {
   name: string
   slug: string
   description: string
-  /** Icon slug matching the icon map in lib/rooms/icon-map.ts */
+  /** Emoji string stored in community_rooms.icon */
   icon: string
   isDefault: boolean
   isArchived: boolean
@@ -553,13 +554,16 @@ export async function adminCreateRoom(
       return { ok: false, error: "Slug must be lowercase letters, numbers, and hyphens only." }
     }
 
+    const icon = input.icon.trim() || DEFAULT_ROOM_EMOJI
+    if (!icon) return { ok: false, error: "Room emoji is required." }
+
     const { data, error } = await supabase
       .from("community_rooms")
       .insert({
         name,
         slug,
         description,
-        icon: input.icon || "hash",
+        icon,
         is_default: input.isDefault,
         sort_order: input.sortOrder ?? 99,
       })
@@ -612,7 +616,11 @@ export async function adminUpdateRoom(
       patch.slug = slug
     }
     if (input.description !== undefined) patch.description = input.description.trim()
-    if (input.icon !== undefined) patch.icon = input.icon
+    if (input.icon !== undefined) {
+      const icon = input.icon.trim()
+      if (!icon) return { ok: false, error: "Room emoji is required." }
+      patch.icon = icon
+    }
     if (input.isDefault !== undefined) patch.is_default = input.isDefault
     if (input.isArchived !== undefined) patch.is_archived = input.isArchived
     if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder

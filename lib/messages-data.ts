@@ -1,21 +1,3 @@
-import type { LucideIcon } from "lucide-react"
-import {
-  Baby,
-  Brain,
-  Camera,
-  ClipboardList,
-  Guitar,
-  Hash,
-  HandHelping,
-  LifeBuoy,
-  Lightbulb,
-  Music,
-  Route,
-  Speaker,
-  Sparkles,
-  Truck,
-} from "lucide-react"
-
 import { people, type Person } from "@/lib/people-data"
 
 /** A one-to-one direct conversation shown under the "Direct" tab. */
@@ -71,7 +53,8 @@ export interface Room {
   id: string
   name: string
   description: string
-  icon: LucideIcon
+  /** Emoji shown beside the room name in lists and thread headers. */
+  icon: string
   /** Whether the current user has already joined this room. */
   joined: boolean
   /** Preview of the latest message in the room. */
@@ -163,7 +146,7 @@ export const rooms: Room[] = [
     id: "r1",
     name: "General",
     description: "The main AWN channel — introductions and announcements.",
-    icon: Hash,
+    icon: "#",
     joined: true,
     preview: "Welcome to AWN — introduce yourself when you join!",
     time: "2h",
@@ -173,7 +156,7 @@ export const rooms: Room[] = [
     id: "r2",
     name: "Musicians",
     description: "Musical directors · Session musicians · Deps.",
-    icon: Music,
+    icon: "🎵",
     joined: false,
     preview: "Anyone know a dep keys player for a festival slot next month?",
     time: "4h",
@@ -182,7 +165,7 @@ export const rooms: Room[] = [
     id: "r3",
     name: "Assistants",
     description: "Personal assistants to musicians and management.",
-    icon: HandHelping,
+    icon: "🤝",
     joined: false,
     preview: "Best practices for managing artist schedules on the road?",
     time: "6h",
@@ -191,7 +174,7 @@ export const rooms: Room[] = [
     id: "r4",
     name: "Audio",
     description: "FOH · Monitors · RF · Systems engineering.",
-    icon: Speaker,
+    icon: "🔊",
     joined: false,
     preview: "What's everyone running for in-ear monitoring these days?",
     time: "1h",
@@ -201,7 +184,7 @@ export const rooms: Room[] = [
     id: "r5",
     name: "Backline & Stage",
     description: "Guitar · Bass · Drum · Keys · Riggers.",
-    icon: Guitar,
+    icon: "🎸",
     joined: false,
     preview: "Tips for quick string changes between songs?",
     time: "8h",
@@ -210,7 +193,7 @@ export const rooms: Room[] = [
     id: "r6",
     name: "Help Needed",
     description: "Need something? Post here for last-minute cover.",
-    icon: LifeBuoy,
+    icon: "🛟",
     joined: false,
     preview: "URGENT: Monitor engineer needed for Nashville show Friday.",
     time: "30m",
@@ -220,7 +203,7 @@ export const rooms: Room[] = [
     id: "r7",
     name: "Lighting & Video",
     description: "LDs · Programmers · LED · IMAG.",
-    icon: Lightbulb,
+    icon: "💡",
     joined: false,
     preview: "Looking for recommendations on LED wall processors.",
     time: "12h",
@@ -229,7 +212,7 @@ export const rooms: Room[] = [
     id: "r8",
     name: "Mental Health",
     description: "Road life is hard. Talk about it here.",
-    icon: Brain,
+    icon: "🧠",
     joined: false,
     preview: "Checking in — how is everyone holding up mid-tour?",
     time: "1d",
@@ -238,7 +221,7 @@ export const rooms: Room[] = [
     id: "r9",
     name: "Parents on the Road",
     description: "Balancing touring and family life.",
-    icon: Baby,
+    icon: "👶",
     joined: false,
     preview: "School schedules vs. routing — how do you manage it?",
     time: "2d",
@@ -247,7 +230,7 @@ export const rooms: Room[] = [
     id: "r10",
     name: "Photo & Content",
     description: "Tour photographers · Videographers · Editors.",
-    icon: Camera,
+    icon: "📷",
     joined: false,
     preview: "Best camera settings for low-light arena shoots?",
     time: "3d",
@@ -256,7 +239,7 @@ export const rooms: Room[] = [
     id: "r11",
     name: "Production",
     description: "Tour managers · Production managers · Coordinators.",
-    icon: ClipboardList,
+    icon: "📋",
     joined: false,
     preview: "Advance checklist template that actually works?",
     time: "5h",
@@ -265,7 +248,7 @@ export const rooms: Room[] = [
     id: "r12",
     name: "Road Life",
     description: "The daily reality of being on the road.",
-    icon: Truck,
+    icon: "🚛",
     joined: false,
     preview: "Favorite green rooms in the Midwest?",
     time: "1d",
@@ -274,7 +257,7 @@ export const rooms: Room[] = [
     id: "r13",
     name: "Touring Life",
     description: "Road life, routes, venues, and travel tips.",
-    icon: Route,
+    icon: "🗺️",
     joined: false,
     preview: "Best routing tips for avoiding back-to-back red-eyes?",
     time: "2d",
@@ -283,7 +266,7 @@ export const rooms: Room[] = [
     id: "r14",
     name: "Women of the Industry",
     description: "A space for women working in live touring.",
-    icon: Sparkles,
+    icon: "✨",
     joined: false,
     preview: "Networking event at PLASA — who's going?",
     time: "4d",

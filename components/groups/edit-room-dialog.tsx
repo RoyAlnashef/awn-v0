@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 
 import { adminUpdateRoom } from "@/lib/rooms/actions"
-import { ROOM_ICON_OPTIONS } from "@/lib/rooms/icon-map"
+import { DEFAULT_ROOM_EMOJI, resolveRoomEmoji } from "@/lib/rooms/emoji"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,13 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { EmojiPickerField } from "@/components/ui/emoji-picker-field"
 import { Switch } from "@/components/ui/switch"
 import type { AdminRoomRecord } from "@/lib/rooms/actions"
 
@@ -36,7 +30,7 @@ type Props = {
 export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const [icon, setIcon] = useState("hash")
+  const [icon, setIcon] = useState(DEFAULT_ROOM_EMOJI)
   const [isDefault, setIsDefault] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -45,7 +39,7 @@ export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
     if (room) {
       setName(room.name)
       setDescription(room.description)
-      setIcon(room.icon)
+      setIcon(resolveRoomEmoji(room.icon))
       setIsDefault(room.isDefault)
       setError(null)
     }
@@ -109,22 +103,12 @@ export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-room-icon">Icon</Label>
-              <Select value={icon} onValueChange={(v) => { if (v) setIcon(v) }}>
-                <SelectTrigger id="edit-room-icon">
-                  <SelectValue placeholder="Choose an icon" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROOM_ICON_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      <span className="flex items-center gap-2">
-                        <opt.icon className="size-4" />
-                        {opt.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="edit-room-icon">Emoji</Label>
+              <EmojiPickerField
+                id="edit-room-icon"
+                value={icon}
+                onChange={setIcon}
+              />
             </div>
 
             <div className="flex items-center justify-between gap-3">

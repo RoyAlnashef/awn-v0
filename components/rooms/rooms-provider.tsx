@@ -15,7 +15,7 @@ import {
   leaveRoom,
   markRoomRead as markRoomReadAction,
 } from "@/lib/rooms/actions"
-import { getRoomIcon } from "@/lib/rooms/icon-map"
+import { resolveRoomEmoji } from "@/lib/rooms/emoji"
 import { useRoomsList } from "@/lib/rooms/hooks/use-rooms-list"
 import { RoomsRealtimeBridge } from "@/lib/rooms/hooks/use-rooms-realtime"
 import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
@@ -58,14 +58,14 @@ export function RoomsProvider({
   const [joinOrder, setJoinOrder] = useState<string[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null)
 
-  // Convert RoomRecord[] (server) → Room[] (UI shape with LucideIcon)
+  // Convert RoomRecord[] (server) → Room[] (UI shape with emoji icon)
   const rooms = useMemo<Room[]>(() => {
     if (serverRooms.length > 0) {
       return serverRooms.map((r) => ({
         id: r.id,
         name: r.name,
         description: r.description,
-        icon: getRoomIcon(r.icon),
+        icon: resolveRoomEmoji(r.icon),
         joined: r.joined,
         preview: r.preview,
         time: r.time,

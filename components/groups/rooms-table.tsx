@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { Archive, ArchiveRestore, Pencil, Users } from "lucide-react"
 
 import { adminArchiveRoom } from "@/lib/rooms/actions"
-import { getRoomIcon } from "@/lib/rooms/icon-map"
+import { resolveRoomEmoji } from "@/lib/rooms/emoji"
 import { formatRelativeTime } from "@/lib/messages/format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -115,7 +115,7 @@ export function RoomsTable({
                 </TableRow>
               ) : (
                 rooms.map((room) => {
-                  const Icon = getRoomIcon(room.icon)
+                  const emoji = resolveRoomEmoji(room.icon)
                   return (
                     <TableRow
                       key={room.id}
@@ -123,8 +123,8 @@ export function RoomsTable({
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground/70">
-                            <Icon className="size-4" />
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xl leading-none">
+                            {emoji}
                           </span>
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-2">
