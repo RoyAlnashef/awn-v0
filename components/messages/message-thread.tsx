@@ -494,6 +494,7 @@ export function MessageThread({
 
       <PersonProfileDrawer
         person={profilePerson}
+        online={conversation.online}
         open={profileOpen}
         onOpenChange={setProfileOpen}
       />

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 import { mutate as mutateSwr } from "swr"
 
@@ -24,6 +24,7 @@ import {
 import { useRooms } from "@/components/rooms/rooms-provider"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import type { Person } from "@/lib/people-data"
+import { getProfileOnline } from "@/lib/presence/actions"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -113,12 +114,38 @@ export function RoomThread({
   )
   const [profileOpen, setProfileOpen] = useState(false)
   const [profilePerson, setProfilePerson] = useState<Person | null>(null)
+  const [profileOnline, setProfileOnline] = useState<boolean | undefined>(
+    undefined,
+  )
+  const openProfileIdRef = useRef<string | null>(null)
 
   function openAuthorProfile(message: ThreadMessage) {
     const person = getPersonForRoomMessage(message)
     if (!person) return
+
+    const profileId = message.authorId
+    openProfileIdRef.current = profileId ?? null
+
     setProfilePerson(person)
+    setProfileOnline(undefined)
     setProfileOpen(true)
+
+    if (!profileId || !isUuid(profileId)) return
+
+    void getProfileOnline(profileId).then((result) => {
+      if (result.ok && openProfileIdRef.current === profileId) {
+        setProfileOnline(result.online)
+      }
+    })
+  }
+
+  function handleProfileOpenChange(open: boolean) {
+    setProfileOpen(open)
+    if (!open) {
+      openProfileIdRef.current = null
+      setProfilePerson(null)
+      setProfileOnline(undefined)
+    }
   }
 
   function requestScrollToEnd() {
@@ -521,8 +548,9 @@ export function RoomThread({
       {profilePerson ? (
         <PersonProfileDrawer
           person={profilePerson}
+          online={profileOnline}
           open={profileOpen}
-          onOpenChange={setProfileOpen}
+          onOpenChange={handleProfileOpenChange}
         />
       ) : null}
     </div>

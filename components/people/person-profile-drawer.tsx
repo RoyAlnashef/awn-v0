@@ -21,8 +21,9 @@ import {
   initials,
   type Person,
 } from "@/lib/people-data"
+import { isPersonOnline } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -52,16 +53,19 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function PersonProfileDrawer({
   person,
+  online,
   open,
   onOpenChange,
 }: {
   person: Person
+  online?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
   const router = useRouter()
   const profile = getPersonProfile(person)
   const availability = availabilityConfig[person.availability]
+  const isOnline = online ?? isPersonOnline(person)
   const [connected, setConnected] = useState(person.connected)
   // Focus the hero on open so the panel starts scrolled to the top rather than
   // jumping to the first focusable control deeper in the content.
@@ -115,6 +119,7 @@ export function PersonProfileDrawer({
               <AvatarFallback className="text-lg">
                 {initials(person.name)}
               </AvatarFallback>
+              <AvatarBadge online={isOnline} className="size-3.5" />
             </Avatar>
 
             <div className="mt-3 flex flex-col gap-1.5">

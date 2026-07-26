@@ -68,7 +68,7 @@ function AvatarBadge({
       data-slot="avatar-badge"
       aria-hidden="true"
       className={cn(
-        "absolute top-0 right-0 z-10 inline-flex size-2.5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background select-none",
+        "absolute top-0 right-0 z-10 inline-flex size-2.5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-green-500 ring-2 ring-background select-none",
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
