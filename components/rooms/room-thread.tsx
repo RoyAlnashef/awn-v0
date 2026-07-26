@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 import { mutate as mutateSwr } from "swr"
 
@@ -14,7 +8,9 @@ import type { Room, ThreadMessage } from "@/lib/messages-data"
 import { applyLocalReaction } from "@/lib/messages/reactions"
 import { isUuid } from "@/lib/messages/format"
 import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
+import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
 import { useRoomThread } from "@/lib/rooms/hooks/use-room-thread"
+import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
 import {
   markRoomRead,
   sendRoomMessage,
@@ -25,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageBubbleWithReactions } from "@/components/messages/message-bubble-with-reactions"
+import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
 import {
   Message,
   MessageAvatar,
@@ -34,11 +31,11 @@ import {
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
   MessageScroller,
-  MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
 } from "@/components/ui/message-scroller"
 import {
   InputGroup,
@@ -53,6 +50,30 @@ function initials(name: string) {
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
+}
+
+function RoomThreadScrollEffects({
+  roomId,
+  ready,
+  sentScrollToken,
+}: {
+  roomId: string
+  ready: boolean
+  sentScrollToken: number
+}) {
+  const { scrollToEnd } = useMessageScroller()
+
+  useLayoutEffect(() => {
+    if (!ready) return
+    scrollToEnd({ behavior: "auto" })
+  }, [roomId, ready, scrollToEnd])
+
+  useLayoutEffect(() => {
+    if (sentScrollToken === 0) return
+    scrollToEnd({ behavior: "auto" })
+  }, [sentScrollToken, scrollToEnd])
+
+  return null
 }
 
 export function RoomThread({
@@ -77,16 +98,17 @@ export function RoomThread({
     mutate: mutateThread,
   } = useRoomThread(usesServer ? room.id : null)
 
-  const [optimisticMessages, addOptimistic] = useOptimistic<
-    ThreadMessage[],
-    ThreadMessage
-  >(serverMessages, (state, msg) => [...state, msg])
-
+  const [localMessages, setLocalMessages] = useState<ThreadMessage[]>([])
   const [draft, setDraft] = useState("")
-  const [isSending, startSend] = useTransition()
+  const [sending, setSending] = useState(false)
+  const [sentScrollToken, setSentScrollToken] = useState(0)
   const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
     null,
   )
+
+  function requestScrollToEnd() {
+    setSentScrollToken((token) => token + 1)
+  }
 
   useEffect(() => {
     setPendingAction(null)
@@ -128,61 +150,84 @@ export function RoomThread({
     })
   }, [room.id, room.joined, usesServer])
 
-  const sendMessage = useCallback(() => {
+  async function sendMessage() {
     if (!room.joined) return
     const text = draft.trim()
-    if (!text) return
+    if (!text || sending) return
 
     if (usesServer) {
-      const optimistic: ThreadMessage = {
-        id: `optimistic-${Date.now()}`,
+      const optimisticId = `optimistic-${Date.now()}`
+      const optimisticMessage: ThreadMessage = {
+        id: optimisticId,
         from: "me",
         text,
         time: "Now",
+        createdAt: new Date().toISOString(),
       }
 
-      startSend(async () => {
-        addOptimistic(optimistic)
-        setDraft("")
+      void mutateThread(
+        (current: RoomThreadCache | undefined) => ({
+          messages: [...(current?.messages ?? []), optimisticMessage],
+          hasMore: current?.hasMore ?? false,
+          oldestCursor: current?.oldestCursor ?? null,
+        }),
+        { revalidate: false },
+      )
 
-        const result = await sendRoomMessage(room.id, text)
-        if (result.ok) {
-          await mutateThread(
-            (current) => {
-              if (!current) return current
-              return {
+      setDraft("")
+      setSending(true)
+      requestScrollToEnd()
+
+      const result = await sendRoomMessage(room.id, text)
+      setSending(false)
+
+      if (!result.ok) {
+        void mutateThread(
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  messages: current.messages.filter(
+                    (message) => message.id !== optimisticId,
+                  ),
+                }
+              : current,
+          { revalidate: false },
+        )
+        setDraft(text)
+        return
+      }
+
+      void mutateThread(
+        (current) =>
+          current
+            ? {
                 ...current,
-                messages: current.messages
-                  .filter((m) => m.id !== optimistic.id)
-                  .concat(result.message),
+                messages: current.messages.map((message) =>
+                  message.id === optimisticId ? result.message : message,
+                ),
               }
-            },
-            { revalidate: false },
-          )
-        } else {
-          // Revert optimistic on error
-          await mutateThread()
-        }
-      })
-    } else {
-      // Mock path (pre-migration / dev fallback)
-      addOptimistic({
+            : current,
+        { revalidate: false },
+      )
+
+      requestScrollToEnd()
+      return
+    }
+
+    setLocalMessages((prev) => [
+      ...prev,
+      {
         id: `local-${Date.now()}`,
         from: "me",
         text,
         time: "Now",
-      })
-      setDraft("")
-    }
-  }, [
-    room.id,
-    room.joined,
-    draft,
-    usesServer,
-    addOptimistic,
-    mutateThread,
-    startSend,
-  ])
+        createdAt: new Date().toISOString(),
+      },
+    ])
+    setDraft("")
+    requestScrollToEnd()
+  }
 
   const handleReact = useCallback(
     (messageId: string, emoji: string | null) => {
@@ -237,7 +282,13 @@ export function RoomThread({
     [usesServer, mutateThread, currentUser],
   )
 
-  const messages = optimisticMessages
+  const messages = usesServer ? serverMessages : localMessages
+  const isThreadPending = usesServer && isLoading
+  const newMessageIds = useNewMessageIds(
+    messages.map((message) => message.id),
+    !isThreadPending,
+  )
+  const threadReady = usesServer ? !isLoading : true
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -288,7 +339,12 @@ export function RoomThread({
         ) : null}
       </header>
 
-      <MessageScrollerProvider autoScroll>
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+        <RoomThreadScrollEffects
+          roomId={room.id}
+          ready={threadReady}
+          sentScrollToken={sentScrollToken}
+        />
         <MessageScroller className="flex-1">
           <MessageScrollerViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
@@ -309,7 +365,10 @@ export function RoomThread({
                   <MessageScrollerItem
                     key={message.id}
                     messageId={message.id}
-                    scrollAnchor={mine}
+                    className={cn(
+                      newMessageIds.has(message.id) &&
+                        "animate-message-enter [content-visibility:visible]",
+                    )}
                   >
                     <Message align={mine ? "end" : "start"}>
                       <MessageAvatar>
@@ -347,7 +406,7 @@ export function RoomThread({
               })}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton />
+          <MessageThreadScrollButton messages={messages} />
         </MessageScroller>
       </MessageScrollerProvider>
 
@@ -376,7 +435,7 @@ export function RoomThread({
                 variant="default"
                 size="icon-sm"
                 aria-label="Send message"
-                disabled={!draft.trim() || isSending}
+                disabled={!draft.trim() || sending}
                 onClick={sendMessage}
               >
                 <Send />

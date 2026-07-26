@@ -35,8 +35,7 @@ export function RoomsInbox({
     return rooms.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q) ||
-        r.preview.toLowerCase().includes(q),
+        r.description.toLowerCase().includes(q),
     )
   }, [q, rooms])
 
@@ -100,26 +99,16 @@ export function RoomsInbox({
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80">
                         <Icon className="size-5" />
                       </span>
-                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <p
-                            className={cn(
-                              "truncate text-sm",
-                              room.unread && room.joined
-                                ? "font-semibold text-foreground"
-                                : "font-medium text-foreground",
-                            )}
-                          >
-                            {room.name}
-                          </p>
-                          <span className="shrink-0 text-[11px] text-muted-foreground/80">
-                            {room.time}
-                          </span>
-                        </div>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {room.preview}
-                        </p>
-                      </div>
+                      <p
+                        className={cn(
+                          "min-w-0 flex-1 truncate text-sm",
+                          room.unread && room.joined
+                            ? "font-semibold text-foreground"
+                            : "font-medium text-foreground",
+                        )}
+                      >
+                        {room.name}
+                      </p>
                     </button>
 
                     <Button

@@ -5,13 +5,7 @@ function SkeletonRow() {
     <div className="flex items-center gap-3 border-b px-4 py-3 last:border-b-0">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Skeleton className="size-10 shrink-0 rounded-lg" />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-3 w-8" />
-          </div>
-          <Skeleton className="h-3 w-full max-w-40" />
-        </div>
+        <Skeleton className="h-4 w-24" />
       </div>
       <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
     </div>
