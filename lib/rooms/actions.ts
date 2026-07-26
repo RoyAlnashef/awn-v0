@@ -273,6 +273,11 @@ export async function getRoomThread(
         row.sender_id !== userId
           ? (row.sender_name?.trim() || "Member")
           : undefined,
+      authorId: row.sender_id !== userId ? row.sender_id : undefined,
+      authorAvatarUrl:
+        row.sender_id !== userId
+          ? (row.sender_avatar_url ?? undefined)
+          : undefined,
       reactions: mapRpcReactions(row.reactions),
     }))
 

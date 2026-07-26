@@ -44,6 +44,10 @@ export interface ThreadMessage {
   readReceipt?: "sent" | "delivered" | "read"
   /** Display name for room messages from other members. */
   author?: string
+  /** Profile id of the room message author (Supabase sender_id). */
+  authorId?: string
+  /** Avatar URL for room messages from other members. */
+  authorAvatarUrl?: string
   /** Aggregated emoji reactions on this message. */
   reactions?: MessageReaction[]
 }
@@ -680,6 +684,44 @@ export function getPersonForConversation(
     topTours: ["Live Events"],
     skills: ["Collaboration"],
     avatar: conversation.avatar,
+    connected: false,
+  }
+}
+
+/** Resolves a full Person for the profile drawer from a room message. */
+export function getPersonForRoomMessage(
+  message: ThreadMessage,
+): Person | null {
+  if (message.from === "me") return null
+
+  const authorName = message.author?.trim() || "Member"
+
+  if (message.authorId) {
+    const byId = getPersonById(message.authorId)
+    if (byId) return byId
+  }
+
+  const byName = people.find((person) => person.name === authorName)
+  if (byName) return byName
+
+  return {
+    id: message.authorId ?? message.id,
+    name: authorName,
+    role: "AWN Member",
+    department: "Production",
+    homeBase: "",
+    city: "Nashville",
+    availability: "Between Tours",
+    availableFrom: "2026-08-01",
+    availableTo: "2026-12-20",
+    venueTiers: ["Arena"],
+    workAuth: ["USA"],
+    yearsExperience: 5,
+    credits: 10,
+    vouches: 5,
+    topTours: ["Live Events"],
+    skills: ["Collaboration"],
+    avatar: message.authorAvatarUrl,
     connected: false,
   }
 }

@@ -4,7 +4,11 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 import { mutate as mutateSwr } from "swr"
 
-import type { Room, ThreadMessage } from "@/lib/messages-data"
+import {
+  getPersonForRoomMessage,
+  type Room,
+  type ThreadMessage,
+} from "@/lib/messages-data"
 import { applyLocalReaction } from "@/lib/messages/reactions"
 import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
@@ -18,6 +22,8 @@ import {
   setRoomMessageReaction,
 } from "@/lib/rooms/actions"
 import { useRooms } from "@/components/rooms/rooms-provider"
+import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
+import type { Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -51,23 +57,6 @@ function initials(name: string) {
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
-}
-
-const ROOM_AUTHOR_COLORS = [
-  "text-orange-400",
-  "text-emerald-400",
-  "text-sky-400",
-  "text-violet-400",
-  "text-rose-400",
-  "text-amber-400",
-] as const
-
-function roomAuthorColor(name: string) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return ROOM_AUTHOR_COLORS[Math.abs(hash) % ROOM_AUTHOR_COLORS.length]
 }
 
 function RoomThreadScrollEffects({
@@ -122,6 +111,15 @@ export function RoomThread({
   const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
     null,
   )
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [profilePerson, setProfilePerson] = useState<Person | null>(null)
+
+  function openAuthorProfile(message: ThreadMessage) {
+    const person = getPersonForRoomMessage(message)
+    if (!person) return
+    setProfilePerson(person)
+    setProfileOpen(true)
+  }
 
   function requestScrollToEnd() {
     setSentScrollToken((token) => token + 1)
@@ -401,21 +399,38 @@ export function RoomThread({
                   >
                     <Message align={mine ? "end" : "start"}>
                       {showAvatar ? (
-                        <MessageAvatar>
-                          <Avatar className="size-8">
-                            <AvatarImage
-                              src={
-                                mine
-                                  ? (currentUser.avatarUrl ?? undefined)
-                                  : undefined
-                              }
-                              alt=""
-                            />
-                            <AvatarFallback>
-                              {initials(displayName)}
-                            </AvatarFallback>
-                          </Avatar>
-                        </MessageAvatar>
+                        !mine ? (
+                          <MessageAvatar>
+                            <button
+                              type="button"
+                              className="cursor-pointer rounded-full focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                              aria-label={`View ${displayName}'s profile`}
+                              onClick={() => openAuthorProfile(message)}
+                            >
+                              <Avatar className="size-8">
+                                <AvatarImage
+                                  src={message.authorAvatarUrl ?? undefined}
+                                  alt=""
+                                />
+                                <AvatarFallback>
+                                  {initials(displayName)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </button>
+                          </MessageAvatar>
+                        ) : (
+                          <MessageAvatar>
+                            <Avatar className="size-8">
+                              <AvatarImage
+                                src={currentUser.avatarUrl ?? undefined}
+                                alt=""
+                              />
+                              <AvatarFallback>
+                                {initials(displayName)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </MessageAvatar>
+                        )
                       ) : (
                         <div className="w-8 shrink-0" aria-hidden />
                       )}
@@ -427,14 +442,16 @@ export function RoomThread({
                           onReact={(emoji) => handleReact(message.id, emoji)}
                         >
                           {showAuthor ? (
-                            <p
-                              className={cn(
-                                "mb-0.5 text-xs font-semibold leading-tight",
-                                roomAuthorColor(message.author!),
-                              )}
+                            <button
+                              type="button"
+                              className="mb-0.5 block w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openAuthorProfile(message)
+                              }}
                             >
                               {message.author!}
-                            </p>
+                            </button>
                           ) : null}
                           {message.text}
                         </MessageBubbleWithReactions>
@@ -500,6 +517,14 @@ export function RoomThread({
           </Button>
         </div>
       )}
+
+      {profilePerson ? (
+        <PersonProfileDrawer
+          person={profilePerson}
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+        />
+      ) : null}
     </div>
   )
 }

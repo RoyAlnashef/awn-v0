@@ -54,12 +54,25 @@ export function useRoomsRealtime({
                 return current
               }
 
+              const priorFromSender = !isMine
+                ? [...current.messages]
+                    .reverse()
+                    .find((message) => message.authorId === row.sender_id)
+                : undefined
+
               const incoming: ThreadMessage = {
                 id: row.id,
                 from: isMine ? "me" : "them",
                 text: row.body,
                 time: formatMessageTime(row.created_at),
                 createdAt: row.created_at,
+                ...(isMine
+                  ? {}
+                  : {
+                      authorId: row.sender_id,
+                      author: priorFromSender?.author,
+                      authorAvatarUrl: priorFromSender?.authorAvatarUrl,
+                    }),
               }
 
               return {

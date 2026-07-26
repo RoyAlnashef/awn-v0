@@ -8,7 +8,13 @@ export function isSameRoomMessageGroup(
   b: ThreadMessage,
 ): boolean {
   if (a.from !== b.from) return false
-  if (a.from === "them" && a.author !== b.author) return false
+  if (a.from === "them") {
+    if (a.authorId && b.authorId) {
+      if (a.authorId !== b.authorId) return false
+    } else if (a.author !== b.author) {
+      return false
+    }
+  }
 
   if (a.createdAt && b.createdAt) {
     return (
