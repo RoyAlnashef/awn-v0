@@ -2,6 +2,7 @@ import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
 import { canAccessAdmin } from "@/lib/auth/require-admin"
+import { profileIsOnline } from "@/lib/presence/is-online"
 import { initials } from "@/lib/users-data"
 
 export type SessionUser = {
@@ -12,6 +13,8 @@ export type SessionUser = {
   avatarUrl?: string
   initials: string
   canAccessAdmin: boolean
+  appearOffline: boolean
+  online: boolean
 }
 
 /**
@@ -28,7 +31,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, title, avatar_url, role, status")
+    .select("full_name, email, title, avatar_url, role, status, appear_offline, last_active_at")
     .eq("id", user.id)
     .maybeSingle()
 
@@ -39,6 +42,8 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     email.split("@")[0] ||
     "Member"
 
+  const appearOffline = profile?.appear_offline ?? false
+
   return {
     id: user.id,
     email,
@@ -47,5 +52,10 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     avatarUrl: profile?.avatar_url ?? undefined,
     initials: initials(name),
     canAccessAdmin: canAccessAdmin(profile),
+    appearOffline,
+    online: profileIsOnline(
+      profile?.last_active_at ?? null,
+      appearOffline,
+    ),
   }
 })

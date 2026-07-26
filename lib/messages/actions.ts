@@ -39,6 +39,7 @@ type InboxRow = {
   other_title: string
   other_avatar_url: string | null
   other_last_active_at: string | null
+  other_appear_offline: boolean | null
   last_message_body: string | null
   last_message_sender_id: string | null
   last_message_at: string | null
@@ -91,6 +92,7 @@ type ProfileRow = {
   title: string | null
   avatar_url: string | null
   last_active_at: string | null
+  appear_offline: boolean | null
 }
 
 type MessageRow = {
@@ -218,7 +220,7 @@ async function fetchOtherParticipant(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, title, avatar_url, last_active_at")
+    .select("id, full_name, title, avatar_url, last_active_at, appear_offline")
     .eq("id", otherId)
     .maybeSingle()
 
@@ -232,7 +234,10 @@ function profileToMessageableMember(profile: ProfileRow): MessageableMember {
     role: profile.title?.trim() || "AWN Member",
     homeBase: "",
     avatar: profile.avatar_url ?? undefined,
-    online: profileIsOnline(profile.last_active_at),
+    online: profileIsOnline(
+      profile.last_active_at,
+      profile.appear_offline ?? false,
+    ),
   }
 }
 
@@ -250,7 +255,10 @@ function profileToConversation(
     preview,
     time: formatRelativeTime(updatedAt),
     unread,
-    online: profileIsOnline(profile.last_active_at),
+    online: profileIsOnline(
+      profile.last_active_at,
+      profile.appear_offline ?? false,
+    ),
     avatar: profile.avatar_url ?? undefined,
     otherProfileId: profile.id,
     isPersisted: true,
@@ -261,7 +269,10 @@ function inboxRowToConversation(
   row: InboxRow,
   currentUserId: string,
 ): DirectConversation {
-  const online = profileIsOnline(row.other_last_active_at)
+  const online = profileIsOnline(
+    row.other_last_active_at,
+    row.other_appear_offline ?? false,
+  )
   const preview = row.last_message_body
     ? buildPreview(
         row.last_message_body,
@@ -557,7 +568,7 @@ export async function searchMessageableUsers(
 
     let request = supabase
       .from("profiles")
-      .select("id, full_name, title, avatar_url, last_active_at")
+      .select("id, full_name, title, avatar_url, last_active_at, appear_offline")
       .eq("status", "active")
       .neq("id", userId)
       .order("full_name", { ascending: true })

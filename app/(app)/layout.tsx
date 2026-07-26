@@ -48,6 +48,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                 email: sessionUser.email,
                 avatarUrl: sessionUser.avatarUrl,
                 initials: sessionUser.initials,
+                appearOffline: sessionUser.appearOffline,
+                online: sessionUser.online,
               }}
             />
             {children}
