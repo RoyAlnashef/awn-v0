@@ -41,10 +41,13 @@ import {
   MessageScroller,
   MessageScrollerContent,
   MessageScrollerItem,
-  MessageScrollerProvider,
-  MessageScrollerViewport,
   useMessageScroller,
 } from "@/components/ui/message-scroller"
+import {
+  MessageAutoScrollProvider,
+  MessageAutoScrollViewport,
+} from "@/components/messages/message-auto-scroll"
+import { LoadOlderMessages } from "@/components/messages/load-older-messages"
 import {
   InputGroup,
   InputGroupAddon,
@@ -101,7 +104,9 @@ export function RoomThread({
 
   const {
     messages: serverMessages,
+    hasMore,
     isLoading,
+    loadOlder,
     mutate: mutateThread,
   } = useRoomThread(usesServer ? room.id : null)
 
@@ -332,6 +337,11 @@ export function RoomThread({
   )
   const threadReady = usesServer ? !isLoading : true
 
+  const handleLoadOlder = useCallback(async () => {
+    if (!usesServer) return
+    await loadOlder()
+  }, [loadOlder, usesServer])
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b p-3">
@@ -381,15 +391,22 @@ export function RoomThread({
         ) : null}
       </header>
 
-      <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <MessageAutoScrollProvider defaultScrollPosition="end">
         <RoomThreadScrollEffects
           roomId={room.id}
           ready={threadReady}
           sentScrollToken={sentScrollToken}
         />
         <MessageScroller className="flex-1">
-          <MessageScrollerViewport className="px-4">
+          <MessageAutoScrollViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
+              {usesServer ? (
+                <LoadOlderMessages
+                  hasMore={hasMore}
+                  onLoadOlder={handleLoadOlder}
+                />
+              ) : null}
+
               <MessageScrollerItem messageId="start">
                 <Marker variant="separator">
                   <MarkerContent>
@@ -491,10 +508,10 @@ export function RoomThread({
                 )
               })}
             </MessageScrollerContent>
-          </MessageScrollerViewport>
+          </MessageAutoScrollViewport>
           <MessageThreadScrollButton messages={messages} />
         </MessageScroller>
-      </MessageScrollerProvider>
+      </MessageAutoScrollProvider>
 
       {room.joined ? (
         <div className="shrink-0 border-t p-3">

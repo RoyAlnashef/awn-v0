@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useMemo, useState, Fragment } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, Fragment } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
 import {
   groupThreadMessagesByDate,
@@ -50,10 +50,13 @@ import {
   MessageScroller,
   MessageScrollerContent,
   MessageScrollerItem,
-  MessageScrollerProvider,
-  MessageScrollerViewport,
   useMessageScroller,
 } from "@/components/ui/message-scroller"
+import {
+  MessageAutoScrollProvider,
+  MessageAutoScrollViewport,
+} from "@/components/messages/message-auto-scroll"
+import { LoadOlderMessages } from "@/components/messages/load-older-messages"
 import {
   InputGroup,
   InputGroupAddon,
@@ -154,7 +157,6 @@ export function MessageThread({
   const [localMessages, setLocalMessages] = useState<ThreadMessage[]>(baseThread)
   const [draft, setDraft] = useState(initialDraft ?? "")
   const [sending, setSending] = useState(false)
-  const [loadingOlder, setLoadingOlder] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
   const profilePerson = useMemo(
@@ -351,15 +353,10 @@ export function MessageThread({
     )
   }
 
-  async function handleLoadOlder() {
-    if (loadingOlder) return
-    setLoadingOlder(true)
-    try {
-      await loadOlder()
-    } finally {
-      setLoadingOlder(false)
-    }
-  }
+  const handleLoadOlder = useCallback(async () => {
+    if (!isPersisted) return
+    await loadOlder()
+  }, [isPersisted, loadOlder])
 
   async function sendMessage() {
     const text = draft.trim()
@@ -499,28 +496,20 @@ export function MessageThread({
         onOpenChange={setProfileOpen}
       />
 
-      <MessageScrollerProvider autoScroll>
+      <MessageAutoScrollProvider>
         <ScrollToEndAfterSend token={sentScrollToken} />
         <MessageScroller className="flex-1">
-          <MessageScrollerViewport className="px-4">
+          <MessageAutoScrollViewport className="px-4">
             <MessageScrollerContent className="gap-4 py-4">
               {isThreadPending ? (
                 <MessageThreadSkeleton />
               ) : (
                 <>
-                  {hasMore ? (
-                    <div className="flex justify-center pb-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={loadingOlder}
-                        onClick={() => void handleLoadOlder()}
-                      >
-                        {loadingOlder
-                          ? "Loading…"
-                          : "Load earlier messages"}
-                      </Button>
-                    </div>
+                  {isPersisted ? (
+                    <LoadOlderMessages
+                      hasMore={hasMore}
+                      onLoadOlder={handleLoadOlder}
+                    />
                   ) : null}
 
                   {messageGroups.map((group) => (
@@ -604,10 +593,10 @@ export function MessageThread({
                 </>
               )}
             </MessageScrollerContent>
-          </MessageScrollerViewport>
+          </MessageAutoScrollViewport>
           <MessageThreadScrollButton messages={messages} />
         </MessageScroller>
-      </MessageScrollerProvider>
+      </MessageAutoScrollProvider>
 
       <div className="shrink-0 border-t p-3">
         <InputGroup>
