@@ -17,6 +17,7 @@ import {
   type MessageableMember,
 } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
+import { buildPopoutUrl } from "@/lib/popout"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -32,6 +33,7 @@ import { useMessages } from "@/components/messages/messages-provider"
 import { useInbox } from "@/lib/messages/hooks/use-inbox"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { PopOutButton } from "@/components/popout-button"
 
 export function MessagesView({
   title,
@@ -39,12 +41,16 @@ export function MessagesView({
   initialConversationId,
   initialPersonId,
   initialDraft,
+  popout = false,
+  basePath = "/messages",
 }: {
   title: string
   description?: string
   initialConversationId?: string
   initialPersonId?: string
   initialDraft?: string
+  popout?: boolean
+  basePath?: string
 }) {
   const router = useRouter()
   const {
@@ -81,9 +87,9 @@ export function MessagesView({
       const params = new URLSearchParams()
       mutate(params)
       const qs = params.toString()
-      router.replace(qs ? `/messages?${qs}` : "/messages", { scroll: false })
+      router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false })
     },
-    [router],
+    [router, basePath],
   )
 
   const cancelScheduledUrlSync = useCallback(() => {
@@ -377,10 +383,28 @@ export function MessagesView({
             </p>
           ) : null}
         </div>
-        <Button className="shrink-0" onClick={() => setNewOpen(true)}>
-          <SquarePen className="size-4" />
-          New
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {!popout ? (
+            <PopOutButton
+              href={buildPopoutUrl(
+                "/popout/messages",
+                visibleActiveConversation
+                  ? { conversation: visibleActiveConversation.id }
+                  : undefined,
+              )}
+              windowName={
+                visibleActiveConversation
+                  ? `msg-${visibleActiveConversation.id}`
+                  : "messages-popout"
+              }
+              aria-label="Pop out Messages"
+            />
+          ) : null}
+          <Button className="shrink-0" onClick={() => setNewOpen(true)}>
+            <SquarePen className="size-4" />
+            New
+          </Button>
+        </div>
       </div>
 
       {startError ? (

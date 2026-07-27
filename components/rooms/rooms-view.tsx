@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Hash } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
+import { buildPopoutUrl } from "@/lib/popout"
 import { cn } from "@/lib/utils"
 import {
   Empty,
@@ -15,15 +16,18 @@ import {
 import { RoomsInbox } from "@/components/rooms/rooms-inbox"
 import { RoomThread } from "@/components/rooms/room-thread"
 import { useRooms } from "@/components/rooms/rooms-provider"
+import { PopOutButton } from "@/components/popout-button"
 
 export function RoomsView({
   title,
   description,
   initialRoomId,
+  popout = false,
 }: {
   title: string
   description?: string
   initialRoomId?: string
+  popout?: boolean
 }) {
   const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom, isLoading } =
     useRooms()
@@ -90,6 +94,18 @@ export function RoomsView({
             </p>
           ) : null}
         </div>
+        {!popout ? (
+          <PopOutButton
+            href={buildPopoutUrl(
+              "/popout/rooms",
+              activeRoom ? { room: activeRoom.id } : undefined,
+            )}
+            windowName={
+              activeRoom ? `room-${activeRoom.id}` : "rooms-popout"
+            }
+            aria-label="Pop out Rooms"
+          />
+        ) : null}
       </div>
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
