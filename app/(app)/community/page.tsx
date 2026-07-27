@@ -3,9 +3,9 @@ import { RoomsTable } from "@/components/groups/rooms-table"
 import { adminListRooms } from "@/lib/rooms/actions"
 import { adminNav } from "@/lib/nav"
 
-const item = adminNav.find((i) => i.href === "/groups")!
+const item = adminNav.find((i) => i.href === "/community")!
 
-export default async function GroupsPage() {
+export default async function CommunityPage() {
   const result = await adminListRooms()
 
   return (
