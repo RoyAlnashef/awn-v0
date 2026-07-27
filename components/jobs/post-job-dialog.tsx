@@ -2,12 +2,18 @@
 
 import * as React from "react"
 import { Plus } from "lucide-react"
+import { toast } from "sonner"
+import { mutate } from "swr"
 
 import {
   engagementTypes,
   roleGroups,
   type EngagementType,
+  type JobKind,
 } from "@/lib/jobs-data"
+import { createJob } from "@/lib/jobs/fetch"
+import { toDateOnly } from "@/lib/jobs/format"
+import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/jobs/date-picker"
 
 interface PostJobForm {
+  kind: JobKind
   role: string
   production: string
   location: string
@@ -46,6 +53,7 @@ interface PostJobForm {
 }
 
 const emptyForm: PostJobForm = {
+  kind: "full",
   role: "",
   production: "",
   location: "",
@@ -78,19 +86,68 @@ function FieldLabel({
   )
 }
 
+function revalidateJobs() {
+  void mutate((key) => typeof key === "string" && key.startsWith(jobsListKey))
+}
+
 export function PostJobDialog() {
   const [open, setOpen] = React.useState(false)
   const [form, setForm] = React.useState<PostJobForm>(emptyForm)
+  const [submitting, setSubmitting] = React.useState(false)
 
   function update(patch: Partial<PostJobForm>) {
     setForm((prev) => ({ ...prev, ...patch }))
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    // UI only — no backend yet. Close and reset.
-    setOpen(false)
-    setForm(emptyForm)
+
+    if (!form.role.trim()) {
+      toast.error("Select a role")
+      return
+    }
+    if (!form.startDate) {
+      toast.error("Pick a start date")
+      return
+    }
+    if (!form.endDate) {
+      toast.error("Pick an end date")
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await createJob({
+        kind: form.kind,
+        role: form.role,
+        production: form.production,
+        location: form.location,
+        payRate: form.rate,
+        startDate: toDateOnly(form.startDate),
+        endDate: toDateOnly(form.endDate),
+        deadline:
+          form.kind === "full" && form.deadline
+            ? toDateOnly(form.deadline)
+            : null,
+        engagement: form.engagement,
+        details: form.details,
+      })
+
+      toast.success(
+        form.kind === "urgent"
+          ? "Urgent request posted — live for 48 hours"
+          : "Role posted",
+      )
+      setOpen(false)
+      setForm(emptyForm)
+      void revalidateJobs()
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not post role",
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -118,8 +175,43 @@ export function PostJobDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
-          {/* Role */}
+        <form onSubmit={(event) => void handleSubmit(event)} className="mt-6 flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <FieldLabel>Posting Type</FieldLabel>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { value: "full", label: "Full Role" },
+                  { value: "urgent", label: "Urgent Help" },
+                ] as const
+              ).map(({ value, label }) => {
+                const active = form.kind === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => update({ kind: value })}
+                    aria-pressed={active}
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            {form.kind === "urgent" ? (
+              <p className="text-xs text-muted-foreground">
+                Urgent Help posts stay live for 48 hours and are visible on the
+                jobs board.
+              </p>
+            ) : null}
+          </div>
+
           <div className="flex flex-col gap-2">
             <FieldLabel>Role</FieldLabel>
             <Select
@@ -144,7 +236,6 @@ export function PostJobDialog() {
             </Select>
           </div>
 
-          {/* Production / Tour Name */}
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="production">Production / Tour Name</FieldLabel>
             <Input
@@ -155,7 +246,6 @@ export function PostJobDialog() {
             />
           </div>
 
-          {/* Location / Routing */}
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="location">Location / Routing</FieldLabel>
             <Input
@@ -166,7 +256,6 @@ export function PostJobDialog() {
             />
           </div>
 
-          {/* Rate */}
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="rate">Rate</FieldLabel>
             <Input
@@ -177,10 +266,11 @@ export function PostJobDialog() {
             />
           </div>
 
-          {/* Start / End dates */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <FieldLabel>Start Date</FieldLabel>
+              <FieldLabel>
+                {form.kind === "urgent" ? "Date Needed" : "Start Date"}
+              </FieldLabel>
               <DatePicker
                 value={form.startDate}
                 onChange={(date) => update({ startDate: date })}
@@ -188,7 +278,9 @@ export function PostJobDialog() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <FieldLabel>End Date</FieldLabel>
+              <FieldLabel>
+                {form.kind === "urgent" ? "Through Date" : "End Date"}
+              </FieldLabel>
               <DatePicker
                 value={form.endDate}
                 onChange={(date) => update({ endDate: date })}
@@ -197,19 +289,19 @@ export function PostJobDialog() {
             </div>
           </div>
 
-          {/* Application deadline */}
-          <div className="flex flex-col gap-2">
-            <FieldLabel hint="listing closes after this date">
-              Application Deadline
-            </FieldLabel>
-            <DatePicker
-              value={form.deadline}
-              onChange={(date) => update({ deadline: date })}
-              placeholder="Pick a deadline"
-            />
-          </div>
+          {form.kind === "full" ? (
+            <div className="flex flex-col gap-2">
+              <FieldLabel hint="listing closes after this date">
+                Application Deadline
+              </FieldLabel>
+              <DatePicker
+                value={form.deadline}
+                onChange={(date) => update({ deadline: date })}
+                placeholder="Pick a deadline"
+              />
+            </div>
+          ) : null}
 
-          {/* Engagement type */}
           <div className="flex flex-col gap-2">
             <FieldLabel>Engagement Type</FieldLabel>
             <div className="flex flex-wrap gap-2">
@@ -235,7 +327,6 @@ export function PostJobDialog() {
             </div>
           </div>
 
-          {/* Details */}
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="details">Details</FieldLabel>
             <Textarea
@@ -250,12 +341,14 @@ export function PostJobDialog() {
           <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose
               render={
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" disabled={submitting}>
                   Cancel
                 </Button>
               }
             />
-            <Button type="submit">Post role →</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Posting..." : "Post role →"}
+            </Button>
           </div>
         </form>
       </DialogContent>

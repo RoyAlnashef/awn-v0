@@ -7,6 +7,62 @@ export type EngagementType =
   | "Session"
   | "Residency"
 
+export type JobKind = "full" | "urgent"
+
+export type JobStatus = "open" | "filled" | "expired" | "deleted"
+
+export type ApplicationStatus =
+  | "pending"
+  | "approved"
+  | "maybe"
+  | "declined"
+  | "withdrawn"
+
+/** Row shape returned from Supabase `job_postings`. */
+export interface JobPostingRow {
+  id: string
+  kind: JobKind
+  status: JobStatus
+  poster_id: string
+  role: string
+  department: string
+  production: string
+  location: string
+  pay_rate: string
+  start_date: string
+  end_date: string
+  deadline: string | null
+  engagement: EngagementType
+  details: string
+  expires_at: string | null
+  filled_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface JobApplicationRow {
+  id: string
+  job_id: string
+  applicant_id: string
+  note: string
+  status: ApplicationStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateJobInput {
+  kind: JobKind
+  role: string
+  production: string
+  location: string
+  payRate: string
+  startDate: string
+  endDate: string
+  deadline?: string | null
+  engagement: EngagementType
+  details: string
+}
+
 /**
  * Parses a date-only string ("YYYY-MM-DD") as a local date.
  * Using `new Date("YYYY-MM-DD")` parses as UTC midnight, which shifts the
@@ -196,12 +252,13 @@ export interface JobPoster {
 
 export interface Job {
   id: string
+  kind: JobKind
   role: string
   department: string
   production: string
   location: string
   payRate: string
-  /** ISO date strings — placeholder data only. */
+  /** ISO date-only strings (YYYY-MM-DD). */
   startDate: string
   endDate: string
   deadline: string
@@ -209,10 +266,21 @@ export interface Job {
   details: string
   postedBy: JobPoster
   postedAt: string
+  saved: boolean
+  applied: boolean
 }
 
-function job(data: Omit<Job, "department">): Job {
-  return { ...data, department: departmentByRole[data.role] ?? "Production" }
+function job(
+  data: Omit<Job, "department" | "kind" | "saved" | "applied"> &
+    Partial<Pick<Job, "kind" | "saved" | "applied">>,
+): Job {
+  return {
+    kind: "full",
+    saved: false,
+    applied: false,
+    ...data,
+    department: departmentByRole[data.role] ?? "Production",
+  }
 }
 
 export const jobs: Job[] = [
