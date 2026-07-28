@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { userRoles, type AdminUser, type UserRole } from "@/lib/users-data"
 import { updateUser } from "@/lib/users/actions"
+import { AvatarUploadField } from "@/components/users/avatar-upload-field"
 import { PasswordField } from "@/components/auth/password-field"
 import { Button } from "@/components/ui/button"
 import {
@@ -112,6 +113,14 @@ export function EditUserDialog({
           </DialogHeader>
 
           <div className="grid gap-4">
+            {user ? (
+              <AvatarUploadField
+                userId={user.id}
+                name={name || user.name}
+                avatarUrl={user.avatar}
+                disabled={pending}
+              />
+            ) : null}
             <div className="grid gap-2">
               <FieldLabel htmlFor="edit-name">Full name</FieldLabel>
               <Input
