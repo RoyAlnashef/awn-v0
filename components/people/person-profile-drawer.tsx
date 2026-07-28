@@ -266,35 +266,27 @@ export function PersonProfileDrawer({
         {/* Footer actions */}
         <div className="flex shrink-0 flex-col gap-2 border-t p-4">
           <div className="flex items-center gap-2">
-            <Button className="flex-1" onClick={handleMessage}>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label={connected ? "Connected" : "Connect"}
+              aria-pressed={connected}
+              onClick={() => setConnected((prev) => !prev)}
+            >
+              {connected ? <BadgeCheck /> : <Plus />}
+            </Button>
+            <Button className="min-w-0 flex-1 shrink" onClick={handleMessage}>
               <MessageSquare />
               Message
             </Button>
             <Button
-              variant="outline"
-              className="flex-1"
-              aria-pressed={connected}
-              onClick={() => setConnected((prev) => !prev)}
+              variant="ghost"
+              size="icon"
+              aria-label="View full profile"
             >
-              {connected ? (
-                <>
-                  <BadgeCheck />
-                  Connected
-                </>
-              ) : (
-                <>
-                  <Plus />
-                  Connect
-                </>
-              )}
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="flex-1">
-              View full profile
               <ExternalLink />
             </Button>
-            <Button variant="ghost" size="sm" className="flex-1">
+            <Button variant="ghost" size="sm" className="shrink-0">
               <Share2 />
               Share
             </Button>
