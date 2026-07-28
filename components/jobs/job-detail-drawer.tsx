@@ -124,52 +124,58 @@ function JobDetailContent({
         {job.production} · {job.location}
       </SheetDescription>
 
-      {/* Hero */}
-      <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
-        <div className="h-24 bg-muted" />
-        <div className="absolute top-4 right-4 flex flex-wrap items-center justify-end gap-1.5">
-          <Badge variant="secondary">{job.engagement}</Badge>
-          <Badge variant="outline">{job.department}</Badge>
-          {job.kind === "urgent" ? (
-            <Badge variant="destructive">Urgent</Badge>
-          ) : null}
+      {/* Header — mirrors job card layout */}
+      <div
+        ref={heroRef}
+        tabIndex={-1}
+        className="relative shrink-0 px-6 pt-5 outline-none"
+      >
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary">{job.engagement}</Badge>
+            <Badge variant="outline">{job.department}</Badge>
+            {job.kind === "urgent" ? (
+              <Badge variant="destructive">Urgent</Badge>
+            ) : null}
+          </div>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {job.postedAt}
+          </span>
         </div>
 
-        <div className="px-6 pb-4">
-          <span className="text-xs text-muted-foreground">{job.postedAt}</span>
-          <div className="mt-2 flex flex-col gap-1.5">
-            <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
-              {job.role}
-            </h2>
-            <p className="text-sm font-medium text-foreground/90">
-              {job.production}
-            </p>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0" />
-              <span className="text-pretty">{job.location}</span>
-            </p>
-            <p className="font-heading text-lg font-semibold text-primary">
-              {job.payRate}
-            </p>
-          </div>
+        <div className="mt-4 flex flex-col gap-1.5">
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
+            {job.role}
+          </h2>
+          <p className="text-sm font-medium text-foreground/90">
+            {job.production}
+          </p>
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="size-3.5 shrink-0" />
+            <span className="text-pretty">{job.location}</span>
+          </p>
         </div>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-6 px-6 py-5">
-          {/* Meta chips */}
-          <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline" className="gap-1 font-normal">
-              <CalendarClock className="size-3" />
-              {formatDateRange(job.startDate, job.endDate)}
-            </Badge>
-            <Badge variant="outline" className="font-normal">
-              Apply by {formatDeadline(job.deadline)}
-            </Badge>
-            <Badge variant="outline" className="gap-1 font-normal">
-              <Users className="size-3" />
-              {applicantCount} applicant{applicantCount === 1 ? "" : "s"}
-            </Badge>
+          <div className="flex flex-col gap-3">
+            <span className="font-heading text-lg font-semibold text-primary">
+              {job.payRate}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant="outline" className="gap-1 font-normal">
+                <CalendarClock className="size-3" />
+                {formatDateRange(job.startDate, job.endDate)}
+              </Badge>
+              <Badge variant="outline" className="font-normal">
+                Apply by {formatDeadline(job.deadline)}
+              </Badge>
+              <Badge variant="outline" className="gap-1 font-normal">
+                <Users className="size-3" />
+                {applicantCount} applicant{applicantCount === 1 ? "" : "s"}
+              </Badge>
+            </div>
           </div>
 
           {/* Description */}
@@ -219,24 +225,22 @@ function JobDetailContent({
             />
           </Button>
           <Button
-            className="flex-1"
+            className="min-w-0 flex-1"
             disabled={applied}
             onClick={() => setApplyOpen(true)}
           >
             {applied ? "Applied" : "Apply"}
           </Button>
-        </div>
-        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="flex-1"
+            className="shrink-0"
             onClick={handleMessagePoster}
           >
             <MessageSquare />
-            Message poster
+            Message
           </Button>
-          <Button variant="ghost" size="sm" className="flex-1">
+          <Button variant="ghost" size="sm" className="shrink-0">
             <Share2 />
             Share
           </Button>
@@ -288,13 +292,18 @@ export function JobDetailDrawer({
         {isLoading ? (
           <>
             <SheetTitle className="sr-only">Loading job details</SheetTitle>
-            <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
-              <div className="h-24 bg-muted" />
-              <div className="space-y-2 px-6 pb-4 pt-2">
-                <Skeleton className="h-4 w-16" />
+            <div ref={heroRef} tabIndex={-1} className="shrink-0 px-6 pt-5 outline-none">
+              <div className="flex items-start justify-between gap-3 pr-8">
+                <div className="flex gap-1.5">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+                <Skeleton className="h-4 w-12" />
+              </div>
+              <div className="mt-4 space-y-2">
                 <Skeleton className="h-7 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
               </div>
             </div>
             <JobDetailSkeleton />
