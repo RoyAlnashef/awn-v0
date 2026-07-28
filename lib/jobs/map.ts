@@ -17,6 +17,7 @@ export type JobPostingSource = {
   id: string
   kind: JobKind | string
   status: JobStatus | string
+  poster_id: string
   role: string
   department: string
   production: string
@@ -46,6 +47,7 @@ export function mapJobPostingRow(
   return {
     id: row.id,
     kind: row.kind as JobKind,
+    posterId: row.poster_id,
     role: row.role,
     department: row.department,
     production: row.production,

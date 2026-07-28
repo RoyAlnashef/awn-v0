@@ -29,6 +29,12 @@ export type SaveJobResponse = {
   saved: boolean
 }
 
+export type JobDetailResponse = {
+  job: Job
+  applicantCount: number
+  posterId: string
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   const data = (await response.json()) as T & { error?: string }
   if (!response.ok) {
@@ -40,6 +46,11 @@ async function parseJson<T>(response: Response): Promise<T> {
 export async function fetchJobs(url: string): Promise<JobsListResponse> {
   const response = await fetch(url)
   return parseJson<JobsListResponse>(response)
+}
+
+export async function fetchJob(jobId: string): Promise<JobDetailResponse> {
+  const response = await fetch(`/api/jobs/${jobId}`)
+  return parseJson<JobDetailResponse>(response)
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<{ job: Job }> {

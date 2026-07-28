@@ -127,7 +127,11 @@ export async function GET(_request: Request, context: RouteContext) {
     },
   )
 
-  return Response.json({ job, applicantCount: applicantCount ?? 0 })
+  return Response.json({
+    job,
+    applicantCount: applicantCount ?? 0,
+    posterId: typedRow.poster_id,
+  })
 }
 
 type PatchJobBody = {

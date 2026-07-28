@@ -1,6 +1,7 @@
 "use client"
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { Bookmark, CalendarClock, MapPin } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -21,6 +22,7 @@ export function JobRow({ job }: { job: Job }) {
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
   const [applyOpen, setApplyOpen] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
@@ -41,8 +43,16 @@ export function JobRow({ job }: { job: Job }) {
 
   return (
     <>
-      <article className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center">
+        {/* Stretched trigger opens the detail drawer; action buttons use pointer-events-auto. */}
+        <button
+          type="button"
+          className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-label={`View ${job.role} details`}
+          onClick={() => setDetailOpen(true)}
+        />
+
+        <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary">{job.engagement}</Badge>
             <Badge variant="outline">{job.department}</Badge>
@@ -69,11 +79,11 @@ export function JobRow({ job }: { job: Job }) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+        <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
           <span className="font-heading text-base font-semibold text-primary">
             {job.payRate}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="pointer-events-auto relative z-10 flex items-center gap-2">
             <Button
               size="icon"
               variant="outline"
@@ -96,6 +106,12 @@ export function JobRow({ job }: { job: Job }) {
           </div>
         </div>
       </article>
+
+      <JobDetailDrawer
+        jobId={job.id}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
 
       <ApplyJobDialog
         job={job}

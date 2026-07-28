@@ -3,6 +3,10 @@ import type { EngagementType } from "@/lib/jobs-data"
 
 export const jobsListKey = "/api/jobs"
 
+export function jobDetailKey(jobId: string | null): string | null {
+  return jobId ? `/api/jobs/${jobId}` : null
+}
+
 export function jobsListKeyWithFilters(filters: JobFilters): string {
   const params = new URLSearchParams()
 

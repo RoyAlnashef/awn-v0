@@ -253,6 +253,7 @@ export interface JobPoster {
 export interface Job {
   id: string
   kind: JobKind
+  posterId: string
   role: string
   department: string
   production: string
@@ -271,13 +272,14 @@ export interface Job {
 }
 
 function job(
-  data: Omit<Job, "department" | "kind" | "saved" | "applied"> &
-    Partial<Pick<Job, "kind" | "saved" | "applied">>,
+  data: Omit<Job, "department" | "kind" | "saved" | "applied" | "posterId"> &
+    Partial<Pick<Job, "kind" | "saved" | "applied" | "posterId">>,
 ): Job {
   return {
     kind: "full",
     saved: false,
     applied: false,
+    posterId: "00000000-0000-4000-8000-000000000000",
     ...data,
     department: departmentByRole[data.role] ?? "Production",
   }
