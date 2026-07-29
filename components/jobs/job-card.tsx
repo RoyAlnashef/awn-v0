@@ -2,6 +2,7 @@
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
+import { JobSharePopover } from "@/components/jobs/job-share-popover"
 import { Bookmark, CalendarClock, MapPin, Share2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -129,13 +130,15 @@ export function JobCard({ job }: { job: Job }) {
                     className={cn("size-4", saved && "fill-current text-primary")}
                   />
                 </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label="Share job"
-                >
-                  <Share2 className="size-4" />
-                </Button>
+                <JobSharePopover job={job}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Share job"
+                  >
+                    <Share2 className="size-4" />
+                  </Button>
+                </JobSharePopover>
                 <Button
                   size="sm"
                   disabled={applied}

@@ -6,7 +6,7 @@ const item = mainNav.find((i) => i.href === "/rooms")!
 export default async function PopoutRoomsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ room?: string }>
+  searchParams: Promise<{ room?: string; shareJob?: string }>
 }) {
   const params = await searchParams
 
@@ -16,6 +16,7 @@ export default async function PopoutRoomsPage({
         title={item.title}
         description={item.description}
         initialRoomId={params.room}
+        initialShareJobId={params.shareJob}
         popout
       />
     </div>

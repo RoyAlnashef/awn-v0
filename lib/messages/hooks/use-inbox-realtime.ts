@@ -37,12 +37,17 @@ export function useInboxRealtime() {
             sender_id: string
             body: string
             created_at: string
+            job_id?: string | null
           }
 
           const isMine = row.sender_id === currentUser.id
           const isActive = row.conversation_id === activeConversationId
+          const previewBody =
+            row.job_id && !row.body.trim()
+              ? "Shared a job"
+              : row.body
 
-          bumpConversation(row.conversation_id, row.body, {
+          bumpConversation(row.conversation_id, previewBody, {
             from: isMine ? "me" : "them",
             unread: !isMine && !isActive,
           })
@@ -63,6 +68,10 @@ export function useInboxRealtime() {
                 return current
               }
 
+              if (row.job_id) {
+                return current
+              }
+
               const incoming: ThreadMessage = {
                 id: row.id,
                 from: isMine ? "me" : "them",
@@ -77,7 +86,7 @@ export function useInboxRealtime() {
                 messages: [...current.messages, incoming],
               }
             },
-            { revalidate: false },
+            { revalidate: row.job_id ? true : false },
           )
         },
       )

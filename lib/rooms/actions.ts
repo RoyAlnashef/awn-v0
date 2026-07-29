@@ -3,6 +3,10 @@
 import { requireAdmin } from "@/lib/auth/require-admin"
 import { DEFAULT_ROOM_EMOJI } from "@/lib/rooms/emoji"
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import {
+  mapRpcJobShare,
+  type JobShareRpcRow,
+} from "@/lib/messages/job-share"
 import { formatMessageTime, formatRelativeTime, isUuid } from "@/lib/messages/format"
 import type { MessageReaction, ThreadMessage } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/server"
@@ -89,7 +93,7 @@ type RoomRpcRow = {
   unread_count: number
 }
 
-type ThreadRpcMessage = {
+type ThreadRpcMessage = JobShareRpcRow & {
   id: string
   sender_id: string
   sender_name: string | null
@@ -120,6 +124,66 @@ async function requireUserId(): Promise<string> {
   const user = await getSessionUser()
   if (!user) throw new Error("Unauthorized")
   return user.id
+}
+
+function mapRoomThreadMessage(
+  row: ThreadRpcMessage,
+  userId: string,
+): ThreadMessage {
+  const jobShare = mapRpcJobShare(row)
+  return {
+    id: row.id,
+    from: row.sender_id === userId ? "me" : "them",
+    text: row.body,
+    time: formatMessageTime(row.created_at),
+    createdAt: row.created_at,
+    author:
+      row.sender_id !== userId
+        ? (row.sender_name?.trim() || "Member")
+        : undefined,
+    authorId: row.sender_id !== userId ? row.sender_id : undefined,
+    authorAvatarUrl:
+      row.sender_id !== userId
+        ? (row.sender_avatar_url ?? undefined)
+        : undefined,
+    reactions: mapRpcReactions(row.reactions),
+    jobShare,
+  }
+}
+
+async function fetchJobSharePayload(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  jobId: string,
+): Promise<
+  | { ok: true; jobShare: NonNullable<ThreadMessage["jobShare"]> }
+  | ActionError
+> {
+  const { data, error } = await supabase
+    .from("job_postings")
+    .select(
+      "id, role, production, location, pay_rate, start_date, end_date, engagement, status",
+    )
+    .eq("id", jobId)
+    .maybeSingle()
+
+  if (error) return { ok: false, error: error.message }
+  if (!data || data.status === "deleted") {
+    return { ok: false, error: "Job not found." }
+  }
+
+  return {
+    ok: true,
+    jobShare: {
+      id: data.id,
+      role: data.role,
+      production: data.production ?? "",
+      location: data.location ?? "",
+      payRate: data.pay_rate ?? "",
+      startDate: data.start_date,
+      endDate: data.end_date,
+      engagement: String(data.engagement),
+    },
+  }
 }
 
 function mapRpcReactions(
@@ -263,23 +327,9 @@ export async function getRoomThread(
 
     const payload = data as ThreadRpcResult
 
-    const messages: ThreadMessage[] = (payload.messages ?? []).map((row) => ({
-      id: row.id,
-      from: row.sender_id === userId ? "me" : "them",
-      text: row.body,
-      time: formatMessageTime(row.created_at),
-      createdAt: row.created_at,
-      author:
-        row.sender_id !== userId
-          ? (row.sender_name?.trim() || "Member")
-          : undefined,
-      authorId: row.sender_id !== userId ? row.sender_id : undefined,
-      authorAvatarUrl:
-        row.sender_id !== userId
-          ? (row.sender_avatar_url ?? undefined)
-          : undefined,
-      reactions: mapRpcReactions(row.reactions),
-    }))
+    const messages: ThreadMessage[] = (payload.messages ?? []).map((row) =>
+      mapRoomThreadMessage(row as ThreadRpcMessage, userId),
+    )
 
     return {
       ok: true,
@@ -294,6 +344,7 @@ export async function getRoomThread(
 export async function sendRoomMessage(
   roomId: string,
   body: string,
+  options?: { jobId?: string },
 ): Promise<SendRoomMessageResult> {
   try {
     if (!isUuid(roomId)) {
@@ -301,10 +352,23 @@ export async function sendRoomMessage(
     }
 
     const text = body.trim()
-    if (!text) return { ok: false, error: "Message cannot be empty." }
+    const jobId = options?.jobId
+    if (!text && !jobId) {
+      return { ok: false, error: "Message cannot be empty." }
+    }
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    let jobShare: ThreadMessage["jobShare"]
+    if (jobId) {
+      if (!isUuid(jobId)) {
+        return { ok: false, error: "Invalid job id." }
+      }
+      const jobResult = await fetchJobSharePayload(supabase, jobId)
+      if (!jobResult.ok) return jobResult
+      jobShare = jobResult.jobShare
+    }
 
     const { data, error } = await supabase
       .from("room_messages")
@@ -312,8 +376,9 @@ export async function sendRoomMessage(
         room_id: roomId,
         sender_id: userId,
         body: text,
+        ...(jobId ? { job_id: jobId } : {}),
       })
-      .select("id, sender_id, body, created_at")
+      .select("id, sender_id, body, created_at, job_id")
       .single()
 
     if (error) return { ok: false, error: error.message }
@@ -326,6 +391,7 @@ export async function sendRoomMessage(
         text: data.body,
         time: formatMessageTime(data.created_at),
         createdAt: data.created_at,
+        jobShare,
       },
     }
   } catch (error) {

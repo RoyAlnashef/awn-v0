@@ -41,6 +41,7 @@ export function MessagesView({
   initialConversationId,
   initialPersonId,
   initialDraft,
+  initialShareJobId,
   popout = false,
   basePath = "/messages",
 }: {
@@ -49,6 +50,7 @@ export function MessagesView({
   initialConversationId?: string
   initialPersonId?: string
   initialDraft?: string
+  initialShareJobId?: string
   popout?: boolean
   basePath?: string
 }) {
@@ -66,6 +68,13 @@ export function MessagesView({
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
   const [composerDraft, setComposerDraft] = useState(initialDraft ?? "")
+  const [composerShareJobId, setComposerShareJobId] = useState(
+    initialShareJobId ?? "",
+  )
+
+  useEffect(() => {
+    setComposerShareJobId(initialShareJobId ?? "")
+  }, [initialShareJobId])
   const [startError, setStartError] = useState<string | null>(null)
   const resolvingPerson = useRef<string | null>(null)
   const selectionEpochRef = useRef(0)
@@ -150,6 +159,7 @@ export function MessagesView({
         params.set("conversation", conversation.id)
         params.delete("person")
         params.delete("draft")
+        params.delete("shareJob")
       }, epoch)
     },
     [applySelection, markConversationRead, scheduleUrlSync],
@@ -164,12 +174,14 @@ export function MessagesView({
     setSelectedId(null)
     setActive(null)
     setComposerDraft("")
+    setComposerShareJobId("")
     lastSyncedUrlIdRef.current = undefined
     startTransition(() => {
       replaceSearchParams((params) => {
         params.delete("conversation")
         params.delete("person")
         params.delete("draft")
+        params.delete("shareJob")
       })
     })
   }, [cancelScheduledUrlSync, replaceSearchParams])
@@ -439,7 +451,16 @@ export function MessagesView({
               key={visibleActiveConversation.id}
               conversation={visibleActiveConversation}
               initialDraft={composerDraft}
+              initialShareJobId={composerShareJobId || undefined}
               onDraftConsumed={() => setComposerDraft("")}
+              onShareJobConsumed={() => {
+                setComposerShareJobId("")
+                startTransition(() => {
+                  replaceSearchParams((params) => {
+                    params.delete("shareJob")
+                  })
+                })
+              }}
               onBack={clearActiveConversation}
             />
           ) : (

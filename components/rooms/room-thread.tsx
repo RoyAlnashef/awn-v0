@@ -23,12 +23,19 @@ import {
 } from "@/lib/rooms/actions"
 import { useRooms } from "@/components/rooms/rooms-provider"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
+import { JobShareCard } from "@/components/jobs/job-share-card"
+import { fetchJob } from "@/lib/jobs/fetch"
+import { jobToSharePayload } from "@/lib/messages/job-share"
+import type { JobSharePayload } from "@/lib/messages-data"
 import type { Person } from "@/lib/people-data"
 import { getProfileOnline } from "@/lib/presence/actions"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageBubbleWithReactions } from "@/components/messages/message-bubble-with-reactions"
+import {
+  MessageBubbleWithReactions,
+  MessageJobShareWithReactions,
+} from "@/components/messages/message-bubble-with-reactions"
 import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
 import {
   Message,
@@ -89,11 +96,15 @@ function RoomThreadScrollEffects({
 
 export function RoomThread({
   room,
+  initialShareJobId,
+  onShareJobConsumed,
   onBack,
   onJoin,
   onLeave,
 }: {
   room: Room
+  initialShareJobId?: string
+  onShareJobConsumed?: () => void
   onBack?: () => void
   onJoin?: () => void | Promise<void>
   onLeave?: () => void | Promise<void>
@@ -112,6 +123,9 @@ export function RoomThread({
 
   const [localMessages, setLocalMessages] = useState<ThreadMessage[]>([])
   const [draft, setDraft] = useState("")
+  const [pendingJobShare, setPendingJobShare] =
+    useState<JobSharePayload | null>(null)
+  const [loadingJobShare, setLoadingJobShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
   const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
@@ -197,10 +211,37 @@ export function RoomThread({
     })
   }, [room.id, room.joined, usesServer])
 
+  useEffect(() => {
+    if (!initialShareJobId) return
+
+    let cancelled = false
+    setLoadingJobShare(true)
+
+    void fetchJob(initialShareJobId)
+      .then((result) => {
+        if (cancelled) return
+        setPendingJobShare(jobToSharePayload(result.job))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPendingJobShare(null)
+      })
+      .finally(() => {
+        if (cancelled) return
+        setLoadingJobShare(false)
+        onShareJobConsumed?.()
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialShareJobId, onShareJobConsumed])
+
   async function sendMessage() {
     if (!room.joined) return
     const text = draft.trim()
-    if (!text || sending) return
+    const jobId = pendingJobShare?.id
+    if ((!text && !jobId) || sending) return
 
     if (usesServer) {
       const optimisticId = `optimistic-${Date.now()}`
@@ -210,6 +251,7 @@ export function RoomThread({
         text,
         time: "Now",
         createdAt: new Date().toISOString(),
+        jobShare: pendingJobShare ?? undefined,
       }
 
       void mutateThread(
@@ -222,10 +264,15 @@ export function RoomThread({
       )
 
       setDraft("")
+      setPendingJobShare(null)
       setSending(true)
       requestScrollToEnd()
 
-      const result = await sendRoomMessage(room.id, text)
+      const result = await sendRoomMessage(
+        room.id,
+        text,
+        jobId ? { jobId } : undefined,
+      )
       setSending(false)
 
       if (!result.ok) {
@@ -242,6 +289,9 @@ export function RoomThread({
           { revalidate: false },
         )
         setDraft(text)
+        if (jobId && optimisticMessage.jobShare) {
+          setPendingJobShare(optimisticMessage.jobShare)
+        }
         return
       }
 
@@ -270,11 +320,15 @@ export function RoomThread({
         text,
         time: "Now",
         createdAt: new Date().toISOString(),
+        jobShare: pendingJobShare ?? undefined,
       },
     ])
     setDraft("")
+    setPendingJobShare(null)
     requestScrollToEnd()
   }
+
+  const canSend = Boolean(draft.trim() || pendingJobShare) && !sending
 
   const handleReact = useCallback(
     (messageId: string, emoji: string | null) => {
@@ -479,26 +533,56 @@ export function RoomThread({
                         <div className="w-8 shrink-0" aria-hidden />
                       )}
                       <MessageContent>
-                        <MessageBubbleWithReactions
-                          variant={mine ? "default" : "muted"}
-                          align={mine ? "end" : "start"}
-                          reactions={message.reactions}
-                          onReact={(emoji) => handleReact(message.id, emoji)}
-                        >
-                          {showAuthor ? (
-                            <button
-                              type="button"
-                              className="mb-0.5 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                openAuthorProfile(message)
-                              }}
-                            >
-                              {message.author!}
-                            </button>
-                          ) : null}
-                          {message.text}
-                        </MessageBubbleWithReactions>
+                        {message.jobShare ? (
+                          <>
+                            {showAuthor ? (
+                              <button
+                                type="button"
+                                className={cn(
+                                  "mb-1 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                                  mine && "self-end text-right",
+                                )}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openAuthorProfile(message)
+                                }}
+                              >
+                                {message.author!}
+                              </button>
+                            ) : null}
+                            <MessageJobShareWithReactions
+                              jobShare={message.jobShare}
+                              text={message.text}
+                              variant={mine ? "default" : "muted"}
+                              align={mine ? "end" : "start"}
+                              reactions={message.reactions}
+                              onReact={(emoji) =>
+                                handleReact(message.id, emoji)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <MessageBubbleWithReactions
+                            variant={mine ? "default" : "muted"}
+                            align={mine ? "end" : "start"}
+                            reactions={message.reactions}
+                            onReact={(emoji) => handleReact(message.id, emoji)}
+                          >
+                            {showAuthor ? (
+                              <button
+                                type="button"
+                                className="mb-0.5 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openAuthorProfile(message)
+                                }}
+                              >
+                                {message.author!}
+                              </button>
+                            ) : null}
+                            {message.text}
+                          </MessageBubbleWithReactions>
+                        )}
                         {showTimestamp ? (
                           <MessageFooter>{message.time}</MessageFooter>
                         ) : null}
@@ -515,6 +599,19 @@ export function RoomThread({
 
       {room.joined ? (
         <div className="shrink-0 border-t p-3">
+          {loadingJobShare ? (
+            <p className="mb-2 text-xs text-muted-foreground">
+              Loading job attachment…
+            </p>
+          ) : pendingJobShare ? (
+            <div className="mb-2">
+              <JobShareCard
+                jobShare={pendingJobShare}
+                variant="preview"
+                onRemove={() => setPendingJobShare(null)}
+              />
+            </div>
+          ) : null}
           <InputGroup>
             <InputGroupTextarea
               value={draft}
@@ -538,7 +635,7 @@ export function RoomThread({
                 variant="default"
                 size="icon-sm"
                 aria-label="Send message"
-                disabled={!draft.trim() || sending}
+                disabled={!canSend}
                 onClick={sendMessage}
               >
                 <Send />

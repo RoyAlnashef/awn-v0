@@ -13,6 +13,10 @@ import type {
   ThreadMessage,
 } from "@/lib/messages-data"
 import { profileIsOnline } from "@/lib/presence/is-online"
+import {
+  mapRpcJobShare,
+  type JobShareRpcRow,
+} from "@/lib/messages/job-share"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -47,7 +51,7 @@ type InboxRow = {
   conversation_updated_at: string
 }
 
-type ThreadRpcMessage = {
+type ThreadRpcMessage = JobShareRpcRow & {
   id: string
   sender_id: string
   body: string
@@ -95,7 +99,7 @@ type ProfileRow = {
   appear_offline: boolean | null
 }
 
-type MessageRow = {
+type MessageRow = JobShareRpcRow & {
   id: string
   sender_id: string
   body: string
@@ -111,6 +115,71 @@ async function requireUserId(): Promise<string> {
   const user = await getSessionUser()
   if (!user) throw new Error("Unauthorized")
   return user.id
+}
+
+function mapThreadRpcMessage(
+  message: ThreadRpcMessage,
+  userId: string,
+  otherLastReadAt: string | null,
+): ThreadMessage {
+  const jobShare = mapRpcJobShare(message)
+  return {
+    id: message.id,
+    from: message.sender_id === userId ? "me" : "them",
+    text: message.body,
+    time: formatMessageTime(message.created_at),
+    createdAt: message.created_at,
+    readReceipt: readReceiptForMessage(message, userId, otherLastReadAt),
+    reactions: mapRpcReactions(message.reactions),
+    jobShare,
+  }
+}
+
+function mapInsertedMessageRow(
+  message: MessageRow,
+  jobShare?: ThreadMessage["jobShare"],
+): ThreadMessage {
+  return {
+    id: message.id,
+    from: "me",
+    text: message.body,
+    time: formatMessageTime(message.created_at),
+    createdAt: message.created_at,
+    readReceipt: "sent",
+    jobShare: jobShare ?? mapRpcJobShare(message),
+  }
+}
+
+async function fetchJobSharePayload(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  jobId: string,
+): Promise<{ ok: true; jobShare: NonNullable<ThreadMessage["jobShare"]> } | ActionError> {
+  const { data, error } = await supabase
+    .from("job_postings")
+    .select(
+      "id, role, production, location, pay_rate, start_date, end_date, engagement, status",
+    )
+    .eq("id", jobId)
+    .maybeSingle()
+
+  if (error) return { ok: false, error: error.message }
+  if (!data || data.status === "deleted") {
+    return { ok: false, error: "Job not found." }
+  }
+
+  return {
+    ok: true,
+    jobShare: {
+      id: data.id,
+      role: data.role,
+      production: data.production ?? "",
+      location: data.location ?? "",
+      payRate: data.pay_rate ?? "",
+      startDate: data.start_date,
+      endDate: data.end_date,
+      engagement: String(data.engagement),
+    },
+  }
 }
 
 function buildPreview(
@@ -377,18 +446,9 @@ export async function getConversationThread(
     const payload = data as ThreadRpcResult
     const otherLastReadAt = payload.other_last_read_at ?? null
 
-    const thread: ThreadMessage[] = (payload.messages ?? []).map((row) => {
-      const message = row as ThreadRpcMessage
-      return {
-        id: message.id,
-        from: message.sender_id === userId ? "me" : "them",
-        text: message.body,
-        time: formatMessageTime(message.created_at),
-        createdAt: message.created_at,
-        readReceipt: readReceiptForMessage(message, userId, otherLastReadAt),
-        reactions: mapRpcReactions(message.reactions),
-      }
-    })
+    const thread: ThreadMessage[] = (payload.messages ?? []).map((row) =>
+      mapThreadRpcMessage(row as ThreadRpcMessage, userId, otherLastReadAt),
+    )
 
     return {
       ok: true,
@@ -404,6 +464,7 @@ export async function getConversationThread(
 export async function sendMessage(
   conversationId: string,
   body: string,
+  options?: { jobId?: string },
 ): Promise<SendMessageResult> {
   try {
     if (!isUuid(conversationId)) {
@@ -411,10 +472,23 @@ export async function sendMessage(
     }
 
     const text = body.trim()
-    if (!text) return { ok: false, error: "Message cannot be empty." }
+    const jobId = options?.jobId
+    if (!text && !jobId) {
+      return { ok: false, error: "Message cannot be empty." }
+    }
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    let jobShare: ThreadMessage["jobShare"]
+    if (jobId) {
+      if (!isUuid(jobId)) {
+        return { ok: false, error: "Invalid job id." }
+      }
+      const jobResult = await fetchJobSharePayload(supabase, jobId)
+      if (!jobResult.ok) return jobResult
+      jobShare = jobResult.jobShare
+    }
 
     const { data, error } = await supabase
       .from("dm_messages")
@@ -422,8 +496,9 @@ export async function sendMessage(
         conversation_id: conversationId,
         sender_id: userId,
         body: text,
+        ...(jobId ? { job_id: jobId } : {}),
       })
-      .select("id, sender_id, body, created_at")
+      .select("id, sender_id, body, created_at, job_id")
       .single()
 
     if (error) return { ok: false, error: error.message }
@@ -432,14 +507,7 @@ export async function sendMessage(
 
     return {
       ok: true,
-      message: {
-        id: message.id,
-        from: "me",
-        text: message.body,
-        time: formatMessageTime(message.created_at),
-        createdAt: message.created_at,
-        readReceipt: "sent",
-      },
+      message: mapInsertedMessageRow(message, jobShare),
     }
   } catch (error) {
     return actionError(error)

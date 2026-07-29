@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Hash } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
@@ -22,16 +23,34 @@ export function RoomsView({
   title,
   description,
   initialRoomId,
+  initialShareJobId,
   popout = false,
 }: {
   title: string
   description?: string
   initialRoomId?: string
+  initialShareJobId?: string
   popout?: boolean
 }) {
+  const router = useRouter()
   const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom, isLoading } =
     useRooms()
   const [active, setActive] = useState<Room | null>(null)
+  const [composerShareJobId, setComposerShareJobId] = useState(
+    initialShareJobId ?? "",
+  )
+
+  useEffect(() => {
+    setComposerShareJobId(initialShareJobId ?? "")
+  }, [initialShareJobId])
+
+  function clearShareJobFromUrl() {
+    setComposerShareJobId("")
+    const params = new URLSearchParams(window.location.search)
+    params.delete("shareJob")
+    const query = params.toString()
+    router.replace(query ? `?${query}` : window.location.pathname)
+  }
 
   function handleToggleJoin(id: string): Promise<void> {
     const room = getRoom(id)
@@ -134,6 +153,8 @@ export function RoomsView({
             <RoomThread
               key={activeRoom.id}
               room={activeRoom}
+              initialShareJobId={composerShareJobId || undefined}
+              onShareJobConsumed={clearShareJobFromUrl}
               onBack={() => setActive(null)}
               onJoin={() => handleToggleJoin(activeRoom.id)}
               onLeave={() => handleToggleJoin(activeRoom.id)}

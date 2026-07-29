@@ -39,6 +39,7 @@ export function useRoomsRealtime({
             sender_id: string
             body: string
             created_at: string
+            job_id?: string | null
           }
 
           const isMine = row.sender_id === currentUserId
@@ -49,8 +50,11 @@ export function useRoomsRealtime({
             roomThreadKey(row.room_id),
             (current: RoomThreadCache | undefined) => {
               if (!current) return current
-              // Deduplicate — optimistic send may have already appended it
               if (current.messages.some((m) => m.id === row.id)) {
+                return current
+              }
+
+              if (row.job_id) {
                 return current
               }
 
@@ -80,7 +84,7 @@ export function useRoomsRealtime({
                 messages: [...current.messages, incoming],
               }
             },
-            { revalidate: false },
+            { revalidate: row.job_id ? true : false },
           )
 
           // Refresh the rooms list to update previews and unread counts

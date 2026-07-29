@@ -12,6 +12,7 @@ export default async function PopoutMessagesPage({
     conversation?: string
     person?: string
     draft?: string
+    shareJob?: string
   }>
 }) {
   const params = await searchParams
@@ -24,6 +25,7 @@ export default async function PopoutMessagesPage({
           initialConversationId={params.conversation}
           initialPersonId={params.person}
           initialDraft={params.draft}
+          initialShareJobId={params.shareJob}
           popout
           basePath="/popout/messages"
         />

@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner"
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import { JobSharePopover } from "@/components/jobs/job-share-popover"
 import {
   formatDateRange,
   parseDateOnly,
@@ -240,10 +241,12 @@ function JobDetailContent({
             <MessageSquare />
             Message
           </Button>
-          <Button variant="ghost" size="sm" className="shrink-0">
-            <Share2 />
-            Share
-          </Button>
+          <JobSharePopover job={job}>
+            <Button variant="ghost" size="sm" className="shrink-0">
+              <Share2 />
+              Share
+            </Button>
+          </JobSharePopover>
         </div>
         <Button
           variant="ghost"

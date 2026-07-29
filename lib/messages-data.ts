@@ -21,13 +21,25 @@ export interface DirectConversation {
   isNew?: boolean
 }
 
-/** A single emoji reaction aggregate on a message. */
+/** Aggregated emoji reactions on a message. */
 export type MessageReaction = {
   emoji: string
   count: number
   reactedByMe: boolean
   /** For tooltip; cap at ~10 names then "+N more" */
   reactors: { id: string; name: string }[]
+}
+
+/** Compact job payload embedded in a shared message. */
+export type JobSharePayload = {
+  id: string
+  role: string
+  production: string
+  location: string
+  payRate: string
+  startDate: string
+  endDate: string
+  engagement: string
 }
 
 /** A single message within a conversation or room thread. */
@@ -50,6 +62,8 @@ export interface ThreadMessage {
   authorAvatarUrl?: string
   /** Aggregated emoji reactions on this message. */
   reactions?: MessageReaction[]
+  /** Rich job card when this message shares a job listing. */
+  jobShare?: JobSharePayload
 }
 
 /** A joinable community room. */
