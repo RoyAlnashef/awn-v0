@@ -1,8 +1,13 @@
 "use client"
 
-import type { JobSharePayload, MessageReaction } from "@/lib/messages-data"
+import type {
+  JobSharePayload,
+  MemberSharePayload,
+  MessageReaction,
+} from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
 import { JobShareCard } from "@/components/jobs/job-share-card"
+import { PersonShareCard } from "@/components/people/person-share-card"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import {
   MessageReactionBadge,
@@ -148,6 +153,67 @@ export function MessageJobShareWithReactions({
         )}
       >
         <JobShareCard jobShare={jobShare} variant="message" />
+        {trimmed ? (
+          <Bubble variant={variant} align={align} className="max-w-full">
+            <BubbleContent>{trimmed}</BubbleContent>
+          </Bubble>
+        ) : null}
+      </div>
+
+      <MessageReactionSurface align={align} onSelect={handleSelect} />
+    </div>
+  )
+}
+
+export function MessageMemberShareWithReactions({
+  memberShare,
+  text,
+  variant,
+  align,
+  reactions,
+  onReact,
+  className,
+}: {
+  memberShare: MemberSharePayload
+  text: string
+  variant?: "default" | "muted"
+  align?: "start" | "end"
+  reactions?: MessageReaction[]
+  onReact: (emoji: string | null) => void
+  className?: string
+}) {
+  const trimmed = text.trim()
+  const { handleSelect, hasReactions } = useMessageReactionHandlers(
+    reactions,
+    onReact,
+  )
+
+  return (
+    <div
+      className={cn(
+        "group/bubble-wrap relative w-fit max-w-[min(20rem,80%)] min-w-0 overflow-visible",
+        hasReactions && "pt-6",
+        "after:absolute after:top-0 after:bottom-0 after:w-9 after:content-['']",
+        align === "end"
+          ? "self-end after:right-full"
+          : "self-start after:left-full",
+        className,
+      )}
+    >
+      {hasReactions ? (
+        <MessageReactionBadge
+          reactions={reactions!}
+          align={align === "end" ? "start" : "end"}
+          onToggleMine={() => onReact(null)}
+        />
+      ) : null}
+      <div
+        className={cn(
+          "flex w-full flex-col gap-2",
+          align === "end" ? "items-end" : "items-start",
+        )}
+      >
+        <PersonShareCard memberShare={memberShare} variant="message" />
         {trimmed ? (
           <Bubble variant={variant} align={align} className="max-w-full">
             <BubbleContent>{trimmed}</BubbleContent>

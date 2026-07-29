@@ -126,7 +126,7 @@ export function initials(name: string) {
 
 export const people: Person[] = [
   {
-    id: "1",
+    id: "a0000001-0000-4000-8000-000000000001",
     name: "Jordan Reyes",
     role: "Tour Manager",
     department: "Production",
@@ -152,7 +152,7 @@ export const people: Person[] = [
     bio: "Seasoned Tour Manager with 14+ years advancing global arena and stadium runs. Founder of Reyes Touring Co., handling routing, settlements, and visa logistics for touring artists and their crews. Known for calm, detail-obsessed leadership on the road and building repeat-booking relationships with promoters worldwide.",
   },
   {
-    id: "2",
+    id: "a0000002-0000-4000-8000-000000000002",
     name: "Priya Anand",
     role: "Front of House Engineer",
     department: "Audio",
@@ -171,7 +171,7 @@ export const people: Person[] = [
     connected: true,
   },
   {
-    id: "3",
+    id: "a0000003-0000-4000-8000-000000000003",
     name: "Marcus Bell",
     role: "Lighting Director (LD)",
     department: "Lighting",
@@ -190,7 +190,7 @@ export const people: Person[] = [
     connected: false,
   },
   {
-    id: "4",
+    id: "a0000004-0000-4000-8000-000000000004",
     name: "Dana Whitfield",
     role: "Video Director",
     department: "Video",
@@ -209,7 +209,7 @@ export const people: Person[] = [
     connected: false,
   },
   {
-    id: "5",
+    id: "a0000005-0000-4000-8000-000000000005",
     name: "Theo Nakamura",
     role: "Monitor Engineer",
     department: "Audio",
@@ -228,7 +228,7 @@ export const people: Person[] = [
     connected: true,
   },
   {
-    id: "6",
+    id: "a0000006-0000-4000-8000-000000000006",
     name: "Sofia Marín",
     role: "Production Manager",
     department: "Production",
@@ -251,7 +251,7 @@ export const people: Person[] = [
     memberSince: "Mar 2020",
   },
   {
-    id: "7",
+    id: "a0000007-0000-4000-8000-000000000007",
     name: "Elliot Shaw",
     role: "Guitar Tech",
     department: "Backline",
@@ -270,7 +270,7 @@ export const people: Person[] = [
     connected: false,
   },
   {
-    id: "8",
+    id: "a0000008-0000-4000-8000-000000000008",
     name: "Naomi Foster",
     role: "Lighting Programmer",
     department: "Lighting",
@@ -289,7 +289,7 @@ export const people: Person[] = [
     connected: true,
   },
   {
-    id: "9",
+    id: "a0000009-0000-4000-8000-000000000009",
     name: "Carlos Rivera",
     role: "Video Engineer / EIC",
     department: "Video",
@@ -308,7 +308,7 @@ export const people: Person[] = [
     connected: false,
   },
   {
-    id: "10",
+    id: "a000000a-0000-4000-8000-00000000000a",
     name: "Aisha Khan",
     role: "Stage Manager",
     department: "Production",
@@ -327,7 +327,7 @@ export const people: Person[] = [
     connected: true,
   },
   {
-    id: "11",
+    id: "a000000b-0000-4000-8000-00000000000b",
     name: "Liam O'Connor",
     role: "Systems Engineer",
     department: "Audio",
@@ -346,7 +346,7 @@ export const people: Person[] = [
     connected: false,
   },
   {
-    id: "12",
+    id: "a000000c-0000-4000-8000-00000000000c",
     name: "Grace Kim",
     role: "Camera Operator",
     department: "Video",

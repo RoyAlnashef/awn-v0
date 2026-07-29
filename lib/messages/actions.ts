@@ -17,6 +17,13 @@ import {
   mapRpcJobShare,
   type JobShareRpcRow,
 } from "@/lib/messages/job-share"
+import {
+  mapRpcMemberShare,
+  personToSharePayload,
+  type MemberShareRpcRow,
+} from "@/lib/messages/member-share"
+import type { MemberSharePayload } from "@/lib/messages-data"
+import { people } from "@/lib/people-data"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -51,7 +58,8 @@ type InboxRow = {
   conversation_updated_at: string
 }
 
-type ThreadRpcMessage = JobShareRpcRow & {
+type ThreadRpcMessage = JobShareRpcRow &
+  MemberShareRpcRow & {
   id: string
   sender_id: string
   body: string
@@ -99,11 +107,13 @@ type ProfileRow = {
   appear_offline: boolean | null
 }
 
-type MessageRow = JobShareRpcRow & {
+type MessageRow = JobShareRpcRow &
+  MemberShareRpcRow & {
   id: string
   sender_id: string
   body: string
   created_at: string
+  member_share_snapshot?: MemberSharePayload | null
 }
 
 function actionError(error: unknown): ActionError {
@@ -123,6 +133,7 @@ function mapThreadRpcMessage(
   otherLastReadAt: string | null,
 ): ThreadMessage {
   const jobShare = mapRpcJobShare(message)
+  const memberShare = mapRpcMemberShare(message)
   return {
     id: message.id,
     from: message.sender_id === userId ? "me" : "them",
@@ -132,12 +143,16 @@ function mapThreadRpcMessage(
     readReceipt: readReceiptForMessage(message, userId, otherLastReadAt),
     reactions: mapRpcReactions(message.reactions),
     jobShare,
+    memberShare,
   }
 }
 
 function mapInsertedMessageRow(
   message: MessageRow,
-  jobShare?: ThreadMessage["jobShare"],
+  attachments?: {
+    jobShare?: ThreadMessage["jobShare"]
+    memberShare?: ThreadMessage["memberShare"]
+  },
 ): ThreadMessage {
   return {
     id: message.id,
@@ -146,7 +161,112 @@ function mapInsertedMessageRow(
     time: formatMessageTime(message.created_at),
     createdAt: message.created_at,
     readReceipt: "sent",
-    jobShare: jobShare ?? mapRpcJobShare(message),
+    jobShare: attachments?.jobShare ?? mapRpcJobShare(message),
+    memberShare: attachments?.memberShare ?? mapRpcMemberShare(message),
+  }
+}
+
+async function fetchMemberSharePayload(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profileId: string,
+): Promise<
+  | { ok: true; memberShare: NonNullable<ThreadMessage["memberShare"]> }
+  | ActionError
+> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, title, avatar_url, status")
+    .eq("id", profileId)
+    .maybeSingle()
+
+  if (error) return { ok: false, error: error.message }
+
+  if (data && data.status === "active") {
+    return {
+      ok: true,
+      memberShare: {
+        id: data.id,
+        name: data.full_name?.trim() || "Member",
+        role: data.title?.trim() || "AWN Member",
+        avatar: data.avatar_url ?? undefined,
+      },
+    }
+  }
+
+  const mockPerson = people.find((person) => person.id === profileId)
+  if (mockPerson) {
+    return { ok: true, memberShare: personToSharePayload(mockPerson) }
+  }
+
+  return { ok: false, error: "Member not found." }
+}
+
+async function resolveMemberShareForInsert(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profileId: string,
+): Promise<
+  | {
+      ok: true
+      memberShare: NonNullable<ThreadMessage["memberShare"]>
+      sharedProfileId: string | null
+      memberShareSnapshot: NonNullable<ThreadMessage["memberShare"]> | null
+    }
+  | ActionError
+> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, title, avatar_url, status")
+    .eq("id", profileId)
+    .maybeSingle()
+
+  if (error) return { ok: false, error: error.message }
+
+  if (data && data.status === "active") {
+    const memberShare = {
+      id: data.id,
+      name: data.full_name?.trim() || "Member",
+      role: data.title?.trim() || "AWN Member",
+      avatar: data.avatar_url ?? undefined,
+    }
+    return {
+      ok: true,
+      memberShare,
+      sharedProfileId: profileId,
+      memberShareSnapshot: null,
+    }
+  }
+
+  const mockPerson = people.find((person) => person.id === profileId)
+  if (mockPerson) {
+    const memberShare = personToSharePayload(mockPerson)
+    return {
+      ok: true,
+      memberShare,
+      sharedProfileId: null,
+      memberShareSnapshot: memberShare,
+    }
+  }
+
+  return { ok: false, error: "Member not found." }
+}
+
+export type MemberSharePayloadResult =
+  | { ok: true; memberShare: NonNullable<ThreadMessage["memberShare"]> }
+  | ActionError
+
+export async function getMemberSharePayload(
+  profileId: string,
+): Promise<MemberSharePayloadResult> {
+  try {
+    if (!isUuid(profileId)) {
+      return { ok: false, error: "Invalid profile id." }
+    }
+
+    await requireUserId()
+    const supabase = await createClient()
+    return fetchMemberSharePayload(supabase, profileId)
+  } catch (error) {
+    return actionError(error)
   }
 }
 
@@ -464,7 +584,7 @@ export async function getConversationThread(
 export async function sendMessage(
   conversationId: string,
   body: string,
-  options?: { jobId?: string },
+  options?: { jobId?: string; sharedProfileId?: string },
 ): Promise<SendMessageResult> {
   try {
     if (!isUuid(conversationId)) {
@@ -473,14 +593,21 @@ export async function sendMessage(
 
     const text = body.trim()
     const jobId = options?.jobId
-    if (!text && !jobId) {
+    const sharedProfileId = options?.sharedProfileId
+    if (!text && !jobId && !sharedProfileId) {
       return { ok: false, error: "Message cannot be empty." }
+    }
+    if (jobId && sharedProfileId) {
+      return { ok: false, error: "Cannot attach both a job and a member." }
     }
 
     const userId = await requireUserId()
     const supabase = await createClient()
 
     let jobShare: ThreadMessage["jobShare"]
+    let memberShare: ThreadMessage["memberShare"]
+    let sharedProfileIdForInsert: string | null = null
+    let memberShareSnapshotForInsert: ThreadMessage["memberShare"] | null = null
     if (jobId) {
       if (!isUuid(jobId)) {
         return { ok: false, error: "Invalid job id." }
@@ -489,16 +616,39 @@ export async function sendMessage(
       if (!jobResult.ok) return jobResult
       jobShare = jobResult.jobShare
     }
+    if (sharedProfileId) {
+      if (!isUuid(sharedProfileId)) {
+        return { ok: false, error: "Invalid profile id." }
+      }
+      const memberResult = await resolveMemberShareForInsert(
+        supabase,
+        sharedProfileId,
+      )
+      if (!memberResult.ok) return memberResult
+      memberShare = memberResult.memberShare
+      sharedProfileIdForInsert = memberResult.sharedProfileId
+      memberShareSnapshotForInsert = memberResult.memberShareSnapshot
+    }
+
+    const insertPayload = {
+      conversation_id: conversationId,
+      sender_id: userId,
+      body: text,
+      ...(jobId ? { job_id: jobId } : {}),
+      ...(sharedProfileIdForInsert
+        ? { shared_profile_id: sharedProfileIdForInsert }
+        : {}),
+      ...(memberShareSnapshotForInsert
+        ? { member_share_snapshot: memberShareSnapshotForInsert }
+        : {}),
+    }
 
     const { data, error } = await supabase
       .from("dm_messages")
-      .insert({
-        conversation_id: conversationId,
-        sender_id: userId,
-        body: text,
-        ...(jobId ? { job_id: jobId } : {}),
-      })
-      .select("id, sender_id, body, created_at, job_id")
+      .insert(insertPayload)
+      .select(
+        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot",
+      )
       .single()
 
     if (error) return { ok: false, error: error.message }
@@ -507,7 +657,7 @@ export async function sendMessage(
 
     return {
       ok: true,
-      message: mapInsertedMessageRow(message, jobShare),
+      message: mapInsertedMessageRow(message, { jobShare, memberShare }),
     }
   } catch (error) {
     return actionError(error)

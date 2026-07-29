@@ -9,6 +9,7 @@ import {
 } from "@/lib/messages/format"
 import {
   getOrCreateConversation,
+  getMemberSharePayload,
   sendMessage as sendMessageAction,
   setMessageReaction,
 } from "@/lib/messages/actions"
@@ -28,12 +29,15 @@ import {
   getThread,
   type DirectConversation,
   type JobSharePayload,
+  type MemberSharePayload,
   type ThreadMessage,
 } from "@/lib/messages-data"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
+import { PersonShareCard } from "@/components/people/person-share-card"
 import { JobShareCard } from "@/components/jobs/job-share-card"
 import { fetchJob } from "@/lib/jobs/fetch"
-import { jobToSharePayload, messageDisplayPreview } from "@/lib/messages/job-share"
+import { jobToSharePayload } from "@/lib/messages/job-share"
+import { messageDisplayPreview } from "@/lib/messages/member-share"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -51,6 +55,7 @@ import {
 import {
   MessageBubbleWithReactions,
   MessageJobShareWithReactions,
+  MessageMemberShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
@@ -144,15 +149,19 @@ export function MessageThread({
   conversation,
   initialDraft,
   initialShareJobId,
+  initialShareMemberId,
   onDraftConsumed,
   onShareJobConsumed,
+  onShareMemberConsumed,
   onBack,
 }: {
   conversation: DirectConversation
   initialDraft?: string
   initialShareJobId?: string
+  initialShareMemberId?: string
   onDraftConsumed?: () => void
   onShareJobConsumed?: () => void
+  onShareMemberConsumed?: () => void
   onBack?: () => void
 }) {
   const { bumpConversation, currentUser, markConversationRead: markRead } =
@@ -169,7 +178,10 @@ export function MessageThread({
   const [draft, setDraft] = useState(initialDraft ?? "")
   const [pendingJobShare, setPendingJobShare] =
     useState<JobSharePayload | null>(null)
+  const [pendingMemberShare, setPendingMemberShare] =
+    useState<MemberSharePayload | null>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
+  const [loadingMemberShare, setLoadingMemberShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -228,7 +240,34 @@ export function MessageThread({
   }, [initialDraft, onDraftConsumed])
 
   useEffect(() => {
-    if (!initialShareJobId) return
+    if (!initialShareMemberId) return
+
+    let cancelled = false
+    setLoadingMemberShare(true)
+
+    void getMemberSharePayload(initialShareMemberId)
+      .then((result) => {
+        if (cancelled) return
+        if (result.ok) {
+          setPendingMemberShare(result.memberShare)
+          setPendingJobShare(null)
+        } else {
+          setPendingMemberShare(null)
+        }
+      })
+      .finally(() => {
+        if (cancelled) return
+        setLoadingMemberShare(false)
+        onShareMemberConsumed?.()
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialShareMemberId, onShareMemberConsumed])
+
+  useEffect(() => {
+    if (!initialShareJobId || initialShareMemberId) return
 
     let cancelled = false
     setLoadingJobShare(true)
@@ -251,7 +290,7 @@ export function MessageThread({
     return () => {
       cancelled = true
     }
-  }, [initialShareJobId, onShareJobConsumed])
+  }, [initialShareJobId, initialShareMemberId, onShareJobConsumed])
 
   useEffect(() => {
     const conversationId = conversation.id
@@ -401,9 +440,14 @@ export function MessageThread({
   async function sendMessage() {
     const text = draft.trim()
     const jobId = pendingJobShare?.id
-    if ((!text && !jobId) || sending) return
+    const sharedProfileId = pendingMemberShare?.id
+    if ((!text && !jobId && !sharedProfileId) || sending) return
 
-    const preview = messageDisplayPreview(text, pendingJobShare ?? undefined)
+    const preview = messageDisplayPreview(
+      text,
+      pendingJobShare ?? undefined,
+      pendingMemberShare ?? undefined,
+    )
 
     if (isPersisted && persistedConversationId) {
       const optimisticId = `optimistic-${Date.now()}`
@@ -415,6 +459,7 @@ export function MessageThread({
         createdAt: new Date().toISOString(),
         readReceipt: "sent",
         jobShare: pendingJobShare ?? undefined,
+        memberShare: pendingMemberShare ?? undefined,
       }
 
       void mutate(
@@ -430,13 +475,18 @@ export function MessageThread({
       bumpConversation(persistedConversationId, preview, { from: "me" })
       setDraft("")
       setPendingJobShare(null)
+      setPendingMemberShare(null)
       setSending(true)
       requestScrollToEnd()
 
       const result = await sendMessageAction(
         persistedConversationId,
         text,
-        jobId ? { jobId } : undefined,
+        jobId
+          ? { jobId }
+          : sharedProfileId
+            ? { sharedProfileId }
+            : undefined,
       )
       setSending(false)
 
@@ -456,6 +506,9 @@ export function MessageThread({
         setDraft(text)
         if (jobId && optimisticMessage.jobShare) {
           setPendingJobShare(optimisticMessage.jobShare)
+        }
+        if (sharedProfileId && optimisticMessage.memberShare) {
+          setPendingMemberShare(optimisticMessage.memberShare)
         }
         return
       }
@@ -487,15 +540,18 @@ export function MessageThread({
         createdAt: new Date().toISOString(),
         readReceipt: "delivered",
         jobShare: pendingJobShare ?? undefined,
+        memberShare: pendingMemberShare ?? undefined,
       },
     ])
     bumpConversation(conversation.id, preview, { from: "me" })
     setDraft("")
     setPendingJobShare(null)
+    setPendingMemberShare(null)
     requestScrollToEnd()
   }
 
-  const canSend = Boolean(draft.trim() || pendingJobShare) && !sending
+  const canSend =
+    Boolean(draft.trim() || pendingJobShare || pendingMemberShare) && !sending
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -611,7 +667,18 @@ export function MessageThread({
                             </Avatar>
                           </MessageAvatar>
                           <MessageContent>
-                            {message.jobShare ? (
+                            {message.memberShare ? (
+                              <MessageMemberShareWithReactions
+                                memberShare={message.memberShare}
+                                text={message.text}
+                                variant={mine ? "default" : "muted"}
+                                align={mine ? "end" : "start"}
+                                reactions={message.reactions}
+                                onReact={(emoji) =>
+                                  void handleReact(message.id, emoji)
+                                }
+                              />
+                            ) : message.jobShare ? (
                               <MessageJobShareWithReactions
                                 jobShare={message.jobShare}
                                 text={message.text}
@@ -668,7 +735,19 @@ export function MessageThread({
       </MessageAutoScrollProvider>
 
       <div className="shrink-0 border-t p-3">
-        {loadingJobShare ? (
+        {loadingMemberShare ? (
+          <p className="mb-2 text-xs text-muted-foreground">
+            Loading member attachment…
+          </p>
+        ) : pendingMemberShare ? (
+          <div className="mb-2">
+            <PersonShareCard
+              memberShare={pendingMemberShare}
+              variant="preview"
+              onRemove={() => setPendingMemberShare(null)}
+            />
+          </div>
+        ) : loadingJobShare ? (
           <p className="mb-2 text-xs text-muted-foreground">
             Loading job attachment…
           </p>

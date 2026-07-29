@@ -42,6 +42,20 @@ export type JobSharePayload = {
   engagement: string
 }
 
+/** Compact member payload embedded in a shared message. */
+export type MemberSharePayload = {
+  id: string
+  name: string
+  role: string
+  department?: string
+  homeBase?: string
+  availability?: string
+  avatar?: string
+  credits?: number
+  vouches?: number
+  yearsExperience?: number
+}
+
 /** A single message within a conversation or room thread. */
 export interface ThreadMessage {
   id: string
@@ -64,6 +78,8 @@ export interface ThreadMessage {
   reactions?: MessageReaction[]
   /** Rich job card when this message shares a job listing. */
   jobShare?: JobSharePayload
+  /** Rich member card when this message shares a crew profile. */
+  memberShare?: MemberSharePayload
 }
 
 /** A joinable community room. */

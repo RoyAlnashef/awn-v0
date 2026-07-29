@@ -38,14 +38,20 @@ export function useInboxRealtime() {
             body: string
             created_at: string
             job_id?: string | null
+            shared_profile_id?: string | null
+            member_share_snapshot?: Record<string, unknown> | null
           }
 
           const isMine = row.sender_id === currentUser.id
           const isActive = row.conversation_id === activeConversationId
           const previewBody =
-            row.job_id && !row.body.trim()
-              ? "Shared a job"
-              : row.body
+            row.member_share_snapshot && !row.body.trim()
+              ? "Shared a member"
+              : row.shared_profile_id && !row.body.trim()
+                ? "Shared a member"
+                : row.job_id && !row.body.trim()
+                  ? "Shared a job"
+                  : row.body
 
           bumpConversation(row.conversation_id, previewBody, {
             from: isMine ? "me" : "them",
@@ -68,7 +74,7 @@ export function useInboxRealtime() {
                 return current
               }
 
-              if (row.job_id) {
+              if (row.job_id || row.shared_profile_id || row.member_share_snapshot) {
                 return current
               }
 
@@ -86,7 +92,7 @@ export function useInboxRealtime() {
                 messages: [...current.messages, incoming],
               }
             },
-            { revalidate: row.job_id ? true : false },
+            { revalidate: row.job_id || row.shared_profile_id || row.member_share_snapshot ? true : false },
           )
         },
       )

@@ -13,6 +13,7 @@ export default async function MessagesPage({
     person?: string
     draft?: string
     shareJob?: string
+    shareMember?: string
   }>
 }) {
   const params = await searchParams
@@ -26,6 +27,7 @@ export default async function MessagesPage({
           initialPersonId={params.person}
           initialDraft={params.draft}
           initialShareJobId={params.shareJob}
+          initialShareMemberId={params.shareMember}
         />
       </Suspense>
     </div>

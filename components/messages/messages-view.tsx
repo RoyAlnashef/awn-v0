@@ -42,6 +42,7 @@ export function MessagesView({
   initialPersonId,
   initialDraft,
   initialShareJobId,
+  initialShareMemberId,
   popout = false,
   basePath = "/messages",
 }: {
@@ -51,6 +52,7 @@ export function MessagesView({
   initialPersonId?: string
   initialDraft?: string
   initialShareJobId?: string
+  initialShareMemberId?: string
   popout?: boolean
   basePath?: string
 }) {
@@ -71,10 +73,17 @@ export function MessagesView({
   const [composerShareJobId, setComposerShareJobId] = useState(
     initialShareJobId ?? "",
   )
+  const [composerShareMemberId, setComposerShareMemberId] = useState(
+    initialShareMemberId ?? "",
+  )
 
   useEffect(() => {
     setComposerShareJobId(initialShareJobId ?? "")
   }, [initialShareJobId])
+
+  useEffect(() => {
+    setComposerShareMemberId(initialShareMemberId ?? "")
+  }, [initialShareMemberId])
   const [startError, setStartError] = useState<string | null>(null)
   const resolvingPerson = useRef<string | null>(null)
   const selectionEpochRef = useRef(0)
@@ -160,6 +169,7 @@ export function MessagesView({
         params.delete("person")
         params.delete("draft")
         params.delete("shareJob")
+        params.delete("shareMember")
       }, epoch)
     },
     [applySelection, markConversationRead, scheduleUrlSync],
@@ -175,6 +185,7 @@ export function MessagesView({
     setActive(null)
     setComposerDraft("")
     setComposerShareJobId("")
+    setComposerShareMemberId("")
     lastSyncedUrlIdRef.current = undefined
     startTransition(() => {
       replaceSearchParams((params) => {
@@ -182,6 +193,7 @@ export function MessagesView({
         params.delete("person")
         params.delete("draft")
         params.delete("shareJob")
+        params.delete("shareMember")
       })
     })
   }, [cancelScheduledUrlSync, replaceSearchParams])
@@ -451,13 +463,24 @@ export function MessagesView({
               key={visibleActiveConversation.id}
               conversation={visibleActiveConversation}
               initialDraft={composerDraft}
-              initialShareJobId={composerShareJobId || undefined}
+              initialShareJobId={
+                composerShareMemberId ? undefined : composerShareJobId || undefined
+              }
+              initialShareMemberId={composerShareMemberId || undefined}
               onDraftConsumed={() => setComposerDraft("")}
               onShareJobConsumed={() => {
                 setComposerShareJobId("")
                 startTransition(() => {
                   replaceSearchParams((params) => {
                     params.delete("shareJob")
+                  })
+                })
+              }}
+              onShareMemberConsumed={() => {
+                setComposerShareMemberId("")
+                startTransition(() => {
+                  replaceSearchParams((params) => {
+                    params.delete("shareMember")
                   })
                 })
               }}
