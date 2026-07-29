@@ -13,17 +13,9 @@ import {
 import { getPersonById } from "@/lib/messages-data"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
-import {
-  Attachment,
-  AttachmentAction,
-  AttachmentActions,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-} from "@/components/ui/attachment"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 function memberShareToPerson(memberShare: MemberSharePayload): Person {
   const existing = getPersonById(memberShare.id)
@@ -92,15 +84,19 @@ export function PersonShareCard({
   const isPreview = variant === "preview"
   const person = useMemo(() => memberShareToPerson(memberShare), [memberShare])
 
+  const hasStats =
+    memberShare.credits != null ||
+    memberShare.vouches != null ||
+    memberShare.yearsExperience != null
+
   const card = (
-    <Attachment
+    <div
       className={cn(
-        "max-w-sm",
+        "relative flex w-full max-w-70 flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center",
         variant === "message" &&
-          "cursor-pointer rounded-xl border-border bg-card shadow-sm hover:border-primary/40",
+          "cursor-pointer shadow-sm transition-colors hover:border-primary/40",
         className,
       )}
-      size={isPreview ? "sm" : "default"}
       onClick={variant === "message" ? () => setDetailOpen(true) : undefined}
       onKeyDown={
         variant === "message"
@@ -115,64 +111,104 @@ export function PersonShareCard({
       role={variant === "message" ? "button" : undefined}
       tabIndex={variant === "message" ? 0 : undefined}
     >
-      <AttachmentMedia variant="image" className="size-10">
-        <Avatar className="size-full">
-          <AvatarImage src={memberShare.avatar || undefined} alt="" />
-          <AvatarFallback>{initials(memberShare.name)}</AvatarFallback>
-        </Avatar>
-      </AttachmentMedia>
-      <AttachmentContent>
-        {memberShare.department ? (
-          <Badge variant="secondary" className="text-[10px]">
-            {memberShare.department}
-          </Badge>
-        ) : null}
-        <AttachmentTitle className="font-heading text-sm">
+      {isPreview && onRemove ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="absolute top-2 right-2 z-10"
+          aria-label="Remove member attachment"
+          onClick={(event) => {
+            event.stopPropagation()
+            onRemove()
+          }}
+        >
+          <X className="size-3.5" />
+        </Button>
+      ) : null}
+
+      {memberShare.department ? (
+        <Badge variant="outline" className="self-center">
+          {memberShare.department}
+        </Badge>
+      ) : null}
+
+      <Avatar
+        className={cn(
+          "border-2 border-border",
+          isPreview ? "size-16" : "size-20",
+        )}
+      >
+        <AvatarImage src={memberShare.avatar || undefined} alt="" />
+        <AvatarFallback className={isPreview ? "text-base" : "text-lg"}>
+          {initials(memberShare.name)}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex flex-col items-center gap-0.5">
+        <h3
+          className={cn(
+            "font-heading font-semibold tracking-tight text-balance",
+            isPreview ? "text-base" : "text-lg",
+          )}
+        >
           {memberShare.name}
-        </AttachmentTitle>
-        <AttachmentDescription>{memberShare.role}</AttachmentDescription>
-        <div className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
+        </h3>
+        <p className="text-sm text-foreground/90">{memberShare.role}</p>
+      </div>
+
+      {memberShare.homeBase || memberShare.availability ? (
+        <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
           {memberShare.homeBase ? (
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3 shrink-0" />
-              <span className="truncate">{memberShare.homeBase}</span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="size-3.5 shrink-0" />
+              {memberShare.homeBase}
             </span>
           ) : null}
           <AvailabilityDot availability={memberShare.availability} />
-          {memberShare.credits != null ||
-          memberShare.vouches != null ||
-          memberShare.yearsExperience != null ? (
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              {memberShare.credits != null ? (
-                <span className="inline-flex items-center gap-1">
-                  <BadgeCheck className="size-3 shrink-0 text-primary" />
-                  {memberShare.credits} credits
-                </span>
-              ) : null}
-              {memberShare.vouches != null ? (
-                <span>{memberShare.vouches} vouches</span>
-              ) : null}
-              {memberShare.yearsExperience != null ? (
-                <span>{memberShare.yearsExperience} yrs</span>
-              ) : null}
+        </div>
+      ) : null}
+
+      {person.skills.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {person.skills.map((skill) => (
+            <Badge key={skill} variant="secondary" className="font-normal">
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
+
+      {hasStats ? (
+        <div className="flex w-full items-center justify-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+          {memberShare.credits != null ? (
+            <span className="flex items-center gap-1.5">
+              <BadgeCheck className="size-4 text-primary" />
+              <span className="font-medium text-foreground">
+                {memberShare.credits}
+              </span>{" "}
+              credits
+            </span>
+          ) : null}
+          {memberShare.vouches != null ? (
+            <span>
+              <span className="font-medium text-foreground">
+                {memberShare.vouches}
+              </span>{" "}
+              vouches
+            </span>
+          ) : null}
+          {memberShare.yearsExperience != null ? (
+            <span>
+              <span className="font-medium text-foreground">
+                {memberShare.yearsExperience}
+              </span>{" "}
+              yrs
             </span>
           ) : null}
         </div>
-      </AttachmentContent>
-      {isPreview && onRemove ? (
-        <AttachmentActions>
-          <AttachmentAction
-            aria-label="Remove member attachment"
-            onClick={(event) => {
-              event.stopPropagation()
-              onRemove()
-            }}
-          >
-            <X className="size-3.5" />
-          </AttachmentAction>
-        </AttachmentActions>
       ) : null}
-    </Attachment>
+    </div>
   )
 
   return (
