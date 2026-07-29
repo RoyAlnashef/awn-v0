@@ -43,6 +43,8 @@ export function MessagesView({
   initialDraft,
   initialShareJobId,
   initialShareMemberId,
+  initialShareLabel,
+  initialNewMessage = false,
   popout = false,
   basePath = "/messages",
 }: {
@@ -53,6 +55,8 @@ export function MessagesView({
   initialDraft?: string
   initialShareJobId?: string
   initialShareMemberId?: string
+  initialShareLabel?: string
+  initialNewMessage?: boolean
   popout?: boolean
   basePath?: string
 }) {
@@ -76,6 +80,11 @@ export function MessagesView({
   const [composerShareMemberId, setComposerShareMemberId] = useState(
     initialShareMemberId ?? "",
   )
+  const [shareLabel, setShareLabel] = useState(initialShareLabel ?? "")
+  const composerShareJobIdRef = useRef(composerShareJobId)
+  const composerShareMemberIdRef = useRef(composerShareMemberId)
+  composerShareJobIdRef.current = composerShareJobId
+  composerShareMemberIdRef.current = composerShareMemberId
 
   useEffect(() => {
     setComposerShareJobId(initialShareJobId ?? "")
@@ -84,6 +93,10 @@ export function MessagesView({
   useEffect(() => {
     setComposerShareMemberId(initialShareMemberId ?? "")
   }, [initialShareMemberId])
+
+  useEffect(() => {
+    setShareLabel(initialShareLabel ?? "")
+  }, [initialShareLabel])
   const [startError, setStartError] = useState<string | null>(null)
   const resolvingPerson = useRef<string | null>(null)
   const selectionEpochRef = useRef(0)
@@ -168,11 +181,25 @@ export function MessagesView({
         params.set("conversation", conversation.id)
         params.delete("person")
         params.delete("draft")
-        params.delete("shareJob")
-        params.delete("shareMember")
+        params.delete("newMessage")
+        if (composerShareJobIdRef.current) {
+          params.set("shareJob", composerShareJobIdRef.current)
+        } else {
+          params.delete("shareJob")
+        }
+        if (composerShareMemberIdRef.current) {
+          params.set("shareMember", composerShareMemberIdRef.current)
+        } else {
+          params.delete("shareMember")
+        }
+        if (shareLabel) {
+          params.set("shareLabel", shareLabel)
+        } else {
+          params.delete("shareLabel")
+        }
       }, epoch)
     },
-    [applySelection, markConversationRead, scheduleUrlSync],
+    [applySelection, markConversationRead, scheduleUrlSync, shareLabel],
   )
 
   const clearActiveConversation = useCallback(() => {
@@ -186,6 +213,7 @@ export function MessagesView({
     setComposerDraft("")
     setComposerShareJobId("")
     setComposerShareMemberId("")
+    setShareLabel("")
     lastSyncedUrlIdRef.current = undefined
     startTransition(() => {
       replaceSearchParams((params) => {
@@ -194,9 +222,36 @@ export function MessagesView({
         params.delete("draft")
         params.delete("shareJob")
         params.delete("shareMember")
+        params.delete("shareLabel")
+        params.delete("newMessage")
       })
     })
   }, [cancelScheduledUrlSync, replaceSearchParams])
+
+  useEffect(() => {
+    if (!initialNewMessage) return
+    if (!initialShareJobId && !initialShareMemberId) return
+
+    setNewOpen(true)
+    startTransition(() => {
+      replaceSearchParams((params) => {
+        if (initialShareJobId) params.set("shareJob", initialShareJobId)
+        if (initialShareMemberId) params.set("shareMember", initialShareMemberId)
+        if (initialShareLabel) params.set("shareLabel", initialShareLabel)
+        if (initialConversationId) {
+          params.set("conversation", initialConversationId)
+        }
+        params.delete("newMessage")
+      })
+    })
+  }, [
+    initialNewMessage,
+    initialShareJobId,
+    initialShareMemberId,
+    initialShareLabel,
+    initialConversationId,
+    replaceSearchParams,
+  ])
 
   function handleStartConversation(member: MessageableMember) {
     setStartError(null)
@@ -470,17 +525,27 @@ export function MessagesView({
               onDraftConsumed={() => setComposerDraft("")}
               onShareJobConsumed={() => {
                 setComposerShareJobId("")
+                setShareLabel("")
                 startTransition(() => {
                   replaceSearchParams((params) => {
+                    if (selectedIdRef.current) {
+                      params.set("conversation", selectedIdRef.current)
+                    }
                     params.delete("shareJob")
+                    params.delete("shareLabel")
                   })
                 })
               }}
               onShareMemberConsumed={() => {
                 setComposerShareMemberId("")
+                setShareLabel("")
                 startTransition(() => {
                   replaceSearchParams((params) => {
+                    if (selectedIdRef.current) {
+                      params.set("conversation", selectedIdRef.current)
+                    }
                     params.delete("shareMember")
+                    params.delete("shareLabel")
                   })
                 })
               }}
@@ -511,6 +576,13 @@ export function MessagesView({
         open={newOpen}
         onOpenChange={setNewOpen}
         onSelectMember={handleStartConversation}
+        shareContext={
+          composerShareMemberId && shareLabel
+            ? { kind: "member", label: shareLabel }
+            : composerShareJobId && shareLabel
+              ? { kind: "job", label: shareLabel }
+              : undefined
+        }
       />
     </div>
   )

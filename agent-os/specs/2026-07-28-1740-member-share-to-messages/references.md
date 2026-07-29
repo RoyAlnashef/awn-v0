@@ -7,7 +7,7 @@ The member share feature mirrors the job share flow with DMs-only destinations. 
 | Area | Location | Notes |
 | ---- | -------- | ----- |
 | Spec | `agent-os/specs/2026-07-28-1640-job-share-to-messages/` | Full plan, smoke check, visuals |
-| Share picker | `components/jobs/job-share-popover.tsx` | Adapt: remove Communities section, change URL param to `shareMember` |
+| Share picker | `components/jobs/job-share-room-popover.tsx`, `components/jobs/job-share-to-messages-button.tsx` | Adapt: messages via New Message drawer, `shareMember` URL param |
 | Share card | `components/jobs/job-share-card.tsx` | Adapt: member fields (avatar, name, role, location, availability, stats) |
 | Share helpers | `lib/messages/job-share.ts` | Mirror for `lib/messages/member-share.ts` |
 | Migration | `supabase/migrations/20260728180000_message_job_shares.sql` | Pattern for `shared_profile_id` column, preview helper, `get_dm_thread` join |

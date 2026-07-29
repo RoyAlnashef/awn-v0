@@ -137,20 +137,10 @@ Design reference: provided member card screenshot (department badge, avatar, nam
 
 ## Task 6: UI — Share Destination Picker (Messages Only)
 
-Create [components/people/person-share-popover.tsx](components/people/person-share-popover.tsx) based on [components/jobs/job-share-popover.tsx](components/jobs/job-share-popover.tsx):
-
-| Aspect      | Job share                                   | Member share                                               |
-| ----------- | ------------------------------------------- | ---------------------------------------------------------- |
-| Sections    | Communities + Messages                      | **Messages only**                                          |
-| Placeholder | "Search communities and messages…"          | "Search messages…"                                         |
-| Empty state | "Join a community or start a conversation…" | "Start a conversation to share this member."               |
-| Navigation  | `/rooms?...` or `/messages?...`             | `/messages?conversation={id}&shareMember={profileId}` only |
-| Footer      | "Sharing {role}"                            | "Sharing {name}"                                           |
+[`components/people/person-share-to-messages-button.tsx`](components/people/person-share-to-messages-button.tsx) navigates to `/messages?shareMember={profileId}&newMessage=1&shareLabel={name}` and auto-opens the New Message drawer for recipient search (covers new and existing conversations via `ensureConversation`).
 
 - Props: `{ person: Person; children: ReactElement }`
-- Data: `useMessages().conversations`, `useInbox({ enabled: open })`
-- Client-side filter by name, role, preview
-- No `useRooms()` import
+- No popover or existing-conversation list
 
 ---
 
@@ -158,9 +148,9 @@ Create [components/people/person-share-popover.tsx](components/people/person-sha
 
 | File                                                                                       | Change                                                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [components/people/person-card.tsx](components/people/person-card.tsx)                     | Add Share icon button between Connect and Message, wrapped in `PersonSharePopover` (match [job-card.tsx](components/jobs/job-card.tsx) pattern with `pointer-events-auto relative z-10`) |
-| [components/people/person-row.tsx](components/people/person-row.tsx)                       | Add Share icon button after Message button                                                                                                                                               |
-| [components/people/person-profile-drawer.tsx](components/people/person-profile-drawer.tsx) | Wire existing Share button via `PersonSharePopover person={person}`                                                                                                                      |
+| [components/people/person-card.tsx](components/people/person-card.tsx)                     | Share icon wrapped in `PersonShareToMessagesButton` |
+| [components/people/person-row.tsx](components/people/person-row.tsx)                       | Same                                                |
+| [components/people/person-profile-drawer.tsx](components/people/person-profile-drawer.tsx) | Wire Share button via `PersonShareToMessagesButton` |
 
 ---
 
@@ -222,13 +212,13 @@ Manual checklist in `smoke-check.md`:
 
 | Area            | Files                                                                                      |
 | --------------- | ------------------------------------------------------------------------------------------ |
-| Share picker    | `components/people/person-share-popover.tsx` (new)                                         |
+| Share picker    | `components/people/person-share-to-messages-button.tsx`, `lib/messages/share-navigation.ts` |
 | Member embed    | `components/people/person-share-card.tsx` (new)                                            |
 | People surfaces | `person-card.tsx`, `person-row.tsx`, `person-profile-drawer.tsx`                           |
 | Backend         | new migration, `lib/messages/actions.ts`, `lib/messages/member-share.ts` (new)             |
 | Thread UI       | `message-thread.tsx`, `message-bubble-with-reactions.tsx`, `messages-view.tsx`             |
 | Types           | `lib/messages-data.ts`                                                                     |
-| Reference       | `components/jobs/job-share-popover.tsx`, `job-share-card.tsx`, `lib/messages/job-share.ts` |
+| Reference       | `components/jobs/job-share-to-messages-button.tsx`, `job-share-card.tsx`, `lib/messages/job-share.ts` |
 
 ---
 
@@ -244,6 +234,10 @@ Manual checklist in `smoke-check.md`:
 
 - Sharing members to rooms / communities
 - Web Share API / copy link / public profile URLs (`/crew/[handle]`)
-- Starting new DMs from share picker (use existing New Message flow)
 - Denormalized snapshot storage for offline/mock profiles
 - Message search indexing for member shares
+
+## Addendum — Share to new messages (2026-07-29)
+
+- Member share uses the New Message drawer instead of listing existing DMs
+- Recipient search via `searchMessageableUsers` supports both new and existing conversations

@@ -32,7 +32,7 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { PersonSharePopover } from "@/components/people/person-share-popover"
+import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 /** Formats an ISO date-only string like "2026-08-01" → "Aug 1". */
@@ -287,12 +287,12 @@ export function PersonProfileDrawer({
             >
               <ExternalLink />
             </Button>
-            <PersonSharePopover person={person}>
+            <PersonShareToMessagesButton person={person}>
               <Button variant="ghost" size="sm" className="shrink-0">
                 <Share2 />
                 Share
               </Button>
-            </PersonSharePopover>
+            </PersonShareToMessagesButton>
           </div>
           <Button
             variant="ghost"

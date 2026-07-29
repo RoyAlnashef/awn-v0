@@ -9,6 +9,7 @@ import {
   Bookmark,
   CalendarClock,
   Flag,
+  Hash,
   MapPin,
   MessageSquare,
   Share2,
@@ -17,7 +18,8 @@ import {
 import { toast } from "sonner"
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
-import { JobSharePopover } from "@/components/jobs/job-share-popover"
+import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
+import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
 import {
   formatDateRange,
   parseDateOnly,
@@ -241,12 +243,22 @@ function JobDetailContent({
             <MessageSquare />
             Message
           </Button>
-          <JobSharePopover job={job}>
+          <JobShareToMessagesButton job={job}>
             <Button variant="ghost" size="sm" className="shrink-0">
               <Share2 />
               Share
             </Button>
-          </JobSharePopover>
+          </JobShareToMessagesButton>
+          <JobShareRoomPopover job={job}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0"
+              aria-label="Share job to a community"
+            >
+              <Hash />
+            </Button>
+          </JobShareRoomPopover>
         </div>
         <Button
           variant="ghost"

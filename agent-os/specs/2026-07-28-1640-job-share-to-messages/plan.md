@@ -110,27 +110,24 @@ Reuse [components/ui/attachment.tsx](components/ui/attachment.tsx) primitives fo
 
 ## Task 5: UI — Share Destination Picker
 
-Create [components/jobs/job-share-popover.tsx](components/jobs/job-share-popover.tsx):
+**Message share:** [`components/jobs/job-share-to-messages-button.tsx`](components/jobs/job-share-to-messages-button.tsx) navigates to `/messages?shareJob={jobId}&newMessage=1` and auto-opens the New Message drawer (member search → existing or new thread).
 
-- **Trigger:** controlled `Popover` anchored to Share button (icon on card/row, ghost button in drawer)
-- **Search:** top `Input type="search"` with Search icon — same pattern as [components/messages/messages-inbox.tsx](components/messages/messages-inbox.tsx)
-- **Section 1 — Communities:** joined rooms only from `useRoomsList()` / `useRooms()` (`room.joined === true`), show room icon + name rows like [components/rooms/rooms-inbox.tsx](components/rooms/rooms-inbox.tsx)
-- **Section 2 — Messages:** active DM conversations from `useInbox()` / `MessagesProvider`, avatar + name rows like inbox
-- Client-side filter across both sections by name/role/description
-- **On select:** `router.push('/rooms?room={id}&shareJob={jobId}')` or `router.push('/messages?conversation={id}&shareJob={jobId}')`; close popover
+**Community share:** [`components/jobs/job-share-room-popover.tsx`](components/jobs/job-share-room-popover.tsx):
+
+- **Trigger:** Hash button on card/row/drawer (Share2 button is for messages)
+- **Search:** top `Input type="search"` — joined rooms only from `useRooms()`
+- **On select:** `router.push('/rooms?room={id}&shareJob={jobId}')`; close popover
 - Empty/loading states; keyboard accessible list items
-
-Extract shared row components only if duplication is substantial — keep scope tight.
 
 ---
 
 ## Task 6: Wire Share on Job Surfaces
 
-| File                                                                           | Change                                                             |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| [components/jobs/job-card.tsx](components/jobs/job-card.tsx)                   | Wrap Share `Button` in `JobSharePopover job={job}`                 |
-| [components/jobs/job-row.tsx](components/jobs/job-row.tsx)                     | Add Share icon button (match card order: Bookmark → Share → Apply) |
-| [components/jobs/job-detail-drawer.tsx](components/jobs/job-detail-drawer.tsx) | Wire ghost Share button via `JobSharePopover` using loaded `Job`   |
+| File                                                                           | Change                                                                                              |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| [components/jobs/job-card.tsx](components/jobs/job-card.tsx)                   | Share2 → `JobShareToMessagesButton`; Hash → `JobShareRoomPopover`                                   |
+| [components/jobs/job-row.tsx](components/jobs/job-row.tsx)                     | Same                                                                                                |
+| [components/jobs/job-detail-drawer.tsx](components/jobs/job-detail-drawer.tsx) | Share ghost button → messages; Hash icon → `JobShareRoomPopover`                                    |
 
 All Share buttons keep `pointer-events-auto relative z-10` so card click-to-open-drawer still works.
 
@@ -197,7 +194,7 @@ Manual checklist (add `smoke-check.md` to spec):
 
 | Area         | Files                                                                          |
 | ------------ | ------------------------------------------------------------------------------ |
-| Share picker | `components/jobs/job-share-popover.tsx` (new)                                  |
+| Share picker | `components/jobs/job-share-room-popover.tsx`, `components/jobs/job-share-to-messages-button.tsx`, `lib/messages/share-navigation.ts` |
 | Job embed    | `components/jobs/job-share-card.tsx` (new)                                     |
 | Job surfaces | `job-card.tsx`, `job-row.tsx`, `job-detail-drawer.tsx`                         |
 | Backend      | new migration, `lib/messages/actions.ts`, `lib/rooms/actions.ts`               |
@@ -209,6 +206,11 @@ Manual checklist (add `smoke-check.md` to spec):
 ## Deferred (out of scope)
 
 - Web Share API / native OS share sheet
-- Sharing to non-joined rooms or starting new DMs from picker (use existing New Message flow)
 - Message search indexing for job shares
 - `/jobs/[id]` dedicated page (drawer + `?job=` query is sufficient for MVP)
+
+## Addendum — Share to new messages (2026-07-29)
+
+- Job message share uses the New Message drawer (`newMessage=1` URL param) instead of listing existing DMs
+- Job community share uses a separate Hash button + `JobShareRoomPopover`
+- Share params are preserved when selecting a recipient or existing inbox conversation

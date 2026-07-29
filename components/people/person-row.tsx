@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
-import { PersonSharePopover } from "@/components/people/person-share-popover"
+import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
 
 export function PersonRow({ person }: { person: Person }) {
   const [connected, setConnected] = useState(person.connected)
@@ -78,7 +78,7 @@ export function PersonRow({ person }: { person: Person }) {
         <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
           <MessageSquare className="size-4" />
         </Button>
-        <PersonSharePopover person={person}>
+        <PersonShareToMessagesButton person={person}>
           <Button
             size="icon"
             variant="outline"
@@ -86,7 +86,7 @@ export function PersonRow({ person }: { person: Person }) {
           >
             <Share2 className="size-4" />
           </Button>
-        </PersonSharePopover>
+        </PersonShareToMessagesButton>
       </div>
 
       <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />

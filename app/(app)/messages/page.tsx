@@ -14,6 +14,8 @@ export default async function MessagesPage({
     draft?: string
     shareJob?: string
     shareMember?: string
+    shareLabel?: string
+    newMessage?: string
   }>
 }) {
   const params = await searchParams
@@ -28,6 +30,8 @@ export default async function MessagesPage({
           initialDraft={params.draft}
           initialShareJobId={params.shareJob}
           initialShareMemberId={params.shareMember}
+          initialShareLabel={params.shareLabel}
+          initialNewMessage={params.newMessage === "1"}
         />
       </Suspense>
     </div>
