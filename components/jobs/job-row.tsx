@@ -4,7 +4,7 @@ import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
-import { Bookmark, CalendarClock, Hash, MapPin, Share2 } from "lucide-react"
+import { Bookmark, CalendarClock, Hash, MapPin, Share } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -104,7 +104,7 @@ export function JobRow({ job }: { job: Job }) {
                 variant="outline"
                 aria-label="Share job in a message"
               >
-                <Share2 className="size-4" />
+                <Share className="size-4" />
               </Button>
             </JobShareToMessagesButton>
             <JobShareRoomPopover job={job}>

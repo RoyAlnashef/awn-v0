@@ -10,7 +10,7 @@ import {
   MessageSquare,
   Plane,
   Plus,
-  Share2,
+  Share,
   Sparkles,
   ThumbsUp,
 } from "lucide-react"
@@ -289,7 +289,7 @@ export function PersonProfileDrawer({
             </Button>
             <PersonShareToMessagesButton person={person}>
               <Button variant="ghost" size="sm" className="shrink-0">
-                <Share2 />
+                <Share />
                 Share
               </Button>
             </PersonShareToMessagesButton>

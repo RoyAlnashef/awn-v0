@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BadgeCheck, MapPin, MessageSquare, Share2 } from "lucide-react"
+import { BadgeCheck, MapPin, MessageSquare, Share } from "lucide-react"
 
 import { availabilityConfig, initials, type Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
@@ -84,7 +84,7 @@ export function PersonRow({ person }: { person: Person }) {
             variant="outline"
             aria-label={`Share ${person.name}`}
           >
-            <Share2 className="size-4" />
+            <Share className="size-4" />
           </Button>
         </PersonShareToMessagesButton>
       </div>

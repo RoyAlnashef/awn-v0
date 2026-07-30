@@ -12,7 +12,7 @@ import {
   Hash,
   MapPin,
   MessageSquare,
-  Share2,
+  Share,
   Users,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -199,7 +199,7 @@ function JobDetailContent({
                   {initials(job.postedBy.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex min-w-0 flex-col gap-0.5">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="font-medium text-foreground">
                   {job.postedBy.name}
                 </span>
@@ -207,6 +207,15 @@ function JobDetailContent({
                   {job.postedBy.role}
                 </span>
               </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                aria-label={`Message ${job.postedBy.name}`}
+                onClick={handleMessagePoster}
+              >
+                <MessageSquare className="size-4" />
+              </Button>
             </div>
           </section>
         </div>
@@ -234,18 +243,9 @@ function JobDetailContent({
           >
             {applied ? "Applied" : "Apply"}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="shrink-0"
-            onClick={handleMessagePoster}
-          >
-            <MessageSquare />
-            Message
-          </Button>
           <JobShareToMessagesButton job={job}>
             <Button variant="ghost" size="sm" className="shrink-0">
-              <Share2 />
+              <Share />
               Share
             </Button>
           </JobShareToMessagesButton>
