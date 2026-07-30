@@ -1,6 +1,10 @@
 "use client"
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import {
+  JobActionTooltip,
+  JobActionTooltips,
+} from "@/components/jobs/job-action-tooltip"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
@@ -119,36 +123,46 @@ export function JobCard({ job }: { job: Job }) {
                 </span>
               </div>
               <div className="pointer-events-auto relative z-10 flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label={saved ? "Remove saved job" : "Save job"}
-                  aria-pressed={saved}
-                  disabled={saving}
-                  onClick={() => void handleSave()}
-                >
-                  <Bookmark
-                    className={cn("size-4", saved && "fill-current text-primary")}
-                  />
-                </Button>
-                <JobShareToMessagesButton job={job}>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    aria-label="Share job in a message"
+                <JobActionTooltips>
+                  <JobActionTooltip
+                    label={saved ? "Remove bookmark" : "Bookmark job"}
                   >
-                    <Share className="size-4" />
-                  </Button>
-                </JobShareToMessagesButton>
-                <JobShareRoomPopover job={job}>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    aria-label="Share job to a room"
-                  >
-                    <Hash className="size-4" />
-                  </Button>
-                </JobShareRoomPopover>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label={saved ? "Remove bookmark" : "Bookmark job"}
+                      aria-pressed={saved}
+                      disabled={saving}
+                      onClick={() => void handleSave()}
+                    >
+                      <Bookmark
+                        className={cn("size-4", saved && "fill-current text-primary")}
+                      />
+                    </Button>
+                  </JobActionTooltip>
+                  <JobActionTooltip label="Share as a message" wrap>
+                    <JobShareToMessagesButton job={job}>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        aria-label="Share as a message"
+                      >
+                        <Share className="size-4" />
+                      </Button>
+                    </JobShareToMessagesButton>
+                  </JobActionTooltip>
+                  <JobActionTooltip label="Share to a room" wrap>
+                    <JobShareRoomPopover job={job}>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        aria-label="Share to a room"
+                      >
+                        <Hash className="size-4" />
+                      </Button>
+                    </JobShareRoomPopover>
+                  </JobActionTooltip>
+                </JobActionTooltips>
                 <Button
                   size="sm"
                   disabled={applied}

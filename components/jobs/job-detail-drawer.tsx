@@ -18,6 +18,10 @@ import {
 import { toast } from "sonner"
 
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import {
+  JobActionTooltip,
+  JobActionTooltips,
+} from "@/components/jobs/job-action-tooltip"
 import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
 import {
@@ -58,6 +62,10 @@ function initials(name: string) {
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
+}
+
+function firstName(name: string) {
+  return name.split(" ")[0] ?? name
 }
 
 function revalidateJobs() {
@@ -121,8 +129,9 @@ function JobDetailContent({
   }
 
   return (
-    <>
-      <SheetTitle className="sr-only">{job.role} job details</SheetTitle>
+    <JobActionTooltips>
+      <>
+        <SheetTitle className="sr-only">{job.role} job details</SheetTitle>
       <SheetDescription className="sr-only">
         {job.production} · {job.location}
       </SheetDescription>
@@ -207,15 +216,19 @@ function JobDetailContent({
                   {job.postedBy.role}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                aria-label={`Message ${job.postedBy.name}`}
-                onClick={handleMessagePoster}
+              <JobActionTooltip
+                label={`Ask ${firstName(job.postedBy.name)} about job`}
               >
-                <MessageSquare className="size-4" />
-              </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label={`Ask ${firstName(job.postedBy.name)} about job`}
+                  onClick={handleMessagePoster}
+                >
+                  <MessageSquare className="size-4" />
+                </Button>
+              </JobActionTooltip>
             </div>
           </section>
         </div>
@@ -224,44 +237,54 @@ function JobDetailContent({
       {/* Footer actions */}
       <div className="flex shrink-0 items-center gap-2 border-t p-4">
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label={saved ? "Remove saved job" : "Save job"}
-            aria-pressed={saved}
-            disabled={saving}
-            onClick={() => void handleSave()}
+          <JobActionTooltip
+            label={saved ? "Remove bookmark" : "Bookmark job"}
           >
-            <Bookmark
-              className={cn("size-4", saved && "fill-current text-primary")}
-            />
-          </Button>
-          <JobShareToMessagesButton job={job}>
-            <Button
-              size="icon"
-              variant="outline"
-              aria-label="Share job in a message"
-            >
-              <Share className="size-4" />
-            </Button>
-          </JobShareToMessagesButton>
-          <JobShareRoomPopover job={job}>
-            <Button
-              size="icon"
-              variant="outline"
-              aria-label="Share job to a room"
-            >
-              <Hash className="size-4" />
-            </Button>
-          </JobShareRoomPopover>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Report job"
-          >
-            <Flag className="size-4" />
-          </Button>
-        </div>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={saved ? "Remove bookmark" : "Bookmark job"}
+                aria-pressed={saved}
+                disabled={saving}
+                onClick={() => void handleSave()}
+              >
+                <Bookmark
+                  className={cn("size-4", saved && "fill-current text-primary")}
+                />
+              </Button>
+            </JobActionTooltip>
+            <JobActionTooltip label="Share as a message" wrap>
+              <JobShareToMessagesButton job={job}>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-label="Share as a message"
+                >
+                  <Share className="size-4" />
+                </Button>
+              </JobShareToMessagesButton>
+            </JobActionTooltip>
+            <JobActionTooltip label="Share to a room" wrap>
+              <JobShareRoomPopover job={job}>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-label="Share to a room"
+                >
+                  <Hash className="size-4" />
+                </Button>
+              </JobShareRoomPopover>
+            </JobActionTooltip>
+            <JobActionTooltip label="Report job">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Report job"
+              >
+                <Flag className="size-4" />
+              </Button>
+            </JobActionTooltip>
+          </div>
         <Button
           className="min-w-0 flex-1"
           size="sm"
@@ -282,7 +305,8 @@ function JobDetailContent({
           void mutate(jobDetailKey(job.id))
         }}
       />
-    </>
+      </>
+    </JobActionTooltips>
   )
 }
 
