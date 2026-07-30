@@ -140,6 +140,7 @@ export function RoomsView({
               variant="outline"
               size="sm"
               className="hidden shrink-0 md:inline-flex"
+              nativeButton={false}
               render={<Link href="/rooms/settings" />}
             >
               Manage Rooms

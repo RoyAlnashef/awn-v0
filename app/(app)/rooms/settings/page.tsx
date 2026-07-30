@@ -1,12 +1,22 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
 
 import { PageShell } from "@/components/page-shell"
+import { CreateRoomDialog } from "@/components/groups/create-room-dialog"
 import { RoomsTable } from "@/components/groups/rooms-table"
-import { Button } from "@/components/ui/button"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { mainNav } from "@/lib/nav"
 import { adminListRooms } from "@/lib/rooms/actions"
+
+const roomsNav = mainNav.find((item) => item.href === "/rooms")!
 
 export default async function RoomsSettingsPage() {
   const sessionUser = await getSessionUser()
@@ -20,17 +30,27 @@ export default async function RoomsSettingsPage() {
   return (
     <PageShell
       title="Manage Rooms"
-      description="Manage crew rooms, departments, and community channels."
-      actions={
-        <Button variant="outline" size="sm" render={<Link href="/rooms" />}>
-          <ArrowLeft className="size-4" />
-          Back to Rooms
-        </Button>
+      breadcrumb={
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link href="/rooms" />}>
+                {roomsNav.title}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Settings</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       }
+      actions={<CreateRoomDialog disabled={!result.ok} />}
     >
       <RoomsTable
         initialRooms={result.ok ? result.rooms : []}
         loadError={result.ok ? null : result.error}
+        showCreateButton={false}
       />
     </PageShell>
   )

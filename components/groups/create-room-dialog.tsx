@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { adminCreateRoom } from "@/lib/rooms/actions"
@@ -23,7 +24,7 @@ import { Switch } from "@/components/ui/switch"
 import type { AdminRoomRecord } from "@/lib/rooms/actions"
 
 type Props = {
-  onCreated: (room: AdminRoomRecord) => void
+  onCreated?: (room: AdminRoomRecord) => void
   disabled?: boolean
 }
 
@@ -36,6 +37,7 @@ function toSlug(name: string): string {
 }
 
 export function CreateRoomDialog({ onCreated, disabled }: Props) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [slug, setSlug] = useState("")
@@ -89,7 +91,8 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
         return
       }
 
-      onCreated(result.room)
+      onCreated?.(result.room)
+      router.refresh()
       setOpen(false)
     })
   }
@@ -98,7 +101,7 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button disabled={disabled}>
+          <Button size="sm" disabled={disabled}>
             <Plus className="size-4" />
             New room
           </Button>

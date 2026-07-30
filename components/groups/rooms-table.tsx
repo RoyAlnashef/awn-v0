@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Archive, ArchiveRestore, Pencil, Users } from "lucide-react"
 
 import { adminArchiveRoom } from "@/lib/rooms/actions"
@@ -29,15 +29,21 @@ import type { AdminRoomRecord } from "@/lib/rooms/actions"
 export function RoomsTable({
   initialRooms,
   loadError,
+  showCreateButton = true,
 }: {
   initialRooms: AdminRoomRecord[]
   loadError: string | null
+  showCreateButton?: boolean
 }) {
   const [rooms, setRooms] = useState<AdminRoomRecord[]>(initialRooms)
   const [editRoom, setEditRoom] = useState<AdminRoomRecord | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [archivingId, setArchivingId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    setRooms(initialRooms)
+  }, [initialRooms])
 
   function handleCreated(room: AdminRoomRecord) {
     setRooms((prev) => [...prev, room].sort((a, b) => a.sortOrder - b.sortOrder))
@@ -82,15 +88,24 @@ export function RoomsTable({
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
+        {showCreateButton ? (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {activeRooms.length} active room{activeRooms.length !== 1 ? "s" : ""}
+              {archivedRooms.length > 0
+                ? `, ${archivedRooms.length} archived`
+                : ""}
+            </p>
+            <CreateRoomDialog onCreated={handleCreated} />
+          </div>
+        ) : (
           <p className="text-sm text-muted-foreground">
             {activeRooms.length} active room{activeRooms.length !== 1 ? "s" : ""}
             {archivedRooms.length > 0
               ? `, ${archivedRooms.length} archived`
               : ""}
           </p>
-          <CreateRoomDialog onCreated={handleCreated} />
-        </div>
+        )}
 
         <div className="rounded-xl border">
           <Table>
@@ -110,7 +125,7 @@ export function RoomsTable({
                     colSpan={5}
                     className="py-10 text-center text-sm text-muted-foreground"
                   >
-                    No rooms yet. Create the first one above.
+                    No rooms yet. Create the first one with New room.
                   </TableCell>
                 </TableRow>
               ) : (
