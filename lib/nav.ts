@@ -1,7 +1,7 @@
 import {
   Radio,
   Briefcase,
-  Users,
+  Contact,
   MessagesSquare,
   Group,
   Compass,
@@ -50,7 +50,7 @@ export const mainNav: NavItem[] = [
     href: "/people",
     description:
       "Find and connect with trusted touring crew across every department.",
-    icon: Users,
+    icon: Contact,
   },
   {
     title: "Messages",
