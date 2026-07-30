@@ -56,6 +56,14 @@ export type MemberSharePayload = {
   yearsExperience?: number
 }
 
+/** Quoted message when this message is a reply. */
+export type MessageReplyPayload = {
+  messageId: string
+  authorName: string
+  preview: string
+  unavailable?: boolean
+}
+
 /** A single message within a conversation or room thread. */
 export interface ThreadMessage {
   id: string
@@ -80,6 +88,8 @@ export interface ThreadMessage {
   jobShare?: JobSharePayload
   /** Rich member card when this message shares a crew profile. */
   memberShare?: MemberSharePayload
+  /** Quoted parent message when this message is a reply. */
+  replyTo?: MessageReplyPayload
 }
 
 /** A joinable community room. */

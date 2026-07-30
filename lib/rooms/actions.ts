@@ -7,6 +7,12 @@ import {
   mapRpcJobShare,
   type JobShareRpcRow,
 } from "@/lib/messages/job-share"
+import {
+  mapRpcReply,
+  mapSnapshotToReply,
+  type ReplyRpcRow,
+  type ReplySnapshot,
+} from "@/lib/messages/reply"
 import { formatMessageTime, formatRelativeTime, isUuid } from "@/lib/messages/format"
 import type { MessageReaction, ThreadMessage } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/server"
@@ -93,7 +99,8 @@ type RoomRpcRow = {
   unread_count: number
 }
 
-type ThreadRpcMessage = JobShareRpcRow & {
+type ThreadRpcMessage = ReplyRpcRow &
+  JobShareRpcRow & {
   id: string
   sender_id: string
   sender_name: string | null
@@ -148,6 +155,7 @@ function mapRoomThreadMessage(
         : undefined,
     reactions: mapRpcReactions(row.reactions),
     jobShare,
+    replyTo: mapRpcReply(row),
   }
 }
 
@@ -344,7 +352,7 @@ export async function getRoomThread(
 export async function sendRoomMessage(
   roomId: string,
   body: string,
-  options?: { jobId?: string },
+  options?: { jobId?: string; replyToMessageId?: string; replySnapshot?: ReplySnapshot },
 ): Promise<SendRoomMessageResult> {
   try {
     if (!isUuid(roomId)) {
@@ -353,12 +361,36 @@ export async function sendRoomMessage(
 
     const text = body.trim()
     const jobId = options?.jobId
+    const replyToMessageId = options?.replyToMessageId
+    const replySnapshot = options?.replySnapshot
+
     if (!text && !jobId) {
       return { ok: false, error: "Message cannot be empty." }
+    }
+    if (replyToMessageId && !text) {
+      return { ok: false, error: "Reply must include a message." }
     }
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    if (replyToMessageId) {
+      if (!isUuid(replyToMessageId)) {
+        return { ok: false, error: "Invalid reply target." }
+      }
+
+      const { data: parentMessage, error: parentError } = await supabase
+        .from("room_messages")
+        .select("id")
+        .eq("id", replyToMessageId)
+        .eq("room_id", roomId)
+        .maybeSingle()
+
+      if (parentError) return { ok: false, error: parentError.message }
+      if (!parentMessage) {
+        return { ok: false, error: "Reply target not found in this room." }
+      }
+    }
 
     let jobShare: ThreadMessage["jobShare"]
     if (jobId) {
@@ -377,11 +409,19 @@ export async function sendRoomMessage(
         sender_id: userId,
         body: text,
         ...(jobId ? { job_id: jobId } : {}),
+        ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
+        ...(replySnapshot ? { reply_snapshot: replySnapshot } : {}),
       })
-      .select("id, sender_id, body, created_at, job_id")
+      .select(
+        "id, sender_id, body, created_at, job_id, reply_to_message_id, reply_snapshot",
+      )
       .single()
 
     if (error) return { ok: false, error: error.message }
+
+    const replyTo = replySnapshot
+      ? mapSnapshotToReply(replySnapshot)
+      : mapRpcReply(data as ReplyRpcRow)
 
     return {
       ok: true,
@@ -392,6 +432,7 @@ export async function sendRoomMessage(
         time: formatMessageTime(data.created_at),
         createdAt: data.created_at,
         jobShare,
+        replyTo,
       },
     }
   } catch (error) {

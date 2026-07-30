@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState, Fragment } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, Fragment } from "react"
 import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
+import { toast } from "sonner"
 import {
   groupThreadMessagesByDate,
   isPersistedConversation,
@@ -57,6 +58,13 @@ import {
   MessageJobShareWithReactions,
   MessageMemberShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
+import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
+import {
+  buildPendingReplyPayload,
+  buildReplySnapshot,
+  copyMessageText,
+  replyAuthorNameForMessage,
+} from "@/lib/messages/reply"
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
   MessageScroller,
@@ -180,6 +188,9 @@ export function MessageThread({
     useState<JobSharePayload | null>(null)
   const [pendingMemberShare, setPendingMemberShare] =
     useState<MemberSharePayload | null>(null)
+  const [pendingReply, setPendingReply] =
+    useState<ThreadMessage | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
   const [loadingMemberShare, setLoadingMemberShare] = useState(false)
   const [sending, setSending] = useState(false)
@@ -437,10 +448,48 @@ export function MessageThread({
     await loadOlder()
   }, [isPersisted, loadOlder])
 
+  const pendingReplyPayload = useMemo(
+    () =>
+      pendingReply
+        ? buildPendingReplyPayload(
+            pendingReply,
+            replyAuthorNameForMessage(pendingReply, {
+              conversationName: conversation.name,
+              currentUserName: currentUser.name,
+            }),
+          )
+        : null,
+    [pendingReply, conversation.name, currentUser.name],
+  )
+
+  function handleReplyToMessage(message: ThreadMessage) {
+    setPendingReply(message)
+    requestAnimationFrame(() => composerRef.current?.focus())
+  }
+
+  function handleCopyMessage(message: ThreadMessage) {
+    const text = copyMessageText(message)
+    void navigator.clipboard.writeText(text).then(
+      () => toast.success("Copied"),
+      () => toast.error("Could not copy text"),
+    )
+  }
+
   async function sendMessage() {
     const text = draft.trim()
     const jobId = pendingJobShare?.id
     const sharedProfileId = pendingMemberShare?.id
+    const replyTarget = pendingReply
+    const replySnapshot =
+      replyTarget && pendingReplyPayload
+        ? buildReplySnapshot(
+            replyTarget,
+            replyAuthorNameForMessage(replyTarget, {
+              conversationName: conversation.name,
+              currentUserName: currentUser.name,
+            }),
+          )
+        : undefined
     if ((!text && !jobId && !sharedProfileId) || sending) return
 
     const preview = messageDisplayPreview(
@@ -460,6 +509,7 @@ export function MessageThread({
         readReceipt: "sent",
         jobShare: pendingJobShare ?? undefined,
         memberShare: pendingMemberShare ?? undefined,
+        replyTo: pendingReplyPayload ?? undefined,
       }
 
       void mutate(
@@ -476,17 +526,25 @@ export function MessageThread({
       setDraft("")
       setPendingJobShare(null)
       setPendingMemberShare(null)
+      setPendingReply(null)
       setSending(true)
       requestScrollToEnd()
+
+      const sendOptions = {
+        ...(jobId ? { jobId } : {}),
+        ...(sharedProfileId ? { sharedProfileId } : {}),
+        ...(replyTarget
+          ? {
+              replyToMessageId: replyTarget.id,
+              replySnapshot,
+            }
+          : {}),
+      }
 
       const result = await sendMessageAction(
         persistedConversationId,
         text,
-        jobId
-          ? { jobId }
-          : sharedProfileId
-            ? { sharedProfileId }
-            : undefined,
+        Object.keys(sendOptions).length > 0 ? sendOptions : undefined,
       )
       setSending(false)
 
@@ -509,6 +567,9 @@ export function MessageThread({
         }
         if (sharedProfileId && optimisticMessage.memberShare) {
           setPendingMemberShare(optimisticMessage.memberShare)
+        }
+        if (replyTarget) {
+          setPendingReply(replyTarget)
         }
         return
       }
@@ -541,12 +602,14 @@ export function MessageThread({
         readReceipt: "delivered",
         jobShare: pendingJobShare ?? undefined,
         memberShare: pendingMemberShare ?? undefined,
+        replyTo: pendingReplyPayload ?? undefined,
       },
     ])
     bumpConversation(conversation.id, preview, { from: "me" })
     setDraft("")
     setPendingJobShare(null)
     setPendingMemberShare(null)
+    setPendingReply(null)
     requestScrollToEnd()
   }
 
@@ -638,6 +701,17 @@ export function MessageThread({
                       message,
                       otherLastReadAt,
                     )
+                    const repliedLabel = message.replyTo
+                      ? mine
+                        ? "You replied"
+                        : `${conversation.name} replied`
+                      : undefined
+                    const messageActions = {
+                      onReply: () => handleReplyToMessage(message),
+                      onCopy: () => handleCopyMessage(message),
+                      replyTo: message.replyTo,
+                      repliedLabel,
+                    }
 
                     return (
                       <MessageScrollerItem
@@ -677,6 +751,7 @@ export function MessageThread({
                                 onReact={(emoji) =>
                                   void handleReact(message.id, emoji)
                                 }
+                                {...messageActions}
                               />
                             ) : message.jobShare ? (
                               <MessageJobShareWithReactions
@@ -688,6 +763,7 @@ export function MessageThread({
                                 onReact={(emoji) =>
                                   void handleReact(message.id, emoji)
                                 }
+                                {...messageActions}
                               />
                             ) : (
                               <MessageBubbleWithReactions
@@ -697,6 +773,7 @@ export function MessageThread({
                                 onReact={(emoji) =>
                                   void handleReact(message.id, emoji)
                                 }
+                                {...messageActions}
                               >
                                 {message.text}
                               </MessageBubbleWithReactions>
@@ -760,8 +837,15 @@ export function MessageThread({
             />
           </div>
         ) : null}
+        {pendingReplyPayload ? (
+          <MessageReplyComposer
+            reply={pendingReplyPayload}
+            onDismiss={() => setPendingReply(null)}
+          />
+        ) : null}
         <InputGroup>
           <InputGroupTextarea
+            ref={composerRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onBlur={onComposerBlur}

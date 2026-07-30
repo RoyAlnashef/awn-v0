@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 import { mutate as mutateSwr } from "swr"
+import { toast } from "sonner"
 
 import {
   getPersonForRoomMessage,
@@ -36,6 +37,13 @@ import {
   MessageBubbleWithReactions,
   MessageJobShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
+import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
+import {
+  buildPendingReplyPayload,
+  buildReplySnapshot,
+  copyMessageText,
+  replyAuthorNameForMessage,
+} from "@/lib/messages/reply"
 import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
 import {
   Message,
@@ -125,6 +133,9 @@ export function RoomThread({
   const [draft, setDraft] = useState("")
   const [pendingJobShare, setPendingJobShare] =
     useState<JobSharePayload | null>(null)
+  const [pendingReply, setPendingReply] =
+    useState<ThreadMessage | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
@@ -237,10 +248,46 @@ export function RoomThread({
     }
   }, [initialShareJobId, onShareJobConsumed])
 
+  const pendingReplyPayload = useMemo(
+    () =>
+      pendingReply
+        ? buildPendingReplyPayload(
+            pendingReply,
+            replyAuthorNameForMessage(pendingReply, {
+              currentUserName: currentUser.name,
+            }),
+          )
+        : null,
+    [pendingReply, currentUser.name],
+  )
+
+  function handleReplyToMessage(message: ThreadMessage) {
+    setPendingReply(message)
+    requestAnimationFrame(() => composerRef.current?.focus())
+  }
+
+  function handleCopyMessage(message: ThreadMessage) {
+    const text = copyMessageText(message)
+    void navigator.clipboard.writeText(text).then(
+      () => toast.success("Copied"),
+      () => toast.error("Could not copy text"),
+    )
+  }
+
   async function sendMessage() {
     if (!room.joined) return
     const text = draft.trim()
     const jobId = pendingJobShare?.id
+    const replyTarget = pendingReply
+    const replySnapshot =
+      replyTarget && pendingReplyPayload
+        ? buildReplySnapshot(
+            replyTarget,
+            replyAuthorNameForMessage(replyTarget, {
+              currentUserName: currentUser.name,
+            }),
+          )
+        : undefined
     if ((!text && !jobId) || sending) return
 
     if (usesServer) {
@@ -252,6 +299,7 @@ export function RoomThread({
         time: "Now",
         createdAt: new Date().toISOString(),
         jobShare: pendingJobShare ?? undefined,
+        replyTo: pendingReplyPayload ?? undefined,
       }
 
       void mutateThread(
@@ -265,13 +313,22 @@ export function RoomThread({
 
       setDraft("")
       setPendingJobShare(null)
+      setPendingReply(null)
       setSending(true)
       requestScrollToEnd()
 
       const result = await sendRoomMessage(
         room.id,
         text,
-        jobId ? { jobId } : undefined,
+        {
+          ...(jobId ? { jobId } : {}),
+          ...(replyTarget
+            ? {
+                replyToMessageId: replyTarget.id,
+                replySnapshot,
+              }
+            : {}),
+        },
       )
       setSending(false)
 
@@ -291,6 +348,9 @@ export function RoomThread({
         setDraft(text)
         if (jobId && optimisticMessage.jobShare) {
           setPendingJobShare(optimisticMessage.jobShare)
+        }
+        if (replyTarget) {
+          setPendingReply(replyTarget)
         }
         return
       }
@@ -321,10 +381,12 @@ export function RoomThread({
         time: "Now",
         createdAt: new Date().toISOString(),
         jobShare: pendingJobShare ?? undefined,
+        replyTo: pendingReplyPayload ?? undefined,
       },
     ])
     setDraft("")
     setPendingJobShare(null)
+    setPendingReply(null)
     requestScrollToEnd()
   }
 
@@ -485,6 +547,17 @@ export function RoomThread({
                   !mine && message.author && !continuesPreviousGroup
                 const showAvatar = !continuesNextGroup
                 const showTimestamp = !continuesNextGroup
+                const repliedLabel = message.replyTo
+                  ? mine
+                    ? "You replied"
+                    : `${message.author ?? "Member"} replied`
+                  : undefined
+                const messageActions = {
+                  onReply: () => handleReplyToMessage(message),
+                  onCopy: () => handleCopyMessage(message),
+                  replyTo: message.replyTo,
+                  repliedLabel,
+                }
                 return (
                   <MessageScrollerItem
                     key={message.id}
@@ -559,6 +632,7 @@ export function RoomThread({
                               onReact={(emoji) =>
                                 handleReact(message.id, emoji)
                               }
+                              {...messageActions}
                             />
                           </>
                         ) : (
@@ -567,6 +641,7 @@ export function RoomThread({
                             align={mine ? "end" : "start"}
                             reactions={message.reactions}
                             onReact={(emoji) => handleReact(message.id, emoji)}
+                            {...messageActions}
                           >
                             {showAuthor ? (
                               <button
@@ -612,8 +687,15 @@ export function RoomThread({
               />
             </div>
           ) : null}
+          {pendingReplyPayload ? (
+            <MessageReplyComposer
+              reply={pendingReplyPayload}
+              onDismiss={() => setPendingReply(null)}
+            />
+          ) : null}
           <InputGroup>
             <InputGroupTextarea
+              ref={composerRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={`Message ${room.name}…`}

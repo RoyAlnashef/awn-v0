@@ -22,6 +22,12 @@ import {
   personToSharePayload,
   type MemberShareRpcRow,
 } from "@/lib/messages/member-share"
+import {
+  mapRpcReply,
+  mapSnapshotToReply,
+  type ReplyRpcRow,
+  type ReplySnapshot,
+} from "@/lib/messages/reply"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import { people } from "@/lib/people-data"
 import { createClient } from "@/lib/supabase/server"
@@ -58,7 +64,8 @@ type InboxRow = {
   conversation_updated_at: string
 }
 
-type ThreadRpcMessage = JobShareRpcRow &
+type ThreadRpcMessage = ReplyRpcRow &
+  JobShareRpcRow &
   MemberShareRpcRow & {
   id: string
   sender_id: string
@@ -107,13 +114,15 @@ type ProfileRow = {
   appear_offline: boolean | null
 }
 
-type MessageRow = JobShareRpcRow &
+type MessageRow = ReplyRpcRow &
+  JobShareRpcRow &
   MemberShareRpcRow & {
   id: string
   sender_id: string
   body: string
   created_at: string
   member_share_snapshot?: MemberSharePayload | null
+  reply_snapshot?: ReplySnapshot | null
 }
 
 function actionError(error: unknown): ActionError {
@@ -144,6 +153,7 @@ function mapThreadRpcMessage(
     reactions: mapRpcReactions(message.reactions),
     jobShare,
     memberShare,
+    replyTo: mapRpcReply(message),
   }
 }
 
@@ -152,6 +162,7 @@ function mapInsertedMessageRow(
   attachments?: {
     jobShare?: ThreadMessage["jobShare"]
     memberShare?: ThreadMessage["memberShare"]
+    replyTo?: ThreadMessage["replyTo"]
   },
 ): ThreadMessage {
   return {
@@ -163,6 +174,7 @@ function mapInsertedMessageRow(
     readReceipt: "sent",
     jobShare: attachments?.jobShare ?? mapRpcJobShare(message),
     memberShare: attachments?.memberShare ?? mapRpcMemberShare(message),
+    replyTo: attachments?.replyTo ?? mapRpcReply(message),
   }
 }
 
@@ -584,7 +596,12 @@ export async function getConversationThread(
 export async function sendMessage(
   conversationId: string,
   body: string,
-  options?: { jobId?: string; sharedProfileId?: string },
+  options?: {
+    jobId?: string
+    sharedProfileId?: string
+    replyToMessageId?: string
+    replySnapshot?: ReplySnapshot
+  },
 ): Promise<SendMessageResult> {
   try {
     if (!isUuid(conversationId)) {
@@ -594,8 +611,14 @@ export async function sendMessage(
     const text = body.trim()
     const jobId = options?.jobId
     const sharedProfileId = options?.sharedProfileId
+    const replyToMessageId = options?.replyToMessageId
+    const replySnapshot = options?.replySnapshot
+
     if (!text && !jobId && !sharedProfileId) {
       return { ok: false, error: "Message cannot be empty." }
+    }
+    if (replyToMessageId && !text) {
+      return { ok: false, error: "Reply must include a message." }
     }
     if (jobId && sharedProfileId) {
       return { ok: false, error: "Cannot attach both a job and a member." }
@@ -603,6 +626,24 @@ export async function sendMessage(
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    if (replyToMessageId) {
+      if (!isUuid(replyToMessageId)) {
+        return { ok: false, error: "Invalid reply target." }
+      }
+
+      const { data: parentMessage, error: parentError } = await supabase
+        .from("dm_messages")
+        .select("id")
+        .eq("id", replyToMessageId)
+        .eq("conversation_id", conversationId)
+        .maybeSingle()
+
+      if (parentError) return { ok: false, error: parentError.message }
+      if (!parentMessage) {
+        return { ok: false, error: "Reply target not found in this conversation." }
+      }
+    }
 
     let jobShare: ThreadMessage["jobShare"]
     let memberShare: ThreadMessage["memberShare"]
@@ -641,23 +682,32 @@ export async function sendMessage(
       ...(memberShareSnapshotForInsert
         ? { member_share_snapshot: memberShareSnapshotForInsert }
         : {}),
+      ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
+      ...(replySnapshot ? { reply_snapshot: replySnapshot } : {}),
     }
 
     const { data, error } = await supabase
       .from("dm_messages")
       .insert(insertPayload)
       .select(
-        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot",
+        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot, reply_to_message_id, reply_snapshot",
       )
       .single()
 
     if (error) return { ok: false, error: error.message }
 
     const message = data as MessageRow
+    const replyTo = replySnapshot
+      ? mapSnapshotToReply(replySnapshot)
+      : mapRpcReply(message)
 
     return {
       ok: true,
-      message: mapInsertedMessageRow(message, { jobShare, memberShare }),
+      message: mapInsertedMessageRow(message, {
+        jobShare,
+        memberShare,
+        replyTo,
+      }),
     }
   } catch (error) {
     return actionError(error)

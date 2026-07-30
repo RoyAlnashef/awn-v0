@@ -5,6 +5,7 @@ import { mutate as mutateSwr } from "swr"
 
 import { useMessages } from "@/components/messages/messages-provider"
 import { formatMessageTime } from "@/lib/messages/format"
+import { mapRealtimeReply } from "@/lib/messages/reply"
 import { threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
@@ -40,6 +41,8 @@ export function useInboxRealtime() {
             job_id?: string | null
             shared_profile_id?: string | null
             member_share_snapshot?: Record<string, unknown> | null
+            reply_to_message_id?: string | null
+            reply_snapshot?: Record<string, unknown> | null
           }
 
           const isMine = row.sender_id === currentUser.id
@@ -66,6 +69,9 @@ export function useInboxRealtime() {
             void mutateSwr(unreadCountKey)
           }
 
+          // Own sends are handled by optimistic update + server action in the thread.
+          if (isMine) return
+
           void mutateSwr(
             threadKey(row.conversation_id),
             (current: ThreadCache | undefined) => {
@@ -78,13 +84,15 @@ export function useInboxRealtime() {
                 return current
               }
 
+              const replyTo = mapRealtimeReply(row)
+
               const incoming: ThreadMessage = {
                 id: row.id,
-                from: isMine ? "me" : "them",
+                from: "them",
                 text: row.body,
                 time: formatMessageTime(row.created_at),
                 createdAt: row.created_at,
-                readReceipt: isMine ? "delivered" : undefined,
+                ...(replyTo ? { replyTo } : {}),
               }
 
               return {
@@ -92,7 +100,11 @@ export function useInboxRealtime() {
                 messages: [...current.messages, incoming],
               }
             },
-            { revalidate: row.job_id || row.shared_profile_id || row.member_share_snapshot ? true : false },
+            {
+              revalidate: Boolean(
+                row.job_id || row.shared_profile_id || row.member_share_snapshot,
+              ),
+            },
           )
         },
       )

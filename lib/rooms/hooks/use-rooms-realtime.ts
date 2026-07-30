@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { mutate as mutateSwr } from "swr"
 
 import { formatMessageTime } from "@/lib/messages/format"
+import { mapRealtimeReply } from "@/lib/messages/reply"
 import { roomThreadKey, roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
@@ -40,52 +41,53 @@ export function useRoomsRealtime({
             body: string
             created_at: string
             job_id?: string | null
+            reply_to_message_id?: string | null
+            reply_snapshot?: Record<string, unknown> | null
           }
 
           const isMine = row.sender_id === currentUserId
           const isActive = row.room_id === activeRoomId
 
-          // Append to the thread cache if it's loaded
-          void mutateSwr(
-            roomThreadKey(row.room_id),
-            (current: RoomThreadCache | undefined) => {
-              if (!current) return current
-              if (current.messages.some((m) => m.id === row.id)) {
-                return current
-              }
+          // Own sends are handled by optimistic update + server action in the thread.
+          if (!isMine) {
+            void mutateSwr(
+              roomThreadKey(row.room_id),
+              (current: RoomThreadCache | undefined) => {
+                if (!current) return current
+                if (current.messages.some((m) => m.id === row.id)) {
+                  return current
+                }
 
-              if (row.job_id) {
-                return current
-              }
+                if (row.job_id) {
+                  return current
+                }
 
-              const priorFromSender = !isMine
-                ? [...current.messages]
-                    .reverse()
-                    .find((message) => message.authorId === row.sender_id)
-                : undefined
+                const priorFromSender = [...current.messages]
+                  .reverse()
+                  .find((message) => message.authorId === row.sender_id)
 
-              const incoming: ThreadMessage = {
-                id: row.id,
-                from: isMine ? "me" : "them",
-                text: row.body,
-                time: formatMessageTime(row.created_at),
-                createdAt: row.created_at,
-                ...(isMine
-                  ? {}
-                  : {
-                      authorId: row.sender_id,
-                      author: priorFromSender?.author,
-                      authorAvatarUrl: priorFromSender?.authorAvatarUrl,
-                    }),
-              }
+                const replyTo = mapRealtimeReply(row)
 
-              return {
-                ...current,
-                messages: [...current.messages, incoming],
-              }
-            },
-            { revalidate: row.job_id ? true : false },
-          )
+                const incoming: ThreadMessage = {
+                  id: row.id,
+                  from: "them",
+                  text: row.body,
+                  time: formatMessageTime(row.created_at),
+                  createdAt: row.created_at,
+                  authorId: row.sender_id,
+                  author: priorFromSender?.author,
+                  authorAvatarUrl: priorFromSender?.authorAvatarUrl,
+                  ...(replyTo ? { replyTo } : {}),
+                }
+
+                return {
+                  ...current,
+                  messages: [...current.messages, incoming],
+                }
+              },
+              { revalidate: row.job_id ? true : false },
+            )
+          }
 
           // Refresh the rooms list to update previews and unread counts
           void mutateSwr(roomsListKey)
