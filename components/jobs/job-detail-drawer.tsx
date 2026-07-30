@@ -222,8 +222,8 @@ function JobDetailContent({
       </ScrollArea>
 
       {/* Footer actions */}
-      <div className="flex shrink-0 flex-col gap-2 border-t p-4">
-        <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2 border-t p-4">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="outline"
             size="icon"
@@ -236,37 +236,39 @@ function JobDetailContent({
               className={cn("size-4", saved && "fill-current text-primary")}
             />
           </Button>
-          <Button
-            className="min-w-0 flex-1"
-            disabled={applied}
-            onClick={() => setApplyOpen(true)}
-          >
-            {applied ? "Applied" : "Apply"}
-          </Button>
           <JobShareToMessagesButton job={job}>
-            <Button variant="ghost" size="sm" className="shrink-0">
-              <Share />
-              Share
+            <Button
+              size="icon"
+              variant="outline"
+              aria-label="Share job in a message"
+            >
+              <Share className="size-4" />
             </Button>
           </JobShareToMessagesButton>
           <JobShareRoomPopover job={job}>
             <Button
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0"
+              size="icon"
+              variant="outline"
               aria-label="Share job to a room"
             >
-              <Hash />
+              <Hash className="size-4" />
             </Button>
           </JobShareRoomPopover>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Report job"
+          >
+            <Flag className="size-4" />
+          </Button>
         </div>
         <Button
-          variant="ghost"
+          className="min-w-0 flex-1"
           size="sm"
-          className="mx-auto text-xs text-muted-foreground"
+          disabled={applied}
+          onClick={() => setApplyOpen(true)}
         >
-          <Flag className="size-3" />
-          Report job
+          {applied ? "Applied" : "Apply"}
         </Button>
       </div>
 
