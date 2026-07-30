@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BadgeCheck, Hash, MapPin, MessageSquare, Share } from "lucide-react"
+import { BadgeCheck, Group, MapPin, MessageSquare, Share } from "lucide-react"
 
 import { availabilityConfig, initials, type Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
@@ -94,7 +94,7 @@ export function PersonRow({ person }: { person: Person }) {
             variant="outline"
             aria-label="Share to a room"
           >
-            <Hash className="size-4" />
+            <Group className="size-4" />
           </Button>
         </PersonShareRoomPopover>
       </div>

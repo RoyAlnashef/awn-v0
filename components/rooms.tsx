@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Hash } from "lucide-react"
+import { Group } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { Button } from "@/components/ui/button"
@@ -58,16 +58,16 @@ export function Rooms() {
             aria-label={
               unreadCount > 0 ? `Rooms, ${unreadCount} unread` : "Rooms"
             }
-          />
+          >
+            <Group className="size-5" />
+            {unreadCount > 0 ? (
+              <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background">
+                {unreadCount}
+              </span>
+            ) : null}
+          </Button>
         }
-      >
-        <Hash className="size-5" />
-        {unreadCount > 0 ? (
-          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background">
-            {unreadCount}
-          </span>
-        ) : null}
-      </SheetTrigger>
+      />
 
       {open ? (
         <SheetContent

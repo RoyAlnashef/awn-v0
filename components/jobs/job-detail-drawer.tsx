@@ -9,7 +9,7 @@ import {
   Bookmark,
   CalendarClock,
   Flag,
-  Hash,
+  Group,
   MapPin,
   MessageSquare,
   Share,
@@ -276,7 +276,7 @@ function JobDetailContent({
                   variant="outline"
                   aria-label="Share to a room"
                 >
-                  <Hash className="size-4" />
+                  <Group className="size-4" />
                 </Button>
               </JobShareRoomPopover>
             </JobActionTooltip>

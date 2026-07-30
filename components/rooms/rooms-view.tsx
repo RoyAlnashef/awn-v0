@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Hash } from "lucide-react"
+import { Group } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { buildPopoutUrl } from "@/lib/popout"
@@ -199,7 +199,7 @@ export function RoomsView({
             <Empty className="flex-1 border-none">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <Hash />
+                  <Group />
                 </EmptyMedia>
                 <EmptyTitle>Community rooms</EmptyTitle>
                 <EmptyDescription>

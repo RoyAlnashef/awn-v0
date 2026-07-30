@@ -10,7 +10,7 @@ import {
   MessageSquare,
   Plane,
   Plus,
-  Hash,
+  Group,
   Share,
   Sparkles,
   ThumbsUp,
@@ -309,7 +309,7 @@ export function PersonProfileDrawer({
                 size="icon"
                 aria-label="Share to a room"
               >
-                <Hash className="size-4" />
+                <Group className="size-4" />
               </Button>
             </PersonShareRoomPopover>
           </div>

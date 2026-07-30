@@ -8,7 +8,7 @@ import {
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
-import { Bookmark, CalendarClock, Hash, MapPin, Share } from "lucide-react"
+import { Bookmark, CalendarClock, Group, MapPin, Share } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -158,7 +158,7 @@ export function JobCard({ job }: { job: Job }) {
                         variant="outline"
                         aria-label="Share to a room"
                       >
-                        <Hash className="size-4" />
+                        <Group className="size-4" />
                       </Button>
                     </JobShareRoomPopover>
                   </JobActionTooltip>

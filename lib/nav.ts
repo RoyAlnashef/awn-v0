@@ -3,7 +3,7 @@ import {
   Briefcase,
   Users,
   MessagesSquare,
-  Hash,
+  Group,
   Compass,
   UserCheck,
   Building2,
@@ -64,7 +64,7 @@ export const mainNav: NavItem[] = [
     href: "/rooms",
     description:
       "Discipline-specific community channels for touring crew.",
-    icon: Hash,
+    icon: Group,
     liveBadge: "rooms",
   },
   {
