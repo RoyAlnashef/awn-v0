@@ -1,5 +1,6 @@
 import { mainNav } from "@/lib/nav"
 import { RoomsView } from "@/components/rooms/rooms-view"
+import { getSessionUser } from "@/lib/auth/get-session-user"
 
 const item = mainNav.find((i) => i.href === "/rooms")!
 
@@ -8,7 +9,10 @@ export default async function RoomsPage({
 }: {
   searchParams: Promise<{ room?: string; shareJob?: string; shareMember?: string }>
 }) {
-  const params = await searchParams
+  const [params, sessionUser] = await Promise.all([
+    searchParams,
+    getSessionUser(),
+  ])
 
   return (
     <div className="flex h-[calc(100svh-4rem)] flex-col p-4 md:p-6">
@@ -18,6 +22,7 @@ export default async function RoomsPage({
         initialRoomId={params.room}
         initialShareJobId={params.shareJob}
         initialShareMemberId={params.shareMember}
+        canManageRooms={sessionUser?.canAccessAdmin ?? false}
       />
     </div>
   )

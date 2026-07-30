@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Hash } from "lucide-react"
 
@@ -14,6 +15,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Button } from "@/components/ui/button"
 import { RoomsInbox } from "@/components/rooms/rooms-inbox"
 import { RoomThread } from "@/components/rooms/room-thread"
 import { useRooms } from "@/components/rooms/rooms-provider"
@@ -25,6 +27,7 @@ export function RoomsView({
   initialRoomId,
   initialShareJobId,
   initialShareMemberId,
+  canManageRooms = false,
   popout = false,
 }: {
   title: string
@@ -32,6 +35,7 @@ export function RoomsView({
   initialRoomId?: string
   initialShareJobId?: string
   initialShareMemberId?: string
+  canManageRooms?: boolean
   popout?: boolean
 }) {
   const router = useRouter()
@@ -130,18 +134,30 @@ export function RoomsView({
             </p>
           ) : null}
         </div>
-        {!popout ? (
-          <PopOutButton
-            href={buildPopoutUrl(
-              "/popout/rooms",
-              activeRoom ? { room: activeRoom.id } : undefined,
-            )}
-            windowName={
-              activeRoom ? `room-${activeRoom.id}` : "rooms-popout"
-            }
-            aria-label="Pop out Rooms"
-          />
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {canManageRooms && !popout ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden shrink-0 md:inline-flex"
+              render={<Link href="/rooms/settings" />}
+            >
+              Manage Rooms
+            </Button>
+          ) : null}
+          {!popout ? (
+            <PopOutButton
+              href={buildPopoutUrl(
+                "/popout/rooms",
+                activeRoom ? { room: activeRoom.id } : undefined,
+              )}
+              windowName={
+                activeRoom ? `room-${activeRoom.id}` : "rooms-popout"
+              }
+              aria-label="Pop out Rooms"
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">

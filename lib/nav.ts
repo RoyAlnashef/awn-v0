@@ -9,7 +9,6 @@ import {
   Building2,
   Store,
   ClipboardList,
-  UsersRound,
   MailPlus,
   Handshake,
   MessageSquareText,
@@ -102,12 +101,6 @@ export const adminNav: NavItem[] = [
     href: "/applications",
     description: "Review membership applications and verify new crew.",
     icon: ClipboardList,
-  },
-  {
-    title: "Community",
-    href: "/community",
-    description: "Manage crew rooms, departments, and community channels.",
-    icon: UsersRound,
   },
   {
     title: "Invites",

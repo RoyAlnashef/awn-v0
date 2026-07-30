@@ -6,15 +6,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  async redirects() {
-    return [
-      {
-        source: "/groups",
-        destination: "/community",
-        permanent: true,
-      },
-    ]
-  },
 }
 
 export default nextConfig
