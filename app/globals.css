@@ -167,9 +167,59 @@ body {
   }
 }
 
+@keyframes typing-handoff-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes typing-handoff-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.typing-handoff-stack {
+  display: grid;
+}
+
+.typing-handoff-layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.typing-handoff-layer-exit {
+  animation: typing-handoff-fade-out 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.typing-handoff-layer-enter {
+  animation: typing-handoff-fade-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.typing-handoff-layer-idle {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-message-enter,
   .animate-message-exit {
+    animation: none !important;
+  }
+
+  .typing-handoff-layer-exit,
+  .typing-handoff-layer-enter {
     animation: none !important;
   }
 }

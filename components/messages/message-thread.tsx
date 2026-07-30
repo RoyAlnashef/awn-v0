@@ -16,10 +16,8 @@ import {
 } from "@/lib/messages/actions"
 import { useThread } from "@/lib/messages/hooks/use-thread"
 import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
-import {
-  useTypingBroadcast,
-  useTypingIndicator,
-} from "@/lib/messages/hooks/use-typing-indicator"
+import { useTypingMessageHandoff } from "@/lib/messages/hooks/use-typing-message-handoff"
+import { useTypingBroadcast } from "@/lib/messages/hooks/use-typing-indicator"
 import {
   applyLocalReaction,
   patchMessageReactions,
@@ -85,9 +83,8 @@ import {
 } from "@/components/ui/input-group"
 import { useMessages } from "@/components/messages/messages-provider"
 import { MessageThreadSkeleton } from "@/components/messages/message-thread-skeleton"
-import { AnimatedMessageScrollerItem } from "@/components/messages/animated-message-scroller-item"
 import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
-import { TypingIndicator } from "@/components/messages/typing-indicator"
+import { TypingMessageHandoffSlot } from "@/components/messages/typing-message-handoff-slot"
 import { createClient } from "@/lib/supabase/client"
 
 function initials(name: string) {
@@ -216,16 +213,6 @@ export function MessageThread({
   } = useThread(persistedConversationId)
 
   const messages = isPersisted ? cachedMessages : localMessages
-  const isOtherTyping = useTypingIndicator(
-    isPersisted ? persistedConversationId : null,
-    currentUser.id,
-  )
-  const { onComposerBlur } = useTypingBroadcast(
-    isPersisted ? persistedConversationId : null,
-    currentUser.id,
-    draft,
-    sending,
-  )
 
   const isResolvingConversation =
     !isPersisted &&
@@ -235,13 +222,41 @@ export function MessageThread({
   const isThreadPending =
     isResolvingConversation ||
     (isPersisted && (isLoading || (isValidating && cachedMessages.length === 0)))
+
   const newMessageIds = useNewMessageIds(
     messages.map((message) => message.id),
     !isThreadPending,
   )
+  const {
+    slotVisible,
+    showTyping,
+    handoffMessage,
+    excludedMessageId,
+    isMorphing,
+    skipEnterAnimationIds,
+  } = useTypingMessageHandoff(
+    isPersisted ? persistedConversationId : null,
+    currentUser.id,
+    messages,
+    newMessageIds,
+  )
+  const { onComposerBlur } = useTypingBroadcast(
+    isPersisted ? persistedConversationId : null,
+    currentUser.id,
+    draft,
+    sending,
+  )
+
+  const displayMessages = useMemo(
+    () =>
+      excludedMessageId
+        ? messages.filter((message) => message.id !== excludedMessageId)
+        : messages,
+    [excludedMessageId, messages],
+  )
   const messageGroups = useMemo(
-    () => groupThreadMessagesByDate(messages),
-    [messages],
+    () => groupThreadMessagesByDate(displayMessages),
+    [displayMessages],
   )
 
   useEffect(() => {
@@ -719,6 +734,7 @@ export function MessageThread({
                         messageId={message.id}
                         className={cn(
                           newMessageIds.has(message.id) &&
+                            !skipEnterAnimationIds.has(message.id) &&
                             "animate-message-enter [content-visibility:visible]",
                         )}
                       >
@@ -794,15 +810,82 @@ export function MessageThread({
                     </Fragment>
                   ))}
 
-                  <AnimatedMessageScrollerItem
-                    visible={isOtherTyping}
-                    messageId="typing"
-                  >
-                    <TypingIndicator
-                      name={conversation.name}
-                      avatarUrl={conversation.avatar}
-                    />
-                  </AnimatedMessageScrollerItem>
+                  <TypingMessageHandoffSlot
+                    visible={slotVisible}
+                    showTyping={showTyping}
+                    isMorphing={isMorphing}
+                    name={conversation.name}
+                    avatarUrl={conversation.avatar}
+                    messageContent={
+                      handoffMessage ? (
+                        handoffMessage.memberShare ? (
+                          <MessageMemberShareWithReactions
+                            memberShare={handoffMessage.memberShare}
+                            text={handoffMessage.text}
+                            variant="muted"
+                            align="start"
+                            reactions={handoffMessage.reactions}
+                            onReact={(emoji) =>
+                              void handleReact(handoffMessage.id, emoji)
+                            }
+                            onReply={() => handleReplyToMessage(handoffMessage)}
+                            onCopy={() => handleCopyMessage(handoffMessage)}
+                            replyTo={handoffMessage.replyTo}
+                            repliedLabel={
+                              handoffMessage.replyTo
+                                ? `${conversation.name} replied`
+                                : undefined
+                            }
+                          />
+                        ) : handoffMessage.jobShare ? (
+                          <MessageJobShareWithReactions
+                            jobShare={handoffMessage.jobShare}
+                            text={handoffMessage.text}
+                            variant="muted"
+                            align="start"
+                            reactions={handoffMessage.reactions}
+                            onReact={(emoji) =>
+                              void handleReact(handoffMessage.id, emoji)
+                            }
+                            onReply={() => handleReplyToMessage(handoffMessage)}
+                            onCopy={() => handleCopyMessage(handoffMessage)}
+                            replyTo={handoffMessage.replyTo}
+                            repliedLabel={
+                              handoffMessage.replyTo
+                                ? `${conversation.name} replied`
+                                : undefined
+                            }
+                          />
+                        ) : (
+                          <MessageBubbleWithReactions
+                            variant="muted"
+                            align="start"
+                            reactions={handoffMessage.reactions}
+                            onReact={(emoji) =>
+                              void handleReact(handoffMessage.id, emoji)
+                            }
+                            onReply={() => handleReplyToMessage(handoffMessage)}
+                            onCopy={() => handleCopyMessage(handoffMessage)}
+                            replyTo={handoffMessage.replyTo}
+                            repliedLabel={
+                              handoffMessage.replyTo
+                                ? `${conversation.name} replied`
+                                : undefined
+                            }
+                          >
+                            {handoffMessage.text}
+                          </MessageBubbleWithReactions>
+                        )
+                      ) : undefined
+                    }
+                    messageFooter={
+                      handoffMessage ? (
+                        <MessageFooter>
+                          <span>{handoffMessage.time}</span>
+                        </MessageFooter>
+                      ) : undefined
+                    }
+                  />
                 </>
               )}
             </MessageScrollerContent>

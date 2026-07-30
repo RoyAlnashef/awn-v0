@@ -15,7 +15,7 @@ function initials(name: string) {
     .join("")
 }
 
-function TypingDots() {
+export function TypingDots() {
   return (
     <span className="inline-flex items-center gap-1 px-0.5 py-0.5" aria-hidden>
       {[0, 1, 2].map((index) => (
