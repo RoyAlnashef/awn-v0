@@ -45,12 +45,18 @@ export function useRoomsRealtime({
             body: string
             created_at: string
             job_id?: string | null
+            shared_profile_id?: string | null
+            member_share_snapshot?: Record<string, unknown> | null
             reply_to_message_id?: string | null
             reply_snapshot?: Record<string, unknown> | null
           }
 
           const isMine = row.sender_id === currentUserId
           const isActive = row.room_id === activeRoomId
+          const hasRichAttachment =
+            Boolean(row.job_id) ||
+            Boolean(row.shared_profile_id) ||
+            Boolean(row.member_share_snapshot)
 
           // Own sends are handled by optimistic update + server action in the thread.
           if (!isMine) {
@@ -62,7 +68,7 @@ export function useRoomsRealtime({
                   return current
                 }
 
-                if (row.job_id) {
+                if (hasRichAttachment) {
                   return current
                 }
 
@@ -89,7 +95,7 @@ export function useRoomsRealtime({
                   messages: [...current.messages, incoming],
                 }
               },
-              { revalidate: row.job_id ? true : false },
+              { revalidate: hasRichAttachment },
             )
           }
 

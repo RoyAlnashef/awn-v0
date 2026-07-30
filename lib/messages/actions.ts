@@ -213,7 +213,7 @@ async function fetchMemberSharePayload(
   return { ok: false, error: "Member not found." }
 }
 
-async function resolveMemberShareForInsert(
+export async function resolveMemberShareForInsert(
   supabase: Awaited<ReturnType<typeof createClient>>,
   profileId: string,
 ): Promise<

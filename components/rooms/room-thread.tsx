@@ -25,10 +25,12 @@ import {
 } from "@/lib/rooms/actions"
 import { useRooms } from "@/components/rooms/rooms-provider"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
+import { PersonShareCard } from "@/components/people/person-share-card"
 import { JobShareCard } from "@/components/jobs/job-share-card"
+import { getMemberSharePayload } from "@/lib/messages/actions"
 import { fetchJob } from "@/lib/jobs/fetch"
 import { jobToSharePayload } from "@/lib/messages/job-share"
-import type { JobSharePayload } from "@/lib/messages-data"
+import type { JobSharePayload, MemberSharePayload } from "@/lib/messages-data"
 import type { Person } from "@/lib/people-data"
 import { getProfileOnline } from "@/lib/presence/actions"
 import { cn } from "@/lib/utils"
@@ -37,6 +39,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   MessageBubbleWithReactions,
   MessageJobShareWithReactions,
+  MessageMemberShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
 import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
 import { MessageDeleteDialog } from "@/components/messages/message-delete-dialog"
@@ -113,14 +116,18 @@ function RoomThreadScrollEffects({
 export function RoomThread({
   room,
   initialShareJobId,
+  initialShareMemberId,
   onShareJobConsumed,
+  onShareMemberConsumed,
   onBack,
   onJoin,
   onLeave,
 }: {
   room: Room
   initialShareJobId?: string
+  initialShareMemberId?: string
   onShareJobConsumed?: () => void
+  onShareMemberConsumed?: () => void
   onBack?: () => void
   onJoin?: () => void | Promise<void>
   onLeave?: () => void | Promise<void>
@@ -141,12 +148,15 @@ export function RoomThread({
   const [draft, setDraft] = useState("")
   const [pendingJobShare, setPendingJobShare] =
     useState<JobSharePayload | null>(null)
+  const [pendingMemberShare, setPendingMemberShare] =
+    useState<MemberSharePayload | null>(null)
   const [pendingReply, setPendingReply] =
     useState<ThreadMessage | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ThreadMessage | null>(null)
   const [deletePending, setDeletePending] = useState(false)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
+  const [loadingMemberShare, setLoadingMemberShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
   const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
@@ -233,7 +243,34 @@ export function RoomThread({
   }, [room.id, room.joined, usesServer])
 
   useEffect(() => {
-    if (!initialShareJobId) return
+    if (!initialShareMemberId) return
+
+    let cancelled = false
+    setLoadingMemberShare(true)
+
+    void getMemberSharePayload(initialShareMemberId)
+      .then((result) => {
+        if (cancelled) return
+        if (result.ok) {
+          setPendingMemberShare(result.memberShare)
+          setPendingJobShare(null)
+        } else {
+          setPendingMemberShare(null)
+        }
+      })
+      .finally(() => {
+        if (cancelled) return
+        setLoadingMemberShare(false)
+        onShareMemberConsumed?.()
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialShareMemberId, onShareMemberConsumed])
+
+  useEffect(() => {
+    if (!initialShareJobId || initialShareMemberId) return
 
     let cancelled = false
     setLoadingJobShare(true)
@@ -256,7 +293,7 @@ export function RoomThread({
     return () => {
       cancelled = true
     }
-  }, [initialShareJobId, onShareJobConsumed])
+  }, [initialShareJobId, initialShareMemberId, onShareJobConsumed])
 
   const pendingReplyPayload = useMemo(
     () =>
@@ -347,6 +384,7 @@ export function RoomThread({
     if (!room.joined) return
     const text = draft.trim()
     const jobId = pendingJobShare?.id
+    const sharedProfileId = pendingMemberShare?.id
     const replyTarget = pendingReply
     const replySnapshot =
       replyTarget && pendingReplyPayload
@@ -357,7 +395,7 @@ export function RoomThread({
             }),
           )
         : undefined
-    if ((!text && !jobId) || sending) return
+    if ((!text && !jobId && !sharedProfileId) || sending) return
 
     if (usesServer) {
       const optimisticId = `optimistic-${Date.now()}`
@@ -368,6 +406,7 @@ export function RoomThread({
         time: "Now",
         createdAt: new Date().toISOString(),
         jobShare: pendingJobShare ?? undefined,
+        memberShare: pendingMemberShare ?? undefined,
         replyTo: pendingReplyPayload ?? undefined,
       }
 
@@ -382,6 +421,7 @@ export function RoomThread({
 
       setDraft("")
       setPendingJobShare(null)
+      setPendingMemberShare(null)
       setPendingReply(null)
       setSending(true)
       requestScrollToEnd()
@@ -391,6 +431,7 @@ export function RoomThread({
         text,
         {
           ...(jobId ? { jobId } : {}),
+          ...(sharedProfileId ? { sharedProfileId } : {}),
           ...(replyTarget
             ? {
                 replyToMessageId: replyTarget.id,
@@ -417,6 +458,9 @@ export function RoomThread({
         setDraft(text)
         if (jobId && optimisticMessage.jobShare) {
           setPendingJobShare(optimisticMessage.jobShare)
+        }
+        if (sharedProfileId && optimisticMessage.memberShare) {
+          setPendingMemberShare(optimisticMessage.memberShare)
         }
         if (replyTarget) {
           setPendingReply(replyTarget)
@@ -450,16 +494,19 @@ export function RoomThread({
         time: "Now",
         createdAt: new Date().toISOString(),
         jobShare: pendingJobShare ?? undefined,
+        memberShare: pendingMemberShare ?? undefined,
         replyTo: pendingReplyPayload ?? undefined,
       },
     ])
     setDraft("")
     setPendingJobShare(null)
+    setPendingMemberShare(null)
     setPendingReply(null)
     requestScrollToEnd()
   }
 
-  const canSend = Boolean(draft.trim() || pendingJobShare) && !sending
+  const canSend =
+    Boolean(draft.trim() || pendingJobShare || pendingMemberShare) && !sending
 
   const handleReact = useCallback(
     (messageId: string, emoji: string | null) => {
@@ -681,7 +728,36 @@ export function RoomThread({
                         <div className="w-8 shrink-0" aria-hidden />
                       )}
                       <MessageContent>
-                        {message.jobShare ? (
+                        {message.memberShare ? (
+                          <>
+                            {showAuthor ? (
+                              <button
+                                type="button"
+                                className={cn(
+                                  "mb-1 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                                  mine && "self-end text-right",
+                                )}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openAuthorProfile(message)
+                                }}
+                              >
+                                {message.author!}
+                              </button>
+                            ) : null}
+                            <MessageMemberShareWithReactions
+                              memberShare={message.memberShare}
+                              text={message.text}
+                              variant={mine ? "default" : "muted"}
+                              align={mine ? "end" : "start"}
+                              reactions={message.reactions}
+                              onReact={(emoji) =>
+                                handleReact(message.id, emoji)
+                              }
+                              {...messageActions}
+                            />
+                          </>
+                        ) : message.jobShare ? (
                           <>
                             {showAuthor ? (
                               <button
@@ -749,7 +825,19 @@ export function RoomThread({
 
       {room.joined ? (
         <div className="shrink-0 border-t p-3">
-          {loadingJobShare ? (
+          {loadingMemberShare ? (
+            <p className="mb-2 text-xs text-muted-foreground">
+              Loading member attachment…
+            </p>
+          ) : pendingMemberShare ? (
+            <div className="mb-2">
+              <PersonShareCard
+                memberShare={pendingMemberShare}
+                variant="preview"
+                onRemove={() => setPendingMemberShare(null)}
+              />
+            </div>
+          ) : loadingJobShare ? (
             <p className="mb-2 text-xs text-muted-foreground">
               Loading job attachment…
             </p>

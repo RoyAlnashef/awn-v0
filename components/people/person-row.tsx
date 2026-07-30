@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BadgeCheck, MapPin, MessageSquare, Share } from "lucide-react"
+import { BadgeCheck, Hash, MapPin, MessageSquare, Share } from "lucide-react"
 
 import { availabilityConfig, initials, type Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
+import { PersonShareRoomPopover } from "@/components/people/person-share-room-popover"
 import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
 
 export function PersonRow({ person }: { person: Person }) {
@@ -82,11 +83,20 @@ export function PersonRow({ person }: { person: Person }) {
           <Button
             size="icon"
             variant="outline"
-            aria-label={`Share ${person.name}`}
+            aria-label="Share as a message"
           >
             <Share className="size-4" />
           </Button>
         </PersonShareToMessagesButton>
+        <PersonShareRoomPopover person={person}>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label="Share to a room"
+          >
+            <Hash className="size-4" />
+          </Button>
+        </PersonShareRoomPopover>
       </div>
 
       <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />

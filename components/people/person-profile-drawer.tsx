@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Plane,
   Plus,
+  Hash,
   Share,
   Sparkles,
   ThumbsUp,
@@ -31,6 +32,7 @@ import {
   FlyoutDrawerClose,
 } from "@/components/messages/flyout-drawer"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
+import { PersonShareRoomPopover } from "@/components/people/person-share-room-popover"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import {
   Drawer,
@@ -295,13 +297,21 @@ export function PersonProfileDrawer({
             </Button>
             <Button
               variant="ghost"
-              size="sm"
-              className="shrink-0"
+              size="icon"
+              aria-label="Share as a message"
               onClick={() => setShareOpen(true)}
             >
-              <Share />
-              Share
+              <Share className="size-4" />
             </Button>
+            <PersonShareRoomPopover person={person}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Share to a room"
+              >
+                <Hash className="size-4" />
+              </Button>
+            </PersonShareRoomPopover>
           </div>
           <Button
             variant="ghost"

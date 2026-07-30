@@ -24,12 +24,14 @@ export function RoomsView({
   description,
   initialRoomId,
   initialShareJobId,
+  initialShareMemberId,
   popout = false,
 }: {
   title: string
   description?: string
   initialRoomId?: string
   initialShareJobId?: string
+  initialShareMemberId?: string
   popout?: boolean
 }) {
   const router = useRouter()
@@ -39,15 +41,30 @@ export function RoomsView({
   const [composerShareJobId, setComposerShareJobId] = useState(
     initialShareJobId ?? "",
   )
+  const [composerShareMemberId, setComposerShareMemberId] = useState(
+    initialShareMemberId ?? "",
+  )
 
   useEffect(() => {
     setComposerShareJobId(initialShareJobId ?? "")
   }, [initialShareJobId])
 
+  useEffect(() => {
+    setComposerShareMemberId(initialShareMemberId ?? "")
+  }, [initialShareMemberId])
+
   function clearShareJobFromUrl() {
     setComposerShareJobId("")
     const params = new URLSearchParams(window.location.search)
     params.delete("shareJob")
+    const query = params.toString()
+    router.replace(query ? `?${query}` : window.location.pathname)
+  }
+
+  function clearShareMemberFromUrl() {
+    setComposerShareMemberId("")
+    const params = new URLSearchParams(window.location.search)
+    params.delete("shareMember")
     const query = params.toString()
     router.replace(query ? `?${query}` : window.location.pathname)
   }
@@ -154,7 +171,9 @@ export function RoomsView({
               key={activeRoom.id}
               room={activeRoom}
               initialShareJobId={composerShareJobId || undefined}
+              initialShareMemberId={composerShareMemberId || undefined}
               onShareJobConsumed={clearShareJobFromUrl}
+              onShareMemberConsumed={clearShareMemberFromUrl}
               onBack={() => setActive(null)}
               onJoin={() => handleToggleJoin(activeRoom.id)}
               onLeave={() => handleToggleJoin(activeRoom.id)}

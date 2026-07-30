@@ -8,6 +8,11 @@ import {
   type JobShareRpcRow,
 } from "@/lib/messages/job-share"
 import {
+  mapRpcMemberShare,
+  type MemberShareRpcRow,
+} from "@/lib/messages/member-share"
+import { resolveMemberShareForInsert } from "@/lib/messages/actions"
+import {
   mapRpcReply,
   mapSnapshotToReply,
   type ReplyRpcRow,
@@ -100,7 +105,8 @@ type RoomRpcRow = {
 }
 
 type ThreadRpcMessage = ReplyRpcRow &
-  JobShareRpcRow & {
+  JobShareRpcRow &
+  MemberShareRpcRow & {
   id: string
   sender_id: string
   sender_name: string | null
@@ -138,6 +144,7 @@ function mapRoomThreadMessage(
   userId: string,
 ): ThreadMessage {
   const jobShare = mapRpcJobShare(row)
+  const memberShare = mapRpcMemberShare(row)
   return {
     id: row.id,
     from: row.sender_id === userId ? "me" : "them",
@@ -155,6 +162,7 @@ function mapRoomThreadMessage(
         : undefined,
     reactions: mapRpcReactions(row.reactions),
     jobShare,
+    memberShare,
     replyTo: mapRpcReply(row),
   }
 }
@@ -352,7 +360,12 @@ export async function getRoomThread(
 export async function sendRoomMessage(
   roomId: string,
   body: string,
-  options?: { jobId?: string; replyToMessageId?: string; replySnapshot?: ReplySnapshot },
+  options?: {
+    jobId?: string
+    sharedProfileId?: string
+    replyToMessageId?: string
+    replySnapshot?: ReplySnapshot
+  },
 ): Promise<SendRoomMessageResult> {
   try {
     if (!isUuid(roomId)) {
@@ -361,14 +374,18 @@ export async function sendRoomMessage(
 
     const text = body.trim()
     const jobId = options?.jobId
+    const sharedProfileId = options?.sharedProfileId
     const replyToMessageId = options?.replyToMessageId
     const replySnapshot = options?.replySnapshot
 
-    if (!text && !jobId) {
+    if (!text && !jobId && !sharedProfileId) {
       return { ok: false, error: "Message cannot be empty." }
     }
     if (replyToMessageId && !text) {
       return { ok: false, error: "Reply must include a message." }
+    }
+    if (jobId && sharedProfileId) {
+      return { ok: false, error: "Cannot attach both a job and a member." }
     }
 
     const userId = await requireUserId()
@@ -393,6 +410,10 @@ export async function sendRoomMessage(
     }
 
     let jobShare: ThreadMessage["jobShare"]
+    let memberShare: ThreadMessage["memberShare"]
+    let sharedProfileIdForInsert: string | null = null
+    let memberShareSnapshotForInsert: ThreadMessage["memberShare"] | null = null
+
     if (jobId) {
       if (!isUuid(jobId)) {
         return { ok: false, error: "Invalid job id." }
@@ -402,6 +423,20 @@ export async function sendRoomMessage(
       jobShare = jobResult.jobShare
     }
 
+    if (sharedProfileId) {
+      if (!isUuid(sharedProfileId)) {
+        return { ok: false, error: "Invalid profile id." }
+      }
+      const memberResult = await resolveMemberShareForInsert(
+        supabase,
+        sharedProfileId,
+      )
+      if (!memberResult.ok) return memberResult
+      memberShare = memberResult.memberShare
+      sharedProfileIdForInsert = memberResult.sharedProfileId
+      memberShareSnapshotForInsert = memberResult.memberShareSnapshot
+    }
+
     const { data, error } = await supabase
       .from("room_messages")
       .insert({
@@ -409,11 +444,17 @@ export async function sendRoomMessage(
         sender_id: userId,
         body: text,
         ...(jobId ? { job_id: jobId } : {}),
+        ...(sharedProfileIdForInsert
+          ? { shared_profile_id: sharedProfileIdForInsert }
+          : {}),
+        ...(memberShareSnapshotForInsert
+          ? { member_share_snapshot: memberShareSnapshotForInsert }
+          : {}),
         ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
         ...(replySnapshot ? { reply_snapshot: replySnapshot } : {}),
       })
       .select(
-        "id, sender_id, body, created_at, job_id, reply_to_message_id, reply_snapshot",
+        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot, reply_to_message_id, reply_snapshot",
       )
       .single()
 
@@ -432,6 +473,7 @@ export async function sendRoomMessage(
         time: formatMessageTime(data.created_at),
         createdAt: data.created_at,
         jobShare,
+        memberShare,
         replyTo,
       },
     }
