@@ -598,6 +598,56 @@ export async function setRoomMessageReaction(
   }
 }
 
+export type DeleteRoomMessageResult = { ok: true } | ActionError
+
+export async function deleteRoomMessage(
+  messageId: string,
+): Promise<DeleteRoomMessageResult> {
+  try {
+    if (!isUuid(messageId)) {
+      return { ok: false, error: "Invalid message id." }
+    }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: msgRow, error: msgError } = await supabase
+      .from("room_messages")
+      .select("id, room_id, sender_id")
+      .eq("id", messageId)
+      .maybeSingle()
+
+    if (msgError) return { ok: false, error: msgError.message }
+    if (!msgRow) return { ok: false, error: "Message not found." }
+
+    if (msgRow.sender_id !== userId) {
+      return { ok: false, error: "You can only delete your own messages." }
+    }
+
+    const { data: membership } = await supabase
+      .from("room_memberships")
+      .select("profile_id")
+      .eq("room_id", msgRow.room_id)
+      .eq("profile_id", userId)
+      .maybeSingle()
+
+    if (!membership) {
+      return { ok: false, error: "You must join the room to delete messages." }
+    }
+
+    const { error: deleteError } = await supabase
+      .from("room_messages")
+      .delete()
+      .eq("id", messageId)
+
+    if (deleteError) return { ok: false, error: deleteError.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Admin actions
 // ---------------------------------------------------------------------------

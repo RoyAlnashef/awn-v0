@@ -1,3 +1,61 @@
+---
+
+name: Message Reply Feature
+overview: Add message reply and copy-text actions to DMs and rooms by extending the existing reaction popover (Plus trigger on desktop, long-press on mobile) with a left-aligned action sheet, persisting replies via `reply_to_message_id`, and rendering quoted replies in-thread and in the composer.
+todos:
+
+- id: save-spec
+content: "Task 1: Save spec folder with plan, shape, standards, references, visuals, smoke-check"
+status: in_progress
+- id: db-migration
+content: "Task 2: Add reply_to_message_id FK + update get_dm_thread / get_room_thread RPCs"
+status: pending
+- id: types-helpers
+content: "Task 3: Extend ThreadMessage with replyTo + add lib/messages/reply.ts helpers"
+status: pending
+- id: server-actions
+content: "Task 4: Extend sendMessage / sendRoomMessage with replyToMessageId validation"
+status: pending
+- id: popover-ui
+content: "Task 5: Refactor reaction picker — Plus trigger, combined popover with action sheet, mobile long-press"
+status: pending
+- id: composer-banner
+content: "Task 6: Build MessageReplyComposer + pendingReply state in both threads"
+status: pending
+- id: quote-render
+content: "Task 7: Build MessageReplyQuote and integrate into bubble components"
+status: pending
+- id: thread-wiring
+content: "Task 8: Wire reply/copy handlers, optimistic sends, and mock thread support"
+status: pending
+- id: smoke-check
+content: "Task 9: Manual smoke verification across DM, room, and message types"
+status: pending
+isProject: false
+
+---
+
+# Message Reply in DMs and Rooms
+
+## Shaping Summary
+
+| Decision          | Choice                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Trigger (desktop) | Replace Smile icon with **Plus**; hover reveals pill, click opens combined popover                                                   |
+| Trigger (mobile)  | **Long-press** on message bubble opens the same combined popover (hover unavailable on touch)                                        |
+| Popover layout    | Emoji quick row + More button on top; **Reply / Copy Text** action sheet below, left-aligned                                         |
+| Surfaces          | DMs (`[message-thread.tsx](components/messages/message-thread.tsx)`) + rooms (`[room-thread.tsx](components/rooms/room-thread.tsx)`) |
+| Reply scope       | All message types — plain text, job share, member share, share-only (no body)                                                        |
+| Copy scope        | Same preview string as inbox (`messageDisplayPreview`) — body text, or share fallback                                                |
+| Persistence       | New `reply_to_message_id` FK on `dm_messages` + `room_messages`; RPC + server actions updated                                        |
+| Visuals           | 6 user-provided screenshots (current AWN reaction UI + iMessage/WhatsApp/Instagram reply references)                                 |
+| Standards         | `css/shadcn-ui`, `css/design-tokens`                                                                                                 |
+
+**Product alignment:** Extends P1 Messages in [agent-os/product/roadmap.md](agent-os/product/roadmap.md). The original DM spec deferred replies; this spec adds the first reply slice.
+
+**Prerequisite context:** Reactions already live in `[message-bubble-with-reactions.tsx](components/messages/message-bubble-with-reactions.tsx)` + `[message-reaction-picker.tsx](components/messages/message-reaction-picker.tsx)`. Job/member share previews reuse `[messageDisplayPreview](lib/messages/member-share.ts)`.
+
+---
 
 ## Architecture
 
@@ -75,7 +133,7 @@ When parent is deleted (`reply_to_message_id` becomes null via FK), UI shows **"
 
 ## Task 3: Types + Reply Helpers
 
-Extend [`lib/messages-data.ts`](lib/messages-data.ts):
+Extend `[lib/messages-data.ts](lib/messages-data.ts)`:
 
 ```typescript
 export type MessageReplyPayload = {
@@ -91,7 +149,7 @@ export interface ThreadMessage {
 }
 ```
 
-Add [`lib/messages/reply.ts`](lib/messages/reply.ts):
+Add `[lib/messages/reply.ts](lib/messages/reply.ts)`:
 
 - `buildReplyPreview(message: ThreadMessage): string` — delegates to `messageDisplayPreview`
 - `mapRpcReply(row): MessageReplyPayload | undefined`
@@ -101,7 +159,7 @@ Add [`lib/messages/reply.ts`](lib/messages/reply.ts):
 
 ## Task 4: Server Actions — Send with Reply
 
-Extend [`lib/messages/actions.ts`](lib/messages/actions.ts) and [`lib/rooms/actions.ts`](lib/rooms/actions.ts):
+Extend `[lib/messages/actions.ts](lib/messages/actions.ts)` and `[lib/rooms/actions.ts](lib/rooms/actions.ts)`:
 
 - `sendMessage(conversationId, body, options?: { jobId?, sharedProfileId?, replyToMessageId? })`
 - `sendRoomMessage(roomId, body, options?: { jobId?, replyToMessageId? })`
@@ -118,29 +176,29 @@ Map RPC rows → `ThreadMessage.replyTo` in both thread fetchers.
 
 ## Task 5: Combined Popover + Action Sheet UI (+ Mobile Long-Press)
 
-Refactor [`message-reaction-picker.tsx`](components/messages/message-reaction-picker.tsx):
+Refactor `[message-reaction-picker.tsx](components/messages/message-reaction-picker.tsx)`:
 
-- Rename trigger conceptually to **message actions**; swap `Smile` → `Plus` in [`MessageReactionTrigger`](components/messages/message-reaction-picker.tsx)
+- Rename trigger conceptually to **message actions**; swap `Smile` → `Plus` in `[MessageReactionTrigger](components/messages/message-reaction-picker.tsx)`
 - Extend `PopoverContent` to a vertical stack:
-  - **Top:** existing quick emoji row + More button (keep [`QUICK_REACTIONS`](lib/messages/reactions.ts))
+  - **Top:** existing quick emoji row + More button (keep `[QUICK_REACTIONS](lib/messages/reactions.ts)`)
   - **Divider**
   - **Bottom:** left-aligned action sheet with two rows:
     - `CornerUpLeft` + **Reply**
     - `Copy` + **Copy Text**
 - New props: `onReply?: () => void`, `onCopy?: () => void`, `messagePreview?: string` (for aria labels)
-- Support **controlled `open` state** so long-press can open the popover programmatically (not only via trigger click)
+- Support **controlled** `open` **state** so long-press can open the popover programmatically (not only via trigger click)
 - Selecting emoji or action closes popover (same as today for reactions)
 
-Add [`components/messages/message-action-sheet.tsx`](components/messages/message-action-sheet.tsx) — small vertical menu using shadcn `Button variant="ghost"` rows inside the shared `message-reaction-surface` styling.
+Add `[components/messages/message-action-sheet.tsx](components/messages/message-action-sheet.tsx)` — small vertical menu using shadcn `Button variant="ghost"` rows inside the shared `message-reaction-surface` styling.
 
-Add [`lib/messages/use-long-press.ts`](lib/messages/use-long-press.ts) — lightweight hook:
+Add `[lib/messages/use-long-press.ts](lib/messages/use-long-press.ts)` — lightweight hook:
 
 - `onPointerDown` starts timer (~400ms); cancel on `pointerup`, `pointerleave`, or `pointercancel`
 - Ignore if pointer moved beyond small threshold (prevents firing during scroll)
 - Callback receives the event; caller opens popover
 - Use `{ passive: true }` on touch listeners where `preventDefault` is not needed
 
-Update [`message-bubble-with-reactions.tsx`](components/messages/message-bubble-with-reactions.tsx):
+Update `[message-bubble-with-reactions.tsx](components/messages/message-bubble-with-reactions.tsx)`:
 
 - Lift popover `open` / `onOpenChange` to bubble wrap level
 - **Desktop:** keep hover-revealed Plus trigger (`group-hover/bubble-wrap`); click opens popover
@@ -148,21 +206,21 @@ Update [`message-bubble-with-reactions.tsx`](components/messages/message-bubble-
 - Long-press opens popover anchored to bubble (`side="top"`, `align="start"`)
 - Prevent text selection during long-press on bubble wrap
 
-Wire through [`MessageReactionSurface`](components/messages/message-bubble-with-reactions.tsx) → all three bubble wrappers (`MessageBubbleWithReactions`, `MessageJobShareWithReactions`, `MessageMemberShareWithReactions`).
+Wire through `[MessageReactionSurface](components/messages/message-bubble-with-reactions.tsx)` → all three bubble wrappers (`MessageBubbleWithReactions`, `MessageJobShareWithReactions`, `MessageMemberShareWithReactions`).
 
-**Copy feedback:** use existing `sonner` toast (`toast.success("Copied")`) — same pattern as [`share-to-messages-flyout.tsx`](components/messages/share-to-messages-flyout.tsx).
+**Copy feedback:** use existing `sonner` toast (`toast.success("Copied")`) — same pattern as `[share-to-messages-flyout.tsx](components/messages/share-to-messages-flyout.tsx)`.
 
 ---
 
 ## Task 6: Reply Composer Banner
 
-Add [`components/messages/message-reply-composer.tsx`](components/messages/message-reply-composer.tsx):
+Add `[components/messages/message-reply-composer.tsx](components/messages/message-reply-composer.tsx)`:
 
 - Mirrors pending attachment previews (job/member share) already above the composer in both threads
 - Shows: "Replying to {authorName}" + truncated preview + dismiss (X)
 - Uses semantic tokens (`bg-muted`, `border-l-2 border-primary`) inspired by WhatsApp/Instagram references
 
-Thread state in both [`message-thread.tsx`](components/messages/message-thread.tsx) and [`room-thread.tsx`](components/rooms/room-thread.tsx):
+Thread state in both `[message-thread.tsx](components/messages/message-thread.tsx)` and `[room-thread.tsx](components/rooms/room-thread.tsx)`:
 
 ```typescript
 const [pendingReply, setPendingReply] = useState<ThreadMessage | null>(null);
@@ -177,14 +235,14 @@ const [pendingReply, setPendingReply] = useState<ThreadMessage | null>(null);
 
 ## Task 7: Quoted Reply Rendering in Thread
 
-Add [`components/messages/message-reply-quote.tsx`](components/messages/message-reply-quote.tsx):
+Add `[components/messages/message-reply-quote.tsx](components/messages/message-reply-quote.tsx)`:
 
 - Compact quoted block rendered **inside** the message bubble, above reply text
 - Shows author name (primary color in rooms; "You" / contact name in DMs) + one-line truncated preview
 - Unavailable state: muted "Message unavailable"
 - For share-only originals, preview uses share text (e.g. `Shared a job · LD`)
 
-Integrate into all bubble variants in [`message-bubble-with-reactions.tsx`](components/messages/message-bubble-with-reactions.tsx) — quote appears above `BubbleContent` / share cards when `replyTo` is set.
+Integrate into all bubble variants in `[message-bubble-with-reactions.tsx](components/messages/message-bubble-with-reactions.tsx)` — quote appears above `BubbleContent` / share cards when `replyTo` is set.
 
 Optional small label above quote for sent replies: **"You replied"** (DM) / **"{author} replied"** (room) — match Instagram reference screenshot 6.
 
@@ -192,13 +250,13 @@ Optional small label above quote for sent replies: **"You replied"** (DM) / **"{
 
 ## Task 8: Thread Wiring (DM + Room)
 
-Update [`message-thread.tsx`](components/messages/message-thread.tsx):
+Update `[message-thread.tsx](components/messages/message-thread.tsx)`:
 
 - Pass message object + `onReply` / `onCopy` handlers into bubble components
 - Render `MessageReplyComposer` above `InputGroup` when `pendingReply` is set
 - Include `replyTo` in optimistic + server-refreshed messages
 
-Update [`room-thread.tsx`](components/rooms/room-thread.tsx) — same wiring; room author names come from `message.author`.
+Update `[room-thread.tsx](components/rooms/room-thread.tsx)` — same wiring; room author names come from `message.author`.
 
 Ensure mock/local threads (non-persisted) also support reply state locally for dev parity.
 
@@ -208,17 +266,17 @@ Ensure mock/local threads (non-persisted) also support reply state locally for d
 
 Create `smoke-check.md` and verify:
 
-- [ ] Plus trigger appears on hover for text, job share, and member share messages (DM + room, desktop)
-- [ ] Long-press on message bubble opens popover on mobile / touch devices
-- [ ] Long-press does not fire while scrolling; native text-selection menu suppressed
-- [ ] Popover shows emoji row + Reply/Copy sheet below, left-aligned
-- [ ] Copy copies correct text for text-only, share-only, and text+share messages
-- [ ] Reply banner appears in composer with correct name + preview
-- [ ] Sent reply shows quoted block; persists after refresh
-- [ ] Reply to share-only message works
+- [x] Plus trigger appears on hover for text, job share, and member share messages (DM + room, desktop)
+- [x] Long-press on message bubble opens popover on mobile / touch devices
+- [x] Long-press does not fire while scrolling; native text-selection menu suppressed
+- [x] Popover shows emoji row + Reply/Copy sheet below, left-aligned
+- [x] Copy copies correct text for text-only, share-only, and text+share messages
+- [x] Reply banner appears in composer with correct name + preview
+- [x] Sent reply shows quoted block; persists after refresh
+- [x] Reply to share-only message works
 - [ ] Deleted original message shows "Message unavailable" in quote
-- [ ] Emoji reactions still work from same popover
-- [ ] Popover closes after Reply, Copy, or emoji select
+- [x] Emoji reactions still work from same popover
+- [x] Popover closes after Reply, Copy, or emoji select
 
 ---
 
@@ -227,10 +285,10 @@ Create `smoke-check.md` and verify:
 | Area          | Files                                                                                                                                                                                                                                                                                                                                           |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | DB            | New migration; update RPCs in latest thread migrations                                                                                                                                                                                                                                                                                          |
-| Types/helpers | [`lib/messages-data.ts`](lib/messages-data.ts), new [`lib/messages/reply.ts`](lib/messages/reply.ts)                                                                                                                                                                                                                                            |
-| Server        | [`lib/messages/actions.ts`](lib/messages/actions.ts), [`lib/rooms/actions.ts`](lib/rooms/actions.ts)                                                                                                                                                                                                                                            |
-| UI            | [`message-reaction-picker.tsx`](components/messages/message-reaction-picker.tsx), new `message-action-sheet.tsx`, `message-reply-composer.tsx`, `message-reply-quote.tsx`, [`message-bubble-with-reactions.tsx`](components/messages/message-bubble-with-reactions.tsx), new [`lib/messages/use-long-press.ts`](lib/messages/use-long-press.ts) |
-| Threads       | [`message-thread.tsx`](components/messages/message-thread.tsx), [`room-thread.tsx`](components/rooms/room-thread.tsx)                                                                                                                                                                                                                           |
+| Types/helpers | `[lib/messages-data.ts](lib/messages-data.ts)`, new `[lib/messages/reply.ts](lib/messages/reply.ts)`                                                                                                                                                                                                                                            |
+| Server        | `[lib/messages/actions.ts](lib/messages/actions.ts)`, `[lib/rooms/actions.ts](lib/rooms/actions.ts)`                                                                                                                                                                                                                                            |
+| UI            | `[message-reaction-picker.tsx](components/messages/message-reaction-picker.tsx)`, new `message-action-sheet.tsx`, `message-reply-composer.tsx`, `message-reply-quote.tsx`, `[message-bubble-with-reactions.tsx](components/messages/message-bubble-with-reactions.tsx)`, new `[lib/messages/use-long-press.ts](lib/messages/use-long-press.ts)` |
+| Threads       | `[message-thread.tsx](components/messages/message-thread.tsx)`, `[room-thread.tsx](components/rooms/room-thread.tsx)`                                                                                                                                                                                                                           |
 
 ---
 

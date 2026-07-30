@@ -938,3 +938,53 @@ export async function setMessageReaction(
     return actionError(error)
   }
 }
+
+export type DeleteMessageResult = { ok: true } | ActionError
+
+export async function deleteMessage(
+  messageId: string,
+): Promise<DeleteMessageResult> {
+  try {
+    if (!isUuid(messageId)) {
+      return { ok: false, error: "Invalid message id." }
+    }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: messageRow, error: messageError } = await supabase
+      .from("dm_messages")
+      .select("id, conversation_id, sender_id")
+      .eq("id", messageId)
+      .maybeSingle()
+
+    if (messageError) return { ok: false, error: messageError.message }
+    if (!messageRow) return { ok: false, error: "Message not found." }
+
+    if (messageRow.sender_id !== userId) {
+      return { ok: false, error: "You can only unsend your own messages." }
+    }
+
+    const { data: participant } = await supabase
+      .from("dm_participants")
+      .select("profile_id")
+      .eq("conversation_id", messageRow.conversation_id)
+      .eq("profile_id", userId)
+      .maybeSingle()
+
+    if (!participant) {
+      return { ok: false, error: "Not a participant in this conversation." }
+    }
+
+    const { error: deleteError } = await supabase
+      .from("dm_messages")
+      .delete()
+      .eq("id", messageId)
+
+    if (deleteError) return { ok: false, error: deleteError.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}

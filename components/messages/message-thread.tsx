@@ -11,6 +11,7 @@ import {
 import {
   getOrCreateConversation,
   getMemberSharePayload,
+  deleteMessage as deleteMessageAction,
   sendMessage as sendMessageAction,
   setMessageReaction,
 } from "@/lib/messages/actions"
@@ -57,6 +58,14 @@ import {
   MessageMemberShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
 import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
+import { MessageDeleteDialog } from "@/components/messages/message-delete-dialog"
+import {
+  applyLocalMessageDelete,
+  applyMessageDelete,
+  canDeleteOwnMessage,
+  isLatestMessage,
+  previewAfterDelete,
+} from "@/lib/messages/delete"
 import {
   buildPendingReplyPayload,
   buildReplySnapshot,
@@ -85,7 +94,9 @@ import { useMessages } from "@/components/messages/messages-provider"
 import { MessageThreadSkeleton } from "@/components/messages/message-thread-skeleton"
 import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
 import { TypingMessageHandoffSlot } from "@/components/messages/typing-message-handoff-slot"
+import { mutate as mutateSwr } from "swr"
 import { createClient } from "@/lib/supabase/client"
+import { inboxKey } from "@/lib/messages/swr-keys"
 
 function initials(name: string) {
   return name
@@ -187,6 +198,8 @@ export function MessageThread({
     useState<MemberSharePayload | null>(null)
   const [pendingReply, setPendingReply] =
     useState<ThreadMessage | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ThreadMessage | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
   const [loadingMemberShare, setLoadingMemberShare] = useState(false)
@@ -494,6 +507,87 @@ export function MessageThread({
     )
   }
 
+  function handleDeleteRequest(message: ThreadMessage) {
+    setDeleteTarget(message)
+  }
+
+  function updateInboxPreviewAfterDelete(
+    conversationId: string,
+    threadMessages: ThreadMessage[],
+    deletedMessageId: string,
+  ) {
+    if (!isLatestMessage(threadMessages, deletedMessageId)) return
+
+    const previewInfo = previewAfterDelete(threadMessages, deletedMessageId)
+    if (!previewInfo) return
+
+    if (!previewInfo.preview.trim()) {
+      void mutateSwr(inboxKey, undefined, { revalidate: true })
+      return
+    }
+
+    bumpConversation(conversationId, previewInfo.preview, {
+      from: previewInfo.from,
+    })
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget || deletePending) return
+
+    const target = deleteTarget
+    setDeletePending(true)
+
+    if (pendingReply?.id === target.id) {
+      setPendingReply(null)
+    }
+
+    if (
+      isPersisted &&
+      persistedConversationId &&
+      isUuid(target.id) &&
+      !target.id.startsWith("optimistic-")
+    ) {
+      const wasLatest = isLatestMessage(messages, target.id)
+      let previousCache: ThreadCache | undefined
+
+      void mutate(
+        (current) => {
+          previousCache = current
+          return current ? applyMessageDelete(current, target.id) : current
+        },
+        { revalidate: false },
+      )
+
+      const result = await deleteMessageAction(target.id)
+
+      if (!result.ok) {
+        void mutate(previousCache, { revalidate: false })
+        toast.error("Could not unsend message")
+        setDeletePending(false)
+        return
+      }
+
+      if (wasLatest) {
+        updateInboxPreviewAfterDelete(
+          persistedConversationId,
+          messages,
+          target.id,
+        )
+      }
+
+      toast.success("Message unsent")
+      setDeleteTarget(null)
+      setDeletePending(false)
+      return
+    }
+
+    setLocalMessages((prev) => applyLocalMessageDelete(prev, target.id))
+    updateInboxPreviewAfterDelete(conversation.id, localMessages, target.id)
+    toast.success("Message unsent")
+    setDeleteTarget(null)
+    setDeletePending(false)
+  }
+
   async function sendMessage() {
     const text = draft.trim()
     const jobId = pendingJobShare?.id
@@ -690,6 +784,16 @@ export function MessageThread({
         onOpenChange={setProfileOpen}
       />
 
+      <MessageDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deletePending) setDeleteTarget(null)
+        }}
+        variant="unsend"
+        pending={deletePending}
+        onConfirm={() => void handleConfirmDelete()}
+      />
+
       <MessageAutoScrollProvider>
         <ScrollToEndAfterSend token={sentScrollToken} />
         <MessageScroller className="flex-1">
@@ -728,6 +832,12 @@ export function MessageThread({
                     const messageActions = {
                       onReply: () => handleReplyToMessage(message),
                       onCopy: () => handleCopyMessage(message),
+                      ...(canDeleteOwnMessage(message, isPersisted)
+                        ? {
+                            onDelete: () => handleDeleteRequest(message),
+                            deleteLabel: "Unsend" as const,
+                          }
+                        : {}),
                       replyTo: message.replyTo,
                       repliedLabel,
                     }

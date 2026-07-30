@@ -4,9 +4,14 @@ import { useEffect } from "react"
 import { mutate as mutateSwr } from "swr"
 
 import { useMessages } from "@/components/messages/messages-provider"
+import {
+  applyMessageDelete,
+  isLatestMessage,
+  previewAfterDelete,
+} from "@/lib/messages/delete"
 import { formatMessageTime } from "@/lib/messages/format"
 import { mapRealtimeReply } from "@/lib/messages/reply"
-import { threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
+import { inboxKey, threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/client"
@@ -105,6 +110,51 @@ export function useInboxRealtime() {
                 row.job_id || row.shared_profile_id || row.member_share_snapshot,
               ),
             },
+          )
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "dm_messages",
+        },
+        (payload) => {
+          const row = payload.old as {
+            id: string
+            conversation_id: string
+            sender_id: string
+          }
+
+          void mutateSwr(
+            threadKey(row.conversation_id),
+            (current: ThreadCache | undefined) => {
+              if (!current) return current
+              if (!current.messages.some((message) => message.id === row.id)) {
+                return current
+              }
+
+              const wasLatest = isLatestMessage(current.messages, row.id)
+              const previewInfo = wasLatest
+                ? previewAfterDelete(current.messages, row.id)
+                : null
+              const next = applyMessageDelete(current, row.id)
+
+              if (wasLatest && previewInfo) {
+                if (!previewInfo.preview.trim()) {
+                  void mutateSwr(inboxKey, undefined, { revalidate: true })
+                } else {
+                  bumpConversation(row.conversation_id, previewInfo.preview, {
+                    from: previewInfo.from,
+                    unread: false,
+                  })
+                }
+              }
+
+              return next
+            },
+            { revalidate: false },
           )
         },
       )

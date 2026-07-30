@@ -46,6 +46,8 @@ export function MessageActionsPopover({
   onSelect,
   onReply,
   onCopy,
+  onDelete,
+  deleteLabel = "Unsend",
   align = "end",
   anchorMode = "trigger",
   triggerRef,
@@ -57,6 +59,8 @@ export function MessageActionsPopover({
   onSelect: (emoji: string) => void
   onReply?: () => void
   onCopy?: () => void
+  onDelete?: () => void
+  deleteLabel?: "Unsend" | "Delete"
   align?: "start" | "end"
   anchorMode?: MessageActionsAnchorMode
   triggerRef?: React.RefObject<Element | null>
@@ -89,7 +93,12 @@ export function MessageActionsPopover({
     closePopover()
   }
 
-  const hasActions = Boolean(onReply || onCopy)
+  function handleDelete() {
+    onDelete?.()
+    closePopover()
+  }
+
+  const hasActions = Boolean(onReply || onCopy || onDelete)
 
   const resolveAnchor = useCallback(() => {
     return (
@@ -172,6 +181,8 @@ export function MessageActionsPopover({
                   <MessageActionSheet
                     onReply={onReply ? handleReply : undefined}
                     onCopy={onCopy ? handleCopy : undefined}
+                    onDelete={onDelete ? handleDelete : undefined}
+                    deleteLabel={deleteLabel}
                   />
                 </div>
               </>

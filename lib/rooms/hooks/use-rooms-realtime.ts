@@ -4,6 +4,10 @@ import { useEffect } from "react"
 import { mutate as mutateSwr } from "swr"
 
 import { formatMessageTime } from "@/lib/messages/format"
+import {
+  applyMessageDelete,
+  isLatestMessage,
+} from "@/lib/messages/delete"
 import { mapRealtimeReply } from "@/lib/messages/reply"
 import { roomThreadKey, roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
@@ -102,6 +106,41 @@ export function useRoomsRealtime({
           if (!isMine && isActive) {
             // The RoomThread component handles mark-read on view; no extra action needed here
           }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "room_messages",
+        },
+        (payload) => {
+          const row = payload.old as {
+            id: string
+            room_id: string
+            sender_id: string
+          }
+
+          void mutateSwr(
+            roomThreadKey(row.room_id),
+            (current: RoomThreadCache | undefined) => {
+              if (!current) return current
+              if (!current.messages.some((message) => message.id === row.id)) {
+                return current
+              }
+
+              const wasLatest = isLatestMessage(current.messages, row.id)
+              const next = applyMessageDelete(current, row.id)
+
+              if (wasLatest) {
+                void mutateSwr(roomsListKey)
+              }
+
+              return next
+            },
+            { revalidate: false },
+          )
         },
       )
       .subscribe()

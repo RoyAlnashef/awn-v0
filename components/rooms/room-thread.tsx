@@ -18,6 +18,7 @@ import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
 import { useRoomThread } from "@/lib/rooms/hooks/use-room-thread"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
 import {
+  deleteRoomMessage,
   markRoomRead,
   sendRoomMessage,
   setRoomMessageReaction,
@@ -38,6 +39,13 @@ import {
   MessageJobShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
 import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
+import { MessageDeleteDialog } from "@/components/messages/message-delete-dialog"
+import {
+  applyLocalMessageDelete,
+  applyMessageDelete,
+  canDeleteOwnMessage,
+  isLatestMessage,
+} from "@/lib/messages/delete"
 import {
   buildPendingReplyPayload,
   buildReplySnapshot,
@@ -135,6 +143,8 @@ export function RoomThread({
     useState<JobSharePayload | null>(null)
   const [pendingReply, setPendingReply] =
     useState<ThreadMessage | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ThreadMessage | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const [loadingJobShare, setLoadingJobShare] = useState(false)
   const [sending, setSending] = useState(false)
@@ -276,6 +286,61 @@ export function RoomThread({
       () => toast.success("Copied"),
       () => toast.error("Could not copy text"),
     )
+  }
+
+  function handleDeleteRequest(message: ThreadMessage) {
+    setDeleteTarget(message)
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget || deletePending) return
+
+    const target = deleteTarget
+    setDeletePending(true)
+
+    if (pendingReply?.id === target.id) {
+      setPendingReply(null)
+    }
+
+    if (
+      usesServer &&
+      isUuid(target.id) &&
+      !target.id.startsWith("optimistic-")
+    ) {
+      const wasLatest = isLatestMessage(messages, target.id)
+      let previousCache: RoomThreadCache | undefined
+
+      void mutateThread(
+        (current) => {
+          previousCache = current
+          return current ? applyMessageDelete(current, target.id) : current
+        },
+        { revalidate: false },
+      )
+
+      const result = await deleteRoomMessage(target.id)
+
+      if (!result.ok) {
+        void mutateThread(previousCache, { revalidate: false })
+        toast.error("Could not delete message")
+        setDeletePending(false)
+        return
+      }
+
+      if (wasLatest) {
+        void mutateSwr(roomsListKey)
+      }
+
+      toast.success("Message deleted")
+      setDeleteTarget(null)
+      setDeletePending(false)
+      return
+    }
+
+    setLocalMessages((prev) => applyLocalMessageDelete(prev, target.id))
+    toast.success("Message deleted")
+    setDeleteTarget(null)
+    setDeletePending(false)
   }
 
   async function sendMessage() {
@@ -559,6 +624,12 @@ export function RoomThread({
                 const messageActions = {
                   onReply: () => handleReplyToMessage(message),
                   onCopy: () => handleCopyMessage(message),
+                  ...(canDeleteOwnMessage(message, usesServer)
+                    ? {
+                        onDelete: () => handleDeleteRequest(message),
+                        deleteLabel: "Delete" as const,
+                      }
+                    : {}),
                   replyTo: message.replyTo,
                   repliedLabel,
                 }
@@ -753,6 +824,16 @@ export function RoomThread({
           onOpenChange={handleProfileOpenChange}
         />
       ) : null}
+
+      <MessageDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deletePending) setDeleteTarget(null)
+        }}
+        variant="delete"
+        pending={deletePending}
+        onConfirm={() => void handleConfirmDelete()}
+      />
     </div>
   )
 }

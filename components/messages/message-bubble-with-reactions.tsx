@@ -49,6 +49,8 @@ type MessageActionsShellProps = {
   onReact: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
+  onDelete?: () => void
+  deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
   repliedLabel?: string
   className?: string
@@ -62,6 +64,8 @@ function MessageActionsShell({
   onReact,
   onReply,
   onCopy,
+  onDelete,
+  deleteLabel,
   replyTo,
   repliedLabel,
   className,
@@ -97,6 +101,8 @@ function MessageActionsShell({
       onSelect={handleSelect}
       onReply={onReply}
       onCopy={onCopy}
+      onDelete={onDelete}
+      deleteLabel={deleteLabel}
     >
       <div
         ref={bubbleRef}
@@ -146,6 +152,8 @@ export function MessageBubbleWithReactions({
   onReact,
   onReply,
   onCopy,
+  onDelete,
+  deleteLabel,
   replyTo,
   repliedLabel,
   className,
@@ -157,6 +165,8 @@ export function MessageBubbleWithReactions({
   onReact: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
+  onDelete?: () => void
+  deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
   repliedLabel?: string
   className?: string
@@ -168,6 +178,8 @@ export function MessageBubbleWithReactions({
       onReact={onReact}
       onReply={onReply}
       onCopy={onCopy}
+      onDelete={onDelete}
+      deleteLabel={deleteLabel}
       replyTo={replyTo}
       repliedLabel={repliedLabel}
       className={cn("max-w-[80%]", className)}
@@ -193,6 +205,8 @@ export function MessageJobShareWithReactions({
   onReact,
   onReply,
   onCopy,
+  onDelete,
+  deleteLabel,
   replyTo,
   repliedLabel,
   className,
@@ -205,6 +219,8 @@ export function MessageJobShareWithReactions({
   onReact: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
+  onDelete?: () => void
+  deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
   repliedLabel?: string
   className?: string
@@ -218,6 +234,8 @@ export function MessageJobShareWithReactions({
       onReact={onReact}
       onReply={onReply}
       onCopy={onCopy}
+      onDelete={onDelete}
+      deleteLabel={deleteLabel}
       replyTo={replyTo}
       repliedLabel={repliedLabel}
       className={cn("max-w-[min(20rem,80%)]", className)}
@@ -255,6 +273,8 @@ export function MessageMemberShareWithReactions({
   onReact,
   onReply,
   onCopy,
+  onDelete,
+  deleteLabel,
   replyTo,
   repliedLabel,
   className,
@@ -267,6 +287,8 @@ export function MessageMemberShareWithReactions({
   onReact: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
+  onDelete?: () => void
+  deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
   repliedLabel?: string
   className?: string
@@ -280,6 +302,8 @@ export function MessageMemberShareWithReactions({
       onReact={onReact}
       onReply={onReply}
       onCopy={onCopy}
+      onDelete={onDelete}
+      deleteLabel={deleteLabel}
       replyTo={replyTo}
       repliedLabel={repliedLabel}
       className={cn("max-w-[min(20rem,80%)]", className)}
