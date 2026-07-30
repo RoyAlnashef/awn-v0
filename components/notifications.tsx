@@ -101,7 +101,7 @@ export function Notifications() {
                       }
                       className={cn(
                         "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                        !n.read && "bg-primary/[0.06]",
+                        !n.read && "bg-primary/6",
                       )}
                     >
                       {!n.read ? (
