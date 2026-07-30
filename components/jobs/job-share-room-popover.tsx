@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 
 import { useRooms } from "@/components/rooms/rooms-provider"
-import { jobToSharePayload } from "@/lib/messages/job-share"
 import type { Job } from "@/lib/jobs-data"
 import { Input } from "@/components/ui/input"
 import {
@@ -42,6 +41,8 @@ export function JobShareRoomPopover({
     )
   }, [joinedRooms, q])
 
+  const showSearch = joinedRooms.length > 5
+
   function handleSelectRoom(roomId: string) {
     setOpen(false)
     setQuery("")
@@ -62,33 +63,34 @@ export function JobShareRoomPopover({
         side="top"
         className="flex w-80 flex-col gap-0 overflow-hidden p-0"
       >
-        <div className="shrink-0 border-b p-3">
-          <p className="mb-2 text-sm font-medium">Share to community</p>
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search communities…"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="pl-9"
-              autoFocus
-            />
+        {showSearch ? (
+          <div className="shrink-0 border-b p-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search rooms…"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="max-h-72 min-h-0 overflow-y-auto overscroll-y-contain">
           {filteredRooms.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-muted-foreground">
               {q
-                ? "No communities match your search."
-                : "Join a community to share this job."}
+                ? "No rooms match your search."
+                : "Join a room to share this job."}
             </p>
           ) : (
             <div className="py-1">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Communities
+                  Rooms
                 </span>
                 <span className="text-xs text-muted-foreground/80">
                   {filteredRooms.length}
@@ -122,12 +124,6 @@ export function JobShareRoomPopover({
               </ul>
             </div>
           )}
-        </div>
-
-        <div className="shrink-0 border-t px-3 py-2">
-          <p className="truncate text-xs text-muted-foreground">
-            Sharing {jobToSharePayload(job).role}
-          </p>
         </div>
       </PopoverContent>
     </Popover>

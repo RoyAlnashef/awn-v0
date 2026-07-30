@@ -144,7 +144,7 @@ export function JobCard({ job }: { job: Job }) {
                   <Button
                     size="icon"
                     variant="outline"
-                    aria-label="Share job to a community"
+                    aria-label="Share job to a room"
                   >
                     <Hash className="size-4" />
                   </Button>

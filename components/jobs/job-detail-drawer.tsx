@@ -254,7 +254,7 @@ function JobDetailContent({
               variant="ghost"
               size="icon-sm"
               className="shrink-0"
-              aria-label="Share job to a community"
+              aria-label="Share job to a room"
             >
               <Hash />
             </Button>
