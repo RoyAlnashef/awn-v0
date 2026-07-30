@@ -27,12 +27,17 @@ import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-} from "@/components/ui/sheet"
-import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
+  FLYOUT_DRAWER_CONTENT_CLASS,
+  FlyoutDrawerClose,
+} from "@/components/messages/flyout-drawer"
+import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
+import { personToSharePayload } from "@/lib/messages/member-share"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 /** Formats an ISO date-only string like "2026-08-01" → "Aug 1". */
@@ -68,6 +73,7 @@ export function PersonProfileDrawer({
   const availability = availabilityConfig[person.availability]
   const isOnline = online ?? isPersonOnline(person)
   const [connected, setConnected] = useState(person.connected)
+  const [shareOpen, setShareOpen] = useState(false)
   // Focus the hero on open so the panel starts scrolled to the top rather than
   // jumping to the first focusable control deeper in the content.
   const heroRef = useRef<HTMLDivElement>(null)
@@ -78,16 +84,16 @@ export function PersonProfileDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
+    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+      <DrawerContent
         initialFocus={heroRef}
-        className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
+        className={FLYOUT_DRAWER_CONTENT_CLASS}
       >
-        <SheetTitle className="sr-only">{person.name} profile</SheetTitle>
-        <SheetDescription className="sr-only">
+        <FlyoutDrawerClose />
+        <DrawerTitle className="sr-only">{person.name} profile</DrawerTitle>
+        <DrawerDescription className="sr-only">
           Extended profile for {person.name}, {person.role}.
-        </SheetDescription>
+        </DrawerDescription>
 
         {/* Hero */}
         <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
@@ -287,12 +293,15 @@ export function PersonProfileDrawer({
             >
               <ExternalLink />
             </Button>
-            <PersonShareToMessagesButton person={person}>
-              <Button variant="ghost" size="sm" className="shrink-0">
-                <Share />
-                Share
-              </Button>
-            </PersonShareToMessagesButton>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setShareOpen(true)}
+            >
+              <Share />
+              Share
+            </Button>
           </div>
           <Button
             variant="ghost"
@@ -303,7 +312,14 @@ export function PersonProfileDrawer({
             Report member
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <ShareToMessagesDrawer
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          shareMember={person.id}
+          shareLabel={personToSharePayload(person).name}
+        />
+      </DrawerContent>
+    </Drawer>
   )
 }

@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 
+import {
+  FLYOUT_DRAWER_CONTENT_CLASS,
+  FlyoutDrawerClose,
+} from "@/components/messages/flyout-drawer"
 import { searchMessageableUsers } from "@/lib/messages/actions"
 import { type MessageableMember } from "@/lib/messages-data"
 import { initials } from "@/lib/people-data"
@@ -15,12 +19,12 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { NewMessageDrawerSkeleton } from "@/components/messages/new-message-drawer-skeleton"
 
 function memberSubtitle(member: MessageableMember) {
@@ -85,16 +89,16 @@ export function NewMessageDrawerPanel({
 
   return (
     <>
-      <SheetHeader className="shrink-0 gap-3 border-b p-4 pr-14">
+      <DrawerHeader className="shrink-0 gap-3 border-b p-4 pr-14">
         <div className="flex flex-col gap-1">
-          <SheetTitle>
+          <DrawerTitle>
             {shareContext ? "Share with…" : "New message"}
-          </SheetTitle>
-          <SheetDescription>
+          </DrawerTitle>
+          <DrawerDescription>
             {shareContext
               ? `Choose who to send ${shareContext.label} to.`
               : "Search for someone on AWN to start a conversation."}
-          </SheetDescription>
+          </DrawerDescription>
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -107,7 +111,7 @@ export function NewMessageDrawerPanel({
             autoFocus
           />
         </div>
-      </SheetHeader>
+      </DrawerHeader>
 
       <ScrollArea className="min-h-0 flex-1">
         {loading ? (
@@ -177,19 +181,17 @@ export function NewMessageDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
       {open ? (
-        <SheetContent
-          side="right"
-          className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
-        >
+        <DrawerContent className={FLYOUT_DRAWER_CONTENT_CLASS}>
+          <FlyoutDrawerClose />
           <NewMessageDrawerPanel
             open={open}
             onSelectMember={handleSelect}
             shareContext={shareContext}
           />
-        </SheetContent>
+        </DrawerContent>
       ) : null}
-    </Sheet>
+    </Drawer>
   )
 }

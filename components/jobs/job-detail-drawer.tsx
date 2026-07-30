@@ -23,7 +23,12 @@ import {
   JobActionTooltips,
 } from "@/components/jobs/job-action-tooltip"
 import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
-import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
+import {
+  FLYOUT_DRAWER_CONTENT_CLASS,
+  FlyoutDrawerClose,
+} from "@/components/messages/flyout-drawer"
+import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
+import { jobToSharePayload } from "@/lib/messages/job-share"
 import {
   formatDateRange,
   parseDateOnly,
@@ -37,11 +42,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { Skeleton } from "@/components/ui/skeleton"
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -104,6 +109,7 @@ function JobDetailContent({
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
   const [applyOpen, setApplyOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
@@ -131,10 +137,10 @@ function JobDetailContent({
   return (
     <JobActionTooltips>
       <>
-        <SheetTitle className="sr-only">{job.role} job details</SheetTitle>
-      <SheetDescription className="sr-only">
+        <DrawerTitle className="sr-only">{job.role} job details</DrawerTitle>
+      <DrawerDescription className="sr-only">
         {job.production} · {job.location}
-      </SheetDescription>
+      </DrawerDescription>
 
       {/* Header — mirrors job card layout */}
       <div
@@ -254,15 +260,14 @@ function JobDetailContent({
               </Button>
             </JobActionTooltip>
             <JobActionTooltip label="Share as a message" wrap>
-              <JobShareToMessagesButton job={job}>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label="Share as a message"
-                >
-                  <Share className="size-4" />
-                </Button>
-              </JobShareToMessagesButton>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Share as a message"
+                onClick={() => setShareOpen(true)}
+              >
+                <Share className="size-4" />
+              </Button>
             </JobActionTooltip>
             <JobActionTooltip label="Share to a room" wrap>
               <JobShareRoomPopover job={job}>
@@ -305,6 +310,13 @@ function JobDetailContent({
           void mutate(jobDetailKey(job.id))
         }}
       />
+
+      <ShareToMessagesDrawer
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        shareJob={job.id}
+        shareLabel={jobToSharePayload(job).role}
+      />
       </>
     </JobActionTooltips>
   )
@@ -324,15 +336,15 @@ export function JobDetailDrawer({
   const { data, error, isLoading } = useSWR(swrKey, () => fetchJob(jobId!))
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
+    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+      <DrawerContent
         initialFocus={heroRef}
-        className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
+        className={FLYOUT_DRAWER_CONTENT_CLASS}
       >
+        <FlyoutDrawerClose />
         {isLoading ? (
           <>
-            <SheetTitle className="sr-only">Loading job details</SheetTitle>
+            <DrawerTitle className="sr-only">Loading job details</DrawerTitle>
             <div ref={heroRef} tabIndex={-1} className="shrink-0 px-6 pt-5 outline-none">
               <div className="flex items-start justify-between gap-3 pr-8">
                 <div className="flex gap-1.5">
@@ -351,7 +363,7 @@ export function JobDetailDrawer({
           </>
         ) : error ? (
           <>
-            <SheetTitle className="sr-only">Job not found</SheetTitle>
+            <DrawerTitle className="sr-only">Job not found</DrawerTitle>
             <div ref={heroRef} tabIndex={-1} className="flex flex-col gap-4 p-6 outline-none">
               <p className="text-sm text-muted-foreground">
                 {error instanceof Error ? error.message : "Could not load job"}
@@ -370,7 +382,7 @@ export function JobDetailDrawer({
             heroRef={heroRef}
           />
         ) : null}
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   )
 }
