@@ -263,7 +263,11 @@ export function RoomThread({
 
   function handleReplyToMessage(message: ThreadMessage) {
     setPendingReply(message)
-    requestAnimationFrame(() => composerRef.current?.focus())
+    const composer = composerRef.current
+    if (composer) {
+      composer.focus()
+      composer.scrollIntoView({ block: "nearest" })
+    }
   }
 
   function handleCopyMessage(message: ThreadMessage) {

@@ -114,6 +114,7 @@ export function MessageActionsPopover({
         align={align === "end" ? "end" : "start"}
         side="top"
         sideOffset={8}
+        finalFocus={false}
         className={cn(
           reactionPopoverSurface,
           "gap-0 p-0",
