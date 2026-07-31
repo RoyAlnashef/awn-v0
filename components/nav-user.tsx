@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
-import { ChevronDown, LifeBuoy, LogOut } from "lucide-react"
+import { ChevronDown, LifeBuoy, LogOut, User } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
@@ -25,7 +25,10 @@ export type NavUserData = {
   online: boolean
 }
 
-const links = [{ label: "Support", href: "/intel", icon: LifeBuoy }]
+const links = [
+  { label: "My Account", href: "/account", icon: User },
+  { label: "Support", href: "/intel", icon: LifeBuoy },
+]
 
 export function NavUser({ user }: { user: NavUserData }) {
   const [open, setOpen] = useState(false)
