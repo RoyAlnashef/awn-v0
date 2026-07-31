@@ -17,14 +17,14 @@ export function AccountLayoutShell({ children }: { children: ReactNode }) {
         actions={<AccountPageActions />}
         fillViewport
       >
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-8 lg:grid-cols-12">
-          <div className="flex min-h-0 flex-col gap-4 overflow-auto lg:col-span-8">
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
+          <div className="flex min-h-0 flex-col gap-4 overflow-auto lg:col-span-7">
             <AccountNav />
             <div className="min-w-0 rounded-xl border border-border bg-background p-6">
               {children}
             </div>
           </div>
-          <aside className="hidden min-h-0 lg:col-span-4 lg:flex lg:flex-col lg:p-5 xl:p-6 bg-accent/20 rounded-4xl">
+          <aside className="hidden min-h-0 lg:col-span-5 lg:flex lg:flex-col lg:p-5 xl:px-12 xl:pb-12 xl:pt-5 bg-accent/20 rounded-4xl">
             <AccountProfilePreview />
           </aside>
         </div>

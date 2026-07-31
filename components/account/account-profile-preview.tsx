@@ -9,7 +9,7 @@ export function AccountProfilePreview() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className="mb-3 shrink-0 text-xs font-semibold tracking-widest text-center text-muted-foreground/40 uppercase">
+      <p className="mb-4 shrink-0 text-xs font-semibold tracking-widest text-center text-muted-foreground/40 uppercase">
         Preview Only
       </p>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-popover">
