@@ -24,7 +24,7 @@ export function AccountLayoutShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </div>
-          <aside className="hidden min-h-0 lg:col-span-4 lg:flex lg:flex-col lg:p-4 xl:p-6 rounded-4xl">
+          <aside className="hidden min-h-0 lg:col-span-4 lg:flex lg:flex-col lg:p-5 xl:p-6 bg-accent/20 rounded-4xl">
             <AccountProfilePreview />
           </aside>
         </div>
