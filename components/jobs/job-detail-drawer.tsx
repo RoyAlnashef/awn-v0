@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { mutate } from "swr"
 import { format } from "date-fns"
@@ -11,7 +10,6 @@ import {
   Flag,
   Group,
   MapPin,
-  MessageSquare,
   Share,
   Users,
 } from "lucide-react"
@@ -69,10 +67,6 @@ function initials(name: string) {
     .join("")
 }
 
-function firstName(name: string) {
-  return name.split(" ")[0] ?? name
-}
-
 function revalidateJobs() {
   void mutate((key) => typeof key === "string" && key.startsWith(jobsListKey))
 }
@@ -95,19 +89,15 @@ function JobDetailSkeleton() {
 function JobDetailContent({
   job,
   applicantCount,
-  posterId,
-  onClose,
   heroRef,
 }: {
   job: Job
   applicantCount: number
-  posterId: string
-  onClose: () => void
   heroRef: React.RefObject<HTMLDivElement | null>
 }) {
-  const router = useRouter()
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
+  const [followed, setFollowed] = useState(false)
   const [applyOpen, setApplyOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -127,11 +117,6 @@ function JobDetailContent({
     } finally {
       setSaving(false)
     }
-  }
-
-  function handleMessagePoster() {
-    onClose()
-    router.push(`/messages?person=${posterId}`)
   }
 
   return (
@@ -222,19 +207,15 @@ function JobDetailContent({
                   {job.postedBy.role}
                 </span>
               </div>
-              <JobActionTooltip
-                label={`Ask ${firstName(job.postedBy.name)} about job`}
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                aria-pressed={followed}
+                onClick={() => setFollowed((prev) => !prev)}
               >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  aria-label={`Ask ${firstName(job.postedBy.name)} about job`}
-                  onClick={handleMessagePoster}
-                >
-                  <MessageSquare className="size-4" />
-                </Button>
-              </JobActionTooltip>
+                {followed ? "Following" : "Follow"}
+              </Button>
             </div>
           </section>
         </div>
@@ -377,8 +358,6 @@ export function JobDetailDrawer({
           <JobDetailContent
             job={data.job}
             applicantCount={data.applicantCount}
-            posterId={data.posterId}
-            onClose={() => onOpenChange(false)}
             heroRef={heroRef}
           />
         ) : null}
