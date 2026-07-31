@@ -8,7 +8,7 @@ import { DrawerClose } from "@/components/ui/drawer"
 
 export const FLYOUT_DRAWER_CONTENT_CLASS = cn(
   "[--drawer-inset:--spacing(3)] gap-0 overflow-hidden rounded-2xl p-0",
-  "data-[swipe-axis=x]:w-full data-[swipe-axis=x]:sm:max-w-md",
+  "data-[swipe-axis=x]:w-[calc(100%-2*var(--drawer-inset))] data-[swipe-axis=x]:sm:max-w-md",
 )
 
 export function FlyoutDrawerClose() {
