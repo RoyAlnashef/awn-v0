@@ -1,30 +1,20 @@
 "use client"
 
+import {
+  availabilityStatuses,
+  venueTiers,
+  workAuthOptions,
+  type Availability,
+  type VenueTier,
+  type WorkAuth,
+} from "@/lib/people-data"
+import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-
-const MOCK = {
-  fullName: "Jordan Reyes",
-  title: "Tour Manager",
-  company: "Reyes Touring Co.",
-  homeBase: "Nashville, TN",
-  city: "Nashville",
-  bio: "Seasoned Tour Manager with 14+ years advancing global arena and stadium runs. Founder of Reyes Touring Co., handling routing, settlements, and visa logistics for touring artists and their crews.",
-  availability: "Available Now",
-  availableFrom: "2026-08-01",
-  availableTo: "2026-12-20",
-  yearsExperience: 14,
-  venueTiers: ["Stadium", "Arena"] as string[],
-  workAuth: ["USA", "Passport"] as string[],
-  skills: ["Advancing", "Settlement", "Visa Logistics"],
-}
-
-const ALL_VENUE_TIERS = ["Stadium", "Arena", "Festival", "Theater", "Club"]
-const ALL_WORK_AUTH = ["Passport", "USA", "Canada", "UK", "EU", "Australia", "Worldwide"]
 
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
@@ -48,7 +38,20 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   )
 }
 
+function toggleItem<T extends string>(items: T[], item: T): T[] {
+  return items.includes(item) ? items.filter((i) => i !== item) : [...items, item]
+}
+
 export function ProfileSection() {
+  const { draft, updateDraft } = useAccountProfile()
+
+  function handleHomeBaseChange(value: string) {
+    updateDraft({
+      homeBase: value,
+      city: value.split(",")[0]?.trim() ?? "",
+    })
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {/* Basic Info */}
@@ -59,27 +62,47 @@ export function ProfileSection() {
         />
         <div className="flex flex-col gap-4">
           <FieldRow label="Full name">
-            <Input defaultValue={MOCK.fullName} placeholder="Your full name" />
+            <Input
+              value={draft.name}
+              onChange={(e) => updateDraft({ name: e.target.value })}
+              placeholder="Your full name"
+            />
           </FieldRow>
           <FieldRow label="Title / Role">
-            <Input defaultValue={MOCK.title} placeholder="e.g. Tour Manager" />
+            <Input
+              value={draft.role}
+              onChange={(e) => updateDraft({ role: e.target.value })}
+              placeholder="e.g. Tour Manager"
+            />
           </FieldRow>
           <FieldRow label="Company">
-            <Input defaultValue={MOCK.company} placeholder="Your company or org" />
+            <Input
+              value={draft.company ?? ""}
+              onChange={(e) => updateDraft({ company: e.target.value })}
+              placeholder="Your company or org"
+            />
           </FieldRow>
           <FieldRow label="Home base">
-            <Input defaultValue={MOCK.homeBase} placeholder="City, State" />
+            <Input
+              value={draft.homeBase}
+              onChange={(e) => handleHomeBaseChange(e.target.value)}
+              placeholder="City, State"
+            />
           </FieldRow>
           <FieldRow label="Years of experience">
             <Input
               type="number"
-              defaultValue={MOCK.yearsExperience}
+              value={draft.yearsExperience}
+              onChange={(e) =>
+                updateDraft({ yearsExperience: Number(e.target.value) || 0 })
+              }
               className="max-w-28"
             />
           </FieldRow>
           <FieldRow label="Bio">
             <Textarea
-              defaultValue={MOCK.bio}
+              value={draft.bio ?? ""}
+              onChange={(e) => updateDraft({ bio: e.target.value })}
               rows={4}
               placeholder="Tell the network about yourself…"
               className="resize-none"
@@ -99,26 +122,37 @@ export function ProfileSection() {
         <div className="flex flex-col gap-4">
           <FieldRow label="Status">
             <div className="flex flex-wrap gap-1.5">
-              {(["Available Now", "Between Tours", "On Tour"] as const).map((s) => (
+              {availabilityStatuses.map((status) => (
                 <button
-                  key={s}
+                  key={status}
                   type="button"
+                  onClick={() => updateDraft({ availability: status as Availability })}
                   className={
-                    MOCK.availability === s
+                    draft.availability === status
                       ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
                       : "inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                   }
                 >
-                  {s}
+                  {status}
                 </button>
               ))}
             </div>
           </FieldRow>
           <FieldRow label="Available from">
-            <Input type="date" defaultValue={MOCK.availableFrom} className="max-w-44" />
+            <Input
+              type="date"
+              value={draft.availableFrom}
+              onChange={(e) => updateDraft({ availableFrom: e.target.value })}
+              className="max-w-44"
+            />
           </FieldRow>
           <FieldRow label="Available to">
-            <Input type="date" defaultValue={MOCK.availableTo} className="max-w-44" />
+            <Input
+              type="date"
+              value={draft.availableTo}
+              onChange={(e) => updateDraft({ availableTo: e.target.value })}
+              className="max-w-44"
+            />
           </FieldRow>
         </div>
       </section>
@@ -134,12 +168,17 @@ export function ProfileSection() {
         <div className="flex flex-col gap-4">
           <FieldRow label="Venue tiers">
             <div className="flex flex-wrap gap-1.5">
-              {ALL_VENUE_TIERS.map((tier) => {
-                const active = MOCK.venueTiers.includes(tier)
+              {venueTiers.map((tier) => {
+                const active = draft.venueTiers.includes(tier)
                 return (
                   <button
                     key={tier}
                     type="button"
+                    onClick={() =>
+                      updateDraft({
+                        venueTiers: toggleItem(draft.venueTiers, tier as VenueTier),
+                      })
+                    }
                     className={
                       active
                         ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
@@ -154,12 +193,17 @@ export function ProfileSection() {
           </FieldRow>
           <FieldRow label="Work auth">
             <div className="flex flex-wrap gap-1.5">
-              {ALL_WORK_AUTH.map((auth) => {
-                const active = MOCK.workAuth.includes(auth)
+              {workAuthOptions.map((auth) => {
+                const active = draft.workAuth.includes(auth)
                 return (
                   <button
                     key={auth}
                     type="button"
+                    onClick={() =>
+                      updateDraft({
+                        workAuth: toggleItem(draft.workAuth, auth as WorkAuth),
+                      })
+                    }
                     className={
                       active
                         ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
@@ -185,13 +229,18 @@ export function ProfileSection() {
         />
         <FieldRow label="Skills">
           <div className="flex flex-wrap gap-1.5">
-            {MOCK.skills.map((skill) => (
+            {draft.skills.map((skill) => (
               <Badge key={skill} variant="secondary" className="gap-1 font-normal">
                 {skill}
                 <button
                   type="button"
                   aria-label={`Remove ${skill}`}
                   className="ml-0.5 rounded-sm opacity-60 hover:opacity-100"
+                  onClick={() =>
+                    updateDraft({
+                      skills: draft.skills.filter((s) => s !== skill),
+                    })
+                  }
                 >
                   ×
                 </button>
@@ -200,6 +249,12 @@ export function ProfileSection() {
             <button
               type="button"
               className="inline-flex items-center rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+              onClick={() => {
+                const skill = window.prompt("Add a skill")
+                if (skill?.trim() && !draft.skills.includes(skill.trim())) {
+                  updateDraft({ skills: [...draft.skills, skill.trim()] })
+                }
+              }}
             >
               + Add skill
             </button>

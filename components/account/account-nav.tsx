@@ -11,7 +11,7 @@ import {
   Users,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const NAV_ITEMS = [
@@ -34,7 +34,7 @@ export function AccountNav() {
   return (
     <nav aria-label="Account navigation">
       {/* Mobile: select dropdown */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <NativeSelect
           value={activeItem?.href ?? ""}
           onChange={(e) => router.push(e.target.value)}
@@ -48,24 +48,22 @@ export function AccountNav() {
         </NativeSelect>
       </div>
 
-      {/* Desktop: vertical link list */}
-      <ul className="hidden flex-col gap-0.5 md:flex">
+      {/* Desktop: horizontal button nav */}
+      <ul className="hidden flex-wrap items-center gap-2 lg:flex">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/")
           return (
             <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-accent font-medium text-foreground"
-                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                )}
+              <Button
+                variant={active ? "secondary" : "outline"}
+                size="sm"
+                nativeButton={false}
+                render={<Link href={href} />}
+                aria-current={active ? "page" : undefined}
               >
-                <Icon className="size-4 shrink-0" />
+                <Icon />
                 {label}
-              </Link>
+              </Button>
             </li>
           )
         })}

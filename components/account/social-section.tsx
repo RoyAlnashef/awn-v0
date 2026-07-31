@@ -2,27 +2,26 @@
 
 import { AtSign, Briefcase, Camera, ExternalLink, Globe, Video } from "lucide-react"
 
+import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 
-interface SocialField {
+interface SocialFieldConfig {
   id: string
   label: string
   placeholder: string
   prefix?: string
   icon: React.ComponentType<{ className?: string }>
-  value: string
 }
 
-const SOCIAL_FIELDS: SocialField[] = [
+const SOCIAL_FIELDS: SocialFieldConfig[] = [
   {
     id: "website",
     label: "Website",
     placeholder: "yoursite.com",
     icon: Globe,
-    value: "reyestouring.com",
   },
   {
     id: "instagram",
@@ -30,7 +29,6 @@ const SOCIAL_FIELDS: SocialField[] = [
     placeholder: "username",
     prefix: "instagram.com/",
     icon: Camera,
-    value: "reyestouring",
   },
   {
     id: "twitter",
@@ -38,25 +36,38 @@ const SOCIAL_FIELDS: SocialField[] = [
     placeholder: "username",
     prefix: "x.com/",
     icon: AtSign,
-    value: "jordanreyes_tm",
   },
   {
     id: "linkedin",
     label: "LinkedIn",
     placeholder: "linkedin.com/in/…",
     icon: Briefcase,
-    value: "linkedin.com/in/jordanreyes",
   },
   {
     id: "youtube",
     label: "YouTube",
     placeholder: "youtube.com/@…",
     icon: Video,
-    value: "",
   },
 ]
 
-function SocialRow({ field }: { field: SocialField }) {
+const SOCIAL_DEFAULTS: Record<string, string> = {
+  website: "reyestouring.com",
+  instagram: "reyestouring",
+  twitter: "jordanreyes_tm",
+  linkedin: "linkedin.com/in/jordanreyes",
+  youtube: "",
+}
+
+function SocialRow({
+  field,
+  value,
+  onChange,
+}: {
+  field: SocialFieldConfig
+  value: string
+  onChange: (value: string) => void
+}) {
   const Icon = field.icon
 
   return (
@@ -77,7 +88,8 @@ function SocialRow({ field }: { field: SocialField }) {
           )}
           <Input
             id={field.id}
-            defaultValue={field.value}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
             className={field.prefix ? "pl-[calc(var(--prefix-width,0px)+12px)]" : ""}
             style={
@@ -87,9 +99,9 @@ function SocialRow({ field }: { field: SocialField }) {
             }
           />
         </div>
-        {field.value && (
+        {value && field.id === "website" ? (
           <a
-            href={field.id === "website" ? `https://${field.value}` : "#"}
+            href={`https://${value}`}
             target="_blank"
             rel="noreferrer"
             className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -97,13 +109,15 @@ function SocialRow({ field }: { field: SocialField }) {
           >
             <ExternalLink className="size-4" />
           </a>
-        )}
+        ) : null}
       </div>
     </div>
   )
 }
 
 export function SocialSection() {
+  const { draft, updateDraft } = useAccountProfile()
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-0.5">
@@ -115,7 +129,20 @@ export function SocialSection() {
 
       <div className="flex flex-col gap-4">
         {SOCIAL_FIELDS.map((field) => (
-          <SocialRow key={field.id} field={field} />
+          <SocialRow
+            key={field.id}
+            field={field}
+            value={
+              field.id === "website"
+                ? (draft.website ?? SOCIAL_DEFAULTS.website)
+                : SOCIAL_DEFAULTS[field.id]
+            }
+            onChange={(value) => {
+              if (field.id === "website") {
+                updateDraft({ website: value })
+              }
+            }}
+          />
         ))}
       </div>
 

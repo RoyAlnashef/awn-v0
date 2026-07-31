@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Contact, ExternalLink } from "lucide-react"
 
-import { people } from "@/lib/people-data"
+import { toProfileTourCredits } from "@/lib/account-profile"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -11,11 +11,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 
-const MOCK_ACCOUNT_PERSON = people[0]
-
 export function AccountPageActions() {
+  const { draft, tourCredits } = useAccountProfile()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -35,14 +35,19 @@ export function AccountPageActions() {
           <TooltipContent>Public profile page coming soon</TooltipContent>
         </Tooltip>
 
-        <Button variant="outline" onClick={() => setDrawerOpen(true)}>
+        <Button
+          variant="outline"
+          className="lg:hidden"
+          onClick={() => setDrawerOpen(true)}
+        >
           <Contact />
-          Contact Card
+          Profile Card
         </Button>
       </div>
 
       <PersonProfileDrawer
-        person={MOCK_ACCOUNT_PERSON}
+        person={draft}
+        tourCredits={toProfileTourCredits(tourCredits)}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />

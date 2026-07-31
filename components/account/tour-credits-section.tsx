@@ -2,58 +2,32 @@
 
 import { Plus, ThumbsUp } from "lucide-react"
 
+import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Button } from "@/components/ui/button"
 
-interface TourCredit {
-  id: string
-  title: string
-  artist: string
-  role: string
-  venueTier: string
-  years: string
-  vouches: number
-}
-
-const MOCK_CREDITS: TourCredit[] = [
-  {
-    id: "1",
-    title: "Midnight Echo — Arena Run",
-    artist: "Midnight Echo",
-    role: "Tour Manager",
-    venueTier: "Arena",
-    years: "2024–26",
-    vouches: 11,
-  },
-  {
-    id: "2",
-    title: "Cassette Kids — World Tour",
-    artist: "Cassette Kids",
-    role: "Tour Manager",
-    venueTier: "Stadium",
-    years: "2022–24",
-    vouches: 8,
-  },
-  {
-    id: "3",
-    title: "Riverbend — Amphitheater Run",
-    artist: "Riverbend",
-    role: "Tour Manager",
-    venueTier: "Arena",
-    years: "2020–22",
-    vouches: 6,
-  },
-  {
-    id: "4",
-    title: "Solar Drift — Festival Circuit",
-    artist: "Solar Drift",
-    role: "Production Coordinator",
-    venueTier: "Festival",
-    years: "2018–20",
-    vouches: 3,
-  },
-]
-
 export function TourCreditsSection() {
+  const { draft, tourCredits, setTourCredits } = useAccountProfile()
+
+  function handleAddCredit() {
+    const id = crypto.randomUUID()
+    setTourCredits((prev) => [
+      ...prev,
+      {
+        id,
+        title: "New Tour Credit",
+        artist: "",
+        role: draft.role || "Tour Manager",
+        venueTier: draft.venueTiers[0] ?? "Arena",
+        years: "2024–26",
+        vouches: 0,
+      },
+    ])
+  }
+
+  function handleRemoveCredit(id: string) {
+    setTourCredits((prev) => prev.filter((credit) => credit.id !== id))
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -63,14 +37,19 @@ export function TourCreditsSection() {
             Your touring history and production credits.
           </p>
         </div>
-        <Button size="sm" variant="outline" className="gap-1.5">
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          onClick={handleAddCredit}
+        >
           <Plus className="size-3.5" />
           Add credit
         </Button>
       </div>
 
       <ul className="flex flex-col gap-3">
-        {MOCK_CREDITS.map((credit) => (
+        {tourCredits.map((credit) => (
           <li
             key={credit.id}
             className="relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5"
@@ -95,8 +74,13 @@ export function TourCreditsSection() {
                     <ThumbsUp className="size-3" />
                     {credit.vouches} vouches
                   </Button>
-                  <Button variant="ghost" size="xs" className="text-muted-foreground">
-                    Edit
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="text-muted-foreground"
+                    onClick={() => handleRemoveCredit(credit.id)}
+                  >
+                    Remove
                   </Button>
                 </div>
               </div>
