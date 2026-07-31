@@ -32,7 +32,7 @@ import {
   FlyoutDrawerClose,
 } from "@/components/messages/flyout-drawer"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
-import { PersonShareRoomPopover } from "@/components/people/person-share-room-popover"
+import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import {
   Drawer,
@@ -76,6 +76,7 @@ export function PersonProfileDrawer({
   const isOnline = online ?? isPersonOnline(person)
   const [followed, setFollowed] = useState(person.followed)
   const [shareOpen, setShareOpen] = useState(false)
+  const [shareRoomOpen, setShareRoomOpen] = useState(false)
   // Focus the hero on open so the panel starts scrolled to the top rather than
   // jumping to the first focusable control deeper in the content.
   const heroRef = useRef<HTMLDivElement>(null)
@@ -303,15 +304,14 @@ export function PersonProfileDrawer({
             >
               <Share className="size-4" />
             </Button>
-            <PersonShareRoomPopover person={person}>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Share to a room"
-              >
-                <Group className="size-4" />
-              </Button>
-            </PersonShareRoomPopover>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Share to a room"
+              onClick={() => setShareRoomOpen(true)}
+            >
+              <Group className="size-4" />
+            </Button>
           </div>
           <Button
             variant="ghost"
@@ -326,6 +326,13 @@ export function PersonProfileDrawer({
         <ShareToMessagesDrawer
           open={shareOpen}
           onOpenChange={setShareOpen}
+          shareMember={person.id}
+          shareLabel={personToSharePayload(person).name}
+        />
+
+        <ShareToRoomsDrawer
+          open={shareRoomOpen}
+          onOpenChange={setShareRoomOpen}
           shareMember={person.id}
           shareLabel={personToSharePayload(person).name}
         />

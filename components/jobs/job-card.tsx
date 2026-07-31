@@ -6,7 +6,7 @@ import {
   JobActionTooltips,
 } from "@/components/jobs/job-action-tooltip"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
-import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
+import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
 import { Bookmark, CalendarClock, Group, MapPin, Share } from "lucide-react"
 import { useState } from "react"
@@ -152,7 +152,7 @@ export function JobCard({ job }: { job: Job }) {
                     </JobShareToMessagesButton>
                   </JobActionTooltip>
                   <JobActionTooltip label="Share to a room" wrap>
-                    <JobShareRoomPopover job={job}>
+                    <JobShareToRoomsButton job={job}>
                       <Button
                         size="icon"
                         variant="outline"
@@ -160,7 +160,7 @@ export function JobCard({ job }: { job: Job }) {
                       >
                         <Group className="size-4" />
                       </Button>
-                    </JobShareRoomPopover>
+                    </JobShareToRoomsButton>
                   </JobActionTooltip>
                 </JobActionTooltips>
                 <Button

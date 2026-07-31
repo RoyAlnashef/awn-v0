@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
-import { PersonShareRoomPopover } from "@/components/people/person-share-room-popover"
+import { PersonShareToRoomsButton } from "@/components/people/person-share-to-rooms-button"
 import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
 
 function AvailabilityDot({ availability }: { availability: Person["availability"] }) {
@@ -122,7 +122,7 @@ export function PersonCard({ person }: { person: Person }) {
               <Share className="size-4" />
             </Button>
           </PersonShareToMessagesButton>
-          <PersonShareRoomPopover person={person}>
+          <PersonShareToRoomsButton person={person}>
             <Button
               size="icon"
               variant="outline"
@@ -130,7 +130,7 @@ export function PersonCard({ person }: { person: Person }) {
             >
               <Group className="size-4" />
             </Button>
-          </PersonShareRoomPopover>
+          </PersonShareToRoomsButton>
           <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
             <MessageSquare className="size-4" />
           </Button>

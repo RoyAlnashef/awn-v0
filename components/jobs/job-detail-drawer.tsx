@@ -20,7 +20,7 @@ import {
   JobActionTooltip,
   JobActionTooltips,
 } from "@/components/jobs/job-action-tooltip"
-import { JobShareRoomPopover } from "@/components/jobs/job-share-room-popover"
+import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import {
   FLYOUT_DRAWER_CONTENT_CLASS,
   FlyoutDrawerClose,
@@ -100,6 +100,7 @@ function JobDetailContent({
   const [followed, setFollowed] = useState(false)
   const [applyOpen, setApplyOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
@@ -251,15 +252,14 @@ function JobDetailContent({
               </Button>
             </JobActionTooltip>
             <JobActionTooltip label="Share to a room" wrap>
-              <JobShareRoomPopover job={job}>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label="Share to a room"
-                >
-                  <Group className="size-4" />
-                </Button>
-              </JobShareRoomPopover>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Share to a room"
+                onClick={() => setShareRoomOpen(true)}
+              >
+                <Group className="size-4" />
+              </Button>
             </JobActionTooltip>
             <JobActionTooltip label="Report job">
               <Button
@@ -295,6 +295,13 @@ function JobDetailContent({
       <ShareToMessagesDrawer
         open={shareOpen}
         onOpenChange={setShareOpen}
+        shareJob={job.id}
+        shareLabel={jobToSharePayload(job).role}
+      />
+
+      <ShareToRoomsDrawer
+        open={shareRoomOpen}
+        onOpenChange={setShareRoomOpen}
         shareJob={job.id}
         shareLabel={jobToSharePayload(job).role}
       />
