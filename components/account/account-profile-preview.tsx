@@ -8,8 +8,8 @@ export function AccountProfilePreview() {
   const { draft, tourCredits } = useAccountProfile()
 
   return (
-    <div className="sticky top-6 flex h-[calc(100vh-8rem)] max-h-[calc(100vh-8rem)] flex-col">
-      <p className="mb-2 shrink-0 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <p className="mb-3 shrink-0 text-xs font-semibold tracking-widest text-muted-foreground/50 uppercase">
         Preview
       </p>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-popover">
