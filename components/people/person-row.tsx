@@ -13,7 +13,7 @@ import { PersonShareRoomPopover } from "@/components/people/person-share-room-po
 import { PersonShareToMessagesButton } from "@/components/people/person-share-to-messages-button"
 
 export function PersonRow({ person }: { person: Person }) {
-  const [connected, setConnected] = useState(person.connected)
+  const [followed, setFollowed] = useState(person.followed)
   const [open, setOpen] = useState(false)
   const config = availabilityConfig[person.availability]
 
@@ -70,11 +70,11 @@ export function PersonRow({ person }: { person: Person }) {
       <div className="relative z-10 flex shrink-0 items-center gap-2">
         <Button
           size="sm"
-          variant={connected ? "outline" : "default"}
-          aria-pressed={connected}
-          onClick={() => setConnected((prev) => !prev)}
+          variant={followed ? "outline" : "default"}
+          aria-pressed={followed}
+          onClick={() => setFollowed((prev) => !prev)}
         >
-          {connected ? "Connected" : "Connect"}
+          {followed ? "Following" : "Follow"}
         </Button>
         <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
           <MessageSquare className="size-4" />

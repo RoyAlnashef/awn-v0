@@ -38,7 +38,7 @@ function AvailabilityDot({ availability }: { availability: Person["availability"
 }
 
 export function PersonCard({ person }: { person: Person }) {
-  const [connected, setConnected] = useState(person.connected)
+  const [followed, setFollowed] = useState(person.followed)
   const [open, setOpen] = useState(false)
 
   return (
@@ -106,12 +106,12 @@ export function PersonCard({ person }: { person: Person }) {
         <div className="relative z-10 flex w-full min-w-0 items-center gap-2">
           <Button
             size="sm"
-            variant={connected ? "outline" : "default"}
+            variant={followed ? "outline" : "default"}
             className="min-w-0 flex-1 truncate"
-            aria-pressed={connected}
-            onClick={() => setConnected((prev) => !prev)}
+            aria-pressed={followed}
+            onClick={() => setFollowed((prev) => !prev)}
           >
-            {connected ? "Connected" : "Connect"}
+            {followed ? "Following" : "Follow"}
           </Button>
           <PersonShareToMessagesButton person={person}>
             <Button

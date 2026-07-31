@@ -724,7 +724,7 @@ export function getPersonForConversation(
     topTours: ["Live Events"],
     skills: ["Collaboration"],
     avatar: conversation.avatar,
-    connected: false,
+    followed: false,
   }
 }
 
@@ -762,6 +762,6 @@ export function getPersonForRoomMessage(
     topTours: ["Live Events"],
     skills: ["Collaboration"],
     avatar: message.authorAvatarUrl,
-    connected: false,
+    followed: false,
   }
 }

@@ -42,7 +42,7 @@ function memberShareToPerson(memberShare: MemberSharePayload): Person {
     topTours: [],
     skills: [],
     avatar: memberShare.avatar,
-    connected: false,
+    followed: false,
   }
 }
 

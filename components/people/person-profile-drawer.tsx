@@ -74,7 +74,7 @@ export function PersonProfileDrawer({
   const profile = getPersonProfile(person)
   const availability = availabilityConfig[person.availability]
   const isOnline = online ?? isPersonOnline(person)
-  const [connected, setConnected] = useState(person.connected)
+  const [followed, setFollowed] = useState(person.followed)
   const [shareOpen, setShareOpen] = useState(false)
   // Focus the hero on open so the panel starts scrolled to the top rather than
   // jumping to the first focusable control deeper in the content.
@@ -278,11 +278,11 @@ export function PersonProfileDrawer({
             <Button
               variant="outline"
               size="icon"
-              aria-label={connected ? "Connected" : "Connect"}
-              aria-pressed={connected}
-              onClick={() => setConnected((prev) => !prev)}
+              aria-label={followed ? "Following" : "Follow"}
+              aria-pressed={followed}
+              onClick={() => setFollowed((prev) => !prev)}
             >
-              {connected ? <BadgeCheck /> : <Plus />}
+              {followed ? <BadgeCheck /> : <Plus />}
             </Button>
             <Button className="min-w-0 flex-1 shrink" onClick={handleMessage}>
               <MessageSquare />

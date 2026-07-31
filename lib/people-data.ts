@@ -86,7 +86,7 @@ export interface Person {
   topTours: string[]
   skills: string[]
   avatar?: string
-  connected: boolean
+  followed: boolean
   /**
    * Optional extended-profile fields. When omitted, getPersonProfile() derives
    * sensible placeholder values so the profile drawer is always fully populated.
@@ -143,7 +143,7 @@ export const people: Person[] = [
     topTours: ["Midnight Echo — Arena Run", "Cassette Kids — World Tour"],
     skills: ["Advancing", "Settlement", "Visa Logistics"],
     avatar: "/images/avatar-jordan.png",
-    connected: true,
+    followed: true,
     verified: true,
     founding: true,
     company: "Reyes Touring Co.",
@@ -168,7 +168,7 @@ export const people: Person[] = [
     vouches: 33,
     topTours: ["Neon Tide — European Leg", "The Lofts — Festival Circuit"],
     skills: ["DiGiCo", "Waves", "System Tuning"],
-    connected: true,
+    followed: true,
   },
   {
     id: "a0000003-0000-4000-8000-000000000003",
@@ -187,7 +187,7 @@ export const people: Person[] = [
     vouches: 40,
     topTours: ["Ultraviolet — Stadium Tour", "Sable — Residency"],
     skills: ["grandMA3", "Previs", "Timecode"],
-    connected: false,
+    followed: false,
   },
   {
     id: "a0000004-0000-4000-8000-000000000004",
@@ -206,7 +206,7 @@ export const people: Person[] = [
     vouches: 19,
     topTours: ["Cassette Kids — World Tour", "Half Light — Amphitheater Run"],
     skills: ["disguise", "PPU", "Camera Cutting"],
-    connected: false,
+    followed: false,
   },
   {
     id: "a0000005-0000-4000-8000-000000000005",
@@ -225,7 +225,7 @@ export const people: Person[] = [
     vouches: 28,
     topTours: ["Neon Tide — European Leg", "Riverbend — Arena Run"],
     skills: ["IEM Wrangling", "Avid", "RF Coordination"],
-    connected: true,
+    followed: true,
   },
   {
     id: "a0000006-0000-4000-8000-000000000006",
@@ -244,7 +244,7 @@ export const people: Person[] = [
     vouches: 47,
     topTours: ["Ultraviolet — Stadium Tour", "Golden Hour — Festival Circuit"],
     skills: ["Budgeting", "Trucking", "Crew Hiring"],
-    connected: false,
+    followed: false,
     verified: true,
     founding: true,
     company: "Marín Live",
@@ -267,7 +267,7 @@ export const people: Person[] = [
     vouches: 15,
     topTours: ["The Lofts — Festival Circuit", "Sable — Club Tour"],
     skills: ["Guitar Setup", "Pedalboards", "Amp Repair"],
-    connected: false,
+    followed: false,
   },
   {
     id: "a0000008-0000-4000-8000-000000000008",
@@ -286,7 +286,7 @@ export const people: Person[] = [
     vouches: 25,
     topTours: ["Neon Tide — European Leg", "Ultraviolet — Stadium Tour"],
     skills: ["grandMA3", "Pixel Mapping", "Busking"],
-    connected: true,
+    followed: true,
   },
   {
     id: "a0000009-0000-4000-8000-000000000009",
@@ -305,7 +305,7 @@ export const people: Person[] = [
     vouches: 31,
     topTours: ["Golden Hour — Festival Circuit", "Half Light — Amphitheater Run"],
     skills: ["Signal Flow", "LED Processing", "Fiber"],
-    connected: false,
+    followed: false,
   },
   {
     id: "a000000a-0000-4000-8000-00000000000a",
@@ -324,7 +324,7 @@ export const people: Person[] = [
     vouches: 22,
     topTours: ["Sable — Residency", "Cassette Kids — World Tour"],
     skills: ["Show Calling", "Changeovers", "Union Relations"],
-    connected: true,
+    followed: true,
   },
   {
     id: "a000000b-0000-4000-8000-00000000000b",
@@ -343,7 +343,7 @@ export const people: Person[] = [
     vouches: 36,
     topTours: ["Riverbend — Arena Run", "Neon Tide — European Leg"],
     skills: ["L-Acoustics", "Smaart", "Line Array Design"],
-    connected: false,
+    followed: false,
   },
   {
     id: "a000000c-0000-4000-8000-00000000000c",
@@ -362,7 +362,7 @@ export const people: Person[] = [
     vouches: 12,
     topTours: ["Half Light — Amphitheater Run", "Golden Hour — Festival Circuit"],
     skills: ["Handheld", "Long Lens", "Jib"],
-    connected: false,
+    followed: false,
   },
 ]
 
