@@ -26,6 +26,7 @@ type JobRow = {
   details: string
   expires_at: string | null
   filled_at: string | null
+  view_count: number
   created_at: string
   updated_at: string
   poster: PosterJoin | PosterJoin[] | null
@@ -53,6 +54,7 @@ const JOB_SELECT = `
   details,
   expires_at,
   filled_at,
+  view_count,
   created_at,
   updated_at,
   poster:profiles!job_postings_poster_id_fkey (
@@ -71,7 +73,11 @@ function normalizePoster(
 
 function mapRow(
   row: JobRow,
-  options: { saved?: boolean; savedAt?: string } = {},
+  options: {
+    saved?: boolean
+    savedAt?: string
+    applicationCount?: number
+  } = {},
 ) {
   return mapJobPostingRow(
     {
@@ -80,7 +86,10 @@ function mapRow(
       engagement: row.engagement as EngagementType,
       poster: normalizePoster(row.poster),
     },
-    options,
+    {
+      ...options,
+      viewCount: row.view_count,
+    },
   )
 }
 
@@ -103,7 +112,32 @@ export async function GET(request: Request) {
 
     if (listError) return jsonError(listError.message, 500)
 
-    const jobs = ((rows ?? []) as JobRow[]).map((row) => mapRow(row))
+    const jobRows = (rows ?? []) as JobRow[]
+    const jobIds = jobRows.map((row) => row.id)
+
+    const applicationCounts = new Map<string, number>()
+    if (jobIds.length > 0) {
+      const { data: appRows, error: appError } = await supabase
+        .from("job_applications")
+        .select("job_id")
+        .in("job_id", jobIds)
+        .neq("status", "withdrawn")
+
+      if (appError) return jsonError(appError.message, 500)
+
+      for (const appRow of appRows ?? []) {
+        applicationCounts.set(
+          appRow.job_id,
+          (applicationCounts.get(appRow.job_id) ?? 0) + 1,
+        )
+      }
+    }
+
+    const jobs = jobRows.map((row) =>
+      mapRow(row, {
+        applicationCount: applicationCounts.get(row.id) ?? 0,
+      }),
+    )
 
     return Response.json({ jobs })
   }

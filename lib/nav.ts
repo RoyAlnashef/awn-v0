@@ -17,6 +17,11 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+export type NavSubItem = {
+  title: string
+  href: string
+}
+
 export type NavItem = {
   title: string
   href: string
@@ -26,6 +31,7 @@ export type NavItem = {
   /** When set, sidebar reads a live count from the matching provider. */
   liveBadge?: "messages" | "rooms"
   live?: boolean
+  items?: NavSubItem[]
 }
 
 export const mainNav: NavItem[] = [
@@ -44,6 +50,7 @@ export const mainNav: NavItem[] = [
       "Open calls, tour gigs, and one-off shifts matched to your skills.",
     icon: Briefcase,
     badge: "12",
+    items: [{ title: "My Jobs", href: "/my-jobs" }],
   },
   {
     title: "People",

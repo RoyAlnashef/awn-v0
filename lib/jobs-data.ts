@@ -36,6 +36,7 @@ export interface JobPostingRow {
   details: string
   expires_at: string | null
   filled_at: string | null
+  view_count: number
   created_at: string
   updated_at: string
 }
@@ -272,6 +273,10 @@ export interface Job {
   saved: boolean
   applied: boolean
   savedAt?: string
+  /** Populated on poster management views. */
+  viewCount?: number
+  /** Populated on poster management views. */
+  applicationCount?: number
 }
 
 function job(

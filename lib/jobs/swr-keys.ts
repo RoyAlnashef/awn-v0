@@ -3,12 +3,18 @@ import type { EngagementType } from "@/lib/jobs-data"
 
 export const jobsListKey = "/api/jobs"
 
+export const myJobsKey = "/api/jobs/mine?tab=created"
+
 export function accountJobsKey(tab: "created" | "saved"): string {
   return `/api/jobs/mine?tab=${tab}`
 }
 
 export function jobDetailKey(jobId: string | null): string | null {
   return jobId ? `/api/jobs/${jobId}` : null
+}
+
+export function jobApplicationsKey(jobId: string | null): string | null {
+  return jobId ? `/api/jobs/${jobId}/applications` : null
 }
 
 export function jobsListKeyWithFilters(filters: JobFilters): string {

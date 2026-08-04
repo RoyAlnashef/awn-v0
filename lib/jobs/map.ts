@@ -28,6 +28,7 @@ export type JobPostingSource = {
   deadline: string | null
   engagement: EngagementType | string
   details: string
+  view_count?: number
   created_at: string
   poster?: PosterProfile | null
 }
@@ -42,7 +43,13 @@ export function mapPoster(profile: PosterProfile | null): JobPoster {
 
 export function mapJobPostingRow(
   row: JobPostingSource,
-  options: { saved?: boolean; applied?: boolean; savedAt?: string } = {},
+  options: {
+    saved?: boolean
+    applied?: boolean
+    savedAt?: string
+    viewCount?: number
+    applicationCount?: number
+  } = {},
 ): Job {
   return {
     id: row.id,
@@ -64,5 +71,7 @@ export function mapJobPostingRow(
     saved: options.saved ?? false,
     applied: options.applied ?? false,
     savedAt: options.savedAt,
+    viewCount: options.viewCount ?? row.view_count,
+    applicationCount: options.applicationCount,
   }
 }

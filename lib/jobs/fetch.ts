@@ -1,6 +1,6 @@
 "use client"
 
-import type { EngagementType, Job, JobKind, JobStatus } from "@/lib/jobs-data"
+import type { EngagementType, Job, JobKind, JobStatus, ApplicationStatus } from "@/lib/jobs-data"
 import { accountJobsKey, jobsListKey } from "@/lib/jobs/swr-keys"
 
 export type JobsListResponse = {
@@ -46,6 +46,25 @@ export type JobDetailResponse = {
   job: Job
   applicantCount: number
   posterId: string
+  viewCount: number
+}
+
+export type JobApplication = {
+  id: string
+  jobId: string
+  applicantId: string
+  note: string
+  status: ApplicationStatus
+  createdAt: string
+  applicant: {
+    name: string
+    title: string
+    avatar?: string
+  }
+}
+
+export type JobApplicationsResponse = {
+  applications: JobApplication[]
 }
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -71,6 +90,13 @@ export async function fetchMyJobs(
 export async function fetchJob(jobId: string): Promise<JobDetailResponse> {
   const response = await fetch(`/api/jobs/${jobId}`)
   return parseJson<JobDetailResponse>(response)
+}
+
+export async function fetchJobApplications(
+  jobId: string,
+): Promise<JobApplicationsResponse> {
+  const response = await fetch(`/api/jobs/${jobId}/applications`)
+  return parseJson<JobApplicationsResponse>(response)
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<{ job: Job }> {

@@ -1,4 +1,4 @@
-import type { JobStatus } from "@/lib/jobs-data"
+import type { ApplicationStatus, JobStatus } from "@/lib/jobs-data"
 import { differenceInCalendarDays, format, startOfDay } from "date-fns"
 
 /** Compact relative label for job cards (e.g. Today, 2h ago, Yesterday). */
@@ -46,4 +46,12 @@ export const jobStatusStyles: Record<JobStatus, string> = {
   filled: "border-border bg-muted text-muted-foreground",
   expired: "border-border bg-muted text-muted-foreground",
   deleted: "border-border bg-muted text-muted-foreground",
+}
+
+export const applicationStatusStyles: Record<ApplicationStatus, string> = {
+  pending: "border-amber-500/30 bg-amber-500/10 text-amber-600",
+  approved: "border-green-500/30 bg-green-500/10 text-green-600",
+  maybe: "border-blue-500/30 bg-blue-500/10 text-blue-600",
+  declined: "border-border bg-muted text-muted-foreground",
+  withdrawn: "border-border bg-muted text-muted-foreground",
 }

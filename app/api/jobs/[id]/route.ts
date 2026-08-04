@@ -27,6 +27,7 @@ type JobRow = {
   details: string
   expires_at: string | null
   filled_at: string | null
+  view_count: number
   created_at: string
   updated_at: string
   poster: PosterJoin | PosterJoin[] | null
@@ -76,6 +77,7 @@ export async function GET(_request: Request, context: RouteContext) {
       details,
       expires_at,
       filled_at,
+      view_count,
       created_at,
       updated_at,
       poster:profiles!job_postings_poster_id_fkey (
@@ -92,6 +94,14 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!row) return jsonError("Job not found", 404)
 
   const typedRow = row as JobRow
+  const isPoster = typedRow.poster_id === user.id
+
+  if (!isPoster) {
+    await supabase
+      .from("job_postings")
+      .update({ view_count: (typedRow.view_count ?? 0) + 1 })
+      .eq("id", id)
+  }
 
   const [{ count: applicantCount }, savedResult, appliedResult] =
     await Promise.all([
@@ -125,6 +135,8 @@ export async function GET(_request: Request, context: RouteContext) {
     {
       saved: Boolean(savedResult.data),
       applied: Boolean(appliedResult.data),
+      viewCount: isPoster ? typedRow.view_count : (typedRow.view_count ?? 0) + 1,
+      applicationCount: applicantCount ?? 0,
     },
   )
 
@@ -132,6 +144,7 @@ export async function GET(_request: Request, context: RouteContext) {
     job,
     applicantCount: applicantCount ?? 0,
     posterId: typedRow.poster_id,
+    viewCount: job.viewCount ?? 0,
   })
 }
 
@@ -231,6 +244,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       details,
       expires_at,
       filled_at,
+      view_count,
       created_at,
       updated_at,
       poster:profiles!job_postings_poster_id_fkey (

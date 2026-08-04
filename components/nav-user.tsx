@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
-import { ChevronDown, LifeBuoy, LogOut, User } from "lucide-react"
+import { Briefcase, ChevronDown, LifeBuoy, LogOut, User } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
@@ -28,6 +28,7 @@ export type NavUserData = {
 
 const links = [
   { label: "My Account", href: "/account", icon: User },
+  { label: "My Jobs", href: "/my-jobs", icon: Briefcase },
   { label: "Support", href: "/intel", icon: LifeBuoy },
 ]
 

@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  Briefcase,
   Link2,
   Settings,
   Star,
@@ -17,7 +16,6 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 const NAV_ITEMS = [
   { label: "Profile", href: "/account/profile", icon: User },
   { label: "Tour Credits", href: "/account/tour-credits", icon: Star },
-  { label: "Jobs", href: "/account/jobs", icon: Briefcase },
   { label: "Network", href: "/account/network", icon: Users },
   { label: "Social", href: "/account/social", icon: Link2 },
   { label: "Settings", href: "/account/settings", icon: Settings },
