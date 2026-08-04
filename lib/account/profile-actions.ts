@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import {
   MEMBER_PROFILE_SELECT,
+  clampBannerPositionY,
   toPersonFromProfile,
   toProfileUpdateFromPerson,
   type MemberProfileRow,
@@ -226,7 +227,7 @@ export async function updateBannerPosition(
   try {
     await requireProfileEditor(userId)
 
-    const clamped = Math.max(0, Math.min(100, Math.round(positionY)))
+    const clamped = clampBannerPositionY(positionY)
     const admin = createAdminClient()
 
     const { data, error } = await admin

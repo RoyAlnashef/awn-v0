@@ -9,6 +9,7 @@ import {
   updateBannerPosition,
   uploadMemberBanner,
 } from "@/lib/account/profile-actions"
+import { clampBannerPositionY } from "@/lib/account/profile-data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -102,16 +103,17 @@ export function BannerUploadEditor({
     dragState.current = null
 
     if (!banner || !drag) return
-    if (Math.round(drag.lastPosition) === Math.round(drag.startPosition)) return
+    const nextPosition = clampBannerPositionY(drag.lastPosition)
+    if (nextPosition === clampBannerPositionY(drag.startPosition)) return
 
-    const result = await updateBannerPosition(userId, drag.lastPosition)
+    const result = await updateBannerPosition(userId, nextPosition)
     if (!result.ok) {
       toast.error(result.error)
       onChange(banner, drag.startPosition)
       return
     }
 
-    onPersisted(banner, drag.lastPosition)
+    onPersisted(banner, nextPosition)
   }, [banner, onChange, onPersisted, userId])
 
   const handleRemove = async () => {

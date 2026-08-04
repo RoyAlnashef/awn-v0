@@ -126,6 +126,11 @@ function toIsoDate(value: string | null | undefined): string {
   return value.slice(0, 10)
 }
 
+/** Clamp banner vertical position to an integer 0–100 for DB smallint column. */
+export function clampBannerPositionY(value: number | undefined): number {
+  return Math.round(Math.max(0, Math.min(100, value ?? 50)))
+}
+
 export function toPersonFromProfile(row: MemberProfileRow): Person {
   const name =
     row.full_name?.trim() ||
@@ -152,7 +157,7 @@ export function toPersonFromProfile(row: MemberProfileRow): Person {
     skills: row.skills ?? [],
     avatar: row.avatar_url ?? undefined,
     banner: row.banner_url ?? undefined,
-    bannerPositionY: row.banner_position_y ?? 50,
+    bannerPositionY: clampBannerPositionY(row.banner_position_y ?? undefined),
     followed: false,
     verified: row.is_verified ?? false,
     founding: row.is_founding_member ?? false,
@@ -177,7 +182,7 @@ export function toProfileUpdateFromPerson(person: Person): MemberProfileUpdate {
     venue_tiers: person.venueTiers.map((tier) => venueTierToDb[tier]),
     work_auth: person.workAuth.map((auth) => workAuthToDb[auth]),
     skills: person.skills,
-    banner_position_y: person.bannerPositionY ?? 50,
+    banner_position_y: clampBannerPositionY(person.bannerPositionY),
   }
 }
 
