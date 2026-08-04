@@ -137,24 +137,15 @@ export function AvatarUploadEditor({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 outline-none transition-opacity hover:opacity-100 focus-visible:opacity-100"
-          aria-label="Upload profile photo"
+          aria-label={avatar ? "Change profile photo" : "Upload profile photo"}
         >
           <Camera className="size-5 text-white" />
         </button>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex flex-col items-start gap-1.5 pt-1">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Camera className="size-3.5" />
-          {avatar ? "Change photo" : "Upload photo"}
-        </Button>
-        {avatar && (
+      {/* Single action slot: upload when empty, remove when set */}
+      <div className="flex flex-col items-start pt-1">
+        {avatar ? (
           <Button
             type="button"
             variant="ghost"
@@ -163,6 +154,16 @@ export function AvatarUploadEditor({
             onClick={() => onChange(undefined)}
           >
             Remove
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Camera className="size-3.5" />
+            Upload photo
           </Button>
         )}
       </div>

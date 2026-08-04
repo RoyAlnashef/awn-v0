@@ -149,7 +149,7 @@ export function BannerUploadEditor({
       </div>
 
       {/* Avatar overlaps banner bottom-left */}
-      <div className="-mt-10 flex items-end px-4 pb-1">
+      <div className="relative z-10 -mt-10 flex items-end px-4 pb-1">
         <div className="flex min-w-0 items-end gap-4">{children}</div>
       </div>
     </div>
