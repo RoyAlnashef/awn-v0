@@ -1,8 +1,7 @@
 "use client"
 
-import type { Job, JobKind } from "@/lib/jobs-data"
-import type { EngagementType } from "@/lib/jobs-data"
-import { jobsListKey } from "@/lib/jobs/swr-keys"
+import type { EngagementType, Job, JobKind, JobStatus } from "@/lib/jobs-data"
+import { accountJobsKey, jobsListKey } from "@/lib/jobs/swr-keys"
 
 export type JobsListResponse = {
   jobs: Job[]
@@ -14,11 +13,25 @@ export type CreateJobPayload = {
   production: string
   location: string
   payRate: string
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
   deadline?: string | null
   engagement: EngagementType
   details: string
+  status?: Extract<JobStatus, "draft" | "open">
+}
+
+export type UpdateJobPayload = {
+  status?: JobStatus
+  role?: string
+  production?: string
+  location?: string
+  payRate?: string
+  startDate?: string
+  endDate?: string
+  deadline?: string | null
+  engagement?: EngagementType
+  details?: string
 }
 
 export type ApplyJobPayload = {
@@ -48,6 +61,13 @@ export async function fetchJobs(url: string): Promise<JobsListResponse> {
   return parseJson<JobsListResponse>(response)
 }
 
+export async function fetchMyJobs(
+  tab: "created" | "saved",
+): Promise<JobsListResponse> {
+  const response = await fetch(accountJobsKey(tab))
+  return parseJson<JobsListResponse>(response)
+}
+
 export async function fetchJob(jobId: string): Promise<JobDetailResponse> {
   const response = await fetch(`/api/jobs/${jobId}`)
   return parseJson<JobDetailResponse>(response)
@@ -56,6 +76,18 @@ export async function fetchJob(jobId: string): Promise<JobDetailResponse> {
 export async function createJob(payload: CreateJobPayload): Promise<{ job: Job }> {
   const response = await fetch(jobsListKey, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  return parseJson(response)
+}
+
+export async function updateJob(
+  jobId: string,
+  payload: UpdateJobPayload,
+): Promise<{ job: Job }> {
+  const response = await fetch(`/api/jobs/${jobId}`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })

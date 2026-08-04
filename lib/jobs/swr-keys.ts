@@ -3,6 +3,10 @@ import type { EngagementType } from "@/lib/jobs-data"
 
 export const jobsListKey = "/api/jobs"
 
+export function accountJobsKey(tab: "created" | "saved"): string {
+  return `/api/jobs/mine?tab=${tab}`
+}
+
 export function jobDetailKey(jobId: string | null): string | null {
   return jobId ? `/api/jobs/${jobId}` : null
 }

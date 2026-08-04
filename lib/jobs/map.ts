@@ -42,11 +42,12 @@ export function mapPoster(profile: PosterProfile | null): JobPoster {
 
 export function mapJobPostingRow(
   row: JobPostingSource,
-  options: { saved?: boolean; applied?: boolean } = {},
+  options: { saved?: boolean; applied?: boolean; savedAt?: string } = {},
 ): Job {
   return {
     id: row.id,
     kind: row.kind as JobKind,
+    status: row.status as JobStatus,
     posterId: row.poster_id,
     role: row.role,
     department: row.department,
@@ -62,5 +63,6 @@ export function mapJobPostingRow(
     postedAt: formatJobPostedAt(row.created_at),
     saved: options.saved ?? false,
     applied: options.applied ?? false,
+    savedAt: options.savedAt,
   }
 }

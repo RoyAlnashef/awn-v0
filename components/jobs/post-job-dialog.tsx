@@ -7,11 +7,14 @@ import { mutate } from "swr"
 
 import {
   engagementTypes,
+  parseDateOnly,
   roleGroups,
   type EngagementType,
+  type Job,
   type JobKind,
+  type JobStatus,
 } from "@/lib/jobs-data"
-import { createJob } from "@/lib/jobs/fetch"
+import { createJob, updateJob } from "@/lib/jobs/fetch"
 import { toDateOnly } from "@/lib/jobs/format"
 import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
@@ -62,6 +65,13 @@ const emptyForm: PostJobForm = {
   details: "",
 }
 
+type PostJobDialogProps = {
+  trigger?: React.ReactElement
+  job?: Job
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
 function FieldLabel({
   htmlFor,
   children,
@@ -86,61 +96,150 @@ function FieldLabel({
   )
 }
 
-function revalidateJobs() {
-  void mutate((key) => typeof key === "string" && key.startsWith(jobsListKey))
+function jobToForm(job: Job): PostJobForm {
+  return {
+    kind: job.kind,
+    role: job.role,
+    production: job.production,
+    location: job.location,
+    rate: job.payRate,
+    startDate: parseDateOnly(job.startDate),
+    endDate: parseDateOnly(job.endDate),
+    deadline:
+      job.deadline && job.deadline !== job.endDate
+        ? parseDateOnly(job.deadline)
+        : undefined,
+    engagement: job.engagement,
+    details: job.details,
+  }
 }
 
-export function PostJobDialog() {
-  const [open, setOpen] = React.useState(false)
+function revalidateJobs() {
+  void mutate(
+    (key) =>
+      typeof key === "string" &&
+      (key.startsWith(jobsListKey) || key.startsWith("/api/jobs/mine")),
+  )
+}
+
+export function PostJobDialog({
+  trigger,
+  job,
+  open: controlledOpen,
+  onOpenChange,
+}: PostJobDialogProps) {
+  const isEdit = Boolean(job)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const open = controlledOpen ?? internalOpen
+  const setOpen = onOpenChange ?? setInternalOpen
+
   const [form, setForm] = React.useState<PostJobForm>(emptyForm)
   const [submitting, setSubmitting] = React.useState(false)
+
+  React.useEffect(() => {
+    if (open && job) {
+      setForm(jobToForm(job))
+    }
+  }, [open, job])
 
   function update(patch: Partial<PostJobForm>) {
     setForm((prev) => ({ ...prev, ...patch }))
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
+  function resetForm() {
+    setForm(emptyForm)
+  }
 
+  function validateRole(): boolean {
     if (!form.role.trim()) {
       toast.error("Select a role")
-      return
+      return false
     }
+    return true
+  }
+
+  function validatePublish(): boolean {
+    if (!validateRole()) return false
     if (!form.startDate) {
       toast.error("Pick a start date")
-      return
+      return false
     }
     if (!form.endDate) {
       toast.error("Pick an end date")
-      return
+      return false
     }
+    return true
+  }
+
+  function buildPayload(status: Extract<JobStatus, "draft" | "open">) {
+    return {
+      kind: form.kind,
+      role: form.role,
+      production: form.production,
+      location: form.location,
+      payRate: form.rate,
+      startDate: form.startDate ? toDateOnly(form.startDate) : undefined,
+      endDate: form.endDate ? toDateOnly(form.endDate) : undefined,
+      deadline:
+        form.kind === "full" && form.deadline
+          ? toDateOnly(form.deadline)
+          : null,
+      engagement: form.engagement,
+      details: form.details,
+      status,
+    }
+  }
+
+  async function handleDraft() {
+    if (!validateRole()) return
 
     setSubmitting(true)
     try {
-      await createJob({
-        kind: form.kind,
-        role: form.role,
-        production: form.production,
-        location: form.location,
-        payRate: form.rate,
-        startDate: toDateOnly(form.startDate),
-        endDate: toDateOnly(form.endDate),
-        deadline:
-          form.kind === "full" && form.deadline
-            ? toDateOnly(form.deadline)
-            : null,
-        engagement: form.engagement,
-        details: form.details,
-      })
-
-      toast.success(
-        form.kind === "urgent"
-          ? "Urgent request posted — live for 48 hours"
-          : "Role posted",
-      )
+      if (isEdit && job) {
+        await updateJob(job.id, {
+          ...buildPayload("draft"),
+          status: "draft",
+        })
+        toast.success("Draft saved")
+      } else {
+        await createJob(buildPayload("draft"))
+        toast.success("Draft saved")
+      }
       setOpen(false)
-      setForm(emptyForm)
-      void revalidateJobs()
+      resetForm()
+      revalidateJobs()
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not save draft",
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handlePublish(event: React.FormEvent) {
+    event.preventDefault()
+    if (!validatePublish()) return
+
+    setSubmitting(true)
+    try {
+      if (isEdit && job) {
+        await updateJob(job.id, {
+          ...buildPayload("open"),
+          status: "open",
+        })
+        toast.success("Role updated")
+      } else {
+        await createJob(buildPayload("open"))
+        toast.success(
+          form.kind === "urgent"
+            ? "Urgent request posted — live for 48 hours"
+            : "Role posted",
+        )
+      }
+      setOpen(false)
+      resetForm()
+      revalidateJobs()
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not post role",
@@ -150,32 +249,38 @@ export function PostJobDialog() {
     }
   }
 
+  function handleOpenChange(next: boolean) {
+    setOpen(next)
+    if (!next) resetForm()
+  }
+
+  const defaultTrigger = (
+    <Button size="sm">
+      <Plus />
+      Post a job
+    </Button>
+  )
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next)
-        if (!next) setForm(emptyForm)
-      }}
-    >
-      <DialogTrigger
-        render={
-          <Button size="sm">
-            <Plus />
-            Post a job
-          </Button>
-        }
-      />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {!isEdit ? (
+        <DialogTrigger render={trigger ?? defaultTrigger} />
+      ) : null}
       <DialogContent className="max-h-[calc(100svh-2rem)] gap-0 overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Post a role</DialogTitle>
+          <DialogTitle className="text-2xl">
+            {isEdit ? "Edit role" : "Post a role"}
+          </DialogTitle>
           <DialogDescription>
             Touring, festival, one-off, or residency — share it with the AWN
             network.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={(event) => void handleSubmit(event)} className="mt-6 flex flex-col gap-5">
+        <form
+          onSubmit={(event) => void handlePublish(event)}
+          className="mt-6 flex flex-col gap-5"
+        >
           <div className="flex flex-col gap-2">
             <FieldLabel>Posting Type</FieldLabel>
             <div className="flex flex-wrap gap-2">
@@ -216,7 +321,9 @@ export function PostJobDialog() {
             <FieldLabel>Role</FieldLabel>
             <Select
               value={form.role || null}
-              onValueChange={(value) => update({ role: (value as string) ?? "" })}
+              onValueChange={(value) =>
+                update({ role: (value as string) ?? "" })
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a role..." />
@@ -346,8 +453,24 @@ export function PostJobDialog() {
                 </Button>
               }
             />
+            {form.kind === "full" ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={submitting}
+                onClick={() => void handleDraft()}
+              >
+                {submitting ? "Saving..." : "Save draft"}
+              </Button>
+            ) : null}
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Posting..." : "Post role →"}
+              {submitting
+                ? isEdit
+                  ? "Saving..."
+                  : "Posting..."
+                : isEdit
+                  ? "Save changes →"
+                  : "Post role →"}
             </Button>
           </div>
         </form>

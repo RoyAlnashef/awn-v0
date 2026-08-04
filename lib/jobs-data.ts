@@ -9,7 +9,7 @@ export type EngagementType =
 
 export type JobKind = "full" | "urgent"
 
-export type JobStatus = "open" | "filled" | "expired" | "deleted"
+export type JobStatus = "open" | "draft" | "filled" | "expired" | "deleted"
 
 export type ApplicationStatus =
   | "pending"
@@ -61,6 +61,7 @@ export interface CreateJobInput {
   deadline?: string | null
   engagement: EngagementType
   details: string
+  status?: Extract<JobStatus, "draft" | "open">
 }
 
 /**
@@ -253,6 +254,7 @@ export interface JobPoster {
 export interface Job {
   id: string
   kind: JobKind
+  status: JobStatus
   posterId: string
   role: string
   department: string
@@ -269,14 +271,19 @@ export interface Job {
   postedAt: string
   saved: boolean
   applied: boolean
+  savedAt?: string
 }
 
 function job(
-  data: Omit<Job, "department" | "kind" | "saved" | "applied" | "posterId"> &
-    Partial<Pick<Job, "kind" | "saved" | "applied" | "posterId">>,
+  data: Omit<
+    Job,
+    "department" | "kind" | "status" | "saved" | "applied" | "posterId"
+  > &
+    Partial<Pick<Job, "kind" | "status" | "saved" | "applied" | "posterId">>,
 ): Job {
   return {
     kind: "full",
+    status: "open",
     saved: false,
     applied: false,
     posterId: "00000000-0000-4000-8000-000000000000",

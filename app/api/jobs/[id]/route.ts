@@ -1,4 +1,5 @@
 import type { EngagementType, JobKind, JobStatus } from "@/lib/jobs-data"
+import { departmentByRole } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { parseDateOnly } from "@/lib/jobs/format"
 import { mapJobPostingRow } from "@/lib/jobs/map"
@@ -181,7 +182,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       patch.filled_at = new Date().toISOString()
     }
   }
-  if (body.role !== undefined) patch.role = body.role.trim()
+  if (body.role !== undefined) {
+    patch.role = body.role.trim()
+    patch.department = departmentByRole[patch.role as string] ?? "Production"
+  }
   if (body.production !== undefined) patch.production = body.production.trim()
   if (body.location !== undefined) patch.location = body.location.trim()
   if (body.payRate !== undefined) patch.pay_rate = body.payRate.trim()

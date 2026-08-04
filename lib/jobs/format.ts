@@ -1,4 +1,5 @@
-import { differenceInCalendarDays, startOfDay } from "date-fns"
+import type { JobStatus } from "@/lib/jobs-data"
+import { differenceInCalendarDays, format, startOfDay } from "date-fns"
 
 /** Compact relative label for job cards (e.g. Today, 2h ago, Yesterday). */
 export function formatJobPostedAt(iso: string, now: Date = new Date()): string {
@@ -32,4 +33,17 @@ export function toDateOnly(date: Date): string {
 export function parseDateOnly(value: string | null | undefined): string | null {
   if (!value) return null
   return value.slice(0, 10)
+}
+
+/** Absolute date label for saved-job rows (e.g. Jul 22, 2026). */
+export function formatJobSavedAt(iso: string): string {
+  return format(new Date(iso), "MMM d, yyyy")
+}
+
+export const jobStatusStyles: Record<JobStatus, string> = {
+  open: "border-green-500/30 bg-green-500/10 text-green-600",
+  draft: "border-amber-500/30 bg-amber-500/10 text-amber-600",
+  filled: "border-border bg-muted text-muted-foreground",
+  expired: "border-border bg-muted text-muted-foreground",
+  deleted: "border-border bg-muted text-muted-foreground",
 }

@@ -183,6 +183,11 @@ type CreateJobBody = {
   deadline?: string | null
   engagement?: EngagementType
   details?: string
+  status?: "draft" | "open"
+}
+
+function todayDateOnly(): string {
+  return new Date().toISOString().slice(0, 10)
 }
 
 export async function POST(request: Request) {
@@ -198,14 +203,21 @@ export async function POST(request: Request) {
 
   const kind: JobKind = body.kind === "urgent" ? "urgent" : "full"
   const role = body.role?.trim() ?? ""
-  const startDate = parseDateOnly(body.startDate)
-  const endDate = parseDateOnly(body.endDate)
+  const requestedStatus =
+    kind === "urgent" ? "open" : body.status === "draft" ? "draft" : "open"
+  const isDraft = requestedStatus === "draft"
 
   if (!role) return jsonError("Role is required", 400)
-  if (!startDate) return jsonError("Start date is required", 400)
-  if (!endDate) return jsonError("End date is required", 400)
-  if (endDate < startDate) {
-    return jsonError("End date must be on or after start date", 400)
+
+  const startDate = parseDateOnly(body.startDate) ?? (isDraft ? todayDateOnly() : null)
+  const endDate = parseDateOnly(body.endDate) ?? (isDraft ? startDate : null)
+
+  if (!isDraft) {
+    if (!startDate) return jsonError("Start date is required", 400)
+    if (!endDate) return jsonError("End date is required", 400)
+    if (endDate < startDate) {
+      return jsonError("End date must be on or after start date", 400)
+    }
   }
 
   const department = departmentByRole[role] ?? "Production"
@@ -221,15 +233,15 @@ export async function POST(request: Request) {
     .from("job_postings")
     .insert({
       kind,
-      status: "open",
+      status: requestedStatus,
       poster_id: user.id,
       role,
       department,
       production: body.production?.trim() ?? "",
       location: body.location?.trim() ?? "",
       pay_rate: body.payRate?.trim() ?? "",
-      start_date: startDate,
-      end_date: endDate,
+      start_date: startDate ?? todayDateOnly(),
+      end_date: endDate ?? startDate ?? todayDateOnly(),
       deadline,
       engagement: body.engagement ?? "Touring",
       details: body.details?.trim() ?? "",
