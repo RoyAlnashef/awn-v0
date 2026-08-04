@@ -99,6 +99,10 @@ export interface Person {
   bio?: string
   memberSince?: string
   website?: string
+  instagram?: string
+  twitter?: string
+  linkedin?: string
+  youtube?: string
 }
 
 export interface TourCredit {

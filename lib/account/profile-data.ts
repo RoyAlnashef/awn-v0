@@ -4,6 +4,7 @@ import type {
   VenueTier,
   WorkAuth,
 } from "@/lib/people-data"
+import { socialFieldsFromPerson } from "@/lib/social-links"
 
 export type DbMemberAvailability =
   | "available_now"
@@ -47,6 +48,11 @@ export interface MemberProfileRow {
   banner_position_y: number | null
   is_verified: boolean | null
   is_founding_member: boolean | null
+  website: string | null
+  instagram: string | null
+  twitter: string | null
+  linkedin: string | null
+  youtube: string | null
   created_at: string
 }
 
@@ -65,6 +71,11 @@ export interface MemberProfileUpdate {
   work_auth?: DbWorkAuth[]
   skills?: string[]
   banner_position_y?: number
+  website?: string | null
+  instagram?: string | null
+  twitter?: string | null
+  linkedin?: string | null
+  youtube?: string | null
 }
 
 const availabilityToUi: Record<DbMemberAvailability, Availability> = {
@@ -164,10 +175,17 @@ export function toPersonFromProfile(row: MemberProfileRow): Person {
     company: row.company?.trim() || undefined,
     bio: row.bio?.trim() || undefined,
     memberSince: formatMemberSince(row.created_at),
+    website: row.website?.trim() || undefined,
+    instagram: row.instagram?.trim() || undefined,
+    twitter: row.twitter?.trim() || undefined,
+    linkedin: row.linkedin?.trim() || undefined,
+    youtube: row.youtube?.trim() || undefined,
   }
 }
 
 export function toProfileUpdateFromPerson(person: Person): MemberProfileUpdate {
+  const social = socialFieldsFromPerson(person)
+
   return {
     full_name: person.name.trim(),
     title: person.role.trim(),
@@ -183,6 +201,11 @@ export function toProfileUpdateFromPerson(person: Person): MemberProfileUpdate {
     work_auth: person.workAuth.map((auth) => workAuthToDb[auth]),
     skills: person.skills,
     banner_position_y: clampBannerPositionY(person.bannerPositionY),
+    website: social.website,
+    instagram: social.instagram,
+    twitter: social.twitter,
+    linkedin: social.linkedin,
+    youtube: social.youtube,
   }
 }
 
@@ -207,5 +230,10 @@ export const MEMBER_PROFILE_SELECT = [
   "banner_position_y",
   "is_verified",
   "is_founding_member",
+  "website",
+  "instagram",
+  "twitter",
+  "linkedin",
+  "youtube",
   "created_at",
 ].join(", ")

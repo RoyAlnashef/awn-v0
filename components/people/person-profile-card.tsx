@@ -22,6 +22,7 @@ import {
   type Person,
   type TourCredit,
 } from "@/lib/people-data"
+import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -100,7 +101,7 @@ export function PersonProfileCard({
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
 
-  const website = person.website ?? profile.website
+  const socialLinks = getPersonSocialLinks(person)
 
   return (
     <TooltipProvider delay={400}>
@@ -286,32 +287,40 @@ export function PersonProfileCard({
               </section>
             ) : null}
 
-            {/* Website */}
-            {website ? (
-              <PreviewTooltip preview={isPreview}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="self-start"
-                  disabled={isPreview}
-                  aria-disabled={isPreview}
-                  nativeButton={false}
-                  render={
-                    isPreview ? (
-                      <span />
-                    ) : (
-                      <a
-                        href={`https://${website}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      />
-                    )
-                  }
-                >
-                  <ExternalLink />
-                  {website}
-                </Button>
-              </PreviewTooltip>
+            {/* Social links */}
+            {socialLinks.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {socialLinks.map((link) => {
+                  const LinkIcon = link.icon
+                  return (
+                    <PreviewTooltip key={link.id} preview={isPreview}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="self-start"
+                        disabled={isPreview}
+                        aria-disabled={isPreview}
+                        nativeButton={false}
+                        render={
+                          isPreview ? (
+                            <span />
+                          ) : (
+                            <a
+                              href={link.href}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={link.label}
+                            />
+                          )
+                        }
+                      >
+                        <LinkIcon />
+                        {link.display}
+                      </Button>
+                    </PreviewTooltip>
+                  )
+                })}
+              </div>
             ) : null}
           </div>
         </ScrollArea>

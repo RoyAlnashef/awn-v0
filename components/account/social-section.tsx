@@ -1,15 +1,22 @@
 "use client"
 
+import { useTransition } from "react"
 import { AtSign, Briefcase, Camera, ExternalLink, Globe, Video } from "lucide-react"
+import { toast } from "sonner"
 
 import { useAccountProfile } from "@/components/account/account-profile-provider"
+import { updateMemberProfile } from "@/lib/account/profile-actions"
+import {
+  buildSocialHref,
+  type SocialFieldId,
+} from "@/lib/social-links"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 
 interface SocialFieldConfig {
-  id: string
+  id: SocialFieldId
   label: string
   placeholder: string
   prefix?: string
@@ -51,14 +58,6 @@ const SOCIAL_FIELDS: SocialFieldConfig[] = [
   },
 ]
 
-const SOCIAL_DEFAULTS: Record<string, string> = {
-  website: "reyestouring.com",
-  instagram: "reyestouring",
-  twitter: "jordanreyes_tm",
-  linkedin: "linkedin.com/in/jordanreyes",
-  youtube: "",
-}
-
 function SocialRow({
   field,
   value,
@@ -69,6 +68,7 @@ function SocialRow({
   onChange: (value: string) => void
 }) {
   const Icon = field.icon
+  const href = buildSocialHref(field.id, value)
 
   return (
     <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-4">
@@ -99,9 +99,9 @@ function SocialRow({
             }
           />
         </div>
-        {value && field.id === "website" ? (
+        {href ? (
           <a
-            href={`https://${value}`}
+            href={href}
             target="_blank"
             rel="noreferrer"
             className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -116,7 +116,23 @@ function SocialRow({
 }
 
 export function SocialSection() {
-  const { draft, updateDraft } = useAccountProfile()
+  const { draft, updateDraft, resetDraft, commitSaved } = useAccountProfile()
+  const [isPending, startTransition] = useTransition()
+
+  function handleSave() {
+    startTransition(async () => {
+      const result = await updateMemberProfile(draft)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      if (result.person) {
+        commitSaved(result.person)
+      }
+      toast.success("Social links saved")
+    })
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -132,15 +148,9 @@ export function SocialSection() {
           <SocialRow
             key={field.id}
             field={field}
-            value={
-              field.id === "website"
-                ? (draft.website ?? SOCIAL_DEFAULTS.website)
-                : SOCIAL_DEFAULTS[field.id]
-            }
+            value={draft[field.id] ?? ""}
             onChange={(value) => {
-              if (field.id === "website") {
-                updateDraft({ website: value })
-              }
+              updateDraft({ [field.id]: value })
             }}
           />
         ))}
@@ -148,10 +158,13 @@ export function SocialSection() {
 
       <Separator />
 
-      {/* Save */}
       <div className="flex justify-end gap-2">
-        <Button variant="outline">Cancel</Button>
-        <Button>Save changes</Button>
+        <Button variant="outline" disabled={isPending} onClick={resetDraft}>
+          Cancel
+        </Button>
+        <Button disabled={isPending} onClick={handleSave}>
+          Save changes
+        </Button>
       </div>
     </div>
   )

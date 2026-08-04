@@ -41,6 +41,7 @@ function actionError(error: unknown): ProfileActionResult {
 
 function revalidateProfilePaths() {
   revalidatePath("/account/profile")
+  revalidatePath("/account/social")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
 }
