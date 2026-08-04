@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Calendar as CalendarIcon, ChevronDown, Search, X } from "lucide-react"
+import { Bookmark, Calendar as CalendarIcon, ChevronDown, Search, X } from "lucide-react"
 
 import {
   engagementTypes,
@@ -24,6 +24,7 @@ export interface JobFilters {
   engagements: EngagementType[]
   startFrom?: Date
   startTo?: Date
+  saved: boolean
 }
 
 function FilterButton({
@@ -224,6 +225,25 @@ export function JobsFilters({
             </div>
           </PopoverContent>
         </Popover>
+
+        <Button
+          type="button"
+          variant="outline"
+          aria-pressed={filters.saved}
+          onClick={() => onChange({ saved: !filters.saved })}
+          className={cn(
+            "gap-1.5",
+            filters.saved && "border-primary/60 bg-primary/10 text-foreground",
+          )}
+        >
+          <Bookmark
+            className={cn(
+              "size-3.5",
+              filters.saved ? "fill-current text-primary" : "text-muted-foreground",
+            )}
+          />
+          Saved
+        </Button>
 
         {activeCount > 0 ? (
           <Button variant="ghost" size="sm" onClick={onClear}>

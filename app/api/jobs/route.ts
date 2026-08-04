@@ -49,6 +49,24 @@ export async function GET(request: Request) {
   const engagements = parseEngagementParam(url.searchParams.get("engagement"))
   const startFrom = parseDateOnly(url.searchParams.get("startFrom"))
   const startTo = parseDateOnly(url.searchParams.get("startTo"))
+  const savedOnly = url.searchParams.get("saved") === "true"
+
+  let savedJobIds: string[] | null = null
+  if (savedOnly) {
+    const { data: savedRows, error: savedError } = await supabase
+      .from("saved_jobs")
+      .select("job_id")
+      .eq("user_id", user.id)
+
+    if (savedError) {
+      return jsonError(savedError.message, 500)
+    }
+
+    savedJobIds = (savedRows ?? []).map((row) => row.job_id)
+    if (savedJobIds.length === 0) {
+      return Response.json({ jobs: [] })
+    }
+  }
 
   let query = supabase
     .from("job_postings")
@@ -81,6 +99,10 @@ export async function GET(request: Request) {
     )
     .eq("status", "open")
     .order("created_at", { ascending: false })
+
+  if (savedJobIds) {
+    query = query.in("id", savedJobIds)
+  }
 
   if (department && department !== "all") {
     query = query.eq("department", department)

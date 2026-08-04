@@ -26,6 +26,9 @@ export function jobsListKeyWithFilters(filters: JobFilters): string {
   if (filters.startTo) {
     params.set("startTo", toDateOnly(filters.startTo))
   }
+  if (filters.saved) {
+    params.set("saved", "true")
+  }
 
   const query = params.toString()
   return query ? `${jobsListKey}?${query}` : jobsListKey

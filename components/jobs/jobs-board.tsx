@@ -20,6 +20,7 @@ const initialFilters: JobFilters = {
   engagements: [],
   startFrom: undefined,
   startTo: undefined,
+  saved: false,
 }
 
 export function JobsBoard() {
@@ -45,7 +46,8 @@ export function JobsBoard() {
     (filters.department !== "all" ? 1 : 0) +
     (filters.engagements.length > 0 ? 1 : 0) +
     (filters.startFrom ? 1 : 0) +
-    (filters.startTo ? 1 : 0)
+    (filters.startTo ? 1 : 0) +
+    (filters.saved ? 1 : 0)
 
   const jobs = data?.jobs ?? []
   const loading = isLoading && !data
@@ -120,9 +122,15 @@ export function JobsBoard() {
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
             <SearchX className="size-8 text-muted-foreground" />
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">No roles match your filters</p>
+              <p className="text-sm font-medium">
+                {filters.saved
+                  ? "No saved roles match your filters"
+                  : "No roles match your filters"}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Try widening your search or clearing a filter.
+                {filters.saved
+                  ? "Try clearing a filter or bookmark more jobs."
+                  : "Try widening your search or clearing a filter."}
               </p>
             </div>
             <Button
