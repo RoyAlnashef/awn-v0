@@ -5,7 +5,7 @@ import { PersonProfileCard } from "@/components/people/person-profile-card"
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 
 export function AccountProfilePreview() {
-  const { draft, tourCredits } = useAccountProfile()
+  const { draft, tourCredits, online } = useAccountProfile()
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -17,6 +17,7 @@ export function AccountProfilePreview() {
           person={draft}
           tourCredits={toProfileTourCredits(tourCredits)}
           mode="preview"
+          online={online}
           className="h-full min-h-0"
         />
       </div>

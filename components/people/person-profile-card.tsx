@@ -22,7 +22,6 @@ import {
   type Person,
   type TourCredit,
 } from "@/lib/people-data"
-import { isPersonOnline } from "@/lib/messages-data"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -93,7 +92,7 @@ export function PersonProfileCard({
   const profile = getPersonProfile(person)
   const resolvedTourCredits = tourCreditsOverride ?? profile.tourCredits
   const availability = availabilityConfig[person.availability]
-  const isOnline = online ?? isPersonOnline(person)
+  const isOnline = online ?? false
   const isPreview = mode === "preview"
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef

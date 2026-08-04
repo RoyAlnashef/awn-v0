@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { redirect } from "next/navigation"
 
 import { getMemberProfile } from "@/lib/account/profile-actions"
+import { getSessionUser } from "@/lib/auth/get-session-user"
 import { AccountLayoutShell } from "@/components/account/account-layout-shell"
 
 export default async function AccountLayout({
@@ -9,14 +10,21 @@ export default async function AccountLayout({
 }: {
   children: ReactNode
 }) {
-  const profile = await getMemberProfile()
+  const [profile, sessionUser] = await Promise.all([
+    getMemberProfile(),
+    getSessionUser(),
+  ])
 
-  if (!profile) {
+  if (!profile || !sessionUser) {
     redirect("/login")
   }
 
   return (
-    <AccountLayoutShell initialProfile={profile} userId={profile.id}>
+    <AccountLayoutShell
+      initialProfile={profile}
+      userId={profile.id}
+      initialOnline={sessionUser.online}
+    >
       {children}
     </AccountLayoutShell>
   )

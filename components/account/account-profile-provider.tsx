@@ -17,6 +17,7 @@ import type { Person } from "@/lib/people-data"
 
 interface AccountProfileContextValue {
   userId: string
+  online: boolean
   draft: Person
   updateDraft: (patch: Partial<Person>) => void
   resetDraft: () => void
@@ -34,10 +35,12 @@ export function AccountProfileProvider({
   children,
   initialProfile,
   userId,
+  initialOnline,
 }: {
   children: ReactNode
   initialProfile: Person
   userId: string
+  initialOnline: boolean
 }) {
   const [saved, setSaved] = useState<Person>(initialProfile)
   const [draft, setDraft] = useState<Person>(initialProfile)
@@ -66,6 +69,7 @@ export function AccountProfileProvider({
   const value = useMemo(
     () => ({
       userId,
+      online: initialOnline,
       draft,
       updateDraft,
       resetDraft,
@@ -76,6 +80,7 @@ export function AccountProfileProvider({
     }),
     [
       userId,
+      initialOnline,
       draft,
       updateDraft,
       resetDraft,

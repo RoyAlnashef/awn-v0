@@ -15,7 +15,7 @@ import { useAccountProfile } from "@/components/account/account-profile-provider
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 
 export function AccountPageActions() {
-  const { draft, tourCredits } = useAccountProfile()
+  const { draft, tourCredits, online } = useAccountProfile()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -48,6 +48,7 @@ export function AccountPageActions() {
       <PersonProfileDrawer
         person={draft}
         tourCredits={toProfileTourCredits(tourCredits)}
+        online={online}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />

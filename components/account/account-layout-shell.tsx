@@ -13,13 +13,19 @@ export function AccountLayoutShell({
   children,
   initialProfile,
   userId,
+  initialOnline,
 }: {
   children: ReactNode
   initialProfile: Person
   userId: string
+  initialOnline: boolean
 }) {
   return (
-    <AccountProfileProvider initialProfile={initialProfile} userId={userId}>
+    <AccountProfileProvider
+      initialProfile={initialProfile}
+      userId={userId}
+      initialOnline={initialOnline}
+    >
       <PageShell
         title="My Account"
         description="Manage your profile, credits, and preferences."
