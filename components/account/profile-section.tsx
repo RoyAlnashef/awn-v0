@@ -1,5 +1,9 @@
 "use client"
 
+import { useTransition } from "react"
+import { toast } from "sonner"
+
+import { updateMemberProfile } from "@/lib/account/profile-actions"
 import {
   availabilityStatuses,
   venueTiers,
@@ -13,6 +17,11 @@ import { AvatarUploadEditor } from "@/components/account/avatar-upload-editor"
 import { BannerUploadEditor } from "@/components/account/banner-upload-editor"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DatePicker,
+  parseDateOnly,
+  toDateOnly,
+} from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -45,12 +54,37 @@ function toggleItem<T extends string>(items: T[], item: T): T[] {
 }
 
 export function ProfileSection() {
-  const { draft, updateDraft } = useAccountProfile()
+  const { userId, draft, updateDraft, resetDraft, commitSaved, commitSavedPatch } =
+    useAccountProfile()
+  const [isPending, startTransition] = useTransition()
 
   function handleHomeBaseChange(value: string) {
     updateDraft({
       homeBase: value,
       city: value.split(",")[0]?.trim() ?? "",
+    })
+  }
+
+  function handlePhotoPersisted(patch: {
+    avatar?: string
+    banner?: string
+    bannerPositionY?: number
+  }) {
+    commitSavedPatch(patch)
+  }
+
+  function handleSave() {
+    startTransition(async () => {
+      const result = await updateMemberProfile(draft)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      if (result.person) {
+        commitSaved(result.person)
+      }
+      toast.success("Profile saved")
     })
   }
 
@@ -64,16 +98,27 @@ export function ProfileSection() {
         />
         <div>
           <BannerUploadEditor
+            userId={userId}
             banner={draft.banner}
             bannerPositionY={draft.bannerPositionY}
+            disabled={isPending}
             onChange={(url, positionY) =>
               updateDraft({ banner: url, bannerPositionY: positionY })
             }
+            onPersisted={(banner, bannerPositionY) =>
+              handlePhotoPersisted({
+                banner,
+                bannerPositionY: bannerPositionY ?? draft.bannerPositionY,
+              })
+            }
           >
             <AvatarUploadEditor
+              userId={userId}
               avatar={draft.avatar}
               name={draft.name}
+              disabled={isPending}
               onChange={(url) => updateDraft({ avatar: url })}
+              onPersisted={(avatar) => handlePhotoPersisted({ avatar })}
             />
           </BannerUploadEditor>
         </div>
@@ -166,19 +211,25 @@ export function ProfileSection() {
             </div>
           </FieldRow>
           <FieldRow label="Available from">
-            <Input
-              type="date"
-              value={draft.availableFrom}
-              onChange={(e) => updateDraft({ availableFrom: e.target.value })}
-              className="max-w-44"
+            <DatePicker
+              value={parseDateOnly(draft.availableFrom)}
+              onChange={(date) =>
+                updateDraft({ availableFrom: date ? toDateOnly(date) : "" })
+              }
+              maxDate={parseDateOnly(draft.availableTo)}
+              placeholder="Pick a date"
+              className="max-w-52"
             />
           </FieldRow>
           <FieldRow label="Available to">
-            <Input
-              type="date"
-              value={draft.availableTo}
-              onChange={(e) => updateDraft({ availableTo: e.target.value })}
-              className="max-w-44"
+            <DatePicker
+              value={parseDateOnly(draft.availableTo)}
+              onChange={(date) =>
+                updateDraft({ availableTo: date ? toDateOnly(date) : "" })
+              }
+              minDate={parseDateOnly(draft.availableFrom)}
+              placeholder="Pick a date"
+              className="max-w-52"
             />
           </FieldRow>
         </div>
@@ -291,8 +342,17 @@ export function ProfileSection() {
 
       {/* Save */}
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="outline">Cancel</Button>
-        <Button>Save changes</Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={resetDraft}
+          disabled={isPending}
+        >
+          Cancel
+        </Button>
+        <Button type="button" onClick={handleSave} disabled={isPending}>
+          {isPending ? "Saving…" : "Save changes"}
+        </Button>
       </div>
     </div>
   )

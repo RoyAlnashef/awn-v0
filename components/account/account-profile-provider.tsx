@@ -10,15 +10,18 @@ import {
 } from "react"
 
 import {
-  createInitialAccountDraft,
   createInitialTourCredits,
   type AccountTourCredit,
 } from "@/lib/account-profile"
 import type { Person } from "@/lib/people-data"
 
 interface AccountProfileContextValue {
+  userId: string
   draft: Person
   updateDraft: (patch: Partial<Person>) => void
+  resetDraft: () => void
+  commitSaved: (next: Person) => void
+  commitSavedPatch: (patch: Partial<Person>) => void
   tourCredits: AccountTourCredit[]
   setTourCredits: React.Dispatch<React.SetStateAction<AccountTourCredit[]>>
 }
@@ -27,8 +30,17 @@ const AccountProfileContext = createContext<AccountProfileContextValue | null>(
   null,
 )
 
-export function AccountProfileProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<Person>(createInitialAccountDraft)
+export function AccountProfileProvider({
+  children,
+  initialProfile,
+  userId,
+}: {
+  children: ReactNode
+  initialProfile: Person
+  userId: string
+}) {
+  const [saved, setSaved] = useState<Person>(initialProfile)
+  const [draft, setDraft] = useState<Person>(initialProfile)
   const [tourCredits, setTourCredits] = useState<AccountTourCredit[]>(
     createInitialTourCredits,
   )
@@ -37,9 +49,40 @@ export function AccountProfileProvider({ children }: { children: ReactNode }) {
     setDraft((prev) => ({ ...prev, ...patch }))
   }, [])
 
+  const resetDraft = useCallback(() => {
+    setDraft(saved)
+  }, [saved])
+
+  const commitSaved = useCallback((next: Person) => {
+    setSaved(next)
+    setDraft(next)
+  }, [])
+
+  const commitSavedPatch = useCallback((patch: Partial<Person>) => {
+    setSaved((prev) => ({ ...prev, ...patch }))
+    setDraft((prev) => ({ ...prev, ...patch }))
+  }, [])
+
   const value = useMemo(
-    () => ({ draft, updateDraft, tourCredits, setTourCredits }),
-    [draft, updateDraft, tourCredits],
+    () => ({
+      userId,
+      draft,
+      updateDraft,
+      resetDraft,
+      commitSaved,
+      commitSavedPatch,
+      tourCredits,
+      setTourCredits,
+    }),
+    [
+      userId,
+      draft,
+      updateDraft,
+      resetDraft,
+      commitSaved,
+      commitSavedPatch,
+      tourCredits,
+    ],
   )
 
   return (

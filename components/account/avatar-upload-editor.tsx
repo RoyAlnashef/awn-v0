@@ -4,9 +4,14 @@ import { useCallback, useRef, useState } from "react"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import { Camera } from "lucide-react"
+import { toast } from "sonner"
 import "react-easy-crop/react-easy-crop.css"
 
 import { initials } from "@/lib/people-data"
+import {
+  removeUserAvatar,
+  uploadUserAvatar,
+} from "@/lib/users/avatar-actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,10 +23,10 @@ import {
 } from "@/components/ui/dialog"
 import { Slider } from "@/components/ui/slider"
 
-async function createCroppedObjectURL(
+async function createCroppedBlob(
   imageSrc: string,
   pixelCrop: Area,
-): Promise<string> {
+): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
@@ -46,14 +51,14 @@ async function createCroppedObjectURL(
     size,
   )
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
           reject(new Error("Failed to create image blob"))
           return
         }
-        resolve(URL.createObjectURL(blob))
+        resolve(blob)
       },
       "image/jpeg",
       0.95,
@@ -62,13 +67,19 @@ async function createCroppedObjectURL(
 }
 
 export function AvatarUploadEditor({
+  userId,
   avatar,
   name,
   onChange,
+  onPersisted,
+  disabled = false,
 }: {
+  userId: string
   avatar?: string
   name: string
   onChange: (url: string | undefined) => void
+  onPersisted: (avatar?: string) => void
+  disabled?: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
@@ -76,6 +87,7 @@ export function AvatarUploadEditor({
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [isApplying, setIsApplying] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -103,11 +115,39 @@ export function AvatarUploadEditor({
     if (!imageSrc || !croppedAreaPixels) return
     setIsApplying(true)
     try {
-      const url = await createCroppedObjectURL(imageSrc, croppedAreaPixels)
-      onChange(url)
+      const blob = await createCroppedBlob(imageSrc, croppedAreaPixels)
+      const formData = new FormData()
+      formData.set("file", new File([blob], "avatar.jpg", { type: "image/jpeg" }))
+
+      const result = await uploadUserAvatar(userId, formData)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      onChange(result.avatarUrl)
+      onPersisted(result.avatarUrl)
+      toast.success("Profile photo updated")
       setImageSrc(null)
     } finally {
       setIsApplying(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    setIsRemoving(true)
+    try {
+      const result = await removeUserAvatar(userId)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      onChange(undefined)
+      onPersisted(undefined)
+      toast.success("Profile photo removed")
+    } finally {
+      setIsRemoving(false)
     }
   }
 
@@ -123,9 +163,9 @@ export function AvatarUploadEditor({
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
         onChange={onFileChange}
+        disabled={disabled || isApplying || isRemoving}
       />
 
-      {/* Circular avatar preview with camera overlay */}
       <div className="relative size-20 shrink-0">
         <Avatar className="size-20 ring-4 ring-background">
           <AvatarImage src={avatar ?? undefined} alt="" />
@@ -136,14 +176,14 @@ export function AvatarUploadEditor({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 outline-none transition-opacity hover:opacity-100 focus-visible:opacity-100"
+          disabled={disabled || isApplying || isRemoving}
+          className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 outline-none transition-opacity hover:opacity-100 focus-visible:opacity-100 disabled:pointer-events-none"
           aria-label={avatar ? "Change profile photo" : "Upload profile photo"}
         >
           <Camera className="size-5 text-white" />
         </button>
       </div>
 
-      {/* Single action slot: upload when empty, remove when set */}
       <div className="flex flex-col items-start pt-1">
         {avatar ? (
           <Button
@@ -151,9 +191,10 @@ export function AvatarUploadEditor({
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            onClick={() => onChange(undefined)}
+            onClick={handleRemove}
+            disabled={disabled || isApplying || isRemoving}
           >
-            Remove
+            {isRemoving ? "Removing…" : "Remove"}
           </Button>
         ) : (
           <Button
@@ -161,6 +202,7 @@ export function AvatarUploadEditor({
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || isApplying || isRemoving}
           >
             <Camera className="size-3.5" />
             Upload photo
@@ -168,7 +210,6 @@ export function AvatarUploadEditor({
         )}
       </div>
 
-      {/* Crop dialog */}
       <Dialog
         open={!!imageSrc}
         onOpenChange={(open) => {
@@ -180,7 +221,6 @@ export function AvatarUploadEditor({
             <DialogTitle>Crop profile photo</DialogTitle>
           </DialogHeader>
 
-          {/* Cropper canvas */}
           <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-black">
             {imageSrc && (
               <Cropper
@@ -197,7 +237,6 @@ export function AvatarUploadEditor({
             )}
           </div>
 
-          {/* Zoom slider */}
           <div className="flex items-center gap-4 px-1">
             <span className="w-10 shrink-0 text-xs text-muted-foreground">
               Zoom
@@ -222,7 +261,7 @@ export function AvatarUploadEditor({
               onClick={handleApply}
               disabled={isApplying || !croppedAreaPixels}
             >
-              {isApplying ? "Applying…" : "Apply"}
+              {isApplying ? "Uploading…" : "Apply"}
             </Button>
           </DialogFooter>
         </DialogContent>

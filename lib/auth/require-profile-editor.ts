@@ -35,7 +35,7 @@ export async function requireProfileEditor(targetUserId: string): Promise<{
 
   if (!canAccessAdmin(profile)) {
     throw new AuthError(
-      "You can only update your own profile photo.",
+      "You can only update your own profile.",
       "forbidden",
     )
   }

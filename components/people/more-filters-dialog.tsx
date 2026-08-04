@@ -11,8 +11,11 @@ import {
 } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  DatePicker,
+  parseDateOnly,
+  toDateOnly,
+} from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogClose,
@@ -149,34 +152,30 @@ export function MoreFiltersDialog({
           <div className="flex flex-col gap-2.5">
             <SectionLabel>Available window</SectionLabel>
             <div className="flex items-center gap-3">
-              <Label htmlFor="available-from" className="sr-only">
-                Available from
-              </Label>
-              <Input
-                id="available-from"
-                type="date"
-                value={filters.availableFrom ?? ""}
-                max={filters.availableTo || undefined}
-                onChange={(e) =>
-                  onChange({ availableFrom: e.target.value || undefined })
+              <DatePicker
+                value={parseDateOnly(filters.availableFrom)}
+                onChange={(date) =>
+                  onChange({
+                    availableFrom: date ? toDateOnly(date) : undefined,
+                  })
                 }
-                className="w-auto"
+                maxDate={parseDateOnly(filters.availableTo)}
+                placeholder="From"
+                className="min-w-40 flex-1"
               />
               <span className="text-muted-foreground" aria-hidden>
                 →
               </span>
-              <Label htmlFor="available-to" className="sr-only">
-                Available to
-              </Label>
-              <Input
-                id="available-to"
-                type="date"
-                value={filters.availableTo ?? ""}
-                min={filters.availableFrom || undefined}
-                onChange={(e) =>
-                  onChange({ availableTo: e.target.value || undefined })
+              <DatePicker
+                value={parseDateOnly(filters.availableTo)}
+                onChange={(date) =>
+                  onChange({
+                    availableTo: date ? toDateOnly(date) : undefined,
+                  })
                 }
-                className="w-auto"
+                minDate={parseDateOnly(filters.availableFrom)}
+                placeholder="To"
+                className="min-w-40 flex-1"
               />
             </div>
           </div>

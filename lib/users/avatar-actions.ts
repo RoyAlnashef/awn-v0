@@ -69,6 +69,8 @@ async function deleteUserAvatarObjects(
 function revalidateAvatarPaths() {
   revalidatePath("/users")
   revalidatePath("/settings")
+  revalidatePath("/account/profile")
+  revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
 }
 

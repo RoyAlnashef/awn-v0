@@ -2,15 +2,24 @@
 
 import type { ReactNode } from "react"
 
+import type { Person } from "@/lib/people-data"
 import { PageShell } from "@/components/page-shell"
 import { AccountNav } from "@/components/account/account-nav"
 import { AccountPageActions } from "@/components/account/account-page-actions"
 import { AccountProfilePreview } from "@/components/account/account-profile-preview"
 import { AccountProfileProvider } from "@/components/account/account-profile-provider"
 
-export function AccountLayoutShell({ children }: { children: ReactNode }) {
+export function AccountLayoutShell({
+  children,
+  initialProfile,
+  userId,
+}: {
+  children: ReactNode
+  initialProfile: Person
+  userId: string
+}) {
   return (
-    <AccountProfileProvider>
+    <AccountProfileProvider initialProfile={initialProfile} userId={userId}>
       <PageShell
         title="My Account"
         description="Manage your profile, credits, and preferences."
