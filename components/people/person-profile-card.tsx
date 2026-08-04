@@ -108,7 +108,19 @@ export function PersonProfileCard({
       <div className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-popover text-popover-foreground", className)}>
         {/* Hero */}
         <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
-          <div className="h-24 bg-muted" />
+          {person.banner ? (
+            <img
+              src={person.banner}
+              alt=""
+              draggable={false}
+              className="h-24 w-full object-cover"
+              style={{
+                objectPosition: `center ${person.bannerPositionY ?? 50}%`,
+              }}
+            />
+          ) : (
+            <div className="h-24 bg-muted" />
+          )}
           {availability ? (
             <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">
               <span className="relative flex size-2">

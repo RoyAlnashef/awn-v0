@@ -86,6 +86,8 @@ export interface Person {
   topTours: string[]
   skills: string[]
   avatar?: string
+  banner?: string
+  bannerPositionY?: number
   followed: boolean
   /**
    * Optional extended-profile fields. When omitted, getPersonProfile() derives

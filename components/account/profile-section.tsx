@@ -9,6 +9,8 @@ import {
   type WorkAuth,
 } from "@/lib/people-data"
 import { useAccountProfile } from "@/components/account/account-profile-provider"
+import { AvatarUploadEditor } from "@/components/account/avatar-upload-editor"
+import { BannerUploadEditor } from "@/components/account/banner-upload-editor"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -54,6 +56,31 @@ export function ProfileSection() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Photos */}
+      <section className="flex flex-col gap-3">
+        <SectionHeading
+          title="Photos"
+          description="Your profile photo and banner visible on your public profile card."
+        />
+        <div>
+          <BannerUploadEditor
+            banner={draft.banner}
+            bannerPositionY={draft.bannerPositionY}
+            onChange={(url, positionY) =>
+              updateDraft({ banner: url, bannerPositionY: positionY })
+            }
+          >
+            <AvatarUploadEditor
+              avatar={draft.avatar}
+              name={draft.name}
+              onChange={(url) => updateDraft({ avatar: url })}
+            />
+          </BannerUploadEditor>
+        </div>
+      </section>
+
+      <Separator />
+
       {/* Basic Info */}
       <section className="flex flex-col gap-4">
         <SectionHeading
