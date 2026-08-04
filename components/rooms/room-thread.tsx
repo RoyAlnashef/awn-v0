@@ -176,9 +176,16 @@ export function RoomThread({
     const profileId = message.authorId
     openProfileIdRef.current = profileId ?? null
 
+    const isFirstMount = profilePerson === null
     setProfilePerson(person)
     setProfileOnline(undefined)
-    setProfileOpen(true)
+
+    // Mount closed first so the drawer can animate in (matches People/Messages).
+    if (isFirstMount) {
+      requestAnimationFrame(() => setProfileOpen(true))
+    } else {
+      setProfileOpen(true)
+    }
 
     if (!profileId || !isUuid(profileId)) return
 
@@ -193,7 +200,6 @@ export function RoomThread({
     setProfileOpen(open)
     if (!open) {
       openProfileIdRef.current = null
-      setProfilePerson(null)
       setProfileOnline(undefined)
     }
   }
