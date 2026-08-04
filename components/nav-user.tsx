@@ -6,6 +6,7 @@ import { ChevronDown, LifeBuoy, LogOut, User } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
+import { iconWithTextDimClass } from "@/lib/icon-styles"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -132,9 +133,10 @@ export function NavUser({ user }: { user: NavUserData }) {
                 className={cn(
                   "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm outline-none transition-colors",
                   "hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                  iconWithTextDimClass,
                 )}
               >
-                <link.icon className="size-4 text-muted-foreground" />
+                <link.icon className="size-4" />
                 {link.label}
               </Link>
             ))}
@@ -145,7 +147,10 @@ export function NavUser({ user }: { user: NavUserData }) {
               type="button"
               onClick={handleSignOut}
               disabled={isPending}
-              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              className={cn(
+                "flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
+                iconWithTextDimClass,
+              )}
             >
               <LogOut className="size-4" />
               {isPending ? "Signing out…" : "Log out"}
