@@ -15,7 +15,7 @@ import {
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { AvatarUploadEditor } from "@/components/account/avatar-upload-editor"
 import { BannerUploadEditor } from "@/components/account/banner-upload-editor"
-import { Badge } from "@/components/ui/badge"
+import { SkillAddPopover } from "@/components/account/skill-add-popover"
 import { Button } from "@/components/ui/button"
 import {
   DatePicker,
@@ -308,12 +308,15 @@ export function ProfileSection() {
         <FieldRow label="Skills">
           <div className="flex flex-wrap gap-1.5">
             {draft.skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="gap-1 font-normal">
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
+              >
                 {skill}
                 <button
                   type="button"
                   aria-label={`Remove ${skill}`}
-                  className="ml-0.5 rounded-sm opacity-60 hover:opacity-100"
+                  className="rounded-sm opacity-60 hover:opacity-100"
                   onClick={() =>
                     updateDraft({
                       skills: draft.skills.filter((s) => s !== skill),
@@ -322,20 +325,15 @@ export function ProfileSection() {
                 >
                   ×
                 </button>
-              </Badge>
+              </span>
             ))}
-            <button
-              type="button"
-              className="inline-flex items-center rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-              onClick={() => {
-                const skill = window.prompt("Add a skill")
-                if (skill?.trim() && !draft.skills.includes(skill.trim())) {
-                  updateDraft({ skills: [...draft.skills, skill.trim()] })
-                }
-              }}
-            >
-              + Add skill
-            </button>
+            <SkillAddPopover
+              existingSkills={draft.skills}
+              disabled={isPending}
+              onAdd={(skill) =>
+                updateDraft({ skills: [...draft.skills, skill] })
+              }
+            />
           </div>
         </FieldRow>
       </section>
