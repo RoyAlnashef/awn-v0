@@ -37,7 +37,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/jobs/date-picker"
 import {
   formToPreviewJob,
-  JobCardPreview,
 } from "@/components/jobs/job-card-preview"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
 
@@ -253,7 +252,7 @@ export function JobFormPage({
           {isEdit ? "Back to job" : "My Jobs"}
         </Button>
       }
-      preview={<JobCardPreview job={previewJob} />}
+      previewJob={previewJob}
     >
       <form
         onSubmit={(event) => void handlePublish(event)}

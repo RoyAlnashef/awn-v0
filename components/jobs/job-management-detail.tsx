@@ -16,7 +16,6 @@ import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { JobCardPreview } from "@/components/jobs/job-card-preview"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
 
 function initials(name: string) {
@@ -74,7 +73,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
           Edit
         </Button>
       }
-      preview={<JobCardPreview job={job} />}
+      previewJob={job}
     >
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-2">
