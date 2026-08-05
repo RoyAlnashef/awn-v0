@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ListTodo, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { PageShell } from "@/components/page-shell"
 import { JobsBoard } from "@/components/jobs/jobs-board"
@@ -21,7 +21,6 @@ export default function JobsPage() {
             nativeButton={false}
             render={<Link href="/my-jobs" />}
           >
-            <ListTodo />
             My Jobs
           </Button>
           <Button size="sm" nativeButton={false} render={<Link href="/jobs/new" />}>
