@@ -1,4 +1,8 @@
-import { type EngagementType, type JobKind } from "@/lib/jobs-data"
+import {
+  type ApplicationStatus,
+  type EngagementType,
+  type JobKind,
+} from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { formatJobSavedAt } from "@/lib/jobs/format"
 import { mapJobPostingRow } from "@/lib/jobs/map"
@@ -33,6 +37,14 @@ type JobRow = {
 }
 
 type SavedJobRow = {
+  created_at: string
+  job: JobRow | JobRow[] | null
+}
+
+type AppliedJobRow = {
+  id: string
+  status: string
+  note: string
   created_at: string
   job: JobRow | JobRow[] | null
 }
@@ -76,6 +88,7 @@ function mapRow(
   options: {
     saved?: boolean
     savedAt?: string
+    applied?: boolean
     applicationCount?: number
   } = {},
 ) {
@@ -98,8 +111,46 @@ export async function GET(request: Request) {
   if (!user) return jsonError(error, 401)
 
   const tab = new URL(request.url).searchParams.get("tab")
-  if (tab !== "created" && tab !== "saved") {
-    return jsonError("tab must be created or saved", 400)
+  if (tab !== "created" && tab !== "saved" && tab !== "applied") {
+    return jsonError("tab must be created, saved, or applied", 400)
+  }
+
+  if (tab === "applied") {
+    const { data: rows, error: listError } = await supabase
+      .from("job_applications")
+      .select(
+        `
+        id,
+        status,
+        note,
+        created_at,
+        job:job_postings!inner (${JOB_SELECT})
+      `,
+      )
+      .eq("applicant_id", user.id)
+      .neq("status", "withdrawn")
+      .order("created_at", { ascending: false })
+
+    if (listError) return jsonError(listError.message, 500)
+
+    const jobs = ((rows ?? []) as AppliedJobRow[])
+      .map((row) => {
+        const jobRow = Array.isArray(row.job) ? row.job[0] : row.job
+        if (!jobRow || jobRow.status === "deleted") return null
+
+        return {
+          ...mapRow(jobRow, { applied: true }),
+          application: {
+            id: row.id,
+            status: row.status as ApplicationStatus,
+            appliedAt: row.created_at,
+            note: row.note,
+          },
+        }
+      })
+      .filter((job): job is NonNullable<typeof job> => job !== null)
+
+    return Response.json({ jobs })
   }
 
   if (tab === "created") {

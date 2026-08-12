@@ -246,7 +246,7 @@ export function JobFormPage({
           size="sm"
           variant="outline"
           nativeButton={false}
-          render={<Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs"} />}
+          render={<Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs/created"} />}
         >
           <ArrowLeft />
           {isEdit ? "Back to job" : "My Jobs"}
@@ -429,7 +429,7 @@ export function JobFormPage({
             disabled={submitting}
             nativeButton={false}
             render={
-              <Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs"} />
+              <Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs/created"} />
             }
           >
             Cancel

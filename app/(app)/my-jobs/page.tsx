@@ -1,5 +1,5 @@
-import { MyJobsBoard } from "@/components/jobs/my-jobs-board"
+import { redirect } from "next/navigation"
 
 export default function MyJobsPage() {
-  return <MyJobsBoard />
+  redirect("/my-jobs/created")
 }

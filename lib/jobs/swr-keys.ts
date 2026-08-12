@@ -5,7 +5,9 @@ export const jobsListKey = "/api/jobs"
 
 export const myJobsKey = "/api/jobs/mine?tab=created"
 
-export function accountJobsKey(tab: "created" | "saved"): string {
+export const myApplicationsKey = "/api/jobs/mine?tab=applied"
+
+export function accountJobsKey(tab: "created" | "saved" | "applied"): string {
   return `/api/jobs/mine?tab=${tab}`
 }
 

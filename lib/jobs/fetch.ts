@@ -1,10 +1,27 @@
 "use client"
 
 import type { EngagementType, Job, JobKind, JobStatus, ApplicationStatus } from "@/lib/jobs-data"
-import { accountJobsKey, jobsListKey } from "@/lib/jobs/swr-keys"
+import {
+  accountJobsKey,
+  jobsListKey,
+  myApplicationsKey,
+} from "@/lib/jobs/swr-keys"
 
 export type JobsListResponse = {
   jobs: Job[]
+}
+
+export type AppliedJob = Job & {
+  application: {
+    id: string
+    status: ApplicationStatus
+    appliedAt: string
+    note: string
+  }
+}
+
+export type AppliedJobsListResponse = {
+  jobs: AppliedJob[]
 }
 
 export type CreateJobPayload = {
@@ -87,6 +104,11 @@ export async function fetchMyJobs(
   return parseJson<JobsListResponse>(response)
 }
 
+export async function fetchMyApplications(): Promise<AppliedJobsListResponse> {
+  const response = await fetch(myApplicationsKey)
+  return parseJson<AppliedJobsListResponse>(response)
+}
+
 export async function fetchJob(jobId: string): Promise<JobDetailResponse> {
   const response = await fetch(`/api/jobs/${jobId}`)
   return parseJson<JobDetailResponse>(response)
@@ -130,6 +152,16 @@ export async function applyToJob(
     body: JSON.stringify(payload),
   })
   return parseJson(response)
+}
+
+export async function withdrawFromJob(jobId: string): Promise<void> {
+  const response = await fetch(`/api/jobs/${jobId}/apply`, {
+    method: "DELETE",
+  })
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string }
+    throw new Error(data.error || "Request failed")
+  }
 }
 
 export async function toggleSaveJob(jobId: string): Promise<SaveJobResponse> {
