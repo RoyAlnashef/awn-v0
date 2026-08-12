@@ -90,7 +90,7 @@ const bubbleReactionsVariants = cva(
   {
     variants: {
       side: {
-        top: "top-1.5",
+        top: "top-0 -translate-y-3/4",
         bottom: "bottom-0 translate-y-3/4",
       },
       align: {

@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import { iconWithTextDimClass } from "@/lib/icon-styles"
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (

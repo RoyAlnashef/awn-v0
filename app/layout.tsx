@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { Nunito_Sans, EB_Garamond } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const fontSans = Nunito_Sans({subsets:['latin'],variable:'--font-sans'});
-
-const fontHeading = EB_Garamond({subsets:['latin'],variable:'--font-heading'});
-
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "A Wright Network",
@@ -29,7 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={fontSans.variable + " " + fontHeading.variable + " bg-background"}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} bg-background font-sans`}
+    >
       <body className="antialiased">
         <ThemeProvider defaultTheme="dark">
           {children}

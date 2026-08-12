@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 
 function Avatar({
   className,
@@ -17,7 +17,7 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        "group/avatar relative flex size-8 shrink-0 overflow-visible rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
         className
       )}
       {...props}
@@ -54,21 +54,12 @@ function AvatarFallback({
   )
 }
 
-function AvatarBadge({
-  className,
-  online,
-  ...props
-}: React.ComponentProps<"span"> & {
-  online?: boolean
-}) {
-  if (online !== true) return null
-
+function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar-badge"
-      aria-hidden="true"
       className={cn(
-        "absolute top-0 right-0 z-10 inline-flex size-2.5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-green-500 ring-2 ring-background select-none",
+        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground bg-blend-color ring-2 ring-background select-none",
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
