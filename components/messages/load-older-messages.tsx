@@ -17,7 +17,7 @@ export function LoadOlderMessages({
   const loadingRef = useRef(false)
 
   useEffect(() => {
-    if (!start || !hasMore || loading || loadingRef.current) return
+    if (start || !hasMore || loading || loadingRef.current) return
 
     loadingRef.current = true
     setLoading(true)
