@@ -21,6 +21,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Collapsible,
@@ -189,8 +190,15 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { showAdminNav: boolean }) {
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
   const { unreadCount: messagesUnreadCount } = useUnreadCount()
   const { unreadCount: roomsUnreadCount } = useRoomsUnreadCount()
+
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }, [pathname, isMobile, setOpenMobile])
 
   const isActive = (item: NavItem) => isSubActive(pathname, item.href)
 
