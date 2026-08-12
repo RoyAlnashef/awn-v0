@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { LayoutGrid, List, SearchX } from "lucide-react"
+import { SearchX } from "lucide-react"
 
 import {
   people as allPeople,
@@ -11,6 +11,8 @@ import {
   type WorkAuth,
 } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
+import { useBoardViewMode } from "@/hooks/use-board-view-mode"
+import { BoardViewToggle } from "@/components/board-view-toggle"
 import { Button } from "@/components/ui/button"
 import {
   PeopleFilters,
@@ -18,8 +20,6 @@ import {
 } from "@/components/people/people-filters"
 import { PersonCard } from "@/components/people/person-card"
 import { PersonRow } from "@/components/people/person-row"
-
-type ViewMode = "grid" | "list"
 
 const initialFilters: PeopleFiltersState = {
   search: "",
@@ -33,8 +33,7 @@ const initialFilters: PeopleFiltersState = {
 }
 
 export function PeopleBoard() {
-  // Default to the card grid when the user lands on the page.
-  const [view, setView] = React.useState<ViewMode>("grid")
+  const [view, setView] = useBoardViewMode("people")
   const [filters, setFilters] = React.useState<PeopleFiltersState>(initialFilters)
 
   function updateFilters(next: Partial<PeopleFiltersState>) {
@@ -127,28 +126,7 @@ export function PeopleBoard() {
             {filtered.length === 1 ? "contact" : "contacts"}
           </p>
 
-          <div className="inline-flex items-center gap-0.5 rounded-full border border-border bg-card p-0.5">
-            <Button
-              type="button"
-              size="icon-sm"
-              variant={view === "grid" ? "secondary" : "ghost"}
-              onClick={() => setView("grid")}
-              aria-pressed={view === "grid"}
-              aria-label="Grid view"
-            >
-              <LayoutGrid />
-            </Button>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant={view === "list" ? "secondary" : "ghost"}
-              onClick={() => setView("list")}
-              aria-pressed={view === "list"}
-              aria-label="List view"
-            >
-              <List />
-            </Button>
-          </div>
+          <BoardViewToggle view={view} onViewChange={setView} />
         </div>
 
         {filtered.length === 0 ? (

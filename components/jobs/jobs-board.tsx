@@ -1,18 +1,22 @@
 "use client"
 
 import * as React from "react"
-import { LayoutGrid, List, Loader2, SearchX } from "lucide-react"
+import { Loader2, SearchX } from "lucide-react"
 import useSWR from "swr"
 
 import { fetchJobs } from "@/lib/jobs/fetch"
 import { jobsListKeyWithFilters } from "@/lib/jobs/swr-keys"
+import {
+  jobsGridClassName,
+  jobsListClassName,
+} from "@/lib/jobs/view-mode"
 import { cn } from "@/lib/utils"
+import { useBoardViewMode } from "@/hooks/use-board-view-mode"
+import { BoardViewToggle } from "@/components/board-view-toggle"
 import { Button } from "@/components/ui/button"
 import { JobsFilters, type JobFilters } from "@/components/jobs/jobs-filters"
 import { JobCard } from "@/components/jobs/job-card"
 import { JobRow } from "@/components/jobs/job-row"
-
-type ViewMode = "grid" | "list"
 
 const initialFilters: JobFilters = {
   search: "",
@@ -24,7 +28,7 @@ const initialFilters: JobFilters = {
 }
 
 export function JobsBoard() {
-  const [view, setView] = React.useState<ViewMode>("grid")
+  const [view, setView] = useBoardViewMode("jobs")
   const [filters, setFilters] = React.useState<JobFilters>(initialFilters)
 
   const listKey = React.useMemo(
@@ -80,28 +84,7 @@ export function JobsBoard() {
             )}
           </p>
 
-          <div className="inline-flex items-center gap-0.5 rounded-full border border-border bg-card p-0.5">
-            <Button
-              type="button"
-              size="icon-sm"
-              variant={view === "grid" ? "secondary" : "ghost"}
-              onClick={() => setView("grid")}
-              aria-pressed={view === "grid"}
-              aria-label="Grid view"
-            >
-              <LayoutGrid />
-            </Button>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant={view === "list" ? "secondary" : "ghost"}
-              onClick={() => setView("list")}
-              aria-pressed={view === "list"}
-              aria-label="List view"
-            >
-              <List />
-            </Button>
-          </div>
+          <BoardViewToggle view={view} onViewChange={setView} />
         </div>
 
         {error ? (
@@ -144,9 +127,7 @@ export function JobsBoard() {
         ) : (
           <div
             className={cn(
-              view === "grid"
-                ? "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-                : "flex flex-col gap-3",
+              view === "grid" ? jobsGridClassName : jobsListClassName,
             )}
           >
             {jobs.map((job) =>

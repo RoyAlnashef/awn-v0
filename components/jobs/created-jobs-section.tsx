@@ -1,17 +1,30 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { Briefcase, Plus } from "lucide-react"
 import useSWR from "swr"
 
 import { fetchMyJobs } from "@/lib/jobs/fetch"
 import { myJobsKey } from "@/lib/jobs/swr-keys"
+import {
+  jobsGridClassName,
+  jobsListClassName,
+} from "@/lib/jobs/view-mode"
+import { cn } from "@/lib/utils"
+import { useBoardViewMode } from "@/hooks/use-board-view-mode"
+import { BoardViewToggle } from "@/components/board-view-toggle"
+import { MyJobListItem } from "@/components/jobs/my-job-list-item"
+import { MyJobRow } from "@/components/jobs/my-job-row"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MyJobListItem } from "@/components/jobs/my-job-list-item"
 
 function JobCardSkeleton() {
   return <Skeleton className="h-80 w-full rounded-xl" />
+}
+
+function JobRowSkeleton() {
+  return <Skeleton className="h-28 w-full rounded-xl" />
 }
 
 function EmptyState() {
@@ -35,6 +48,7 @@ function EmptyState() {
 }
 
 export function CreatedJobsSection() {
+  const [view, setView] = useBoardViewMode("my-jobs-created")
   const { data, error, isLoading } = useSWR(myJobsKey, () =>
     fetchMyJobs("created"),
   )
@@ -51,10 +65,26 @@ export function CreatedJobsSection() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <JobCardSkeleton />
-        <JobCardSkeleton />
-        <JobCardSkeleton />
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-8 w-18 rounded-full" />
+        </div>
+        <div className={view === "grid" ? jobsGridClassName : jobsListClassName}>
+          {view === "grid" ? (
+            <>
+              <JobCardSkeleton />
+              <JobCardSkeleton />
+              <JobCardSkeleton />
+            </>
+          ) : (
+            <>
+              <JobRowSkeleton />
+              <JobRowSkeleton />
+              <JobRowSkeleton />
+            </>
+          )}
+        </div>
       </div>
     )
   }
@@ -65,14 +95,21 @@ export function CreatedJobsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        <span className="font-medium text-foreground">{jobs.length}</span>{" "}
-        {jobs.length === 1 ? "role" : "roles"}
-      </p>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {jobs.map((job) => (
-          <MyJobListItem key={job.id} job={job} />
-        ))}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          <span className="font-medium text-foreground">{jobs.length}</span>{" "}
+          {jobs.length === 1 ? "role" : "roles"}
+        </p>
+        <BoardViewToggle view={view} onViewChange={setView} />
+      </div>
+      <div className={cn(view === "grid" ? jobsGridClassName : jobsListClassName)}>
+        {jobs.map((job) =>
+          view === "grid" ? (
+            <MyJobListItem key={job.id} job={job} />
+          ) : (
+            <MyJobRow key={job.id} job={job} />
+          ),
+        )}
       </div>
     </div>
   )
