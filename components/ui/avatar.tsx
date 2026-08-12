@@ -54,7 +54,15 @@ function AvatarFallback({
   )
 }
 
-function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+function AvatarBadge({
+  className,
+  online,
+  ...props
+}: React.ComponentProps<"span"> & { online?: boolean }) {
+  if (!online) {
+    return null
+  }
+
   return (
     <span
       data-slot="avatar-badge"
