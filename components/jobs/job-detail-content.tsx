@@ -173,7 +173,7 @@ export function JobDetailContent({
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-6 px-6 py-5">
             <div className="flex flex-col gap-3">
-              <span className="font-heading text-lg font-semibold text-primary">
+              <span className="font-heading text-lg font-semibold text-primary-bright">
                 {job.payRate || "Rate TBD"}
               </span>
               <div className="flex flex-wrap gap-1.5">

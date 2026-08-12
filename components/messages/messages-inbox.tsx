@@ -107,14 +107,14 @@ export function MessagesInbox({
                     aria-current={active ? "true" : undefined}
                     className={cn(
                       "relative flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                      c.unread && "bg-primary/6",
+                      c.unread && "bg-success/6",
                       active && "bg-accent",
                     )}
                   >
                     {c.unread ? (
                       <span
                         aria-hidden="true"
-                        className="absolute inset-y-0 left-0 w-0.5 bg-primary"
+                        className="absolute inset-y-0 left-0 w-0.5 bg-success"
                       />
                     ) : null}
 
@@ -157,7 +157,7 @@ export function MessagesInbox({
                         {c.unread ? (
                           <span
                             aria-hidden="true"
-                            className="size-2 shrink-0 rounded-full bg-primary"
+                            className="size-2 shrink-0 rounded-full bg-success"
                           />
                         ) : null}
                       </div>

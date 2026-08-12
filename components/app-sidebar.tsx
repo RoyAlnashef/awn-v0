@@ -169,8 +169,8 @@ function FlatNavItem({
         {item.live ? (
           <span className="ml-auto flex items-center gap-1.5 group-data-[collapsible=icon]:hidden">
             <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-success" />
             </span>
           </span>
         ) : null}

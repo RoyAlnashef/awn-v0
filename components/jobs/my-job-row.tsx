@@ -122,7 +122,7 @@ export function MyJobRow({ job }: { job: Job }) {
       </div>
 
       <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
-        <span className="font-heading text-base font-semibold text-primary">
+        <span className="font-heading text-base font-semibold text-primary-bright">
           {job.payRate || "Rate TBD"}
         </span>
         <div className="pointer-events-auto relative z-10 flex flex-wrap items-center justify-end gap-1.5">

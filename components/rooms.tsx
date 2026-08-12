@@ -61,7 +61,7 @@ export function Rooms() {
           >
             <Group className="size-5" />
             {unreadCount > 0 ? (
-              <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background">
+              <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground ring-2 ring-background">
                 {unreadCount}
               </span>
             ) : null}
@@ -78,7 +78,7 @@ export function Rooms() {
             <div className="flex items-center gap-2">
               <SheetTitle>Rooms</SheetTitle>
               {unreadCount > 0 ? (
-                <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
+                <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-xs font-medium text-success">
                   {unreadCount} new
                 </span>
               ) : null}

@@ -78,7 +78,7 @@ export function JobShareCard({
             </span>
           ) : null}
           {jobShare.payRate ? (
-            <span className="font-heading text-primary">{jobShare.payRate}</span>
+            <span className="font-heading text-primary-bright">{jobShare.payRate}</span>
           ) : null}
         </div>
       </AttachmentContent>

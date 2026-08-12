@@ -78,14 +78,14 @@ export function RoomsInbox({
                   <div
                     className={cn(
                       "relative flex items-center gap-3 border-b px-4 py-3 last:border-b-0",
-                      room.unread && room.joined && "bg-primary/[0.06]",
+                      room.unread && room.joined && "bg-success/[0.06]",
                       active && "bg-accent",
                     )}
                   >
                     {room.unread && room.joined ? (
                       <span
                         aria-hidden="true"
-                        className="absolute inset-y-0 left-0 w-0.5 bg-primary"
+                        className="absolute inset-y-0 left-0 w-0.5 bg-success"
                       />
                     ) : null}
 
@@ -110,7 +110,7 @@ export function RoomsInbox({
                           {room.name}
                         </p>
                         {room.unread && room.joined && (room.unreadCount ?? 0) > 0 ? (
-                          <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                          <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground">
                             {room.unreadCount}
                           </span>
                         ) : null}

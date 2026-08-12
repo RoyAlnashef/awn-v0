@@ -36,12 +36,8 @@ function MessageScroller({
 
 function MessageScrollerViewport({
   className,
-  onReadingHistoryStart,
-  onTouchStart,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport> & {
-  onReadingHistoryStart?: () => void
-}) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
   return (
     <MessageScrollerPrimitive.Viewport
       data-slot="message-scroller-viewport"
@@ -49,10 +45,6 @@ function MessageScrollerViewport({
         "size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-thumb-transparent data-autoscrolling:scrollbar-track-transparent",
         className
       )}
-      onTouchStart={(event) => {
-        onReadingHistoryStart?.()
-        onTouchStart?.(event)
-      }}
       {...props}
     />
   )
@@ -65,7 +57,7 @@ function MessageScrollerContent({
   return (
     <MessageScrollerPrimitive.Content
       data-slot="message-scroller-content"
-      className={cn("flex h-max min-h-full flex-col justify-end gap-8", className)}
+      className={cn("flex h-max min-h-full flex-col gap-8", className)}
       {...props}
     />
   )
@@ -80,7 +72,10 @@ function MessageScrollerItem({
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
-      className={cn("min-w-0 shrink-0", className)}
+      className={cn(
+        "min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
+        className
+      )}
       {...props}
     />
   )

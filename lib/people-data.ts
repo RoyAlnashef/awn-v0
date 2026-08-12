@@ -8,20 +8,20 @@ export const availabilityStatuses: Availability[] = [
 
 /**
  * Visual config for each availability status. Kept within the app palette:
- * "Available Now" uses the ember primary (with a live ping, mirroring the
+ * "Available Now" uses the teal success tone (with a live ping, mirroring the
  * sidebar availability card); the others step down to muted neutrals.
  */
 export const availabilityConfig: Record<
   Availability,
   { dot: string; ping: boolean; label: string }
 > = {
-  "Available Now": { dot: "bg-primary", ping: true, label: "Available Now" },
+  "Available Now": { dot: "bg-success", ping: true, label: "Available Now" },
   "Between Tours": {
     dot: "bg-foreground/50",
     ping: false,
     label: "Between Tours",
   },
-  "On Tour": { dot: "bg-primary/60", ping: false, label: "On Tour" },
+  "On Tour": { dot: "bg-foreground/40", ping: false, label: "On Tour" },
 }
 
 /** Home-base cities offered as quick chips. Anything else falls under "Other". */

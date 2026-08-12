@@ -41,7 +41,7 @@ export function formatJobSavedAt(iso: string): string {
 }
 
 export const jobStatusStyles: Record<JobStatus, string> = {
-  open: "border-green-500/30 bg-green-500/10 text-green-600",
+  open: "border-success/30 bg-success/10 text-success",
   draft: "border-amber-500/30 bg-amber-500/10 text-amber-600",
   filled: "border-border bg-muted text-muted-foreground",
   expired: "border-border bg-muted text-muted-foreground",
@@ -50,7 +50,7 @@ export const jobStatusStyles: Record<JobStatus, string> = {
 
 export const applicationStatusStyles: Record<ApplicationStatus, string> = {
   pending: "border-amber-500/30 bg-amber-500/10 text-amber-600",
-  approved: "border-green-500/30 bg-green-500/10 text-green-600",
+  approved: "border-success/30 bg-success/10 text-success",
   maybe: "border-blue-500/30 bg-blue-500/10 text-blue-600",
   declined: "border-border bg-muted text-muted-foreground",
   withdrawn: "border-border bg-muted text-muted-foreground",

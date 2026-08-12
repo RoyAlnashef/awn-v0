@@ -12,12 +12,12 @@ export function AvailabilityCard() {
         <div className="flex items-center gap-2">
           <span className="relative flex size-2.5">
             {available ? (
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
             ) : null}
             <span
               className={
                 "relative inline-flex size-2.5 rounded-full " +
-                (available ? "bg-primary" : "bg-muted-foreground")
+                (available ? "bg-success" : "bg-muted-foreground")
               }
             />
           </span>

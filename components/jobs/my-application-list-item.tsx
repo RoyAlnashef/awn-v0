@@ -98,7 +98,7 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
 
           <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col gap-1">
-              <span className="font-heading text-lg font-semibold text-primary">
+              <span className="font-heading text-lg font-semibold text-primary-bright">
                 {job.payRate || "Rate TBD"}
               </span>
               {job.startDate && job.endDate ? (

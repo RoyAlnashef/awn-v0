@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Raleway, Merriweather } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const merriweatherHeading = Merriweather({subsets:['latin'],variable:'--font-heading'});
+
+const raleway = Raleway({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "A Wright Network",
@@ -29,7 +32,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} bg-background font-sans`}
+      className={cn("bg-background", "font-sans", raleway.variable, merriweatherHeading.variable)}
     >
       <body className="antialiased">
         <ThemeProvider defaultTheme="dark">

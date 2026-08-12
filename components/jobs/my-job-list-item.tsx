@@ -131,7 +131,7 @@ export function MyJobListItem({ job }: { job: Job }) {
 
           <div className="flex items-end justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <span className="font-heading text-lg font-semibold text-primary">
+              <span className="font-heading text-lg font-semibold text-primary-bright">
                 {job.payRate || "Rate TBD"}
               </span>
               {job.startDate && job.endDate ? (

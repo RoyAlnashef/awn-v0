@@ -23,7 +23,7 @@ export const statusConfig: Record<
   UserStatus,
   { variant: "default" | "secondary" | "outline" | "destructive"; dot: string }
 > = {
-  Active: { variant: "default", dot: "bg-primary" },
+  Active: { variant: "default", dot: "bg-success" },
   Invited: { variant: "secondary", dot: "bg-foreground/40" },
   Suspended: { variant: "outline", dot: "bg-destructive" },
 }

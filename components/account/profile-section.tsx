@@ -201,7 +201,7 @@ export function ProfileSection() {
                   onClick={() => updateDraft({ availability: status as Availability })}
                   className={
                     draft.availability === status
-                      ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
+                      ? "inline-flex items-center rounded-full border border-success/30 bg-success/15 px-3 py-1 text-xs font-medium text-success"
                       : "inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                   }
                 >
@@ -259,7 +259,7 @@ export function ProfileSection() {
                     }
                     className={
                       active
-                        ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
+                        ? "inline-flex items-center rounded-full border border-success/30 bg-success/15 px-3 py-1 text-xs font-medium text-success"
                         : "inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                     }
                   >
@@ -284,7 +284,7 @@ export function ProfileSection() {
                     }
                     className={
                       active
-                        ? "inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary"
+                        ? "inline-flex items-center rounded-full border border-success/30 bg-success/15 px-3 py-1 text-xs font-medium text-success"
                         : "inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                     }
                   >
