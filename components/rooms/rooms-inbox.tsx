@@ -78,7 +78,7 @@ export function RoomsInbox({
                   <div
                     className={cn(
                       "relative flex items-center gap-3 border-b px-4 py-3 last:border-b-0",
-                      room.unread && room.joined && "bg-success/[0.06]",
+                      room.unread && room.joined && "bg-success/6",
                       active && "bg-accent",
                     )}
                   >
