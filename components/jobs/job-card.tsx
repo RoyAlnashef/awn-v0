@@ -112,8 +112,8 @@ export function JobCard({ job }: { job: Job }) {
               </p>
             </div>
 
-            <div className="flex items-end justify-between gap-3">
-              <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex min-w-0 flex-col gap-1">
                 <span className="font-heading text-lg font-semibold text-primary-bright">
                   {job.payRate}
                 </span>
@@ -122,7 +122,7 @@ export function JobCard({ job }: { job: Job }) {
                   {formatDateRange(job.startDate, job.endDate)}
                 </span>
               </div>
-              <div className="pointer-events-auto relative z-10 flex items-center gap-2">
+              <div className="pointer-events-auto relative z-10 flex min-w-0 flex-wrap items-center justify-end gap-2">
                 <JobActionTooltips>
                   <JobActionTooltip
                     label={saved ? "Remove bookmark" : "Bookmark job"}
