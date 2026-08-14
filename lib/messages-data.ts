@@ -40,6 +40,9 @@ export type JobSharePayload = {
   startDate: string
   endDate: string
   engagement: string
+  department: string
+  kind: "full" | "urgent"
+  postedAt: string
 }
 
 /** Compact member payload embedded in a shared message. */

@@ -2,16 +2,7 @@
 
 import { useRef, useState } from "react"
 import { mutate } from "swr"
-import { format } from "date-fns"
-import {
-  Bookmark,
-  CalendarClock,
-  Flag,
-  Group,
-  MapPin,
-  Share,
-  Users,
-} from "lucide-react"
+import { Bookmark, Flag, Group, Share } from "lucide-react"
 import { toast } from "sonner"
 
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
@@ -20,14 +11,11 @@ import {
   JobActionTooltip,
   JobActionTooltips,
 } from "@/components/jobs/job-action-tooltip"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
 import { jobToSharePayload } from "@/lib/messages/job-share"
-import {
-  formatDateRange,
-  parseDateOnly,
-  type Job,
-} from "@/lib/jobs-data"
+import { type Job } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
 import {
   urgentAccentTextStyles,
@@ -37,7 +25,6 @@ import {
 import { jobDetailKey, jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
@@ -48,10 +35,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       {children}
     </h3>
   )
-}
-
-function formatDeadline(deadline: string) {
-  return format(parseDateOnly(deadline), "MMM d, yyyy")
 }
 
 function initials(name: string) {
@@ -107,9 +90,6 @@ export function JobDetailContent({
     }
   }
 
-  const hasDates = Boolean(job.startDate && job.endDate)
-  const hasDeadline = job.kind === "full" && Boolean(job.deadline)
-
   const accessibilityLabel = preview ? "Job preview" : `${job.role} job details`
   const accessibilityDescription = preview
     ? "Preview of how your job listing will appear on AWN."
@@ -145,76 +125,42 @@ export function JobDetailContent({
         >
           <div
             className={cn(
-              "flex items-start justify-between gap-3",
+              "flex flex-col gap-1.5",
               !embedded && "pr-8",
             )}
           >
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary">{job.engagement}</Badge>
-              <Badge variant="outline">{job.department}</Badge>
-              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="min-w-0 font-heading text-xl font-semibold tracking-tight text-balance">
+                {job.role || "Role title"}
+              </h2>
+              {job.kind === "urgent" ? (
+                <JobUrgentHelpBadge className="shrink-0" />
+              ) : null}
             </div>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {job.postedAt}
-            </span>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-1.5">
-            <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
-              {job.role || "Role title"}
-            </h2>
             <p className="text-sm text-muted-foreground">
               {job.production || "Production / tour name"}
             </p>
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0" />
-              <span className="text-pretty">
-                {job.location || "Location / routing"}
-              </span>
-            </p>
+            <JobMetadataBadges
+              job={job}
+              includePostedAt
+              includeDeadline={job.kind === "full"}
+              applicantCount={preview ? null : applicantCount}
+              showPlaceholders={preview}
+              className="mt-1"
+            />
           </div>
         </div>
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-6 px-6 py-5">
-            <div className="flex flex-col gap-3">
-              <span
-                className={cn(
-                  "font-heading text-lg font-semibold",
-                  isUrgent ? urgentAccentTextStyles : "text-primary-bright",
-                )}
-              >
-                {job.payRate || "Rate TBD"}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {hasDates ? (
-                  <Badge variant="outline" className="gap-1 font-normal">
-                    <CalendarClock className="size-3" />
-                    {formatDateRange(job.startDate, job.endDate)}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="gap-1 font-normal">
-                    <CalendarClock className="size-3" />
-                    Dates TBD
-                  </Badge>
-                )}
-                {job.kind === "full" ? (
-                  hasDeadline ? (
-                    <Badge variant="outline" className="font-normal">
-                      Apply by {formatDeadline(job.deadline)}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="font-normal">
-                      Deadline TBD
-                    </Badge>
-                  )
-                ) : null}
-                <Badge variant="outline" className="gap-1 font-normal">
-                  <Users className="size-3" />
-                  {applicantCount} applicant{applicantCount === 1 ? "" : "s"}
-                </Badge>
-              </div>
-            </div>
+            <span
+              className={cn(
+                "font-heading text-lg font-semibold",
+                isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+              )}
+            >
+              {job.payRate || "Rate TBD"}
+            </span>
 
             <section className="flex flex-col gap-3">
               <SectionLabel>Details</SectionLabel>
@@ -226,10 +172,10 @@ export function JobDetailContent({
 
             <section className="flex flex-col gap-3">
               <SectionLabel>Posted by</SectionLabel>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-                <Avatar className="size-10">
+              <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-3">
+                <Avatar className="size-8">
                   <AvatarImage src={job.postedBy.avatar} alt="" />
-                  <AvatarFallback className="text-sm">
+                  <AvatarFallback className="text-xs">
                     {initials(job.postedBy.name)}
                   </AvatarFallback>
                 </Avatar>

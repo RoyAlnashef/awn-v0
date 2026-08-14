@@ -63,17 +63,15 @@ export function JobDetailDrawer({
               tabIndex={-1}
               className="shrink-0 px-6 pt-5 outline-none"
             >
-              <div className="flex items-start justify-between gap-3 pr-8">
-                <div className="flex gap-1.5">
+              <div className="flex flex-col gap-1.5 pr-8">
+                <Skeleton className="h-7 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-20" />
                   <Skeleton className="h-5 w-16" />
                   <Skeleton className="h-5 w-20" />
                 </div>
-                <Skeleton className="h-4 w-12" />
-              </div>
-              <div className="mt-4 space-y-2">
-                <Skeleton className="h-7 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-2/3" />
               </div>
             </div>
             <JobDetailSkeleton />

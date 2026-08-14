@@ -2,8 +2,11 @@
 
 import { requireAdmin } from "@/lib/auth/require-admin"
 import { DEFAULT_ROOM_EMOJI } from "@/lib/rooms/emoji"
+import { formatJobPostedAt } from "@/lib/jobs/format"
+import type { EngagementType, JobKind } from "@/lib/jobs-data"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import {
+  jobToSharePayload,
   mapRpcJobShare,
   type JobShareRpcRow,
 } from "@/lib/messages/job-share"
@@ -177,7 +180,7 @@ async function fetchJobSharePayload(
   const { data, error } = await supabase
     .from("job_postings")
     .select(
-      "id, role, production, location, pay_rate, start_date, end_date, engagement, status",
+      "id, role, production, location, pay_rate, start_date, end_date, engagement, department, kind, created_at, status",
     )
     .eq("id", jobId)
     .maybeSingle()
@@ -189,7 +192,7 @@ async function fetchJobSharePayload(
 
   return {
     ok: true,
-    jobShare: {
+    jobShare: jobToSharePayload({
       id: data.id,
       role: data.role,
       production: data.production ?? "",
@@ -197,8 +200,11 @@ async function fetchJobSharePayload(
       payRate: data.pay_rate ?? "",
       startDate: data.start_date,
       endDate: data.end_date,
-      engagement: String(data.engagement),
-    },
+      engagement: data.engagement as EngagementType,
+      department: data.department ?? "",
+      kind: data.kind as JobKind,
+      postedAt: formatJobPostedAt(data.created_at),
+    }),
   }
 }
 

@@ -1,4 +1,5 @@
 import type { ApplicationStatus, JobStatus } from "@/lib/jobs-data"
+import { parseDateOnly as parseJobDateOnly } from "@/lib/jobs-data"
 import { differenceInCalendarDays, format, startOfDay } from "date-fns"
 
 /** Compact relative label for job cards (e.g. Today, 2h ago, Yesterday). */
@@ -38,6 +39,11 @@ export function parseDateOnly(value: string | null | undefined): string | null {
 /** Absolute date label for saved-job rows (e.g. Jul 22, 2026). */
 export function formatJobSavedAt(iso: string): string {
   return format(new Date(iso), "MMM d, yyyy")
+}
+
+/** Absolute date label for application deadlines (e.g. Aug 27, 2026). */
+export function formatJobDeadline(deadline: string): string {
+  return format(parseJobDateOnly(deadline), "MMM d, yyyy")
 }
 
 export const urgentBadgeStyles =

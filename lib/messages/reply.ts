@@ -32,6 +32,9 @@ export type ReplyRpcRow = JobShareRpcRow &
     reply_job_start_date?: string | null
     reply_job_end_date?: string | null
     reply_job_engagement?: string | null
+    reply_job_department?: string | null
+    reply_job_kind?: string | null
+    reply_job_created_at?: string | null
     reply_shared_profile_id?: string | null
     reply_shared_profile_name?: string | null
     reply_shared_profile_title?: string | null
@@ -110,6 +113,9 @@ export function mapRpcReply(row: ReplyRpcRow): MessageReplyPayload | undefined {
       job_start_date: row.reply_job_start_date,
       job_end_date: row.reply_job_end_date,
       job_engagement: row.reply_job_engagement,
+      job_department: row.reply_job_department,
+      job_kind: row.reply_job_kind,
+      job_created_at: row.reply_job_created_at,
     })
     const memberShare = mapRpcMemberShare({
       shared_profile_id: row.reply_shared_profile_id,

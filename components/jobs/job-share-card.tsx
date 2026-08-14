@@ -1,11 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarClock, MapPin, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
-import { formatDateRange } from "@/lib/jobs-data"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import type { JobSharePayload } from "@/lib/messages-data"
+import type { EngagementType } from "@/lib/jobs-data"
+import {
+  urgentAccentTextStyles,
+  urgentJobCardBorderStyles,
+} from "@/lib/jobs/format"
 import { cn } from "@/lib/utils"
 import {
   Attachment,
@@ -15,7 +21,6 @@ import {
   AttachmentDescription,
   AttachmentTitle,
 } from "@/components/ui/attachment"
-import { Badge } from "@/components/ui/badge"
 
 export function JobShareCard({
   jobShare,
@@ -30,13 +35,19 @@ export function JobShareCard({
 }) {
   const [detailOpen, setDetailOpen] = useState(false)
   const isPreview = variant === "preview"
+  const isUrgent = jobShare.kind === "urgent"
 
   const card = (
     <Attachment
       className={cn(
         "max-w-sm",
         variant === "message" &&
-          "cursor-pointer rounded-xl border-border bg-card shadow-sm hover:border-primary/40",
+          cn(
+            "cursor-pointer rounded-xl bg-card shadow-sm transition-colors",
+            isUrgent
+              ? urgentJobCardBorderStyles
+              : "border-border hover:border-primary/40",
+          ),
         className,
       )}
       size={isPreview ? "sm" : "default"}
@@ -54,33 +65,39 @@ export function JobShareCard({
       role={variant === "message" ? "button" : undefined}
       tabIndex={variant === "message" ? 0 : undefined}
     >
-      <AttachmentContent>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="secondary" className="text-[10px]">
-            {jobShare.engagement}
-          </Badge>
+      <AttachmentContent className="flex flex-col gap-3 px-2.5 py-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <AttachmentTitle className="min-w-0 font-heading text-sm font-semibold tracking-tight text-balance">
+              {jobShare.role}
+            </AttachmentTitle>
+            {isUrgent ? <JobUrgentHelpBadge className="shrink-0" /> : null}
+          </div>
+          <AttachmentDescription>{jobShare.production}</AttachmentDescription>
         </div>
-        <AttachmentTitle className="font-heading text-sm">
-          {jobShare.role}
-        </AttachmentTitle>
-        <AttachmentDescription>{jobShare.production}</AttachmentDescription>
-        <div className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
-          {jobShare.location ? (
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3 shrink-0" />
-              <span className="truncate">{jobShare.location}</span>
-            </span>
-          ) : null}
-          {jobShare.startDate && jobShare.endDate ? (
-            <span className="flex items-center gap-1">
-              <CalendarClock className="size-3 shrink-0" />
-              {formatDateRange(jobShare.startDate, jobShare.endDate)}
-            </span>
-          ) : null}
-          {jobShare.payRate ? (
-            <span className="font-heading text-primary-bright">{jobShare.payRate}</span>
-          ) : null}
-        </div>
+        <JobMetadataBadges
+          job={{
+            engagement: jobShare.engagement as EngagementType,
+            department: jobShare.department,
+            startDate: jobShare.startDate,
+            endDate: jobShare.endDate,
+            location: jobShare.location,
+            postedAt: jobShare.postedAt,
+            deadline: "",
+            kind: jobShare.kind,
+          }}
+          includePostedAt={false}
+        />
+        {jobShare.payRate ? (
+          <span
+            className={cn(
+              "font-heading text-sm font-semibold",
+              isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+            )}
+          >
+            {jobShare.payRate}
+          </span>
+        ) : null}
       </AttachmentContent>
       {isPreview && onRemove ? (
         <AttachmentActions>
