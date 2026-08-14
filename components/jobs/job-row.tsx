@@ -144,6 +144,7 @@ export function JobRow({ job }: { job: Job }) {
             </JobActionTooltips>
             <Button
               size="sm"
+              variant={isUrgent ? "default" : "outline"}
               className={isUrgent ? urgentApplyButtonStyles : undefined}
               disabled={applied}
               onClick={() => setApplyOpen(true)}
