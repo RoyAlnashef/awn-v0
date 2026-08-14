@@ -161,7 +161,7 @@ export function JobDetailContent({
             <p className="text-sm font-medium text-foreground/90">
               {job.production || "Production / tour name"}
             </p>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="size-3.5 shrink-0" />
               <span className="text-pretty">
                 {job.location || "Location / routing"}

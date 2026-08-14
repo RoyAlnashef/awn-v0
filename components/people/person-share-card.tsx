@@ -160,7 +160,7 @@ export function PersonShareCard({
       {memberShare.homeBase || memberShare.availability ? (
         <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
           {memberShare.homeBase ? (
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1">
               <MapPin className="size-3.5 shrink-0" />
               {memberShare.homeBase}
             </span>

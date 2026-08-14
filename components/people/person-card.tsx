@@ -69,7 +69,7 @@ export function PersonCard({ person }: { person: Person }) {
       </div>
 
       <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1">
           <MapPin className="size-3.5 shrink-0" />
           {person.homeBase}
         </span>

@@ -85,18 +85,16 @@ export function JobCard({ job }: { job: Job }) {
             <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
               {job.role}
             </h3>
-            <p className="text-sm font-medium text-foreground/90">
-              {job.production}
-            </p>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0" />
-              <span className="text-pretty">{job.location}</span>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="font-medium text-foreground/90">
+                {job.production}
+              </span>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <MapPin className="size-3.5 shrink-0" />
+                <span className="text-pretty">{job.location}</span>
+              </span>
             </p>
           </div>
-
-          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-            {job.details}
-          </p>
 
           <div className="mt-auto flex flex-col gap-4">
             <div className="flex items-center gap-2 border-t border-border pt-4">

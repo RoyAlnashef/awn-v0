@@ -41,7 +41,7 @@ export function PersonRow({ person }: { person: Person }) {
         </div>
         <p className="text-sm text-foreground/90">{person.role}</p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1">
             <MapPin className="size-3.5 shrink-0" />
             {person.homeBase}
           </span>

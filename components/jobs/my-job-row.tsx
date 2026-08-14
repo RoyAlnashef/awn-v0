@@ -100,7 +100,7 @@ export function MyJobRow({ job }: { job: Job }) {
         </h3>
         <p className="text-sm text-foreground/90">{job.production}</p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1">
             <MapPin className="size-3.5 shrink-0" />
             {job.location || "—"}
           </span>

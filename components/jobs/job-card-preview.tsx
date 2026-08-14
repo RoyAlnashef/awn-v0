@@ -40,20 +40,18 @@ export function JobCardPreview({ job }: { job: Job }) {
           <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
             {job.role || "Role title"}
           </h3>
-          <p className="text-sm font-medium text-foreground/90">
-            {job.production || "Production / tour name"}
-          </p>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0" />
-            <span className="text-pretty">
-              {job.location || "Location / routing"}
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="font-medium text-foreground/90">
+              {job.production || "Production / tour name"}
+            </span>
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" />
+              <span className="text-pretty">
+                {job.location || "Location / routing"}
+              </span>
             </span>
           </p>
         </div>
-
-        <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-          {job.details || "Job details will appear here as you write them."}
-        </p>
 
         <div className="mt-auto flex flex-col gap-4">
           <div className="flex items-center gap-2 border-t border-border pt-4">
