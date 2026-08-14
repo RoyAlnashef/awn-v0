@@ -30,6 +30,7 @@ import {
   type DirectConversation,
   type JobSharePayload,
   type MemberSharePayload,
+  type MessageReactionTarget,
   type ThreadMessage,
 } from "@/lib/messages-data"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
@@ -69,6 +70,7 @@ import {
 import {
   buildPendingReplyPayload,
   buildReplySnapshot,
+  copyMessageBody,
   copyMessageText,
   replyAuthorNameForMessage,
 } from "@/lib/messages/reply"
@@ -430,7 +432,11 @@ export function MessageThread({
     }
   }, [isPersisted, mutate, persistedConversationId])
 
-  async function handleReact(messageId: string, emoji: string | null) {
+  async function handleReact(
+    messageId: string,
+    emoji: string | null,
+    target: MessageReactionTarget = "body",
+  ) {
     const reactionUser = { id: currentUser.id, name: currentUser.name }
 
     if (isPersisted && persistedConversationId) {
@@ -444,13 +450,14 @@ export function MessageThread({
                   messageId,
                   emoji,
                   reactionUser,
+                  target,
                 ),
               }
             : current,
         { revalidate: false },
       )
 
-      const result = await setMessageReaction(messageId, emoji)
+      const result = await setMessageReaction(messageId, emoji, target)
       if (!result.ok) {
         void mutate()
         return
@@ -459,7 +466,12 @@ export function MessageThread({
       void mutate(
         (current) =>
           current
-            ? patchMessageReactions(current, messageId, result.reactions)
+            ? patchMessageReactions(
+                current,
+                messageId,
+                result.reactions,
+                result.attachmentReactions,
+              )
             : current,
         { revalidate: false },
       )
@@ -467,7 +479,7 @@ export function MessageThread({
     }
 
     setLocalMessages((prev) =>
-      applyLocalReaction(prev, messageId, emoji, reactionUser),
+      applyLocalReaction(prev, messageId, emoji, reactionUser, target),
     )
   }
 
@@ -502,6 +514,15 @@ export function MessageThread({
   function handleCopyMessage(message: ThreadMessage) {
     const text = copyMessageText(message)
     void navigator.clipboard.writeText(text).then(
+      () => toast.success("Copied"),
+      () => toast.error("Could not copy text"),
+    )
+  }
+
+  function handleCopyMessageBody(text: string) {
+    const body = copyMessageBody(text)
+    if (!body) return
+    void navigator.clipboard.writeText(body).then(
       () => toast.success("Copied"),
       () => toast.error("Could not copy text"),
     )
@@ -831,7 +852,6 @@ export function MessageThread({
                       : undefined
                     const messageActions = {
                       onReply: () => handleReplyToMessage(message),
-                      onCopy: () => handleCopyMessage(message),
                       ...(canDeleteOwnMessage(message, isPersisted)
                         ? {
                             onDelete: () => handleDeleteRequest(message),
@@ -840,6 +860,12 @@ export function MessageThread({
                         : {}),
                       replyTo: message.replyTo,
                       repliedLabel,
+                    }
+                    const shareMessageActions = {
+                      ...messageActions,
+                      ...(message.text.trim()
+                        ? { onCopy: () => handleCopyMessageBody(message.text) }
+                        : {}),
                     }
 
                     return (
@@ -878,10 +904,14 @@ export function MessageThread({
                                 variant={mine ? "default" : "muted"}
                                 align={mine ? "end" : "start"}
                                 reactions={message.reactions}
-                                onReact={(emoji) =>
-                                  void handleReact(message.id, emoji)
+                                attachmentReactions={message.attachmentReactions}
+                                onReactBody={(emoji) =>
+                                  void handleReact(message.id, emoji, "body")
                                 }
-                                {...messageActions}
+                                onReactAttachment={(emoji) =>
+                                  void handleReact(message.id, emoji, "attachment")
+                                }
+                                {...shareMessageActions}
                               />
                             ) : message.jobShare ? (
                               <MessageJobShareWithReactions
@@ -890,10 +920,14 @@ export function MessageThread({
                                 variant={mine ? "default" : "muted"}
                                 align={mine ? "end" : "start"}
                                 reactions={message.reactions}
-                                onReact={(emoji) =>
-                                  void handleReact(message.id, emoji)
+                                attachmentReactions={message.attachmentReactions}
+                                onReactBody={(emoji) =>
+                                  void handleReact(message.id, emoji, "body")
                                 }
-                                {...messageActions}
+                                onReactAttachment={(emoji) =>
+                                  void handleReact(message.id, emoji, "attachment")
+                                }
+                                {...shareMessageActions}
                               />
                             ) : (
                               <MessageBubbleWithReactions
@@ -903,6 +937,7 @@ export function MessageThread({
                                 onReact={(emoji) =>
                                   void handleReact(message.id, emoji)
                                 }
+                                onCopy={() => handleCopyMessage(message)}
                                 {...messageActions}
                               >
                                 {message.text}
@@ -939,11 +974,24 @@ export function MessageThread({
                             variant="muted"
                             align="start"
                             reactions={handoffMessage.reactions}
-                            onReact={(emoji) =>
-                              void handleReact(handoffMessage.id, emoji)
+                            attachmentReactions={handoffMessage.attachmentReactions}
+                            onReactBody={(emoji) =>
+                              void handleReact(handoffMessage.id, emoji, "body")
+                            }
+                            onReactAttachment={(emoji) =>
+                              void handleReact(
+                                handoffMessage.id,
+                                emoji,
+                                "attachment",
+                              )
                             }
                             onReply={() => handleReplyToMessage(handoffMessage)}
-                            onCopy={() => handleCopyMessage(handoffMessage)}
+                            {...(handoffMessage.text.trim()
+                              ? {
+                                  onCopy: () =>
+                                    handleCopyMessageBody(handoffMessage.text),
+                                }
+                              : {})}
                             replyTo={handoffMessage.replyTo}
                             repliedLabel={
                               handoffMessage.replyTo
@@ -958,11 +1006,24 @@ export function MessageThread({
                             variant="muted"
                             align="start"
                             reactions={handoffMessage.reactions}
-                            onReact={(emoji) =>
-                              void handleReact(handoffMessage.id, emoji)
+                            attachmentReactions={handoffMessage.attachmentReactions}
+                            onReactBody={(emoji) =>
+                              void handleReact(handoffMessage.id, emoji, "body")
+                            }
+                            onReactAttachment={(emoji) =>
+                              void handleReact(
+                                handoffMessage.id,
+                                emoji,
+                                "attachment",
+                              )
                             }
                             onReply={() => handleReplyToMessage(handoffMessage)}
-                            onCopy={() => handleCopyMessage(handoffMessage)}
+                            {...(handoffMessage.text.trim()
+                              ? {
+                                  onCopy: () =>
+                                    handleCopyMessageBody(handoffMessage.text),
+                                }
+                              : {})}
                             replyTo={handoffMessage.replyTo}
                             repliedLabel={
                               handoffMessage.replyTo

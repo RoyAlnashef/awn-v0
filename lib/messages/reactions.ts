@@ -1,10 +1,20 @@
-import type { MessageReaction, ThreadMessage } from "@/lib/messages-data"
+import type {
+  MessageReaction,
+  MessageReactionTarget,
+  ThreadMessage,
+} from "@/lib/messages-data"
 
 export const QUICK_REACTIONS = ["❤️", "😆", "😮", "😢", "😡", "👍"] as const
 
 export type ReactionUser = {
   id: string
   name: string
+}
+
+function reactionKey(
+  target: MessageReactionTarget,
+): "reactions" | "attachmentReactions" {
+  return target === "attachment" ? "attachmentReactions" : "reactions"
 }
 
 function sortReactions(reactions: MessageReaction[]): MessageReaction[] {
@@ -14,41 +24,33 @@ function sortReactions(reactions: MessageReaction[]): MessageReaction[] {
   })
 }
 
-/** Toggle or replace the current user's reaction on a message (local/mock threads). */
-export function applyLocalReaction(
-  messages: ThreadMessage[],
-  messageId: string,
+function updateReactionList(
+  reactions: MessageReaction[],
   emoji: string | null,
   currentUser: ReactionUser,
-): ThreadMessage[] {
-  return messages.map((message) => {
-    if (message.id !== messageId) return message
+): MessageReaction[] | undefined {
+  const existingMine = reactions.find((r) => r.reactedByMe)
 
-    const reactions = message.reactions ?? []
-    const existingMine = reactions.find((r) => r.reactedByMe)
+  if (!emoji || existingMine?.emoji === emoji) {
+    const next = reactions
+      .map((reaction) => {
+        if (!reaction.reactedByMe) return reaction
+        const count = reaction.count - 1
+        if (count <= 0) return null
+        return {
+          ...reaction,
+          count,
+          reactedByMe: false,
+          reactors: reaction.reactors.filter((r) => r.id !== currentUser.id),
+        }
+      })
+      .filter((r): r is MessageReaction => r !== null)
 
-    if (!emoji || existingMine?.emoji === emoji) {
-      const next = reactions
-        .map((reaction) => {
-          if (!reaction.reactedByMe) return reaction
-          const count = reaction.count - 1
-          if (count <= 0) return null
-          return {
-            ...reaction,
-            count,
-            reactedByMe: false,
-            reactors: reaction.reactors.filter((r) => r.id !== currentUser.id),
-          }
-        })
-        .filter((r): r is MessageReaction => r !== null)
+    return next.length > 0 ? sortReactions(next) : undefined
+  }
 
-      return {
-        ...message,
-        reactions: next.length > 0 ? sortReactions(next) : undefined,
-      }
-    }
-
-    let next = reactions.map((reaction) => {
+  let next = reactions
+    .map((reaction) => {
       if (!reaction.reactedByMe) return reaction
       const count = reaction.count - 1
       if (count <= 0) return null
@@ -58,30 +60,48 @@ export function applyLocalReaction(
         reactedByMe: false,
         reactors: reaction.reactors.filter((r) => r.id !== currentUser.id),
       }
-    }).filter((r): r is MessageReaction => r !== null)
+    })
+    .filter((r): r is MessageReaction => r !== null)
 
-    const existingEmoji = next.find((r) => r.emoji === emoji)
-    if (existingEmoji) {
-      next = next.map((reaction) =>
-        reaction.emoji === emoji
-          ? {
-              ...reaction,
-              count: reaction.count + 1,
-              reactedByMe: true,
-              reactors: [...reaction.reactors, currentUser],
-            }
-          : reaction,
-      )
-    } else {
-      next.push({
-        emoji,
-        count: 1,
-        reactedByMe: true,
-        reactors: [currentUser],
-      })
-    }
+  const existingEmoji = next.find((r) => r.emoji === emoji)
+  if (existingEmoji) {
+    next = next.map((reaction) =>
+      reaction.emoji === emoji
+        ? {
+            ...reaction,
+            count: reaction.count + 1,
+            reactedByMe: true,
+            reactors: [...reaction.reactors, currentUser],
+          }
+        : reaction,
+    )
+  } else {
+    next.push({
+      emoji,
+      count: 1,
+      reactedByMe: true,
+      reactors: [currentUser],
+    })
+  }
 
-    return { ...message, reactions: sortReactions(next) }
+  return sortReactions(next)
+}
+
+/** Toggle or replace the current user's reaction on a message (local/mock threads). */
+export function applyLocalReaction(
+  messages: ThreadMessage[],
+  messageId: string,
+  emoji: string | null,
+  currentUser: ReactionUser,
+  target: MessageReactionTarget = "body",
+): ThreadMessage[] {
+  const key = reactionKey(target)
+
+  return messages.map((message) => {
+    if (message.id !== messageId) return message
+
+    const next = updateReactionList(message[key] ?? [], emoji, currentUser)
+    return { ...message, [key]: next }
   })
 }
 
@@ -89,12 +109,18 @@ export function patchMessageReactions<T extends { messages: ThreadMessage[] }>(
   cache: T,
   messageId: string,
   reactions: MessageReaction[],
+  attachmentReactions: MessageReaction[],
 ): T {
   return {
     ...cache,
     messages: cache.messages.map((message) =>
       message.id === messageId
-        ? { ...message, reactions: reactions.length > 0 ? reactions : undefined }
+        ? {
+            ...message,
+            reactions: reactions.length > 0 ? reactions : undefined,
+            attachmentReactions:
+              attachmentReactions.length > 0 ? attachmentReactions : undefined,
+          }
         : message,
     ),
   }

@@ -73,6 +73,10 @@ export function copyMessageText(message: ThreadMessage): string {
   return buildReplyPreview(message)
 }
 
+export function copyMessageBody(text: string): string {
+  return text.trim()
+}
+
 export function replyAuthorNameForMessage(
   message: ThreadMessage,
   options: {

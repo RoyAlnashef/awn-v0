@@ -7,10 +7,11 @@ import { toast } from "sonner"
 
 import {
   getPersonForRoomMessage,
+  type MessageReactionTarget,
   type Room,
   type ThreadMessage,
 } from "@/lib/messages-data"
-import { applyLocalReaction } from "@/lib/messages/reactions"
+import { applyLocalReaction, patchMessageReactions } from "@/lib/messages/reactions"
 import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
 import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
@@ -52,6 +53,7 @@ import {
 import {
   buildPendingReplyPayload,
   buildReplySnapshot,
+  copyMessageBody,
   copyMessageText,
   replyAuthorNameForMessage,
 } from "@/lib/messages/reply"
@@ -331,6 +333,15 @@ export function RoomThread({
     )
   }
 
+  function handleCopyMessageBody(text: string) {
+    const body = copyMessageBody(text)
+    if (!body) return
+    void navigator.clipboard.writeText(body).then(
+      () => toast.success("Copied"),
+      () => toast.error("Could not copy text"),
+    )
+  }
+
   function handleDeleteRequest(message: ThreadMessage) {
     setDeleteTarget(message)
   }
@@ -515,34 +526,38 @@ export function RoomThread({
     Boolean(draft.trim() || pendingJobShare || pendingMemberShare) && !sending
 
   const handleReact = useCallback(
-    (messageId: string, emoji: string | null) => {
+    (messageId: string, emoji: string | null, target: MessageReactionTarget = "body") => {
       if (usesServer) {
         void mutateThread(
           (current) => {
             if (!current) return current
             return {
               ...current,
-              messages: applyLocalReaction(current.messages, messageId, emoji, {
-                id: currentUser.id,
-                name: currentUser.name,
-              }),
+              messages: applyLocalReaction(
+                current.messages,
+                messageId,
+                emoji,
+                {
+                  id: currentUser.id,
+                  name: currentUser.name,
+                },
+                target,
+              ),
             }
           },
           { revalidate: false },
         )
-        void setRoomMessageReaction(messageId, emoji).then((result) => {
+        void setRoomMessageReaction(messageId, emoji, target).then((result) => {
           if (result.ok) {
             void mutateThread(
               (current) => {
                 if (!current) return current
-                return {
-                  ...current,
-                  messages: current.messages.map((m) =>
-                    m.id === messageId
-                      ? { ...m, reactions: result.reactions }
-                      : m,
-                  ),
-                }
+                return patchMessageReactions(
+                  current,
+                  messageId,
+                  result.reactions,
+                  result.attachmentReactions,
+                )
               },
               { revalidate: false },
             )
@@ -554,10 +569,16 @@ export function RoomThread({
             if (!current) return current
             return {
               ...current,
-              messages: applyLocalReaction(current.messages, messageId, emoji, {
-                id: currentUser.id,
-                name: currentUser.name,
-              }),
+              messages: applyLocalReaction(
+                current.messages,
+                messageId,
+                emoji,
+                {
+                  id: currentUser.id,
+                  name: currentUser.name,
+                },
+                target,
+              ),
             }
           },
           { revalidate: false },
@@ -676,7 +697,6 @@ export function RoomThread({
                   : undefined
                 const messageActions = {
                   onReply: () => handleReplyToMessage(message),
-                  onCopy: () => handleCopyMessage(message),
                   ...(canDeleteOwnMessage(message, usesServer)
                     ? {
                         onDelete: () => handleDeleteRequest(message),
@@ -685,6 +705,12 @@ export function RoomThread({
                     : {}),
                   replyTo: message.replyTo,
                   repliedLabel,
+                }
+                const shareMessageActions = {
+                  ...messageActions,
+                  ...(message.text.trim()
+                    ? { onCopy: () => handleCopyMessageBody(message.text) }
+                    : {}),
                 }
                 return (
                   <MessageScrollerItem
@@ -757,10 +783,14 @@ export function RoomThread({
                               variant={mine ? "default" : "muted"}
                               align={mine ? "end" : "start"}
                               reactions={message.reactions}
-                              onReact={(emoji) =>
-                                handleReact(message.id, emoji)
+                              attachmentReactions={message.attachmentReactions}
+                              onReactBody={(emoji) =>
+                                handleReact(message.id, emoji, "body")
                               }
-                              {...messageActions}
+                              onReactAttachment={(emoji) =>
+                                handleReact(message.id, emoji, "attachment")
+                              }
+                              {...shareMessageActions}
                             />
                           </>
                         ) : message.jobShare ? (
@@ -786,10 +816,14 @@ export function RoomThread({
                               variant={mine ? "default" : "muted"}
                               align={mine ? "end" : "start"}
                               reactions={message.reactions}
-                              onReact={(emoji) =>
-                                handleReact(message.id, emoji)
+                              attachmentReactions={message.attachmentReactions}
+                              onReactBody={(emoji) =>
+                                handleReact(message.id, emoji, "body")
                               }
-                              {...messageActions}
+                              onReactAttachment={(emoji) =>
+                                handleReact(message.id, emoji, "attachment")
+                              }
+                              {...shareMessageActions}
                             />
                           </>
                         ) : (
@@ -798,6 +832,7 @@ export function RoomThread({
                             align={mine ? "end" : "start"}
                             reactions={message.reactions}
                             onReact={(emoji) => handleReact(message.id, emoji)}
+                            onCopy={() => handleCopyMessage(message)}
                             {...messageActions}
                           >
                             {showAuthor ? (

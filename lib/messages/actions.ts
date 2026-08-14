@@ -10,6 +10,7 @@ import type {
   DirectConversation,
   MessageableMember,
   MessageReaction,
+  MessageReactionTarget,
   ThreadMessage,
 } from "@/lib/messages-data"
 import { formatJobPostedAt } from "@/lib/jobs/format"
@@ -75,6 +76,7 @@ type ThreadRpcMessage = ReplyRpcRow &
   body: string
   created_at: string
   reactions?: ThreadRpcReaction[]
+  attachment_reactions?: ThreadRpcReaction[]
 }
 
 type ThreadRpcReaction = {
@@ -105,7 +107,11 @@ export type SearchMessageableUsersResult =
   | ActionError
 
 export type SetMessageReactionResult =
-  | { ok: true; reactions: MessageReaction[] }
+  | {
+      ok: true
+      reactions: MessageReaction[]
+      attachmentReactions: MessageReaction[]
+    }
   | ActionError
 
 type ProfileRow = {
@@ -154,6 +160,7 @@ function mapThreadRpcMessage(
     createdAt: message.created_at,
     readReceipt: readReceiptForMessage(message, userId, otherLastReadAt),
     reactions: mapRpcReactions(message.reactions),
+    attachmentReactions: mapRpcReactions(message.attachment_reactions),
     jobShare,
     memberShare,
     replyTo: mapRpcReply(message),
@@ -359,15 +366,24 @@ async function fetchMessageReactions(
   supabase: Awaited<ReturnType<typeof createClient>>,
   messageId: string,
   currentUserId: string,
-): Promise<MessageReaction[]> {
+): Promise<{
+  reactions: MessageReaction[]
+  attachmentReactions: MessageReaction[]
+}> {
   const { data, error } = await supabase
     .from("dm_message_reactions")
-    .select("emoji, profile_id, created_at, profiles(full_name)")
+    .select("emoji, profile_id, target, created_at, profiles(full_name)")
     .eq("message_id", messageId)
 
-  if (error || !data?.length) return []
+  if (error || !data?.length) {
+    return { reactions: [], attachmentReactions: [] }
+  }
 
-  const grouped = new Map<
+  const bodyGrouped = new Map<
+    string,
+    { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
+  >()
+  const attachmentGrouped = new Map<
     string,
     { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
   >()
@@ -375,12 +391,14 @@ async function fetchMessageReactions(
   for (const row of data) {
     const profileId = row.profile_id as string
     const emoji = row.emoji as string
+    const target = (row.target as string | null) ?? "body"
     const profiles = row.profiles as
       | { full_name: string | null }
       | { full_name: string | null }[]
       | null
     const profile = Array.isArray(profiles) ? profiles[0] : profiles
     const name = profile?.full_name?.trim() || "Member"
+    const grouped = target === "attachment" ? attachmentGrouped : bodyGrouped
 
     const existing = grouped.get(emoji)
     if (existing) {
@@ -396,17 +414,29 @@ async function fetchMessageReactions(
     }
   }
 
-  return [...grouped.entries()]
-    .map(([emoji, value]) => ({
-      emoji,
-      count: value.count,
-      reactedByMe: value.reactedByMe,
-      reactors: value.reactors,
-    }))
-    .sort((a, b) => {
-      if (b.count !== a.count) return b.count - a.count
-      return a.emoji.localeCompare(b.emoji)
-    })
+  function toSortedReactions(
+    grouped: Map<
+      string,
+      { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
+    >,
+  ): MessageReaction[] {
+    return [...grouped.entries()]
+      .map(([emoji, value]) => ({
+        emoji,
+        count: value.count,
+        reactedByMe: value.reactedByMe,
+        reactors: value.reactors,
+      }))
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count
+        return a.emoji.localeCompare(b.emoji)
+      })
+  }
+
+  return {
+    reactions: toSortedReactions(bodyGrouped),
+    attachmentReactions: toSortedReactions(attachmentGrouped),
+  }
 }
 
 async function fetchOtherParticipant(
@@ -877,10 +907,15 @@ export async function searchMessageableUsers(
 export async function setMessageReaction(
   messageId: string,
   emoji: string | null,
+  target: MessageReactionTarget = "body",
 ): Promise<SetMessageReactionResult> {
   try {
     if (!isUuid(messageId)) {
       return { ok: false, error: "Invalid message id." }
+    }
+
+    if (target !== "body" && target !== "attachment") {
+      return { ok: false, error: "Invalid reaction target." }
     }
 
     const userId = await requireUserId()
@@ -913,6 +948,7 @@ export async function setMessageReaction(
       .select("emoji")
       .eq("message_id", messageId)
       .eq("profile_id", userId)
+      .eq("target", target)
       .maybeSingle()
 
     if (!trimmedEmoji || existing?.emoji === trimmedEmoji) {
@@ -921,6 +957,7 @@ export async function setMessageReaction(
         .delete()
         .eq("message_id", messageId)
         .eq("profile_id", userId)
+        .eq("target", target)
 
       if (deleteError) return { ok: false, error: deleteError.message }
     } else {
@@ -931,15 +968,20 @@ export async function setMessageReaction(
             message_id: messageId,
             profile_id: userId,
             emoji: trimmedEmoji,
+            target,
           },
-          { onConflict: "message_id,profile_id" },
+          { onConflict: "message_id,profile_id,target" },
         )
 
       if (upsertError) return { ok: false, error: upsertError.message }
     }
 
-    const reactions = await fetchMessageReactions(supabase, messageId, userId)
-    return { ok: true, reactions }
+    const { reactions, attachmentReactions } = await fetchMessageReactions(
+      supabase,
+      messageId,
+      userId,
+    )
+    return { ok: true, reactions, attachmentReactions }
   } catch (error) {
     return actionError(error)
   }

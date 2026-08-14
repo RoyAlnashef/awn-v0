@@ -17,10 +17,12 @@ import {
 export function MessageReactionBadge({
   reactions,
   align = "end",
+  side = "top",
   onToggleMine,
 }: {
   reactions: MessageReaction[]
   align?: "start" | "end"
+  side?: "top" | "top-edge" | "bottom"
   onToggleMine?: () => void
 }) {
   if (!reactions.length) return null
@@ -39,7 +41,7 @@ export function MessageReactionBadge({
           <button
             type="button"
             className={cn(
-              bubbleReactionsVariants({ side: "top", align }),
+              bubbleReactionsVariants({ side, align }),
               "ring-secondary cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-0",
             )}
             aria-label={`${total} reaction${total === 1 ? "" : "s"}`}
@@ -77,7 +79,7 @@ export function MessageReactionBadge({
         }
       />
       <HoverCardContent
-        side="top"
+        side={side === "bottom" ? "bottom" : "top"}
         align="center"
         className="w-auto max-w-56 bg-secondary px-3 py-2 text-xs whitespace-pre-line"
       >

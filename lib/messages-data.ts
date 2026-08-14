@@ -21,6 +21,9 @@ export interface DirectConversation {
   isNew?: boolean
 }
 
+/** Which part of a message a reaction applies to. */
+export type MessageReactionTarget = "body" | "attachment"
+
 /** Aggregated emoji reactions on a message. */
 export type MessageReaction = {
   emoji: string
@@ -85,8 +88,10 @@ export interface ThreadMessage {
   authorId?: string
   /** Avatar URL for room messages from other members. */
   authorAvatarUrl?: string
-  /** Aggregated emoji reactions on this message. */
+  /** Aggregated emoji reactions on the text bubble. */
   reactions?: MessageReaction[]
+  /** Aggregated emoji reactions on a job or member share card. */
+  attachmentReactions?: MessageReaction[]
   /** Rich job card when this message shares a job listing. */
   jobShare?: JobSharePayload
   /** Rich member card when this message shares a crew profile. */

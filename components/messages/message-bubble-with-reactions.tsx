@@ -8,7 +8,6 @@ import type {
   MessageReaction,
   MessageReplyPayload,
 } from "@/lib/messages-data"
-import { copyMessageText } from "@/lib/messages/reply"
 import { cn } from "@/lib/utils"
 import { JobShareCard } from "@/components/jobs/job-share-card"
 import { PersonShareCard } from "@/components/people/person-share-card"
@@ -46,6 +45,10 @@ function useMessageReactionHandlers(
 type MessageActionsShellProps = {
   align?: "start" | "end"
   reactions?: MessageReaction[]
+  /** Badge vertical placement relative to this shell's content. */
+  reactionSide?: "top" | "top-edge" | "bottom"
+  /** Badge horizontal placement; defaults to inward-facing corner for message align. */
+  reactionAlign?: "start" | "end"
   onReact: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
@@ -61,6 +64,8 @@ type MessageActionsShellProps = {
 function MessageActionsShell({
   align,
   reactions,
+  reactionSide = "top",
+  reactionAlign,
   onReact,
   onReply,
   onCopy,
@@ -80,6 +85,8 @@ function MessageActionsShell({
     reactions,
     onReact,
   )
+  const badgeAlign =
+    reactionAlign ?? (align === "end" ? "start" : "end")
 
   const handleLongPress = useCallback(() => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -108,7 +115,6 @@ function MessageActionsShell({
         ref={bubbleRef}
         className={cn(
           "group/bubble-wrap relative w-fit min-w-0 overflow-visible select-none",
-          hasReactions && "pt-6",
           "after:absolute after:top-0 after:bottom-0 after:w-9 after:content-['']",
           align === "end"
             ? "self-end after:right-full"
@@ -118,15 +124,24 @@ function MessageActionsShell({
         )}
         {...(coarsePointer ? longPressHandlers : {})}
       >
-        {hasReactions ? (
-          <MessageReactionBadge
-            reactions={reactions!}
-            align={align === "end" ? "start" : "end"}
-            onToggleMine={() => onReact(null)}
-          />
-        ) : null}
-
-        {children}
+        <div className="relative w-fit min-w-0 max-w-full">
+          <div
+            className={cn(
+              hasReactions && reactionSide === "top" && "pt-6",
+              hasReactions && reactionSide === "bottom" && "pb-6",
+            )}
+          >
+            {children}
+          </div>
+          {hasReactions ? (
+            <MessageReactionBadge
+              reactions={reactions!}
+              side={reactionSide}
+              align={badgeAlign}
+              onToggleMine={() => onReact(null)}
+            />
+          ) : null}
+        </div>
 
         <div
           ref={triggerRef}
@@ -202,7 +217,9 @@ export function MessageJobShareWithReactions({
   variant,
   align,
   reactions,
-  onReact,
+  attachmentReactions,
+  onReactBody,
+  onReactAttachment,
   onReply,
   onCopy,
   onDelete,
@@ -216,7 +233,9 @@ export function MessageJobShareWithReactions({
   variant?: "default" | "muted"
   align?: "start" | "end"
   reactions?: MessageReaction[]
-  onReact: (emoji: string | null) => void
+  attachmentReactions?: MessageReaction[]
+  onReactBody: (emoji: string | null) => void
+  onReactAttachment: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
   onDelete?: () => void
@@ -226,41 +245,52 @@ export function MessageJobShareWithReactions({
   className?: string
 }) {
   const trimmed = text.trim()
+  const hasText = Boolean(trimmed)
+  const messageActions = { onReply, onDelete, deleteLabel }
 
   return (
-    <MessageActionsShell
-      align={align}
-      reactions={reactions}
-      onReact={onReact}
-      onReply={onReply}
-      onCopy={onCopy}
-      onDelete={onDelete}
-      deleteLabel={deleteLabel}
-      replyTo={replyTo}
-      repliedLabel={repliedLabel}
-      className={cn("max-w-[min(20rem,80%)]", className)}
+    <div
+      className={cn(
+        "flex w-full max-w-[min(20rem,80%)] flex-col gap-2",
+        align === "end" ? "items-end self-end" : "items-start self-start",
+        className,
+      )}
     >
-      <div
-        className={cn(
-          "flex w-full flex-col gap-2",
-          align === "end" ? "items-end" : "items-start",
-        )}
+      {replyTo ? (
+        <Bubble variant={variant} align={align} className="max-w-full">
+          <BubbleContent>
+            <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
+          </BubbleContent>
+        </Bubble>
+      ) : null}
+      <MessageActionsShell
+        align={align}
+        reactions={attachmentReactions}
+        reactionSide="top-edge"
+        reactionAlign="start"
+        onReact={onReactAttachment}
+        {...messageActions}
+        className="max-w-full"
       >
-        {replyTo ? (
-          <Bubble variant={variant} align={align} className="max-w-full">
-            <BubbleContent>
-              <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
-            </BubbleContent>
-          </Bubble>
-        ) : null}
         <JobShareCard jobShare={jobShare} variant="message" />
-        {trimmed ? (
+      </MessageActionsShell>
+      {hasText ? (
+        <MessageActionsShell
+          align={align}
+          reactions={reactions}
+          reactionSide="top-edge"
+          reactionAlign="start"
+          onReact={onReactBody}
+          onCopy={onCopy}
+          {...messageActions}
+          className="max-w-full"
+        >
           <Bubble variant={variant} align={align} className="max-w-full">
             <BubbleContent>{trimmed}</BubbleContent>
           </Bubble>
-        ) : null}
-      </div>
-    </MessageActionsShell>
+        </MessageActionsShell>
+      ) : null}
+    </div>
   )
 }
 
@@ -270,7 +300,9 @@ export function MessageMemberShareWithReactions({
   variant,
   align,
   reactions,
-  onReact,
+  attachmentReactions,
+  onReactBody,
+  onReactAttachment,
   onReply,
   onCopy,
   onDelete,
@@ -284,7 +316,9 @@ export function MessageMemberShareWithReactions({
   variant?: "default" | "muted"
   align?: "start" | "end"
   reactions?: MessageReaction[]
-  onReact: (emoji: string | null) => void
+  attachmentReactions?: MessageReaction[]
+  onReactBody: (emoji: string | null) => void
+  onReactAttachment: (emoji: string | null) => void
   onReply?: () => void
   onCopy?: () => void
   onDelete?: () => void
@@ -294,40 +328,51 @@ export function MessageMemberShareWithReactions({
   className?: string
 }) {
   const trimmed = text.trim()
+  const hasText = Boolean(trimmed)
+  const messageActions = { onReply, onDelete, deleteLabel }
 
   return (
-    <MessageActionsShell
-      align={align}
-      reactions={reactions}
-      onReact={onReact}
-      onReply={onReply}
-      onCopy={onCopy}
-      onDelete={onDelete}
-      deleteLabel={deleteLabel}
-      replyTo={replyTo}
-      repliedLabel={repliedLabel}
-      className={cn("max-w-[min(20rem,80%)]", className)}
+    <div
+      className={cn(
+        "flex w-full max-w-[min(20rem,80%)] flex-col gap-2",
+        align === "end" ? "items-end self-end" : "items-start self-start",
+        className,
+      )}
     >
-      <div
-        className={cn(
-          "flex w-full flex-col gap-2",
-          align === "end" ? "items-end" : "items-start",
-        )}
+      {replyTo ? (
+        <Bubble variant={variant} align={align} className="max-w-full">
+          <BubbleContent>
+            <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
+          </BubbleContent>
+        </Bubble>
+      ) : null}
+      <MessageActionsShell
+        align={align}
+        reactions={attachmentReactions}
+        reactionSide="top-edge"
+        reactionAlign="start"
+        onReact={onReactAttachment}
+        {...messageActions}
+        className="max-w-full"
       >
-        {replyTo ? (
-          <Bubble variant={variant} align={align} className="max-w-full">
-            <BubbleContent>
-              <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
-            </BubbleContent>
-          </Bubble>
-        ) : null}
         <PersonShareCard memberShare={memberShare} variant="message" />
-        {trimmed ? (
+      </MessageActionsShell>
+      {hasText ? (
+        <MessageActionsShell
+          align={align}
+          reactions={reactions}
+          reactionSide="top-edge"
+          reactionAlign="start"
+          onReact={onReactBody}
+          onCopy={onCopy}
+          {...messageActions}
+          className="max-w-full"
+        >
           <Bubble variant={variant} align={align} className="max-w-full">
             <BubbleContent>{trimmed}</BubbleContent>
           </Bubble>
-        ) : null}
-      </div>
-    </MessageActionsShell>
+        </MessageActionsShell>
+      ) : null}
+    </div>
   )
 }

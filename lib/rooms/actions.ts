@@ -22,7 +22,11 @@ import {
   type ReplySnapshot,
 } from "@/lib/messages/reply"
 import { formatMessageTime, formatRelativeTime, isUuid } from "@/lib/messages/format"
-import type { MessageReaction, ThreadMessage } from "@/lib/messages-data"
+import type {
+  MessageReaction,
+  MessageReactionTarget,
+  ThreadMessage,
+} from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/server"
 
 // ---------------------------------------------------------------------------
@@ -67,7 +71,11 @@ export type SendRoomMessageResult =
   | ActionError
 
 export type SetRoomReactionResult =
-  | { ok: true; reactions: MessageReaction[] }
+  | {
+      ok: true
+      reactions: MessageReaction[]
+      attachmentReactions: MessageReaction[]
+    }
   | ActionError
 
 export type AdminRoomResult = { ok: true; room: AdminRoomRecord } | ActionError
@@ -117,6 +125,7 @@ type ThreadRpcMessage = ReplyRpcRow &
   body: string
   created_at: string
   reactions?: ThreadRpcReaction[]
+  attachment_reactions?: ThreadRpcReaction[]
 }
 
 type ThreadRpcReaction = {
@@ -164,6 +173,7 @@ function mapRoomThreadMessage(
         ? (row.sender_avatar_url ?? undefined)
         : undefined,
     reactions: mapRpcReactions(row.reactions),
+    attachmentReactions: mapRpcReactions(row.attachment_reactions),
     jobShare,
     memberShare,
     replyTo: mapRpcReply(row),
@@ -532,16 +542,20 @@ export async function getRoomsUnreadCount(): Promise<UnreadCountResult> {
 export async function setRoomMessageReaction(
   messageId: string,
   emoji: string | null,
+  target: MessageReactionTarget = "body",
 ): Promise<SetRoomReactionResult> {
   try {
     if (!isUuid(messageId)) {
       return { ok: false, error: "Invalid message id." }
     }
 
+    if (target !== "body" && target !== "attachment") {
+      return { ok: false, error: "Invalid reaction target." }
+    }
+
     const userId = await requireUserId()
     const supabase = await createClient()
 
-    // Verify message exists and get its room_id
     const { data: msgRow, error: msgError } = await supabase
       .from("room_messages")
       .select("id, room_id")
@@ -551,7 +565,6 @@ export async function setRoomMessageReaction(
     if (msgError) return { ok: false, error: msgError.message }
     if (!msgRow) return { ok: false, error: "Message not found." }
 
-    // Verify user is a member
     const { data: membership } = await supabase
       .from("room_memberships")
       .select("profile_id")
@@ -570,6 +583,7 @@ export async function setRoomMessageReaction(
       .select("emoji")
       .eq("message_id", messageId)
       .eq("profile_id", userId)
+      .eq("target", target)
       .maybeSingle()
 
     if (!trimmedEmoji || existing?.emoji === trimmedEmoji) {
@@ -578,49 +592,62 @@ export async function setRoomMessageReaction(
         .delete()
         .eq("message_id", messageId)
         .eq("profile_id", userId)
+        .eq("target", target)
 
       if (deleteError) return { ok: false, error: deleteError.message }
     } else {
       const { error: upsertError } = await supabase
         .from("room_message_reactions")
         .upsert(
-          { message_id: messageId, profile_id: userId, emoji: trimmedEmoji },
-          { onConflict: "message_id,profile_id" },
+          {
+            message_id: messageId,
+            profile_id: userId,
+            emoji: trimmedEmoji,
+            target,
+          },
+          { onConflict: "message_id,profile_id,target" },
         )
 
       if (upsertError) return { ok: false, error: upsertError.message }
     }
 
-    // Fetch updated reactions for this message
     const { data: reactionsData } = await supabase
       .from("room_message_reactions")
-      .select("emoji, profile_id, profiles(full_name)")
+      .select("emoji, profile_id, target, profiles(full_name)")
       .eq("message_id", messageId)
 
-    if (!reactionsData?.length) return { ok: true, reactions: [] }
+    if (!reactionsData?.length) {
+      return { ok: true, reactions: [], attachmentReactions: [] }
+    }
 
-    const grouped = new Map<
+    const bodyGrouped = new Map<
+      string,
+      { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
+    >()
+    const attachmentGrouped = new Map<
       string,
       { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
     >()
 
     for (const row of reactionsData) {
       const profileId = row.profile_id as string
-      const emoji = row.emoji as string
+      const rowEmoji = row.emoji as string
+      const rowTarget = (row.target as string | null) ?? "body"
       const profiles = row.profiles as
         | { full_name: string | null }
         | { full_name: string | null }[]
         | null
       const profile = Array.isArray(profiles) ? profiles[0] : profiles
       const name = profile?.full_name?.trim() || "Member"
+      const grouped = rowTarget === "attachment" ? attachmentGrouped : bodyGrouped
 
-      const existing = grouped.get(emoji)
-      if (existing) {
-        existing.count += 1
-        existing.reactedByMe ||= profileId === userId
-        existing.reactors.push({ id: profileId, name })
+      const existingGroup = grouped.get(rowEmoji)
+      if (existingGroup) {
+        existingGroup.count += 1
+        existingGroup.reactedByMe ||= profileId === userId
+        existingGroup.reactors.push({ id: profileId, name })
       } else {
-        grouped.set(emoji, {
+        grouped.set(rowEmoji, {
           count: 1,
           reactedByMe: profileId === userId,
           reactors: [{ id: profileId, name }],
@@ -628,19 +655,30 @@ export async function setRoomMessageReaction(
       }
     }
 
-    const reactions: MessageReaction[] = [...grouped.entries()]
-      .map(([emoji, value]) => ({
-        emoji,
-        count: value.count,
-        reactedByMe: value.reactedByMe,
-        reactors: value.reactors,
-      }))
-      .sort((a, b) => {
-        if (b.count !== a.count) return b.count - a.count
-        return a.emoji.localeCompare(b.emoji)
-      })
+    function toSortedReactions(
+      grouped: Map<
+        string,
+        { count: number; reactedByMe: boolean; reactors: { id: string; name: string }[] }
+      >,
+    ): MessageReaction[] {
+      return [...grouped.entries()]
+        .map(([rowEmoji, value]) => ({
+          emoji: rowEmoji,
+          count: value.count,
+          reactedByMe: value.reactedByMe,
+          reactors: value.reactors,
+        }))
+        .sort((a, b) => {
+          if (b.count !== a.count) return b.count - a.count
+          return a.emoji.localeCompare(b.emoji)
+        })
+    }
 
-    return { ok: true, reactions }
+    return {
+      ok: true,
+      reactions: toSortedReactions(bodyGrouped),
+      attachmentReactions: toSortedReactions(attachmentGrouped),
+    }
   } catch (error) {
     return actionError(error)
   }
