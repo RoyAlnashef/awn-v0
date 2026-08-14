@@ -66,28 +66,31 @@ export function JobShareCard({
       tabIndex={variant === "message" ? 0 : undefined}
     >
       <AttachmentContent className="flex flex-col gap-3 px-2.5 py-2">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-start justify-between gap-3">
-            <AttachmentTitle className="min-w-0 font-heading text-sm font-semibold tracking-tight text-balance">
-              {jobShare.role}
-            </AttachmentTitle>
-            {isUrgent ? <JobUrgentHelpBadge className="shrink-0" /> : null}
+        <div className="flex flex-col">
+          <div className="flex flex-col gap-1 mb-2">
+            <div className="flex items-start justify-between gap-3">
+              <AttachmentTitle className="min-w-0 font-heading text-sm font-semibold tracking-tight text-balance">
+                {jobShare.role}
+              </AttachmentTitle>
+              {isUrgent ? <JobUrgentHelpBadge className="shrink-0" /> : null}
+            </div>
+            <AttachmentDescription>{jobShare.production}</AttachmentDescription>
           </div>
-          <AttachmentDescription>{jobShare.production}</AttachmentDescription>
+          <JobMetadataBadges
+            job={{
+              engagement: jobShare.engagement as EngagementType,
+              department: jobShare.department,
+              startDate: jobShare.startDate,
+              endDate: jobShare.endDate,
+              location: jobShare.location,
+              postedAt: jobShare.postedAt,
+              deadline: "",
+              kind: jobShare.kind,
+            }}
+            includePostedAt={false}
+            className="mt-2"
+          />
         </div>
-        <JobMetadataBadges
-          job={{
-            engagement: jobShare.engagement as EngagementType,
-            department: jobShare.department,
-            startDate: jobShare.startDate,
-            endDate: jobShare.endDate,
-            location: jobShare.location,
-            postedAt: jobShare.postedAt,
-            deadline: "",
-            kind: jobShare.kind,
-          }}
-          includePostedAt={false}
-        />
         {jobShare.payRate ? (
           <span
             className={cn(

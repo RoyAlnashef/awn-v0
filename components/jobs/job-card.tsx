@@ -75,7 +75,7 @@ export function JobCard({ job }: { job: Job }) {
 
         <div className="pointer-events-none flex flex-col gap-4">
           <div className="flex flex-col">
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1 mb-2">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="min-w-0 font-heading text-lg font-semibold tracking-tight text-balance">
                   {job.role}
@@ -88,7 +88,7 @@ export function JobCard({ job }: { job: Job }) {
                 {job.production}
               </p>
             </div>
-            <JobMetadataBadges job={job} className="mt-2.5" />
+            <JobMetadataBadges job={job} className="mt-2" />
           </div>
 
           <div className="flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">

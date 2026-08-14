@@ -125,28 +125,30 @@ export function JobDetailContent({
         >
           <div
             className={cn(
-              "flex flex-col gap-1.5",
+              "flex flex-col",
               !embedded && "pr-8",
             )}
           >
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="min-w-0 font-heading text-xl font-semibold tracking-tight text-balance">
-                {job.role || "Role title"}
-              </h2>
-              {job.kind === "urgent" ? (
-                <JobUrgentHelpBadge className="shrink-0" />
-              ) : null}
+            <div className="flex flex-col gap-1 mb-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="min-w-0 font-heading text-xl font-semibold tracking-tight text-balance">
+                  {job.role || "Role title"}
+                </h2>
+                {job.kind === "urgent" ? (
+                  <JobUrgentHelpBadge className="shrink-0" />
+                ) : null}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {job.production || "Production / tour name"}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {job.production || "Production / tour name"}
-            </p>
             <JobMetadataBadges
               job={job}
               includePostedAt
               includeDeadline={job.kind === "full"}
               applicantCount={preview ? null : applicantCount}
               showPlaceholders={preview}
-              className="mt-1"
+              className="mt-2.5"
             />
           </div>
         </div>
