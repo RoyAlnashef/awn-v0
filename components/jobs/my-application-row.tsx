@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
-import { CalendarClock, MapPin, Undo2 } from "lucide-react"
+import { Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
-import { formatDateRange } from "@/lib/jobs-data"
 import { type AppliedJob, withdrawFromJob } from "@/lib/jobs/fetch"
 import {
   applicationStatusStyles,
@@ -27,7 +27,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export function MyApplicationRow({ job }: { job: AppliedJob }) {
@@ -71,11 +70,18 @@ export function MyApplicationRow({ job }: { job: AppliedJob }) {
           onClick={() => setDetailOpen(true)}
         />
 
-        <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary">{job.engagement}</Badge>
-            <Badge variant="outline">{job.department}</Badge>
-            {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
+        <div className="pointer-events-none flex min-w-0 flex-1 flex-col">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-heading text-base font-semibold tracking-tight">
+                {job.role}
+              </h3>
+              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
+            </div>
+            <p className="text-sm text-muted-foreground">{job.production}</p>
+          </div>
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <JobMetadataBadges job={job} includePostedAt={false} />
             <span
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[job.application.status]}`}
             >
@@ -84,22 +90,6 @@ export function MyApplicationRow({ job }: { job: AppliedJob }) {
             <span className="text-xs text-muted-foreground">
               · Applied {appliedAtLabel}
             </span>
-          </div>
-          <h3 className="font-heading text-base font-semibold tracking-tight">
-            {job.role}
-          </h3>
-          <p className="text-sm text-muted-foreground">{job.production}</p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3.5 shrink-0" />
-              {job.location || "—"}
-            </span>
-            {job.startDate && job.endDate ? (
-              <span className="flex items-center gap-1.5">
-                <CalendarClock className="size-3.5 shrink-0" />
-                {formatDateRange(job.startDate, job.endDate)}
-              </span>
-            ) : null}
           </div>
         </div>
 

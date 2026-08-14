@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
-import { CalendarClock, MapPin, Undo2 } from "lucide-react"
+import { Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
-import { formatDateRange } from "@/lib/jobs-data"
 import { type AppliedJob, withdrawFromJob } from "@/lib/jobs/fetch"
 import {
   applicationStatusStyles,
@@ -27,7 +27,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export function MyApplicationListItem({ job }: { job: AppliedJob }) {
@@ -72,59 +71,48 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
         />
 
         <div className="pointer-events-none flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary">{job.engagement}</Badge>
-              <Badge variant="outline">{job.department}</Badge>
-              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
+          <div className="flex flex-col">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="min-w-0 font-heading text-lg font-semibold tracking-tight text-balance">
+                  {job.role}
+                </h3>
+                <div className="flex shrink-0 items-center gap-2">
+                  {job.kind === "urgent" ? (
+                    <JobUrgentHelpBadge className="shrink-0" />
+                  ) : null}
+                  <span className="text-xs text-muted-foreground">
+                    Applied {appliedAtLabel}
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">{job.production}</p>
+            </div>
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <JobMetadataBadges job={job} includePostedAt={false} />
               <span
                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[job.application.status]}`}
               >
                 {job.application.status}
               </span>
             </div>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              Applied {appliedAtLabel}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
-              {job.role}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {job.production}
-            </p>
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0" />
-              <span className="text-pretty">{job.location || "—"}</span>
-            </p>
           </div>
 
           <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
             {job.details}
           </p>
 
-          <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
-            <div className="flex flex-col gap-1">
-              <span
-                className={cn(
-                  "font-heading text-lg font-semibold",
-                  job.kind === "urgent"
-                    ? urgentAccentTextStyles
-                    : "text-primary-bright",
-                )}
-              >
-                {job.payRate || "Rate TBD"}
-              </span>
-              {job.startDate && job.endDate ? (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CalendarClock className="size-3.5 shrink-0" />
-                  {formatDateRange(job.startDate, job.endDate)}
-                </span>
-              ) : null}
-            </div>
-
+          <div className="mt-auto flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">
+            <span
+              className={cn(
+                "font-heading text-md font-semibold",
+                job.kind === "urgent"
+                  ? urgentAccentTextStyles
+                  : "text-primary-bright",
+              )}
+            >
+              {job.payRate || "Rate TBD"}
+            </span>
             <div className="pointer-events-auto relative z-10">
               <Button
                 size="xs"
