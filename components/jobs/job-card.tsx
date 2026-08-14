@@ -68,28 +68,22 @@ export function JobCard({ job }: { job: Job }) {
         />
 
         <div className="pointer-events-none flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary">{job.engagement}</Badge>
-              <Badge variant="outline">{job.department}</Badge>
-              {job.kind === "urgent" ? (
-                <Badge variant="destructive">Urgent</Badge>
-              ) : null}
-            </div>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {job.postedAt}
-            </span>
-          </div>
-
           <div className="flex flex-col gap-1.5">
-            <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
-              {job.role}
-            </h3>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <span className="font-medium text-foreground/90">
-                {job.production}
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
+                {job.role}
+              </h3>
+              <Badge variant="secondary">{job.engagement}</Badge>
+            </div>
+            <p className="text-sm font-medium text-foreground/90">
+              {job.production}
+            </p>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <CalendarClock className="size-3.5 shrink-0" />
+                {formatDateRange(job.startDate, job.endDate)}
               </span>
-              <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="flex items-center gap-1">
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="text-pretty">{job.location}</span>
               </span>
@@ -98,28 +92,27 @@ export function JobCard({ job }: { job: Job }) {
 
           <div className="mt-auto flex flex-col gap-4">
             <div className="flex items-center gap-2 border-t border-border pt-4">
-              <Avatar className="size-7">
+              <Avatar className="size-6">
                 <AvatarImage src={job.postedBy.avatar} alt="" />
                 <AvatarFallback className="text-xs">
                   {initials(job.postedBy.name)}
                 </AvatarFallback>
               </Avatar>
               <p className="text-xs text-muted-foreground">
-                <span className="text-foreground">{job.postedBy.name}</span> ·{" "}
-                {job.postedBy.role}
+                <span className="text-foreground">{job.postedBy.name}</span>
+                {" · "}
+                {job.postedAt}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="font-heading text-lg font-semibold text-primary-bright">
-                  {job.payRate}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CalendarClock className="size-3.5 shrink-0" />
-                  {formatDateRange(job.startDate, job.endDate)}
-                </span>
-              </div>
+            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
+              {job.details}
+            </p>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="font-heading text-md font-semibold">
+                {job.payRate}
+              </span>
               <div className="pointer-events-auto relative z-10 flex min-w-0 flex-wrap items-center justify-end gap-2">
                 <JobActionTooltips>
                   <JobActionTooltip
