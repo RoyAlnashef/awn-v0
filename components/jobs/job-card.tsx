@@ -149,8 +149,7 @@ export function JobCard({ job }: { job: Job }) {
                 </JobActionTooltips>
                 <Button
                   size="sm"
-                  variant={isUrgent ? "default" : "outline"}
-                  className={isUrgent ? urgentApplyButtonStyles : undefined}
+                  className={cn(isUrgent && urgentApplyButtonStyles)}
                   disabled={applied}
                   onClick={() => setApplyOpen(true)}
                 >

@@ -41,18 +41,18 @@ export function formatJobSavedAt(iso: string): string {
 }
 
 export const urgentBadgeStyles =
-  "border-amber-500/30 bg-amber-500/10 text-amber-600"
+  "border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-600"
 
 export const urgentJobCardBorderStyles =
-  "border-border hover:border-amber-500/50"
+  "border-border hover:border-amber-600/50"
 
-export const urgentAccentTextStyles = "text-amber-600 dark:text-amber-500"
+export const urgentAccentTextStyles = "text-amber-700 dark:text-amber-600"
 
 export const urgentBookmarkSavedStyles =
-  "fill-current text-amber-600 dark:text-amber-500"
+  "fill-current text-amber-700 dark:text-amber-600"
 
 export const urgentApplyButtonStyles =
-  "bg-amber-700 text-white hover:bg-amber-700/90 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-600/90"
+  "bg-amber-800 text-white hover:bg-amber-800/90 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-700/90"
 
 export const jobStatusStyles: Record<JobStatus, string> = {
   open: "border-success/30 bg-success/10 text-success",

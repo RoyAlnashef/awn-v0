@@ -52,7 +52,7 @@ export function Notifications() {
       >
         <Bell className="size-5" />
         {unreadCount > 0 ? (
-          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground ring-2 ring-background">
+          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-notification px-1 text-[10px] font-semibold text-notification-foreground ring-2 ring-background">
             {unreadCount}
           </span>
         ) : null}
@@ -67,7 +67,7 @@ export function Notifications() {
             <div className="flex items-center gap-2">
               <SheetTitle>Notifications</SheetTitle>
               {unreadCount > 0 ? (
-                <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-xs font-medium text-success">
+                <span className="rounded-full bg-notification/15 px-1.5 py-0.5 text-xs font-medium text-notification">
                   {unreadCount} new
                 </span>
               ) : null}
@@ -101,13 +101,13 @@ export function Notifications() {
                       }
                       className={cn(
                         "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                        !n.read && "bg-success/6",
+                        !n.read && "bg-notification/6",
                       )}
                     >
                       {!n.read ? (
                         <span
                           aria-hidden="true"
-                          className="absolute inset-y-0 left-0 w-0.5 bg-success"
+                          className="absolute inset-y-0 left-0 w-0.5 bg-notification"
                         />
                       ) : null}
 
@@ -116,7 +116,7 @@ export function Notifications() {
                           "flex size-9 shrink-0 items-center justify-center rounded-full",
                           n.read
                             ? "bg-muted text-muted-foreground"
-                            : "bg-success/15 text-success",
+                            : "bg-notification/15 text-notification",
                         )}
                       >
                         <Icon className="size-4" />
@@ -137,7 +137,7 @@ export function Notifications() {
                           {!n.read ? (
                             <span
                               aria-hidden="true"
-                              className="mt-1.5 size-2 shrink-0 rounded-full bg-success"
+                              className="mt-1.5 size-2 shrink-0 rounded-full bg-notification"
                             />
                           ) : null}
                         </div>
