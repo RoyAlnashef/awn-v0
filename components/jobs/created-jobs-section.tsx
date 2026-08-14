@@ -41,7 +41,7 @@ function EmptyState() {
         render={<Link href="/jobs/new" />}
       >
         <Plus className="size-3.5" />
-        Post a job
+        Post a Job
       </Button>
     </div>
   )

@@ -29,7 +29,7 @@ export default async function RoomsSettingsPage() {
 
   return (
     <PageShell
-      title="Manage Rooms"
+      title="Manage rooms"
       breadcrumb={
         <Breadcrumb>
           <BreadcrumbList>

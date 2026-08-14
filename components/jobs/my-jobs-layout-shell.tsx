@@ -11,17 +11,27 @@ import { Button } from "@/components/ui/button"
 export function MyJobsLayoutShell({ children }: { children: ReactNode }) {
   return (
     <PageShell
-      title="My Jobs"
+      title="My jobs"
       description="Manage the roles you've posted and track jobs you've applied to."
       actions={
-        <Button
-          size="sm"
-          nativeButton={false}
-          render={<Link href="/jobs/new" />}
-        >
-          <Plus />
-          Post a job
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/jobs" />}
+          >
+            Browse Jobs
+          </Button>
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/jobs/new" />}
+          >
+            <Plus />
+            Post a Job
+          </Button>
+        </div>
       }
     >
       <div className="flex flex-col gap-4">

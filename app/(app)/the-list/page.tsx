@@ -4,5 +4,5 @@ import { adminNav } from "@/lib/nav"
 const item = adminNav.find((i) => i.href === "/the-list")!
 
 export default function TheListPage() {
-  return <PageShell title={item.title} description={item.description} />
+  return <PageShell title="The list" description={item.description} />
 }

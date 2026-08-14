@@ -27,7 +27,7 @@ export function AccountLayoutShell({
       initialOnline={initialOnline}
     >
       <PageShell
-        title="My Account"
+        title="My account"
         description="Manage your profile, credits, and preferences."
         actions={<AccountPageActions />}
         fillViewport
