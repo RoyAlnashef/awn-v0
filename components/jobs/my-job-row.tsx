@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import {
   CalendarClock,
   Copy,
@@ -17,8 +18,9 @@ import { mutate } from "swr"
 
 import { formatDateRange, type Job } from "@/lib/jobs-data"
 import { createJob, updateJob } from "@/lib/jobs/fetch"
-import { jobStatusStyles } from "@/lib/jobs/format"
+import { jobStatusStyles, urgentAccentTextStyles, urgentJobCardBorderStyles } from "@/lib/jobs/format"
 import { myJobsKey } from "@/lib/jobs/swr-keys"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -74,7 +76,14 @@ export function MyJobRow({ job }: { job: Job }) {
   }
 
   return (
-    <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center">
+    <article
+      className={cn(
+        "relative flex flex-col gap-4 rounded-xl border bg-card p-4 transition-colors sm:flex-row sm:items-center",
+        job.kind === "urgent"
+          ? urgentJobCardBorderStyles
+          : "border-border hover:border-primary/40",
+      )}
+    >
       <Link
         href={`/jobs/${job.id}`}
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -85,14 +94,12 @@ export function MyJobRow({ job }: { job: Job }) {
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant="secondary">{job.engagement}</Badge>
           <Badge variant="outline">{job.department}</Badge>
+          {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
           <span
             className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${jobStatusStyles[job.status]}`}
           >
             {job.status}
           </span>
-          {job.kind === "urgent" ? (
-            <Badge variant="destructive">Urgent</Badge>
-          ) : null}
           <span className="text-xs text-muted-foreground">· {job.postedAt}</span>
         </div>
         <h3 className="font-heading text-base font-semibold tracking-tight">
@@ -122,7 +129,14 @@ export function MyJobRow({ job }: { job: Job }) {
       </div>
 
       <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
-        <span className="font-heading text-base font-semibold text-primary-bright">
+        <span
+          className={cn(
+            "font-heading text-base font-semibold",
+            job.kind === "urgent"
+              ? urgentAccentTextStyles
+              : "text-primary-bright",
+          )}
+        >
           {job.payRate || "Rate TBD"}
         </span>
         <div className="pointer-events-auto relative z-10 flex flex-wrap items-center justify-end gap-1.5">

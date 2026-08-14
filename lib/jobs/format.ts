@@ -40,6 +40,20 @@ export function formatJobSavedAt(iso: string): string {
   return format(new Date(iso), "MMM d, yyyy")
 }
 
+export const urgentBadgeStyles =
+  "border-amber-500/30 bg-amber-500/10 text-amber-600"
+
+export const urgentJobCardBorderStyles =
+  "border-border hover:border-amber-500/50"
+
+export const urgentAccentTextStyles = "text-amber-600 dark:text-amber-500"
+
+export const urgentBookmarkSavedStyles =
+  "fill-current text-amber-600 dark:text-amber-500"
+
+export const urgentApplyButtonStyles =
+  "bg-amber-700 text-white hover:bg-amber-700/90 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-600/90"
+
 export const jobStatusStyles: Record<JobStatus, string> = {
   open: "border-success/30 bg-success/10 text-success",
   draft: "border-amber-500/30 bg-amber-500/10 text-amber-600",
@@ -49,7 +63,7 @@ export const jobStatusStyles: Record<JobStatus, string> = {
 }
 
 export const applicationStatusStyles: Record<ApplicationStatus, string> = {
-  pending: "border-amber-500/30 bg-amber-500/10 text-amber-600",
+  pending: urgentBadgeStyles,
   approved: "border-success/30 bg-success/10 text-success",
   maybe: "border-blue-500/30 bg-blue-500/10 text-blue-600",
   declined: "border-border bg-muted text-muted-foreground",

@@ -8,16 +8,23 @@ import {
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
-import { Bookmark, CalendarClock, Clock, Group, MapPin, Share, User } from "lucide-react"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
+import { Bookmark, Group, Share } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
-import { formatDateRange, type Job } from "@/lib/jobs-data"
+import {
+  urgentAccentTextStyles,
+  urgentApplyButtonStyles,
+  urgentBookmarkSavedStyles,
+  urgentJobCardBorderStyles,
+} from "@/lib/jobs/format"
+import { type Job } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
 import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 function revalidateJobs() {
@@ -30,6 +37,7 @@ export function JobCard({ job }: { job: Job }) {
   const [applyOpen, setApplyOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const isUrgent = job.kind === "urgent"
 
   async function handleSave() {
     const previous = saved
@@ -49,7 +57,14 @@ export function JobCard({ job }: { job: Job }) {
 
   return (
     <>
-      <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
+      <article
+        className={cn(
+          "relative flex flex-col gap-4 rounded-xl border bg-card p-5 transition-colors",
+          job.kind === "urgent"
+            ? urgentJobCardBorderStyles
+            : "border-border hover:border-primary/40",
+        )}
+      >
         {/* Stretched trigger opens the detail drawer; action buttons use pointer-events-auto. */}
         <button
           type="button"
@@ -59,38 +74,30 @@ export function JobCard({ job }: { job: Job }) {
         />
 
         <div className="pointer-events-none flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
-                {job.role}
-              </h3>
-              <Badge variant="secondary">{job.engagement}</Badge>
+          <div className="flex flex-col">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="min-w-0 font-heading text-lg font-semibold tracking-tight text-balance">
+                  {job.role}
+                </h3>
+                {job.kind === "urgent" ? (
+                  <JobUrgentHelpBadge className="shrink-0" />
+                ) : null}
+              </div>
+              <p className="text-sm font-medium text-foreground/90">
+                {job.production}
+              </p>
             </div>
-            <p className="text-sm font-medium text-foreground/90">
-              {job.production}
-            </p>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <CalendarClock className="size-3.5 shrink-0" />
-                {formatDateRange(job.startDate, job.endDate)}
-              </span>
-              <span className="flex items-center gap-1">
-                <MapPin className="size-3.5 shrink-0" />
-                <span className="text-pretty">{job.location}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <User className="size-3.5 shrink-0" />
-                <span className="text-pretty">{job.postedBy.name}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="size-3.5 shrink-0" />
-                {job.postedAt}
-              </span>
-            </p>
+            <JobMetadataBadges job={job} className="mt-2.5" />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-              <span className="font-heading text-md font-semibold">
+          <div className="flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">
+              <span
+                className={cn(
+                  "font-heading text-md font-semibold",
+                  isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+                )}
+              >
                 {job.payRate}
               </span>
               <div className="pointer-events-auto relative z-10 flex min-w-0 flex-wrap items-center justify-end gap-2">
@@ -107,7 +114,13 @@ export function JobCard({ job }: { job: Job }) {
                       onClick={() => void handleSave()}
                     >
                       <Bookmark
-                        className={cn("size-4", saved && "fill-current text-primary")}
+                        className={cn(
+                          "size-4",
+                          saved &&
+                            (isUrgent
+                              ? urgentBookmarkSavedStyles
+                              : "fill-current text-primary"),
+                        )}
                       />
                     </Button>
                   </JobActionTooltip>
@@ -136,6 +149,7 @@ export function JobCard({ job }: { job: Job }) {
                 </JobActionTooltips>
                 <Button
                   size="sm"
+                  className={isUrgent ? urgentApplyButtonStyles : undefined}
                   disabled={applied}
                   onClick={() => setApplyOpen(true)}
                 >

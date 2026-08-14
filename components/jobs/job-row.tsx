@@ -8,16 +8,23 @@ import {
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
-import { Bookmark, CalendarClock, Group, MapPin, Share } from "lucide-react"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
+import { Bookmark, Group, Share } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
-import { formatDateRange, type Job } from "@/lib/jobs-data"
+import {
+  urgentAccentTextStyles,
+  urgentApplyButtonStyles,
+  urgentBookmarkSavedStyles,
+  urgentJobCardBorderStyles,
+} from "@/lib/jobs/format"
+import { type Job } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
 import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 function revalidateJobs() {
@@ -30,6 +37,7 @@ export function JobRow({ job }: { job: Job }) {
   const [applyOpen, setApplyOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const isUrgent = job.kind === "urgent"
 
   async function handleSave() {
     const previous = saved
@@ -49,7 +57,14 @@ export function JobRow({ job }: { job: Job }) {
 
   return (
     <>
-      <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center">
+      <article
+        className={cn(
+          "relative flex flex-col gap-4 rounded-xl border bg-card p-4 transition-colors sm:flex-row sm:items-center",
+          job.kind === "urgent"
+            ? urgentJobCardBorderStyles
+            : "border-border hover:border-primary/40",
+        )}
+      >
         {/* Stretched trigger opens the detail drawer; action buttons use pointer-events-auto. */}
         <button
           type="button"
@@ -58,35 +73,26 @@ export function JobRow({ job }: { job: Job }) {
           onClick={() => setDetailOpen(true)}
         />
 
-        <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary">{job.engagement}</Badge>
-            <Badge variant="outline">{job.department}</Badge>
-            {job.kind === "urgent" ? (
-              <Badge variant="destructive">Urgent</Badge>
-            ) : null}
-            <span className="text-xs text-muted-foreground">
-              · {job.postedAt}
-            </span>
+        <div className="pointer-events-none flex min-w-0 flex-1 flex-col">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-heading text-base font-semibold tracking-tight">
+                {job.role}
+              </h3>
+              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
+            </div>
+            <p className="text-sm text-foreground/90">{job.production}</p>
           </div>
-          <h3 className="font-heading text-base font-semibold tracking-tight">
-            {job.role}
-          </h3>
-          <p className="text-sm text-foreground/90">{job.production}</p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3.5 shrink-0" />
-              {job.location}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CalendarClock className="size-3.5 shrink-0" />
-              {formatDateRange(job.startDate, job.endDate)}
-            </span>
-          </div>
+          <JobMetadataBadges job={job} className="mt-2.5" />
         </div>
 
         <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
-          <span className="font-heading text-base font-semibold text-primary-bright">
+          <span
+            className={cn(
+              "font-heading text-base font-semibold",
+              isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+            )}
+          >
             {job.payRate}
           </span>
           <div className="pointer-events-auto relative z-10 flex items-center gap-2">
@@ -103,7 +109,13 @@ export function JobRow({ job }: { job: Job }) {
                   onClick={() => void handleSave()}
                 >
                   <Bookmark
-                    className={cn("size-4", saved && "fill-current text-primary")}
+                    className={cn(
+                      "size-4",
+                      saved &&
+                        (isUrgent
+                          ? urgentBookmarkSavedStyles
+                          : "fill-current text-primary"),
+                    )}
                   />
                 </Button>
               </JobActionTooltip>
@@ -132,6 +144,7 @@ export function JobRow({ job }: { job: Job }) {
             </JobActionTooltips>
             <Button
               size="sm"
+              className={isUrgent ? urgentApplyButtonStyles : undefined}
               disabled={applied}
               onClick={() => setApplyOpen(true)}
             >

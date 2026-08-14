@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { CalendarClock, MapPin, Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -10,8 +11,11 @@ import { type AppliedJob, withdrawFromJob } from "@/lib/jobs/fetch"
 import {
   applicationStatusStyles,
   formatJobPostedAt,
+  urgentAccentTextStyles,
+  urgentJobCardBorderStyles,
 } from "@/lib/jobs/format"
 import { jobsListKey, myApplicationsKey } from "@/lib/jobs/swr-keys"
+import { cn } from "@/lib/utils"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import {
   AlertDialog,
@@ -52,7 +56,14 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
 
   return (
     <>
-      <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
+      <article
+        className={cn(
+          "relative flex flex-col gap-4 rounded-xl border bg-card p-5 transition-colors",
+          job.kind === "urgent"
+            ? urgentJobCardBorderStyles
+            : "border-border hover:border-primary/40",
+        )}
+      >
         <button
           type="button"
           className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -65,14 +76,12 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary">{job.engagement}</Badge>
               <Badge variant="outline">{job.department}</Badge>
+              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
               <span
                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[job.application.status]}`}
               >
                 {job.application.status}
               </span>
-              {job.kind === "urgent" ? (
-                <Badge variant="destructive">Urgent</Badge>
-              ) : null}
             </div>
             <span className="shrink-0 text-xs text-muted-foreground">
               Applied {appliedAtLabel}
@@ -98,7 +107,14 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
 
           <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col gap-1">
-              <span className="font-heading text-lg font-semibold text-primary-bright">
+              <span
+                className={cn(
+                  "font-heading text-lg font-semibold",
+                  job.kind === "urgent"
+                    ? urgentAccentTextStyles
+                    : "text-primary-bright",
+                )}
+              >
                 {job.payRate || "Rate TBD"}
               </span>
               {job.startDate && job.endDate ? (

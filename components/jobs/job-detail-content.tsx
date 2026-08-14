@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
 import {
   JobActionTooltip,
@@ -28,6 +29,11 @@ import {
   type Job,
 } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
+import {
+  urgentAccentTextStyles,
+  urgentApplyButtonStyles,
+  urgentBookmarkSavedStyles,
+} from "@/lib/jobs/format"
 import { jobDetailKey, jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -82,6 +88,7 @@ export function JobDetailContent({
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const isUrgent = job.kind === "urgent"
 
   async function handleSave() {
     const previous = saved
@@ -101,7 +108,7 @@ export function JobDetailContent({
   }
 
   const hasDates = Boolean(job.startDate && job.endDate)
-  const hasDeadline = Boolean(job.deadline)
+  const hasDeadline = job.kind === "full" && Boolean(job.deadline)
 
   const accessibilityLabel = preview ? "Job preview" : `${job.role} job details`
   const accessibilityDescription = preview
@@ -145,9 +152,7 @@ export function JobDetailContent({
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="secondary">{job.engagement}</Badge>
               <Badge variant="outline">{job.department}</Badge>
-              {job.kind === "urgent" ? (
-                <Badge variant="destructive">Urgent</Badge>
-              ) : null}
+              {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
             </div>
             <span className="shrink-0 text-xs text-muted-foreground">
               {job.postedAt}
@@ -173,7 +178,12 @@ export function JobDetailContent({
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-6 px-6 py-5">
             <div className="flex flex-col gap-3">
-              <span className="font-heading text-lg font-semibold text-primary-bright">
+              <span
+                className={cn(
+                  "font-heading text-lg font-semibold",
+                  isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+                )}
+              >
                 {job.payRate || "Rate TBD"}
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -188,15 +198,17 @@ export function JobDetailContent({
                     Dates TBD
                   </Badge>
                 )}
-                {hasDeadline ? (
-                  <Badge variant="outline" className="font-normal">
-                    Apply by {formatDeadline(job.deadline)}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="font-normal">
-                    Deadline TBD
-                  </Badge>
-                )}
+                {job.kind === "full" ? (
+                  hasDeadline ? (
+                    <Badge variant="outline" className="font-normal">
+                      Apply by {formatDeadline(job.deadline)}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="font-normal">
+                      Deadline TBD
+                    </Badge>
+                  )
+                ) : null}
                 <Badge variant="outline" className="gap-1 font-normal">
                   <Users className="size-3" />
                   {applicantCount} applicant{applicantCount === 1 ? "" : "s"}
@@ -258,7 +270,13 @@ export function JobDetailContent({
                 onClick={() => void handleSave()}
               >
                 <Bookmark
-                  className={cn("size-4", saved && "fill-current text-primary")}
+                  className={cn(
+                    "size-4",
+                    saved &&
+                      (isUrgent
+                        ? urgentBookmarkSavedStyles
+                        : "fill-current text-primary"),
+                  )}
                 />
               </Button>
             </JobActionTooltip>
@@ -296,7 +314,7 @@ export function JobDetailContent({
             </JobActionTooltip>
           </div>
           <Button
-            className="min-w-0 flex-1"
+            className={cn("min-w-0 flex-1", isUrgent && urgentApplyButtonStyles)}
             size="sm"
             disabled={preview || applied}
             onClick={() => setApplyOpen(true)}

@@ -1,6 +1,7 @@
 import { departmentByRole, type EngagementType, type JobKind } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { parseDateOnly } from "@/lib/jobs/format"
+import { normalizeJobKind, urgentExpiresAt } from "@/lib/jobs/kind"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 import { parseEngagementParam } from "@/lib/jobs/swr-keys"
 
@@ -223,7 +224,7 @@ export async function POST(request: Request) {
     return jsonError("Invalid JSON body", 400)
   }
 
-  const kind: JobKind = body.kind === "urgent" ? "urgent" : "full"
+  const kind = normalizeJobKind(body.kind)
   const role = body.role?.trim() ?? ""
   const requestedStatus =
     kind === "urgent" ? "open" : body.status === "draft" ? "draft" : "open"
@@ -243,10 +244,7 @@ export async function POST(request: Request) {
   }
 
   const department = departmentByRole[role] ?? "Production"
-  const expiresAt =
-    kind === "urgent"
-      ? new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
-      : null
+  const expiresAt = kind === "urgent" ? urgentExpiresAt() : null
 
   const deadline =
     kind === "full" ? parseDateOnly(body.deadline ?? null) : null

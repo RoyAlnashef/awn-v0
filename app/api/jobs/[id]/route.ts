@@ -2,6 +2,10 @@ import type { EngagementType, JobKind, JobStatus } from "@/lib/jobs-data"
 import { departmentByRole } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { parseDateOnly } from "@/lib/jobs/format"
+import {
+  kindTransitionPatch,
+  normalizeJobKind,
+} from "@/lib/jobs/kind"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 
 type PosterJoin = {
@@ -149,6 +153,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 type PatchJobBody = {
+  kind?: JobKind
   status?: JobStatus
   role?: string
   production?: string
@@ -177,7 +182,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const { data: existing, error: existingError } = await supabase
     .from("job_postings")
-    .select("poster_id, status")
+    .select("poster_id, status, kind")
     .eq("id", id)
     .maybeSingle()
 
@@ -187,7 +192,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     return jsonError("Forbidden", 403)
   }
 
+  const existingKind = normalizeJobKind(existing.kind as string)
+  const resolvedKind =
+    body.kind !== undefined ? normalizeJobKind(body.kind) : existingKind
+
   const patch: Record<string, unknown> = {}
+
+  if (body.kind !== undefined) {
+    const transition = kindTransitionPatch(resolvedKind, existingKind)
+    if (transition) {
+      Object.assign(patch, transition)
+    }
+  }
 
   if (body.status) {
     patch.status = body.status
@@ -212,7 +228,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!endDate) return jsonError("Invalid end date", 400)
     patch.end_date = endDate
   }
-  if (body.deadline !== undefined) {
+  if (body.deadline !== undefined && resolvedKind === "full") {
     patch.deadline = parseDateOnly(body.deadline)
   }
   if (body.engagement !== undefined) patch.engagement = body.engagement

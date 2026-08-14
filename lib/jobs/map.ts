@@ -63,7 +63,10 @@ export function mapJobPostingRow(
     payRate: row.pay_rate,
     startDate: row.start_date,
     endDate: row.end_date,
-    deadline: row.deadline ?? row.end_date,
+    deadline:
+      row.kind === "urgent"
+        ? (row.deadline ?? "")
+        : (row.deadline ?? row.end_date),
     engagement: row.engagement as EngagementType,
     details: row.details,
     postedBy: mapPoster(row.poster ?? null),

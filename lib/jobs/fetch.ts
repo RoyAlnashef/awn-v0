@@ -39,6 +39,7 @@ export type CreateJobPayload = {
 }
 
 export type UpdateJobPayload = {
+  kind?: JobKind
   status?: JobStatus
   role?: string
   production?: string
