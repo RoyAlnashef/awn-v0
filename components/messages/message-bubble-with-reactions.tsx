@@ -46,7 +46,7 @@ type MessageActionsShellProps = {
   align?: "start" | "end"
   reactions?: MessageReaction[]
   /** Badge vertical placement relative to this shell's content. */
-  reactionSide?: "top" | "top-edge" | "bottom"
+  reactionSide?: "top-edge" | "bottom"
   /** Badge horizontal placement; defaults to inward-facing corner for message align. */
   reactionAlign?: "start" | "end"
   onReact: (emoji: string | null) => void
@@ -64,7 +64,7 @@ type MessageActionsShellProps = {
 function MessageActionsShell({
   align,
   reactions,
-  reactionSide = "top",
+  reactionSide = "top-edge",
   reactionAlign,
   onReact,
   onReply,
@@ -127,7 +127,6 @@ function MessageActionsShell({
         <div className="relative w-fit min-w-0 max-w-full">
           <div
             className={cn(
-              hasReactions && reactionSide === "top" && "pt-6",
               hasReactions && reactionSide === "bottom" && "pb-6",
             )}
           >
@@ -266,8 +265,6 @@ export function MessageJobShareWithReactions({
       <MessageActionsShell
         align={align}
         reactions={attachmentReactions}
-        reactionSide="top-edge"
-        reactionAlign="start"
         onReact={onReactAttachment}
         {...messageActions}
         className="max-w-full"
@@ -278,8 +275,6 @@ export function MessageJobShareWithReactions({
         <MessageActionsShell
           align={align}
           reactions={reactions}
-          reactionSide="top-edge"
-          reactionAlign="start"
           onReact={onReactBody}
           onCopy={onCopy}
           {...messageActions}
@@ -349,8 +344,6 @@ export function MessageMemberShareWithReactions({
       <MessageActionsShell
         align={align}
         reactions={attachmentReactions}
-        reactionSide="top-edge"
-        reactionAlign="start"
         onReact={onReactAttachment}
         {...messageActions}
         className="max-w-full"
@@ -361,8 +354,6 @@ export function MessageMemberShareWithReactions({
         <MessageActionsShell
           align={align}
           reactions={reactions}
-          reactionSide="top-edge"
-          reactionAlign="start"
           onReact={onReactBody}
           onCopy={onCopy}
           {...messageActions}

@@ -17,12 +17,12 @@ import {
 export function MessageReactionBadge({
   reactions,
   align = "end",
-  side = "top",
+  side = "top-edge",
   onToggleMine,
 }: {
   reactions: MessageReaction[]
   align?: "start" | "end"
-  side?: "top" | "top-edge" | "bottom"
+  side?: "top-edge" | "bottom"
   onToggleMine?: () => void
 }) {
   if (!reactions.length) return null
