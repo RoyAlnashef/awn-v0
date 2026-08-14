@@ -59,7 +59,7 @@ export function JobCard({ job }: { job: Job }) {
     <>
       <article
         className={cn(
-          "relative flex flex-col gap-4 rounded-xl border bg-card p-5 transition-colors",
+          "relative flex h-full flex-col gap-4 rounded-xl border bg-card p-5 transition-colors",
           job.kind === "urgent"
             ? urgentJobCardBorderStyles
             : "border-border hover:border-primary/40",
@@ -73,7 +73,7 @@ export function JobCard({ job }: { job: Job }) {
           onClick={() => setDetailOpen(true)}
         />
 
-        <div className="pointer-events-none flex flex-col gap-4">
+        <div className="pointer-events-none flex flex-1 flex-col gap-4">
           <div className="flex flex-col">
             <div className="flex flex-col gap-1 mb-2">
               <div className="flex items-start justify-between gap-3">
@@ -91,7 +91,7 @@ export function JobCard({ job }: { job: Job }) {
             <JobMetadataBadges job={job} className="mt-2" />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">
+          <div className="mt-auto flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">
               <span
                 className={cn(
                   "font-heading text-md font-semibold",
