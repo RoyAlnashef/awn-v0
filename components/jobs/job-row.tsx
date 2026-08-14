@@ -81,7 +81,7 @@ export function JobRow({ job }: { job: Job }) {
               </h3>
               {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
             </div>
-            <p className="text-sm text-foreground/90">{job.production}</p>
+            <p className="text-sm text-muted-foreground">{job.production}</p>
           </div>
           <JobMetadataBadges job={job} className="mt-2.5" />
         </div>

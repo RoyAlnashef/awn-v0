@@ -84,7 +84,7 @@ export function JobCard({ job }: { job: Job }) {
                   <JobUrgentHelpBadge className="shrink-0" />
                 ) : null}
               </div>
-              <p className="text-sm font-medium text-foreground/90">
+              <p className="text-sm text-muted-foreground">
                 {job.production}
               </p>
             </div>

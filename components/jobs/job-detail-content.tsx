@@ -163,7 +163,7 @@ export function JobDetailContent({
             <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
               {job.role || "Role title"}
             </h2>
-            <p className="text-sm font-medium text-foreground/90">
+            <p className="text-sm text-muted-foreground">
               {job.production || "Production / tour name"}
             </p>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">

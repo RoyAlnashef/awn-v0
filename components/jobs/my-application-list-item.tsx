@@ -92,7 +92,7 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
             <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
               {job.role}
             </h3>
-            <p className="text-sm font-medium text-foreground/90">
+            <p className="text-sm text-muted-foreground">
               {job.production}
             </p>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
