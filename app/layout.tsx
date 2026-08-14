@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, Raleway, Merriweather } from "next/font/google";
+import { Figtree, Merriweather } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
-const merriweatherHeading = Merriweather({subsets:['latin'],variable:'--font-heading'});
+const merriweatherHeading = Merriweather({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
 
-const raleway = Raleway({subsets:['latin'],variable:'--font-sans'});
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: "A Wright Network",
@@ -32,7 +38,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("bg-background", "font-sans", raleway.variable, merriweatherHeading.variable)}
+      className={cn("bg-background", "font-sans", figtree.variable, merriweatherHeading.variable)}
     >
       <body className="antialiased">
         <ThemeProvider defaultTheme="dark">
