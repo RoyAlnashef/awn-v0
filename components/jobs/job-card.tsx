@@ -8,7 +8,7 @@ import {
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
 import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
-import { Bookmark, CalendarClock, Group, MapPin, Share } from "lucide-react"
+import { Bookmark, CalendarClock, Clock, Group, MapPin, Share, User } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -17,17 +17,8 @@ import { formatDateRange, type Job } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
 import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-}
 
 function revalidateJobs() {
   void mutate((key) => typeof key === "string" && key.startsWith(jobsListKey))
@@ -79,7 +70,7 @@ export function JobCard({ job }: { job: Job }) {
               {job.production}
             </p>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 <CalendarClock className="size-3.5 shrink-0" />
                 {formatDateRange(job.startDate, job.endDate)}
               </span>
@@ -87,29 +78,18 @@ export function JobCard({ job }: { job: Job }) {
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="text-pretty">{job.location}</span>
               </span>
+              <span className="flex items-center gap-1">
+                <User className="size-3.5 shrink-0" />
+                <span className="text-pretty">{job.postedBy.name}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="size-3.5 shrink-0" />
+                {job.postedAt}
+              </span>
             </p>
           </div>
 
-          <div className="mt-auto flex flex-col gap-4">
-            <div className="flex items-center gap-2 border-t border-border pt-4">
-              <Avatar className="size-6">
-                <AvatarImage src={job.postedBy.avatar} alt="" />
-                <AvatarFallback className="text-xs">
-                  {initials(job.postedBy.name)}
-                </AvatarFallback>
-              </Avatar>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-foreground">{job.postedBy.name}</span>
-                {" · "}
-                {job.postedAt}
-              </p>
-            </div>
-
-            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-              {job.details}
-            </p>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
               <span className="font-heading text-md font-semibold">
                 {job.payRate}
               </span>
@@ -163,7 +143,6 @@ export function JobCard({ job }: { job: Job }) {
                 </Button>
               </div>
             </div>
-          </div>
         </div>
       </article>
 

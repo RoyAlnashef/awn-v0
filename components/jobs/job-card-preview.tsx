@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarClock, MapPin } from "lucide-react"
+import { CalendarClock, Clock, MapPin, User } from "lucide-react"
 
 import {
   departmentByRole,
@@ -8,16 +8,7 @@ import {
   type Job,
   type JobPoster,
 } from "@/lib/jobs-data"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-}
 
 export function JobCardPreview({ job }: { job: Job }) {
   return (
@@ -35,12 +26,15 @@ export function JobCardPreview({ job }: { job: Job }) {
           </p>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {job.startDate && job.endDate ? (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 <CalendarClock className="size-3.5 shrink-0" />
                 {formatDateRange(job.startDate, job.endDate)}
               </span>
             ) : (
-              <span>Dates TBD</span>
+              <span className="flex items-center gap-1">
+                <CalendarClock className="size-3.5 shrink-0" />
+                Dates TBD
+              </span>
             )}
             <span className="flex items-center gap-1">
               <MapPin className="size-3.5 shrink-0" />
@@ -48,33 +42,21 @@ export function JobCardPreview({ job }: { job: Job }) {
                 {job.location || "Location / routing"}
               </span>
             </span>
+            <span className="flex items-center gap-1">
+              <User className="size-3.5 shrink-0" />
+              <span className="text-pretty">{job.postedBy.name}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="size-3.5 shrink-0" />
+              {job.postedAt}
+            </span>
           </p>
         </div>
 
-        <div className="mt-auto flex flex-col gap-4">
-          <div className="flex items-center gap-2 border-t border-border pt-4">
-            <Avatar className="size-6">
-              <AvatarImage src={job.postedBy.avatar} alt="" />
-              <AvatarFallback className="text-xs">
-                {initials(job.postedBy.name)}
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-foreground">{job.postedBy.name}</span>
-              {" · "}
-              {job.postedAt}
-            </p>
-          </div>
-
-          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-            {job.details || "Job details will appear here as you write them."}
-          </p>
-
-          <div className="flex items-end justify-between gap-3">
-            <span className="font-heading text-lg font-semibold text-primary-bright">
-              {job.payRate || "Rate TBD"}
-            </span>
-          </div>
+        <div className="flex items-end justify-between gap-3 border-t border-border pt-4">
+          <span className="font-heading text-lg font-semibold text-primary-bright">
+            {job.payRate || "Rate TBD"}
+          </span>
         </div>
       </div>
     </article>
