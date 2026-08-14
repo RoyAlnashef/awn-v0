@@ -17,6 +17,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { DatePicker } from "@/components/jobs/date-picker"
+import {
+  JobActionTooltip,
+  JobActionTooltips,
+} from "@/components/jobs/job-action-tooltip"
 
 export interface JobFilters {
   search: string
@@ -226,24 +230,31 @@ export function JobsFilters({
           </PopoverContent>
         </Popover>
 
-        <Button
-          type="button"
-          variant="outline"
-          aria-pressed={filters.saved}
-          onClick={() => onChange({ saved: !filters.saved })}
-          className={cn(
-            "gap-1.5",
-            filters.saved && "border-primary/60 bg-primary/10 text-foreground",
-          )}
-        >
-          <Bookmark
-            className={cn(
-              "size-3.5",
-              filters.saved ? "fill-current text-primary" : "text-muted-foreground",
-            )}
-          />
-          Saved
-        </Button>
+        <JobActionTooltips>
+          <JobActionTooltip label="Saved jobs">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-pressed={filters.saved}
+              aria-label="Saved jobs"
+              onClick={() => onChange({ saved: !filters.saved })}
+              className={cn(
+                filters.saved &&
+                  "border-primary/60 bg-primary/10 text-foreground",
+              )}
+            >
+              <Bookmark
+                className={cn(
+                  "size-3.5",
+                  filters.saved
+                    ? "fill-current text-primary"
+                    : "text-muted-foreground",
+                )}
+              />
+            </Button>
+          </JobActionTooltip>
+        </JobActionTooltips>
 
         {activeCount > 0 ? (
           <Button variant="ghost" size="sm" onClick={onClear}>

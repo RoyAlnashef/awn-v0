@@ -4,6 +4,7 @@ import { formatDateRange, type Job } from "@/lib/jobs-data"
 import { formatJobDeadline } from "@/lib/jobs/format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 
 type JobMetadataBadgesProps = {
   job: Pick<
@@ -19,6 +20,7 @@ type JobMetadataBadgesProps = {
   >
   includePostedAt?: boolean
   includeDeadline?: boolean
+  includeUrgentBadge?: boolean
   applicantCount?: number | null
   showPlaceholders?: boolean
   className?: string
@@ -28,6 +30,7 @@ export function JobMetadataBadges({
   job,
   includePostedAt = true,
   includeDeadline = false,
+  includeUrgentBadge = false,
   applicantCount,
   showPlaceholders = false,
   className,
@@ -38,6 +41,9 @@ export function JobMetadataBadges({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
+      {includeUrgentBadge && job.kind === "urgent" ? (
+        <JobUrgentHelpBadge />
+      ) : null}
       {hasDates ? (
         <Badge variant="secondary" className="gap-1 font-normal">
           <CalendarClock className="size-3" />
