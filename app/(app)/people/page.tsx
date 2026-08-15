@@ -6,7 +6,7 @@ const item = mainNav.find((i) => i.href === "/people")!
 
 export default function PeoplePage() {
   return (
-    <PageShell title={item.title} description={item.description}>
+    <PageShell title="Find people" description={item.description}>
       <PeopleBoard />
     </PageShell>
   )
