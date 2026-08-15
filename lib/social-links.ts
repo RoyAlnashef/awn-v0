@@ -1,12 +1,9 @@
-import {
-  AtSign,
-  Briefcase,
-  Camera,
-  Globe,
-  Video,
-  type LucideIcon,
-} from "lucide-react"
+import type { ComponentType } from "react"
 
+import {
+  SOCIAL_FIELD_ICONS,
+  type SocialBrandIcon,
+} from "@/components/icons/social-brand-icons"
 import type { Person } from "@/lib/people-data"
 
 export const SOCIAL_FIELD_IDS = [
@@ -24,38 +21,43 @@ export interface SocialLinkDisplay {
   label: string
   display: string
   href: string
-  icon: LucideIcon
+  icon: SocialBrandIcon
 }
 
 const SOCIAL_CONFIG: Record<
   SocialFieldId,
-  { label: string; icon: LucideIcon; displayPrefix?: string; hrefPrefix: string }
+  {
+    label: string
+    icon: ComponentType<{ className?: string }>
+    displayPrefix?: string
+    hrefPrefix: string
+  }
 > = {
   website: {
     label: "Website",
-    icon: Globe,
+    icon: SOCIAL_FIELD_ICONS.website,
     hrefPrefix: "https://",
   },
   instagram: {
     label: "Instagram",
-    icon: Camera,
+    icon: SOCIAL_FIELD_ICONS.instagram,
     displayPrefix: "instagram.com/",
     hrefPrefix: "https://instagram.com/",
   },
   twitter: {
     label: "X / Twitter",
-    icon: AtSign,
+    icon: SOCIAL_FIELD_ICONS.twitter,
     displayPrefix: "x.com/",
     hrefPrefix: "https://x.com/",
   },
   linkedin: {
     label: "LinkedIn",
-    icon: Briefcase,
+    icon: SOCIAL_FIELD_ICONS.linkedin,
     hrefPrefix: "https://",
   },
   youtube: {
     label: "YouTube",
-    icon: Video,
+    icon: SOCIAL_FIELD_ICONS.youtube,
     hrefPrefix: "https://",
   },
 }

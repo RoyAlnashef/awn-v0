@@ -1,10 +1,11 @@
 "use client"
 
 import { useTransition } from "react"
-import { AtSign, Briefcase, Camera, ExternalLink, Globe, Video } from "lucide-react"
+import { ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAccountProfile } from "@/components/account/account-profile-provider"
+import { SOCIAL_FIELD_ICONS } from "@/components/icons/social-brand-icons"
 import { updateMemberProfile } from "@/lib/account/profile-actions"
 import {
   buildSocialHref,
@@ -28,33 +29,33 @@ const SOCIAL_FIELDS: SocialFieldConfig[] = [
     id: "website",
     label: "Website",
     placeholder: "yoursite.com",
-    icon: Globe,
+    icon: SOCIAL_FIELD_ICONS.website,
   },
   {
     id: "instagram",
     label: "Instagram",
     placeholder: "username",
     prefix: "instagram.com/",
-    icon: Camera,
+    icon: SOCIAL_FIELD_ICONS.instagram,
   },
   {
     id: "twitter",
     label: "X / Twitter",
     placeholder: "username",
     prefix: "x.com/",
-    icon: AtSign,
+    icon: SOCIAL_FIELD_ICONS.twitter,
   },
   {
     id: "linkedin",
     label: "LinkedIn",
     placeholder: "linkedin.com/in/…",
-    icon: Briefcase,
+    icon: SOCIAL_FIELD_ICONS.linkedin,
   },
   {
     id: "youtube",
     label: "YouTube",
     placeholder: "youtube.com/@…",
-    icon: Video,
+    icon: SOCIAL_FIELD_ICONS.youtube,
   },
 ]
 
