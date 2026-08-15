@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BadgeCheck, Group, MapPin, MessageSquare, Share } from "lucide-react"
+import { BadgeCheck, Group, MapPin, MessagesSquare, Share } from "lucide-react"
 
 import {
   availabilityConfig,
@@ -84,35 +84,25 @@ export function PersonCard({ person }: { person: Person }) {
         ))}
       </div>
 
-      <div className="mt-auto flex w-full flex-col gap-4">
-        <div className="flex items-center justify-center gap-4 border-t border-border pt-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <BadgeCheck className="size-4 text-primary" />
-            <span className="font-medium text-foreground">{person.credits}</span>{" "}
-            credits
-          </span>
-          <span>
-            <span className="font-medium text-foreground">{person.vouches}</span>{" "}
-            vouches
-          </span>
-          <span>
-            <span className="font-medium text-foreground">
-              {person.yearsExperience}
-            </span>{" "}
-            yrs
-          </span>
-        </div>
+      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <BadgeCheck className="size-4 text-primary" />
+          <span className="font-medium text-foreground">{person.credits}</span>{" "}
+          credits
+        </span>
+        <span>
+          <span className="font-medium text-foreground">{person.vouches}</span>{" "}
+          vouches
+        </span>
+        <span>
+          <span className="font-medium text-foreground">
+            {person.yearsExperience}
+          </span>{" "}
+          yrs
+        </span>
+      </div>
 
-        <div className="relative z-10 flex w-full min-w-0 items-center gap-2">
-          <Button
-            size="sm"
-            variant={followed ? "outline" : "default"}
-            className="min-w-0 flex-1 truncate"
-            aria-pressed={followed}
-            onClick={() => setFollowed((prev) => !prev)}
-          >
-            {followed ? "Following" : "Follow"}
-          </Button>
+      <div className="relative z-10 mt-auto flex w-full min-w-0 items-center gap-2 border-t border-border pt-4">
           <PersonShareToMessagesButton person={person}>
             <Button
               size="icon"
@@ -132,9 +122,17 @@ export function PersonCard({ person }: { person: Person }) {
             </Button>
           </PersonShareToRoomsButton>
           <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
-            <MessageSquare className="size-4" />
+            <MessagesSquare className="size-4" />
           </Button>
-        </div>
+          <Button
+            size="sm"
+            variant={followed ? "outline" : "default"}
+            className="ml-auto shrink-0"
+            aria-pressed={followed}
+            onClick={() => setFollowed((prev) => !prev)}
+          >
+            {followed ? "Connected" : "Connect"}
+          </Button>
       </div>
 
       <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />
