@@ -25,7 +25,6 @@ import {
 } from "@/lib/messages/reactions"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import {
-  getPersonForConversation,
   getThread,
   type DirectConversation,
   type JobSharePayload,
@@ -33,6 +32,9 @@ import {
   type MessageReactionTarget,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import { personFromConversation } from "@/lib/people/fallback-person"
+import { getMemberById } from "@/lib/people/actions"
+import type { Person, TourCredit } from "@/lib/people-data"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { PersonShareCard } from "@/components/people/person-share-card"
 import { JobShareCard } from "@/components/jobs/job-share-card"
@@ -208,10 +210,27 @@ export function MessageThread({
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
-  const profilePerson = useMemo(
-    () => getPersonForConversation(conversation),
-    [conversation],
+  const [profilePerson, setProfilePerson] = useState<Person>(() =>
+    personFromConversation(conversation),
   )
+  const [profileTourCredits, setProfileTourCredits] = useState<TourCredit[]>([])
+
+  useEffect(() => {
+    setProfilePerson(personFromConversation(conversation))
+    setProfileTourCredits([])
+  }, [conversation])
+
+  useEffect(() => {
+    if (!profileOpen) return
+    const profileId = conversation.otherProfileId
+    if (!profileId) return
+
+    void getMemberById(profileId).then((result) => {
+      if (!result.ok) return
+      setProfilePerson(result.person)
+      setProfileTourCredits(result.tourCredits)
+    })
+  }, [profileOpen, conversation.otherProfileId])
 
   function requestScrollToEnd() {
     setSentScrollToken((token) => token + 1)
@@ -800,6 +819,7 @@ export function MessageThread({
 
       <PersonProfileDrawer
         person={profilePerson}
+        tourCredits={profileTourCredits}
         online={conversation.online}
         open={profileOpen}
         onOpenChange={setProfileOpen}

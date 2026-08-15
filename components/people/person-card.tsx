@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
+import { toast } from "sonner"
 import { BadgeCheck, Group, MapPin, MessagesSquare, Share } from "lucide-react"
 
 import {
@@ -8,6 +9,7 @@ import {
   initials,
   type Person,
 } from "@/lib/people-data"
+import { toggleConnection } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -40,11 +42,21 @@ function AvailabilityDot({ availability }: { availability: Person["availability"
 export function PersonCard({ person }: { person: Person }) {
   const [followed, setFollowed] = useState(person.followed)
   const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  function handleConnectionToggle() {
+    startTransition(async () => {
+      const result = await toggleConnection(person.id, followed)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setFollowed(result.connected)
+    })
+  }
 
   return (
     <article className="relative flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-5 text-center transition-colors hover:border-primary/40">
-      {/* Stretched trigger: whole card opens the profile drawer. Action
-          buttons below sit above this via z-10 so they stay clickable. */}
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -52,9 +64,11 @@ export function PersonCard({ person }: { person: Person }) {
         onClick={() => setOpen(true)}
       />
 
-      <Badge variant="outline" className="self-center">
-        {person.department}
-      </Badge>
+      {person.department ? (
+        <Badge variant="outline" className="self-center">
+          {person.department}
+        </Badge>
+      ) : null}
 
       <Avatar className="size-24 border-2 border-border">
         <AvatarImage src={person.avatar || undefined} alt="" />
@@ -69,20 +83,24 @@ export function PersonCard({ person }: { person: Person }) {
       </div>
 
       <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <MapPin className="size-3.5 shrink-0" />
-          {person.homeBase}
-        </span>
+        {person.homeBase ? (
+          <span className="flex items-center gap-1">
+            <MapPin className="size-3.5 shrink-0" />
+            {person.homeBase}
+          </span>
+        ) : null}
         <AvailabilityDot availability={person.availability} />
       </div>
 
-      <div className="flex flex-wrap justify-center gap-1.5">
-        {person.skills.map((skill) => (
-          <Badge key={skill} variant="secondary" className="font-normal">
-            {skill}
-          </Badge>
-        ))}
-      </div>
+      {person.skills.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {person.skills.map((skill) => (
+            <Badge key={skill} variant="secondary" className="font-normal">
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
@@ -103,36 +121,29 @@ export function PersonCard({ person }: { person: Person }) {
       </div>
 
       <div className="relative z-10 mt-auto flex w-full min-w-0 items-center gap-2 border-t border-border pt-4">
-          <PersonShareToMessagesButton person={person}>
-            <Button
-              size="icon"
-              variant="outline"
-              aria-label="Share as a message"
-            >
-              <Share className="size-4" />
-            </Button>
-          </PersonShareToMessagesButton>
-          <PersonShareToRoomsButton person={person}>
-            <Button
-              size="icon"
-              variant="outline"
-              aria-label="Share to a room"
-            >
-              <Group className="size-4" />
-            </Button>
-          </PersonShareToRoomsButton>
-          <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
-            <MessagesSquare className="size-4" />
+        <PersonShareToMessagesButton person={person}>
+          <Button size="icon" variant="outline" aria-label="Share as a message">
+            <Share className="size-4" />
           </Button>
-          <Button
-            size="sm"
-            variant={followed ? "outline" : "default"}
-            className="ml-auto shrink-0"
-            aria-pressed={followed}
-            onClick={() => setFollowed((prev) => !prev)}
-          >
-            {followed ? "Connected" : "Connect"}
+        </PersonShareToMessagesButton>
+        <PersonShareToRoomsButton person={person}>
+          <Button size="icon" variant="outline" aria-label="Share to a room">
+            <Group className="size-4" />
           </Button>
+        </PersonShareToRoomsButton>
+        <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>
+          <MessagesSquare className="size-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant={followed ? "outline" : "default"}
+          className="ml-auto shrink-0"
+          aria-pressed={followed}
+          disabled={isPending}
+          onClick={handleConnectionToggle}
+        >
+          {followed ? "Connected" : "Connect"}
+        </Button>
       </div>
 
       <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />

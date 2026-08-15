@@ -4,7 +4,7 @@ import * as React from "react"
 import { Plane, SlidersHorizontal } from "lucide-react"
 
 import {
-  cityOptions,
+  cityOptions as presetCityOptions,
   OTHER_CITY,
   venueTiers,
   workAuthOptions,
@@ -78,10 +78,13 @@ export function advancedFilterCount(filters: PeopleFilters) {
 export function MoreFiltersDialog({
   filters,
   onChange,
+  cityOptions: cityOptionsProp,
 }: {
   filters: PeopleFilters
   onChange: (next: Partial<PeopleFilters>) => void
+  cityOptions?: string[]
 }) {
+  const cityOptions = cityOptionsProp ?? presetCityOptions
   const count = advancedFilterCount(filters)
 
   function toggle<T extends string>(list: T[], value: T): T[] {

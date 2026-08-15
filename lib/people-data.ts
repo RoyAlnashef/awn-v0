@@ -89,10 +89,6 @@ export interface Person {
   banner?: string
   bannerPositionY?: number
   followed: boolean
-  /**
-   * Optional extended-profile fields. When omitted, getPersonProfile() derives
-   * sensible placeholder values so the profile drawer is always fully populated.
-   */
   verified?: boolean
   founding?: boolean
   company?: string
@@ -130,279 +126,33 @@ export function initials(name: string) {
     .join("")
 }
 
-export const people: Person[] = [
-  {
-    id: "a0000001-0000-4000-8000-000000000001",
-    name: "Jordan Reyes",
-    role: "Tour Manager",
-    department: "Production",
-    homeBase: "Nashville, TN",
-    city: "Nashville",
-    availability: "Available Now",
-    availableFrom: "2026-08-01",
-    availableTo: "2026-12-20",
-    venueTiers: ["Stadium", "Arena"],
-    workAuth: ["USA", "Passport"],
-    yearsExperience: 14,
-    credits: 38,
-    vouches: 27,
-    topTours: ["Midnight Echo — Arena Run", "Cassette Kids — World Tour"],
-    skills: ["Advancing", "Settlement", "Visa Logistics"],
-    avatar: "/images/avatar-jordan.png",
-    followed: true,
-    verified: true,
-    founding: true,
-    company: "Reyes Touring Co.",
-    memberSince: "Jan 2021",
-    website: "reyestouring.com",
-    bio: "Seasoned Tour Manager with 14+ years advancing global arena and stadium runs. Founder of Reyes Touring Co., handling routing, settlements, and visa logistics for touring artists and their crews. Known for calm, detail-obsessed leadership on the road and building repeat-booking relationships with promoters worldwide.",
-  },
-  {
-    id: "a0000002-0000-4000-8000-000000000002",
-    name: "Priya Anand",
-    role: "Front of House Engineer",
-    department: "Audio",
-    homeBase: "London, UK",
-    city: "London",
-    availability: "On Tour",
-    availableFrom: "2026-11-15",
-    availableTo: "2027-02-28",
-    venueTiers: ["Arena", "Festival"],
-    workAuth: ["UK", "EU", "Passport"],
-    yearsExperience: 11,
-    credits: 42,
-    vouches: 33,
-    topTours: ["Neon Tide — European Leg", "The Lofts — Festival Circuit"],
-    skills: ["DiGiCo", "Waves", "System Tuning"],
-    followed: true,
-  },
-  {
-    id: "a0000003-0000-4000-8000-000000000003",
-    name: "Marcus Bell",
-    role: "Lighting Director (LD)",
-    department: "Lighting",
-    homeBase: "Los Angeles, CA",
-    city: "Los Angeles",
-    availability: "Between Tours",
-    availableFrom: "2026-07-15",
-    availableTo: "2026-10-30",
-    venueTiers: ["Stadium", "Arena"],
-    workAuth: ["USA", "Passport"],
-    yearsExperience: 16,
-    credits: 51,
-    vouches: 40,
-    topTours: ["Ultraviolet — Stadium Tour", "Sable — Residency"],
-    skills: ["grandMA3", "Previs", "Timecode"],
-    followed: false,
-  },
-  {
-    id: "a0000004-0000-4000-8000-000000000004",
-    name: "Dana Whitfield",
-    role: "Video Director",
-    department: "Video",
-    homeBase: "Atlanta, GA",
-    city: "Atlanta",
-    availability: "Available Now",
-    availableFrom: "2026-07-10",
-    availableTo: "2026-11-30",
-    venueTiers: ["Arena", "Theater"],
-    workAuth: ["USA"],
-    yearsExperience: 9,
-    credits: 24,
-    vouches: 19,
-    topTours: ["Cassette Kids — World Tour", "Half Light — Amphitheater Run"],
-    skills: ["disguise", "PPU", "Camera Cutting"],
-    followed: false,
-  },
-  {
-    id: "a0000005-0000-4000-8000-000000000005",
-    name: "Theo Nakamura",
-    role: "Monitor Engineer",
-    department: "Audio",
-    homeBase: "Toronto, ON",
-    city: "Toronto",
-    availability: "On Tour",
-    availableFrom: "2026-10-01",
-    availableTo: "2027-01-15",
-    venueTiers: ["Arena", "Theater"],
-    workAuth: ["Canada", "Passport"],
-    yearsExperience: 13,
-    credits: 36,
-    vouches: 28,
-    topTours: ["Neon Tide — European Leg", "Riverbend — Arena Run"],
-    skills: ["IEM Wrangling", "Avid", "RF Coordination"],
-    followed: true,
-  },
-  {
-    id: "a0000006-0000-4000-8000-000000000006",
-    name: "Sofia Marín",
-    role: "Production Manager",
-    department: "Production",
-    homeBase: "Austin, TX",
-    city: "Austin",
-    availability: "Available Now",
-    availableFrom: "2026-08-15",
-    availableTo: "2027-03-01",
-    venueTiers: ["Stadium", "Festival"],
-    workAuth: ["USA", "Worldwide", "Passport"],
-    yearsExperience: 18,
-    credits: 61,
-    vouches: 47,
-    topTours: ["Ultraviolet — Stadium Tour", "Golden Hour — Festival Circuit"],
-    skills: ["Budgeting", "Trucking", "Crew Hiring"],
-    followed: false,
-    verified: true,
-    founding: true,
-    company: "Marín Live",
-    memberSince: "Mar 2020",
-  },
-  {
-    id: "a0000007-0000-4000-8000-000000000007",
-    name: "Elliot Shaw",
-    role: "Guitar Tech",
-    department: "Backline",
-    homeBase: "Manchester, UK",
-    city: "Manchester",
-    availability: "Between Tours",
-    availableFrom: "2026-09-01",
-    availableTo: "2026-12-15",
-    venueTiers: ["Festival", "Club"],
-    workAuth: ["UK", "EU"],
-    yearsExperience: 8,
-    credits: 22,
-    vouches: 15,
-    topTours: ["The Lofts — Festival Circuit", "Sable — Club Tour"],
-    skills: ["Guitar Setup", "Pedalboards", "Amp Repair"],
-    followed: false,
-  },
-  {
-    id: "a0000008-0000-4000-8000-000000000008",
-    name: "Naomi Foster",
-    role: "Lighting Programmer",
-    department: "Lighting",
-    homeBase: "Berlin, DE",
-    city: "Berlin",
-    availability: "Between Tours",
-    availableFrom: "2027-01-10",
-    availableTo: "2027-04-30",
-    venueTiers: ["Stadium", "Arena"],
-    workAuth: ["EU", "Passport"],
-    yearsExperience: 12,
-    credits: 34,
-    vouches: 25,
-    topTours: ["Neon Tide — European Leg", "Ultraviolet — Stadium Tour"],
-    skills: ["grandMA3", "Pixel Mapping", "Busking"],
-    followed: true,
-  },
-  {
-    id: "a0000009-0000-4000-8000-000000000009",
-    name: "Carlos Rivera",
-    role: "Video Engineer / EIC",
-    department: "Video",
-    homeBase: "Mexico City, MX",
-    city: "Mexico City",
-    availability: "Available Now",
-    availableFrom: "2026-07-05",
-    availableTo: "2026-11-10",
-    venueTiers: ["Festival", "Arena"],
-    workAuth: ["Worldwide", "Passport"],
-    yearsExperience: 15,
-    credits: 45,
-    vouches: 31,
-    topTours: ["Golden Hour — Festival Circuit", "Half Light — Amphitheater Run"],
-    skills: ["Signal Flow", "LED Processing", "Fiber"],
-    followed: false,
-  },
-  {
-    id: "a000000a-0000-4000-8000-00000000000a",
-    name: "Aisha Khan",
-    role: "Stage Manager",
-    department: "Production",
-    homeBase: "New York, NY",
-    city: "New York",
-    availability: "On Tour",
-    availableFrom: "2026-09-20",
-    availableTo: "2026-12-31",
-    venueTiers: ["Theater", "Arena"],
-    workAuth: ["USA", "Passport"],
-    yearsExperience: 10,
-    credits: 29,
-    vouches: 22,
-    topTours: ["Sable — Residency", "Cassette Kids — World Tour"],
-    skills: ["Show Calling", "Changeovers", "Union Relations"],
-    followed: true,
-  },
-  {
-    id: "a000000b-0000-4000-8000-00000000000b",
-    name: "Liam O'Connor",
-    role: "Systems Engineer",
-    department: "Audio",
-    homeBase: "Dublin, IE",
-    city: "Dublin",
-    availability: "Between Tours",
-    availableFrom: "2026-08-10",
-    availableTo: "2026-12-05",
-    venueTiers: ["Stadium", "Arena"],
-    workAuth: ["EU", "UK", "Passport"],
-    yearsExperience: 17,
-    credits: 48,
-    vouches: 36,
-    topTours: ["Riverbend — Arena Run", "Neon Tide — European Leg"],
-    skills: ["L-Acoustics", "Smaart", "Line Array Design"],
-    followed: false,
-  },
-  {
-    id: "a000000c-0000-4000-8000-00000000000c",
-    name: "Grace Kim",
-    role: "Camera Operator",
-    department: "Video",
-    homeBase: "Seattle, WA",
-    city: "Seattle",
-    availability: "Available Now",
-    availableFrom: "2026-07-01",
-    availableTo: "2026-10-15",
-    venueTiers: ["Festival", "Theater"],
-    workAuth: ["USA"],
-    yearsExperience: 7,
-    credits: 18,
-    vouches: 12,
-    topTours: ["Half Light — Amphitheater Run", "Golden Hour — Festival Circuit"],
-    skills: ["Handheld", "Long Lens", "Jib"],
-    followed: false,
-  },
-]
-
 /**
  * Builds a fully-populated profile for the profile drawer. Explicit fields on
- * the Person win; anything missing is derived from existing data so every
- * member renders a complete, believable profile.
+ * the Person win; tour credits come from the database when provided.
  */
-export function getPersonProfile(person: Person): PersonProfile {
+export function getPersonProfile(
+  person: Person,
+  tourCredits: TourCredit[] = [],
+): PersonProfile {
   const firstName = person.name.split(" ")[0]
+  const skillsText =
+    person.skills.length > 0 ? person.skills.join(", ") : "live production"
+  const venueText =
+    person.venueTiers.length > 0
+      ? person.venueTiers.join(" and ").toLowerCase()
+      : "arena and festival"
 
   const bio =
     person.bio ??
-    `${person.name} is a ${person.role} based in ${person.homeBase} with ${person.yearsExperience}+ years across touring and live events. Recent credits include ${person.topTours.join(" and ")}. Known for ${person.skills.join(", ")}, ${firstName} works ${person.venueTiers.join(" and ").toLowerCase()}-scale productions and is currently ${person.availability.toLowerCase()}.`
-
-  // Turn top tours into dated credits, most recent first.
-  const tourCredits: TourCredit[] = person.topTours.map((title, i) => {
-    const end = 26 - i * 2
-    const start = end - 2
-    return {
-      title,
-      venueTier: person.venueTiers[i % person.venueTiers.length] ?? "Arena",
-      role: person.role,
-      years: `20${start}–${end}`,
-    }
-  })
+    `${person.name} is a ${person.role || "touring professional"} based in ${person.homeBase || "the road"} with ${person.yearsExperience}+ years across touring and live events. Known for ${skillsText}, ${firstName} works ${venueText}-scale productions and is currently ${person.availability.toLowerCase()}.`
 
   return {
-    verified: person.verified ?? person.credits >= 40,
+    verified: person.verified ?? false,
     founding: person.founding ?? false,
     company: person.company,
     bio,
-    memberSince: person.memberSince ?? "Apr 2026",
-    website: person.website ?? `${firstName.toLowerCase()}.live`,
+    memberSince: person.memberSince ?? "",
+    website: person.website ?? "",
     tourCredits,
   }
 }

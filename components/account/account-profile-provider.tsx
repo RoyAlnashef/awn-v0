@@ -9,10 +9,7 @@ import {
   type ReactNode,
 } from "react"
 
-import {
-  createInitialTourCredits,
-  type AccountTourCredit,
-} from "@/lib/account-profile"
+import type { AccountTourCredit } from "@/lib/account-profile"
 import type { Person } from "@/lib/people-data"
 
 interface AccountProfileContextValue {
@@ -34,19 +31,20 @@ const AccountProfileContext = createContext<AccountProfileContextValue | null>(
 export function AccountProfileProvider({
   children,
   initialProfile,
+  initialTourCredits,
   userId,
   initialOnline,
 }: {
   children: ReactNode
   initialProfile: Person
+  initialTourCredits: AccountTourCredit[]
   userId: string
   initialOnline: boolean
 }) {
   const [saved, setSaved] = useState<Person>(initialProfile)
   const [draft, setDraft] = useState<Person>(initialProfile)
-  const [tourCredits, setTourCredits] = useState<AccountTourCredit[]>(
-    createInitialTourCredits,
-  )
+  const [tourCredits, setTourCredits] =
+    useState<AccountTourCredit[]>(initialTourCredits)
 
   const updateDraft = useCallback((patch: Partial<Person>) => {
     setDraft((prev) => ({ ...prev, ...patch }))

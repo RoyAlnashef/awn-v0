@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 
+import type { AccountTourCredit } from "@/lib/account-profile"
 import type { Person } from "@/lib/people-data"
 import { PageShell } from "@/components/page-shell"
 import { AccountNav } from "@/components/account/account-nav"
@@ -12,17 +13,20 @@ import { AccountProfileProvider } from "@/components/account/account-profile-pro
 export function AccountLayoutShell({
   children,
   initialProfile,
+  initialTourCredits,
   userId,
   initialOnline,
 }: {
   children: ReactNode
   initialProfile: Person
+  initialTourCredits: AccountTourCredit[]
   userId: string
   initialOnline: boolean
 }) {
   return (
     <AccountProfileProvider
       initialProfile={initialProfile}
+      initialTourCredits={initialTourCredits}
       userId={userId}
       initialOnline={initialOnline}
     >

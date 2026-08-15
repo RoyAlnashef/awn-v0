@@ -1,4 +1,4 @@
-import { people, type Person } from "@/lib/people-data"
+import type { Person } from "@/lib/people-data"
 
 /** A one-to-one direct conversation shown under the "Direct" tab. */
 export interface DirectConversation {
@@ -60,6 +60,7 @@ export type MemberSharePayload = {
   credits?: number
   vouches?: number
   yearsExperience?: number
+  skills?: string[]
 }
 
 /** Quoted message when this message is a reply. */
@@ -656,9 +657,6 @@ export function isPersonOnline(person: Person): boolean {
   )
 }
 
-/** People that can be searched and messaged from the "New message" drawer. */
-export const messageablePeople: Person[] = people
-
 /** A member surfaced in the "New message" people picker. */
 export type MessageableMember = {
   id: string
@@ -695,81 +693,4 @@ export function personToConversation(person: Person): DirectConversation {
     avatar: person.avatar,
     online: isPersonOnline(person),
   })
-}
-
-/** Resolves a person from mock people data by id. */
-export function getPersonById(personId: string): Person | undefined {
-  return people.find((p) => p.id === personId)
-}
-
-/** Resolves a full Person for the profile drawer from a direct conversation. */
-export function getPersonForConversation(
-  conversation: DirectConversation,
-): Person {
-  if (conversation.otherProfileId) {
-    const byId = getPersonById(conversation.otherProfileId)
-    if (byId) return byId
-  }
-
-  const byName = people.find((person) => person.name === conversation.name)
-  if (byName) return byName
-
-  return {
-    id: conversation.otherProfileId ?? conversation.id,
-    name: conversation.name,
-    role: conversation.role,
-    department: "Production",
-    homeBase: "",
-    city: "Nashville",
-    availability: conversation.online ? "Available Now" : "Between Tours",
-    availableFrom: "2026-08-01",
-    availableTo: "2026-12-20",
-    venueTiers: ["Arena"],
-    workAuth: ["USA"],
-    yearsExperience: 5,
-    credits: 10,
-    vouches: 5,
-    topTours: ["Live Events"],
-    skills: ["Collaboration"],
-    avatar: conversation.avatar,
-    followed: false,
-  }
-}
-
-/** Resolves a full Person for the profile drawer from a room message. */
-export function getPersonForRoomMessage(
-  message: ThreadMessage,
-): Person | null {
-  if (message.from === "me") return null
-
-  const authorName = message.author?.trim() || "Member"
-
-  if (message.authorId) {
-    const byId = getPersonById(message.authorId)
-    if (byId) return byId
-  }
-
-  const byName = people.find((person) => person.name === authorName)
-  if (byName) return byName
-
-  return {
-    id: message.authorId ?? message.id,
-    name: authorName,
-    role: "AWN Member",
-    department: "Production",
-    homeBase: "",
-    city: "Nashville",
-    availability: "Between Tours",
-    availableFrom: "2026-08-01",
-    availableTo: "2026-12-20",
-    venueTiers: ["Arena"],
-    workAuth: ["USA"],
-    yearsExperience: 5,
-    credits: 10,
-    vouches: 5,
-    topTours: ["Live Events"],
-    skills: ["Collaboration"],
-    avatar: message.authorAvatarUrl,
-    followed: false,
-  }
 }

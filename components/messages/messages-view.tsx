@@ -12,10 +12,10 @@ import { MessagesSquare, SquarePen } from "lucide-react"
 
 import { parsePersonConversationId } from "@/lib/messages/format"
 import {
-  getPersonById,
   type DirectConversation,
   type MessageableMember,
 } from "@/lib/messages-data"
+import { getMemberById } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { buildPopoutUrl } from "@/lib/popout"
 import { Button } from "@/components/ui/button"
@@ -402,15 +402,15 @@ export function MessagesView({
     const requestEpoch = selectionEpochRef.current
 
     void (async () => {
-      const mockPerson = getPersonById(initialPersonId)
-      const member: MessageableMember = mockPerson
+      const memberResult = await getMemberById(initialPersonId)
+      const member: MessageableMember = memberResult.ok
         ? {
-            id: mockPerson.id,
-            name: mockPerson.name,
-            role: mockPerson.role,
-            homeBase: mockPerson.homeBase,
-            avatar: mockPerson.avatar,
-            online: mockPerson.availability === "Available Now",
+            id: memberResult.person.id,
+            name: memberResult.person.name,
+            role: memberResult.person.role,
+            homeBase: memberResult.person.homeBase,
+            avatar: memberResult.person.avatar,
+            online: memberResult.person.availability === "Available Now",
           }
         : {
             id: initialPersonId,

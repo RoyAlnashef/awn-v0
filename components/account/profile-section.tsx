@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { toast } from "sonner"
 
 import { updateMemberProfile } from "@/lib/account/profile-actions"
+import { departments } from "@/lib/jobs-data"
 import {
   availabilityStatuses,
   venueTiers,
@@ -24,6 +25,13 @@ import {
 } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -146,6 +154,25 @@ export function ProfileSection() {
               onChange={(e) => updateDraft({ role: e.target.value })}
               placeholder="e.g. Tour Manager"
             />
+          </FieldRow>
+          <FieldRow label="Department">
+            <Select
+              value={draft.department || undefined}
+              onValueChange={(value) => {
+                if (value) updateDraft({ department: value })
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((department) => (
+                  <SelectItem key={department} value={department}>
+                    {department}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </FieldRow>
           <FieldRow label="Company">
             <Input

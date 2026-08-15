@@ -235,6 +235,9 @@ export const roleGroups: RoleGroup[] = [
   },
 ]
 
+/** All touring departments for filters and profile forms. */
+export const departments = roleGroups.map((group) => group.department)
+
 /** Reverse lookup so a job's role resolves to its department. */
 export const departmentByRole: Record<string, string> = roleGroups.reduce(
   (acc, group) => {

@@ -1,6 +1,8 @@
+import { departmentByRole } from "@/lib/jobs-data"
 import type {
   Availability,
   Person,
+  TourCredit,
   VenueTier,
   WorkAuth,
 } from "@/lib/people-data"
@@ -27,12 +29,19 @@ export type DbWorkAuth =
   | "australia"
   | "worldwide"
 
+export type ConnectionStatus =
+  | "none"
+  | "pending_sent"
+  | "pending_received"
+  | "connected"
+
 export interface MemberProfileRow {
   id: string
   full_name: string | null
   email: string
   avatar_url: string | null
   title: string | null
+  department: string | null
   company: string | null
   home_base: string | null
   city: string | null
@@ -56,9 +65,22 @@ export interface MemberProfileRow {
   created_at: string
 }
 
+export interface TourCreditRow {
+  id: string
+  profile_id: string
+  title: string
+  artist: string | null
+  role: string
+  venue_tier: DbVenueTier | null
+  years: string | null
+  sort_order: number
+  created_at: string
+}
+
 export interface MemberProfileUpdate {
   full_name?: string
   title?: string
+  department?: string | null
   company?: string | null
   home_base?: string
   city?: string
@@ -76,6 +98,12 @@ export interface MemberProfileUpdate {
   twitter?: string | null
   linkedin?: string | null
   youtube?: string | null
+}
+
+export interface PersonDirectoryExtras {
+  tourCreditCount?: number
+  vouchCount?: number
+  connectionStatus?: ConnectionStatus
 }
 
 const availabilityToUi: Record<DbMemberAvailability, Availability> = {
@@ -142,17 +170,54 @@ export function clampBannerPositionY(value: number | undefined): number {
   return Math.round(Math.max(0, Math.min(100, value ?? 50)))
 }
 
-export function toPersonFromProfile(row: MemberProfileRow): Person {
+export function departmentFromTitle(title: string | null | undefined): string {
+  const trimmed = title?.trim()
+  if (!trimmed) return "Production"
+  return departmentByRole[trimmed] ?? "Production"
+}
+
+export function resolveDepartment(
+  department: string | null | undefined,
+  title: string | null | undefined,
+): string {
+  const trimmed = department?.trim()
+  if (trimmed) return trimmed
+  return departmentFromTitle(title)
+}
+
+export function connectionStatusToFollowed(
+  status: ConnectionStatus | undefined,
+): boolean {
+  return status === "connected"
+}
+
+export function toTourCreditsFromRows(rows: TourCreditRow[]): TourCredit[] {
+  return rows.map((row) => ({
+    title: row.title,
+    venueTier: row.venue_tier
+      ? venueTierToUi[row.venue_tier]
+      : "Arena",
+    role: row.role,
+    years: row.years?.trim() || "—",
+  }))
+}
+
+export function toPersonFromProfile(
+  row: MemberProfileRow,
+  extras: PersonDirectoryExtras = {},
+): Person {
   const name =
     row.full_name?.trim() ||
     row.email.split("@")[0] ||
     "Member"
 
+  const department = resolveDepartment(row.department, row.title)
+
   return {
     id: row.id,
     name,
     role: row.title?.trim() || "",
-    department: "",
+    department,
     homeBase: row.home_base?.trim() || "",
     city: row.city?.trim() || row.home_base?.split(",")[0]?.trim() || "",
     availability:
@@ -162,14 +227,14 @@ export function toPersonFromProfile(row: MemberProfileRow): Person {
     venueTiers: (row.venue_tiers ?? []).map((tier) => venueTierToUi[tier]),
     workAuth: (row.work_auth ?? []).map((auth) => workAuthToUi[auth]),
     yearsExperience: row.years_experience ?? 0,
-    credits: 0,
-    vouches: 0,
+    credits: extras.tourCreditCount ?? 0,
+    vouches: extras.vouchCount ?? 0,
     topTours: [],
     skills: row.skills ?? [],
     avatar: row.avatar_url ?? undefined,
     banner: row.banner_url ?? undefined,
     bannerPositionY: clampBannerPositionY(row.banner_position_y ?? undefined),
-    followed: false,
+    followed: connectionStatusToFollowed(extras.connectionStatus),
     verified: row.is_verified ?? false,
     founding: row.is_founding_member ?? false,
     company: row.company?.trim() || undefined,
@@ -189,6 +254,7 @@ export function toProfileUpdateFromPerson(person: Person): MemberProfileUpdate {
   return {
     full_name: person.name.trim(),
     title: person.role.trim(),
+    department: person.department.trim() || null,
     company: person.company?.trim() || null,
     home_base: person.homeBase.trim(),
     city: person.city.trim(),
@@ -215,6 +281,7 @@ export const MEMBER_PROFILE_SELECT = [
   "email",
   "avatar_url",
   "title",
+  "department",
   "company",
   "home_base",
   "city",
@@ -237,3 +304,22 @@ export const MEMBER_PROFILE_SELECT = [
   "youtube",
   "created_at",
 ].join(", ")
+
+export const TOUR_CREDIT_SELECT =
+  "id, profile_id, title, artist, role, venue_tier, years, sort_order, created_at"
+
+export function tourCreditRowToAccountCredit(row: TourCreditRow) {
+  return {
+    id: row.id,
+    title: row.title,
+    artist: row.artist?.trim() || "",
+    role: row.role,
+    venueTier: row.venue_tier ? venueTierToUi[row.venue_tier] : "Arena",
+    years: row.years?.trim() || "—",
+    vouches: 0,
+  }
+}
+
+export function venueTierToDbValue(tier: string): DbVenueTier {
+  return venueTierToDb[tier as VenueTier] ?? "arena"
+}

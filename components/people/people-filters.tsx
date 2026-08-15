@@ -7,6 +7,7 @@ import { roleGroups } from "@/lib/jobs-data"
 import {
   availabilityStatuses,
   availabilityConfig,
+  cityOptions as cityOptionsDefault,
   type Availability,
 } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
@@ -74,11 +75,13 @@ export function PeopleFilters({
   onChange,
   onClear,
   activeCount,
+  cityOptions = cityOptionsDefault,
 }: {
   filters: PeopleFilters
   onChange: (next: Partial<PeopleFilters>) => void
   onClear: () => void
   activeCount: number
+  cityOptions?: string[]
 }) {
   function toggleAvailability(status: Availability) {
     const active = filters.availability.includes(status)
@@ -189,7 +192,7 @@ export function PeopleFilters({
           </PopoverContent>
         </Popover>
 
-        <MoreFiltersDialog filters={filters} onChange={onChange} />
+        <MoreFiltersDialog filters={filters} onChange={onChange} cityOptions={cityOptions} />
 
         {activeCount > 0 ? (
           <Button variant="ghost" size="sm" onClick={onClear}>

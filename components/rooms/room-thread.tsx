@@ -6,11 +6,12 @@ import { mutate as mutateSwr } from "swr"
 import { toast } from "sonner"
 
 import {
-  getPersonForRoomMessage,
   type MessageReactionTarget,
   type Room,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import { personFromRoomMessage } from "@/lib/people/fallback-person"
+import { getMemberById } from "@/lib/people/actions"
 import { applyLocalReaction, patchMessageReactions } from "@/lib/messages/reactions"
 import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
@@ -172,7 +173,7 @@ export function RoomThread({
   const openProfileIdRef = useRef<string | null>(null)
 
   function openAuthorProfile(message: ThreadMessage) {
-    const person = getPersonForRoomMessage(message)
+    const person = personFromRoomMessage(message)
     if (!person) return
 
     const profileId = message.authorId
@@ -182,7 +183,6 @@ export function RoomThread({
     setProfilePerson(person)
     setProfileOnline(undefined)
 
-    // Mount closed first so the drawer can animate in (matches People/Messages).
     if (isFirstMount) {
       requestAnimationFrame(() => setProfileOpen(true))
     } else {
@@ -190,6 +190,12 @@ export function RoomThread({
     }
 
     if (!profileId || !isUuid(profileId)) return
+
+    void getMemberById(profileId).then((result) => {
+      if (result.ok && openProfileIdRef.current === profileId) {
+        setProfilePerson(result.person)
+      }
+    })
 
     void getProfileOnline(profileId).then((result) => {
       if (result.ok && openProfileIdRef.current === profileId) {

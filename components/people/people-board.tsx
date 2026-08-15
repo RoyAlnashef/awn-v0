@@ -4,9 +4,9 @@ import * as React from "react"
 import { SearchX } from "lucide-react"
 
 import {
-  people as allPeople,
-  cityOptions,
+  cityOptions as presetCityOptions,
   OTHER_CITY,
+  type Person,
   type VenueTier,
   type WorkAuth,
 } from "@/lib/people-data"
@@ -32,9 +32,23 @@ const initialFilters: PeopleFiltersState = {
   workAuth: [],
 }
 
-export function PeopleBoard() {
+export function PeopleBoard({
+  initialPeople,
+  loadError,
+}: {
+  initialPeople: Person[]
+  loadError: string | null
+}) {
   const [view, setView] = useBoardViewMode("people")
   const [filters, setFilters] = React.useState<PeopleFiltersState>(initialFilters)
+
+  const cityOptions = React.useMemo(() => {
+    const cities = new Set(presetCityOptions)
+    for (const person of initialPeople) {
+      if (person.city) cities.add(person.city)
+    }
+    return [...cities]
+  }, [initialPeople])
 
   function updateFilters(next: Partial<PeopleFiltersState>) {
     setFilters((prev) => ({ ...prev, ...next }))
@@ -52,7 +66,7 @@ export function PeopleBoard() {
   const filtered = React.useMemo(() => {
     const query = filters.search.trim().toLowerCase()
 
-    return allPeople.filter((person) => {
+    return initialPeople.filter((person) => {
       if (query) {
         const haystack =
           `${person.name} ${person.role} ${person.homeBase} ${person.skills.join(" ")}`.toLowerCase()
@@ -71,8 +85,6 @@ export function PeopleBoard() {
         return false
       }
 
-      // City chips: match selected cities, with "Other…" catching anything
-      // not in the predefined cityOptions list.
       if (filters.cities.length > 0) {
         const matchesCity =
           filters.cities.includes(person.city) ||
@@ -81,8 +93,6 @@ export function PeopleBoard() {
         if (!matchesCity) return false
       }
 
-      // Available window: keep people whose availability window overlaps the
-      // requested range (string comparison is safe for ISO date-only values).
       if (filters.availableFrom && person.availableTo < filters.availableFrom) {
         return false
       }
@@ -90,7 +100,6 @@ export function PeopleBoard() {
         return false
       }
 
-      // Venue tier / work auth: OR match (person has at least one selected).
       if (
         filters.venueTiers.length > 0 &&
         !filters.venueTiers.some((t) =>
@@ -108,15 +117,22 @@ export function PeopleBoard() {
 
       return true
     })
-  }, [filters])
+  }, [filters, initialPeople, cityOptions])
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      {loadError ? (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {loadError}
+        </p>
+      ) : null}
+
       <PeopleFilters
         filters={filters}
         onChange={updateFilters}
         onClear={() => setFilters(initialFilters)}
         activeCount={activeCount}
+        cityOptions={cityOptions}
       />
 
       <div className="flex flex-col gap-4">
@@ -133,18 +149,26 @@ export function PeopleBoard() {
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
             <SearchX className="size-8 text-muted-foreground" />
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">No contacts match your filters</p>
+              <p className="text-sm font-medium">
+                {initialPeople.length === 0
+                  ? "No members in the directory yet"
+                  : "No contacts match your filters"}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Try widening your search or clearing a filter.
+                {initialPeople.length === 0
+                  ? "Active member profiles will appear here once they join."
+                  : "Try widening your search or clearing a filter."}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilters(initialFilters)}
-            >
-              Clear filters
-            </Button>
+            {initialPeople.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters(initialFilters)}
+              >
+                Clear filters
+              </Button>
+            ) : null}
           </div>
         ) : (
           <div

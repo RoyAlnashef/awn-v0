@@ -9,6 +9,8 @@ import {
   toProfileUpdateFromPerson,
   type MemberProfileRow,
 } from "@/lib/account/profile-data"
+import { listMemberTourCredits } from "@/lib/account/tour-credits-actions"
+import type { AccountTourCredit } from "@/lib/account-profile"
 import { AuthError } from "@/lib/auth/require-admin"
 import { requireProfileEditor } from "@/lib/auth/require-profile-editor"
 import type { Person } from "@/lib/people-data"
@@ -98,7 +100,37 @@ export async function getMemberProfile(): Promise<Person | null> {
 
   if (error || !data) return null
 
-  return toPersonFromProfile(data as unknown as MemberProfileRow)
+  const row = data as unknown as MemberProfileRow
+
+  const [creditCountResult, vouchCountResult] = await Promise.all([
+    supabase
+      .from("tour_credits")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", user.id),
+    supabase
+      .from("profile_vouches")
+      .select("id", { count: "exact", head: true })
+      .eq("vouchee_id", user.id),
+  ])
+
+  return toPersonFromProfile(row, {
+    tourCreditCount: creditCountResult.count ?? 0,
+    vouchCount: vouchCountResult.count ?? 0,
+  })
+}
+
+export async function getMemberProfileWithTourCredits(): Promise<{
+  profile: Person
+  tourCredits: AccountTourCredit[]
+} | null> {
+  const profile = await getMemberProfile()
+  if (!profile) return null
+
+  const creditsResult = await listMemberTourCredits(profile.id)
+  return {
+    profile,
+    tourCredits: creditsResult.ok ? creditsResult.credits : [],
+  }
 }
 
 export async function updateMemberProfile(
@@ -122,7 +154,25 @@ export async function updateMemberProfile(
     }
 
     revalidateProfilePaths()
-    return { ok: true, person: toPersonFromProfile(data as unknown as MemberProfileRow) }
+
+    const [creditCountResult, vouchCountResult] = await Promise.all([
+      admin
+        .from("tour_credits")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", person.id),
+      admin
+        .from("profile_vouches")
+        .select("id", { count: "exact", head: true })
+        .eq("vouchee_id", person.id),
+    ])
+
+    return {
+      ok: true,
+      person: toPersonFromProfile(data as unknown as MemberProfileRow, {
+        tourCreditCount: creditCountResult.count ?? person.credits,
+        vouchCount: vouchCountResult.count ?? person.vouches,
+      }),
+    }
   } catch (error) {
     return actionError(error)
   }

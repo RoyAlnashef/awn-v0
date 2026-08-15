@@ -33,7 +33,11 @@ import {
   type ReplySnapshot,
 } from "@/lib/messages/reply"
 import type { MemberSharePayload } from "@/lib/messages-data"
-import { people } from "@/lib/people-data"
+import {
+  MEMBER_PROFILE_SELECT,
+  toPersonFromProfile,
+  type MemberProfileRow,
+} from "@/lib/account/profile-data"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -188,6 +192,41 @@ function mapInsertedMessageRow(
   }
 }
 
+async function buildMemberShareFromProfile(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profileId: string,
+): Promise<MemberSharePayload | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(MEMBER_PROFILE_SELECT)
+    .eq("id", profileId)
+    .eq("status", "active")
+    .maybeSingle()
+
+  if (error || !data) return null
+
+  const [creditCountResult, vouchCountResult] = await Promise.all([
+    supabase
+      .from("tour_credits")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profileId),
+    supabase
+      .from("profile_vouches")
+      .select("id", { count: "exact", head: true })
+      .eq("vouchee_id", profileId),
+  ])
+
+  const person = toPersonFromProfile(data as unknown as MemberProfileRow, {
+    tourCreditCount: creditCountResult.count ?? 0,
+    vouchCount: vouchCountResult.count ?? 0,
+  })
+
+  return {
+    ...personToSharePayload(person),
+    skills: person.skills,
+  }
+}
+
 async function fetchMemberSharePayload(
   supabase: Awaited<ReturnType<typeof createClient>>,
   profileId: string,
@@ -195,32 +234,12 @@ async function fetchMemberSharePayload(
   | { ok: true; memberShare: NonNullable<ThreadMessage["memberShare"]> }
   | ActionError
 > {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, title, avatar_url, status")
-    .eq("id", profileId)
-    .maybeSingle()
-
-  if (error) return { ok: false, error: error.message }
-
-  if (data && data.status === "active") {
-    return {
-      ok: true,
-      memberShare: {
-        id: data.id,
-        name: data.full_name?.trim() || "Member",
-        role: data.title?.trim() || "AWN Member",
-        avatar: data.avatar_url ?? undefined,
-      },
-    }
+  const memberShare = await buildMemberShareFromProfile(supabase, profileId)
+  if (!memberShare) {
+    return { ok: false, error: "Member not found." }
   }
 
-  const mockPerson = people.find((person) => person.id === profileId)
-  if (mockPerson) {
-    return { ok: true, memberShare: personToSharePayload(mockPerson) }
-  }
-
-  return { ok: false, error: "Member not found." }
+  return { ok: true, memberShare }
 }
 
 export async function resolveMemberShareForInsert(
@@ -235,41 +254,17 @@ export async function resolveMemberShareForInsert(
     }
   | ActionError
 > {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, title, avatar_url, status")
-    .eq("id", profileId)
-    .maybeSingle()
-
-  if (error) return { ok: false, error: error.message }
-
-  if (data && data.status === "active") {
-    const memberShare = {
-      id: data.id,
-      name: data.full_name?.trim() || "Member",
-      role: data.title?.trim() || "AWN Member",
-      avatar: data.avatar_url ?? undefined,
-    }
-    return {
-      ok: true,
-      memberShare,
-      sharedProfileId: profileId,
-      memberShareSnapshot: null,
-    }
+  const memberShare = await buildMemberShareFromProfile(supabase, profileId)
+  if (!memberShare) {
+    return { ok: false, error: "Member not found." }
   }
 
-  const mockPerson = people.find((person) => person.id === profileId)
-  if (mockPerson) {
-    const memberShare = personToSharePayload(mockPerson)
-    return {
-      ok: true,
-      memberShare,
-      sharedProfileId: null,
-      memberShareSnapshot: memberShare,
-    }
+  return {
+    ok: true,
+    memberShare,
+    sharedProfileId: profileId,
+    memberShareSnapshot: null,
   }
-
-  return { ok: false, error: "Member not found." }
 }
 
 export type MemberSharePayloadResult =

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { BadgeCheck, MapPin, X } from "lucide-react"
 
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
@@ -9,8 +9,9 @@ import {
   initials,
   type Availability,
   type Person,
+  type TourCredit,
 } from "@/lib/people-data"
-import { getPersonById } from "@/lib/messages-data"
+import { getMemberById } from "@/lib/people/actions"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,9 +19,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 function memberShareToPerson(memberShare: MemberSharePayload): Person {
-  const existing = getPersonById(memberShare.id)
-  if (existing) return existing
-
   const availability = (memberShare.availability ??
     "Between Tours") as Availability
 
@@ -28,7 +26,7 @@ function memberShareToPerson(memberShare: MemberSharePayload): Person {
     id: memberShare.id,
     name: memberShare.name,
     role: memberShare.role,
-    department: memberShare.department ?? "Production",
+    department: memberShare.department ?? "",
     homeBase: memberShare.homeBase ?? "",
     city: memberShare.homeBase?.split(",")[0]?.trim() ?? "",
     availability,
@@ -40,7 +38,7 @@ function memberShareToPerson(memberShare: MemberSharePayload): Person {
     credits: memberShare.credits ?? 0,
     vouches: memberShare.vouches ?? 0,
     topTours: [],
-    skills: [],
+    skills: memberShare.skills ?? [],
     avatar: memberShare.avatar,
     followed: false,
   }
@@ -81,8 +79,24 @@ export function PersonShareCard({
   onRemove?: () => void
 }) {
   const [detailOpen, setDetailOpen] = useState(false)
+  const [resolvedPerson, setResolvedPerson] = useState<Person | null>(null)
+  const [resolvedTourCredits, setResolvedTourCredits] = useState<TourCredit[]>([])
   const isPreview = variant === "preview"
-  const person = useMemo(() => memberShareToPerson(memberShare), [memberShare])
+  const fallbackPerson = useMemo(
+    () => memberShareToPerson(memberShare),
+    [memberShare],
+  )
+  const person = resolvedPerson ?? fallbackPerson
+
+  useEffect(() => {
+    if (!detailOpen) return
+
+    void getMemberById(memberShare.id).then((result) => {
+      if (!result.ok) return
+      setResolvedPerson(result.person)
+      setResolvedTourCredits(result.tourCredits)
+    })
+  }, [detailOpen, memberShare.id])
 
   const hasStats =
     memberShare.credits != null ||
@@ -217,6 +231,7 @@ export function PersonShareCard({
       {variant === "message" ? (
         <PersonProfileDrawer
           person={person}
+          tourCredits={resolvedTourCredits}
           open={detailOpen}
           onOpenChange={setDetailOpen}
         />

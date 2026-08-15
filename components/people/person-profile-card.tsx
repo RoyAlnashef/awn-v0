@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useState, type RefObject } from "react"
+import { useRef, useState, useTransition, type RefObject } from "react"
+import { toast } from "sonner"
 import {
   BadgeCheck,
   CalendarClock,
@@ -24,6 +25,7 @@ import {
 } from "@/lib/people-data"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
+import { toggleConnection } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -90,7 +92,7 @@ export function PersonProfileCard({
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
 }) {
-  const profile = getPersonProfile(person)
+  const profile = getPersonProfile(person, tourCreditsOverride ?? [])
   const resolvedTourCredits = tourCreditsOverride ?? profile.tourCredits
   const availability = availabilityConfig[person.availability]
   const isOnline = online ?? false
@@ -100,6 +102,18 @@ export function PersonProfileCard({
   const [followed, setFollowed] = useState(person.followed)
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  function handleFollowToggle() {
+    startTransition(async () => {
+      const result = await toggleConnection(person.id, followed)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setFollowed(result.connected)
+    })
+  }
 
   const socialLinks = getPersonSocialLinks(person)
 
@@ -334,9 +348,9 @@ export function PersonProfileCard({
                 size="icon"
                 aria-label={followed ? "Following" : "Follow"}
                 aria-pressed={followed}
-                disabled={isPreview}
+                disabled={isPreview || isPending}
                 aria-disabled={isPreview}
-                onClick={() => setFollowed((prev) => !prev)}
+                onClick={handleFollowToggle}
               >
                 {followed ? <BadgeCheck /> : <Plus />}
               </Button>

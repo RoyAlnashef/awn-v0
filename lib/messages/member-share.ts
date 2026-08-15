@@ -59,6 +59,7 @@ export function personToSharePayload(
     | "credits"
     | "vouches"
     | "yearsExperience"
+    | "skills"
   >,
 ): MemberSharePayload {
   return {
@@ -72,6 +73,7 @@ export function personToSharePayload(
     credits: person.credits,
     vouches: person.vouches,
     yearsExperience: person.yearsExperience,
+    skills: person.skills,
   }
 }
 
