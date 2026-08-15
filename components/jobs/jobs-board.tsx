@@ -12,24 +12,16 @@ import {
 } from "@/lib/jobs/view-mode"
 import { cn } from "@/lib/utils"
 import { useBoardViewMode } from "@/hooks/use-board-view-mode"
+import { useJobFilters } from "@/hooks/use-job-filters"
 import { BoardViewToggle } from "@/components/board-view-toggle"
 import { Button } from "@/components/ui/button"
-import { JobsFilters, type JobFilters } from "@/components/jobs/jobs-filters"
+import { JobsFilters } from "@/components/jobs/jobs-filters"
 import { JobCard } from "@/components/jobs/job-card"
 import { JobRow } from "@/components/jobs/job-row"
 
-const initialFilters: JobFilters = {
-  search: "",
-  department: "all",
-  engagements: [],
-  startFrom: undefined,
-  startTo: undefined,
-  saved: false,
-}
-
 export function JobsBoard() {
   const [view, setView] = useBoardViewMode("jobs")
-  const [filters, setFilters] = React.useState<JobFilters>(initialFilters)
+  const [filters, updateFilters, clearFilters] = useJobFilters()
 
   const listKey = React.useMemo(
     () => jobsListKeyWithFilters(filters),
@@ -40,10 +32,6 @@ export function JobsBoard() {
     dedupingInterval: 2000,
     revalidateOnFocus: true,
   })
-
-  function updateFilters(next: Partial<JobFilters>) {
-    setFilters((prev) => ({ ...prev, ...next }))
-  }
 
   const activeCount =
     (filters.search.trim() ? 1 : 0) +
@@ -61,7 +49,7 @@ export function JobsBoard() {
       <JobsFilters
         filters={filters}
         onChange={updateFilters}
-        onClear={() => setFilters(initialFilters)}
+        onClear={clearFilters}
         activeCount={activeCount}
       />
 
@@ -119,7 +107,7 @@ export function JobsBoard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setFilters(initialFilters)}
+              onClick={clearFilters}
             >
               Clear filters
             </Button>
