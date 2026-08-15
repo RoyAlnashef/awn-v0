@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { BadgeCheck, Group, MapPin, MessagesSquare, Share } from "lucide-react"
+import { Group, MapPin, MessagesSquare, Share } from "lucide-react"
 
 import {
   availabilityConfig,
@@ -12,7 +12,6 @@ import {
 import { toggleConnection } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { PersonShareToRoomsButton } from "@/components/people/person-share-to-rooms-button"
@@ -61,7 +60,7 @@ export function PersonCard({ person }: { person: Person }) {
   }
 
   return (
-    <article className="relative flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-5 text-center transition-colors hover:border-primary/40">
+    <article className="relative flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40">
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -69,60 +68,30 @@ export function PersonCard({ person }: { person: Person }) {
         onClick={() => setOpen(true)}
       />
 
-      {person.department ? (
-        <Badge variant="outline" className="self-center">
-          {person.department}
-        </Badge>
-      ) : null}
+      <div className="flex gap-3">
+        <Avatar className="size-14 shrink-0 border-2 border-border">
+          <AvatarImage src={person.avatar || undefined} alt="" />
+          <AvatarFallback className="text-sm">{initials(person.name)}</AvatarFallback>
+        </Avatar>
 
-      <Avatar className="size-24 border-2 border-border">
-        <AvatarImage src={person.avatar || undefined} alt="" />
-        <AvatarFallback className="text-xl">{initials(person.name)}</AvatarFallback>
-      </Avatar>
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-heading text-base font-semibold tracking-tight text-balance">
+              {person.name}
+            </h3>
+            <p className="text-sm text-foreground/90">{person.role}</p>
+          </div>
 
-      <div className="flex flex-col items-center gap-0.5">
-        <h3 className="font-heading text-lg font-semibold tracking-tight text-balance">
-          {person.name}
-        </h3>
-        <p className="text-sm text-foreground/90">{person.role}</p>
-      </div>
-
-      <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
-        {person.homeBase ? (
-          <span className="flex items-center gap-1">
-            <MapPin className="size-3.5 shrink-0" />
-            {person.homeBase}
-          </span>
-        ) : null}
-        <AvailabilityDot availability={person.availability} />
-      </div>
-
-      {person.skills.length > 0 ? (
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {person.skills.map((skill) => (
-            <Badge key={skill} variant="secondary" className="font-normal">
-              {skill}
-            </Badge>
-          ))}
+          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+            {person.homeBase ? (
+              <span className="flex items-center gap-1">
+                <MapPin className="size-3.5 shrink-0" />
+                {person.homeBase}
+              </span>
+            ) : null}
+            <AvailabilityDot availability={person.availability} />
+          </div>
         </div>
-      ) : null}
-
-      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <BadgeCheck className="size-4 text-primary" />
-          <span className="font-medium text-foreground">{person.credits}</span>{" "}
-          credits
-        </span>
-        <span>
-          <span className="font-medium text-foreground">{person.vouches}</span>{" "}
-          vouches
-        </span>
-        <span>
-          <span className="font-medium text-foreground">
-            {person.yearsExperience}
-          </span>{" "}
-          yrs
-        </span>
       </div>
 
       <div
