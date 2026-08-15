@@ -246,28 +246,25 @@ export function PersonProfileCard({
             ) : null}
 
             {/* Meta chips */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {person.venueTiers.map((tier) => (
-                <Badge
-                  key={tier}
-                  className="border-primary/30 bg-primary/15 text-[11px] tracking-wide text-primary uppercase"
-                >
+                <Badge key={tier} variant="secondary">
                   {tier}
                 </Badge>
               ))}
               {person.availableFrom ? (
-                <Badge variant="outline" className="gap-1 font-normal">
+                <Badge variant="secondary" className="gap-1 font-normal">
                   <CalendarClock className="size-3" />
                   Free {formatShortDate(person.availableFrom)}
                 </Badge>
               ) : null}
               {person.workAuth.map((auth) => (
-                <Badge key={auth} variant="outline" className="gap-1 font-normal">
+                <Badge key={auth} variant="secondary" className="gap-1 font-normal">
                   {auth === "Passport" ? <Plane className="size-3" /> : null}
                   {auth}
                 </Badge>
               ))}
-              <Badge variant="outline" className="font-normal">
+              <Badge variant="secondary" className="font-normal">
                 Member since {profile.memberSince}
               </Badge>
             </div>
