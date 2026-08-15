@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, Fragment } from "react"
-import { ArrowLeft, Check, CheckCheck, Phone, Send, Video } from "lucide-react"
+import { ArrowLeft, Check, CheckCheck, Send } from "lucide-react"
 import { toast } from "sonner"
 import {
   groupThreadMessagesByDate,
@@ -807,14 +807,6 @@ export function MessageThread({
             </p>
           </div>
         </button>
-        <div className="ml-auto flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label="Start voice call">
-            <Phone className="size-5" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Start video call">
-            <Video className="size-5" />
-          </Button>
-        </div>
       </header>
 
       <PersonProfileDrawer
