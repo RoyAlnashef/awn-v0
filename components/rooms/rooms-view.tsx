@@ -117,7 +117,7 @@ export function RoomsView({
     : null
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       <div
         className={cn(
           "flex items-start justify-between gap-4",
@@ -161,10 +161,10 @@ export function RoomsView({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-hidden">
         <div
           className={cn(
-            "flex w-full min-h-0 flex-col md:w-80 lg:w-96",
+            "flex w-full min-h-0 shrink-0 flex-col md:w-80 lg:w-96",
             activeRoom && "hidden md:flex",
           )}
         >
@@ -179,7 +179,7 @@ export function RoomsView({
 
         <div
           className={cn(
-            "min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
+            "min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
             activeRoom ? "flex" : "hidden md:flex",
           )}
         >

@@ -94,7 +94,7 @@ export function PersonShareCard({
       className={cn(
         "relative flex w-full max-w-70 flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center",
         variant === "message" &&
-          "cursor-pointer shadow-sm transition-colors hover:border-primary/40",
+          "max-w-full cursor-pointer shadow-sm transition-colors hover:border-primary/40",
         className,
       )}
       onClick={variant === "message" ? () => setDetailOpen(true) : undefined}

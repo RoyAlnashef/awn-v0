@@ -40,7 +40,7 @@ export function JobShareCard({
   const card = (
     <Attachment
       className={cn(
-        "max-w-sm",
+        variant === "message" ? "max-w-full" : "max-w-sm",
         variant === "message" &&
           cn(
             "cursor-pointer rounded-xl bg-card shadow-sm transition-colors",

@@ -114,7 +114,7 @@ function MessageActionsShell({
       <div
         ref={bubbleRef}
         className={cn(
-          "group/bubble-wrap relative w-fit min-w-0 overflow-visible select-none",
+          "group/bubble-wrap relative w-max max-w-full min-w-0 overflow-visible select-none",
           "after:absolute after:top-0 after:bottom-0 after:w-9 after:content-['']",
           align === "end"
             ? "self-end after:right-full"
@@ -124,7 +124,7 @@ function MessageActionsShell({
         )}
         {...(coarsePointer ? longPressHandlers : {})}
       >
-        <div className="relative w-fit min-w-0 max-w-full">
+        <div className="relative min-w-0 max-w-full w-full">
           <div
             className={cn(
               hasReactions && reactionSide === "bottom" && "pb-6",
@@ -196,9 +196,9 @@ export function MessageBubbleWithReactions({
       deleteLabel={deleteLabel}
       replyTo={replyTo}
       repliedLabel={repliedLabel}
-      className={cn("max-w-[80%]", className)}
+      className={cn("max-w-[80%] min-w-0", className)}
     >
-      <Bubble variant={variant} align={align} className="max-w-full">
+      <Bubble variant={variant} align={align} className="w-full max-w-full">
         <BubbleContent>
           {replyTo ? (
             <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
@@ -250,13 +250,13 @@ export function MessageJobShareWithReactions({
   return (
     <div
       className={cn(
-        "flex w-full max-w-[min(20rem,80%)] flex-col gap-2",
+        "flex w-full min-w-0 max-w-[min(20rem,80%)] flex-col gap-2",
         align === "end" ? "items-end self-end" : "items-start self-start",
         className,
       )}
     >
       {replyTo ? (
-        <Bubble variant={variant} align={align} className="max-w-full">
+        <Bubble variant={variant} align={align} className="w-full max-w-full">
           <BubbleContent>
             <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
           </BubbleContent>
@@ -267,7 +267,7 @@ export function MessageJobShareWithReactions({
         reactions={attachmentReactions}
         onReact={onReactAttachment}
         {...messageActions}
-        className="max-w-full"
+        className="w-full min-w-0 max-w-full"
       >
         <JobShareCard jobShare={jobShare} variant="message" />
       </MessageActionsShell>
@@ -278,9 +278,9 @@ export function MessageJobShareWithReactions({
           onReact={onReactBody}
           onCopy={onCopy}
           {...messageActions}
-          className="max-w-full"
+          className="min-w-0 max-w-full"
         >
-          <Bubble variant={variant} align={align} className="max-w-full">
+          <Bubble variant={variant} align={align} className="w-full max-w-full">
             <BubbleContent>{trimmed}</BubbleContent>
           </Bubble>
         </MessageActionsShell>
@@ -329,13 +329,13 @@ export function MessageMemberShareWithReactions({
   return (
     <div
       className={cn(
-        "flex w-full max-w-[min(20rem,80%)] flex-col gap-2",
+        "flex w-full min-w-0 max-w-[min(20rem,80%)] flex-col gap-2",
         align === "end" ? "items-end self-end" : "items-start self-start",
         className,
       )}
     >
       {replyTo ? (
-        <Bubble variant={variant} align={align} className="max-w-full">
+        <Bubble variant={variant} align={align} className="w-full max-w-full">
           <BubbleContent>
             <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
           </BubbleContent>
@@ -346,7 +346,7 @@ export function MessageMemberShareWithReactions({
         reactions={attachmentReactions}
         onReact={onReactAttachment}
         {...messageActions}
-        className="max-w-full"
+        className="w-full min-w-0 max-w-full"
       >
         <PersonShareCard memberShare={memberShare} variant="message" />
       </MessageActionsShell>
@@ -357,9 +357,9 @@ export function MessageMemberShareWithReactions({
           onReact={onReactBody}
           onCopy={onCopy}
           {...messageActions}
-          className="max-w-full"
+          className="min-w-0 max-w-full"
         >
-          <Bubble variant={variant} align={align} className="max-w-full">
+          <Bubble variant={variant} align={align} className="w-full max-w-full">
             <BubbleContent>{trimmed}</BubbleContent>
           </Bubble>
         </MessageActionsShell>

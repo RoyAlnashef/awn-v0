@@ -602,7 +602,7 @@ export function RoomThread({
   }, [loadOlder, usesServer])
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b p-3">
         {onBack ? (
           <Button
