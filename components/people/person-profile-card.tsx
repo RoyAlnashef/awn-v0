@@ -198,6 +198,53 @@ export function PersonProfileCard({
 
         <ScrollArea className="min-h-0 flex-1 overflow-hidden">
           <div className="flex flex-col gap-6 px-6 py-5">
+            {/* Social links */}
+            {socialLinks.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {socialLinks.map((link) => {
+                  const LinkIcon = link.icon
+                  const button = (
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      disabled={isPreview}
+                      aria-disabled={isPreview}
+                      aria-label={`${link.label}: ${link.display}`}
+                      nativeButton={false}
+                      render={
+                        isPreview ? (
+                          <span />
+                        ) : (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                          />
+                        )
+                      }
+                    >
+                      <LinkIcon />
+                    </Button>
+                  )
+
+                  if (isPreview) {
+                    return (
+                      <PreviewTooltip key={link.id} preview={isPreview}>
+                        {button}
+                      </PreviewTooltip>
+                    )
+                  }
+
+                  return (
+                    <Tooltip key={link.id}>
+                      <TooltipTrigger render={<span className="inline-flex">{button}</span>} />
+                      <TooltipContent>{link.display}</TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            ) : null}
+
             {/* Meta chips */}
             <div className="flex flex-wrap gap-1.5">
               {person.venueTiers.map((tier) => (
@@ -299,42 +346,6 @@ export function PersonProfileCard({
                   ))}
                 </div>
               </section>
-            ) : null}
-
-            {/* Social links */}
-            {socialLinks.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {socialLinks.map((link) => {
-                  const LinkIcon = link.icon
-                  return (
-                    <PreviewTooltip key={link.id} preview={isPreview}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="self-start"
-                        disabled={isPreview}
-                        aria-disabled={isPreview}
-                        nativeButton={false}
-                        render={
-                          isPreview ? (
-                            <span />
-                          ) : (
-                            <a
-                              href={link.href}
-                              target="_blank"
-                              rel="noreferrer"
-                              aria-label={link.label}
-                            />
-                          )
-                        }
-                      >
-                        <LinkIcon />
-                        {link.display}
-                      </Button>
-                    </PreviewTooltip>
-                  )
-                })}
-              </div>
             ) : null}
           </div>
         </ScrollArea>
