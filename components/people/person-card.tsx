@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { BadgeCheck, Group, MapPin, MessagesSquare, Share } from "lucide-react"
 
@@ -40,18 +40,23 @@ function AvailabilityDot({ availability }: { availability: Person["availability"
 }
 
 export function PersonCard({ person }: { person: Person }) {
-  const [followed, setFollowed] = useState(person.followed)
+  const [connected, setConnected] = useState(person.followed)
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  function handleConnectionToggle() {
+  useEffect(() => {
+    setConnected(person.followed)
+  }, [person.followed, person.id])
+
+  function handleConnectionToggle(event: React.MouseEvent) {
+    event.stopPropagation()
     startTransition(async () => {
-      const result = await toggleConnection(person.id, followed)
+      const result = await toggleConnection(person.id, connected)
       if (!result.ok) {
         toast.error(result.error)
         return
       }
-      setFollowed(result.connected)
+      setConnected(result.connected)
     })
   }
 
@@ -120,7 +125,11 @@ export function PersonCard({ person }: { person: Person }) {
         </span>
       </div>
 
-      <div className="relative z-10 mt-auto flex w-full min-w-0 items-center gap-2 border-t border-border pt-4">
+      <div
+        className="relative z-10 mt-auto flex w-full min-w-0 items-center gap-2 border-t border-border pt-4"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         <PersonShareToMessagesButton person={person}>
           <Button size="icon" variant="outline" aria-label="Share as a message">
             <Share className="size-4" />
@@ -136,13 +145,13 @@ export function PersonCard({ person }: { person: Person }) {
         </Button>
         <Button
           size="sm"
-          variant={followed ? "outline" : "default"}
+          variant={connected ? "outline" : "default"}
           className="ml-auto shrink-0"
-          aria-pressed={followed}
+          aria-pressed={connected}
           disabled={isPending}
           onClick={handleConnectionToggle}
         >
-          {followed ? "Connected" : "Connect"}
+          {connected ? "Connected" : "Connect"}
         </Button>
       </div>
 
