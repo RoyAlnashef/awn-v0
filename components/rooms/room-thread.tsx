@@ -15,7 +15,7 @@ import { getMemberById } from "@/lib/people/actions"
 import { applyLocalReaction, patchMessageReactions } from "@/lib/messages/reactions"
 import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
-import { roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
+import { roomsListKey, roomsUnreadCountKey, roomMembersPreviewKey } from "@/lib/rooms/swr-keys"
 import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
 import { useRoomThread } from "@/lib/rooms/hooks/use-room-thread"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
@@ -26,6 +26,7 @@ import {
   setRoomMessageReaction,
 } from "@/lib/rooms/actions"
 import { useRooms } from "@/components/rooms/rooms-provider"
+import { RoomMembersAvatarGroup } from "@/components/rooms/room-members-avatar-group"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { PersonShareCard } from "@/components/people/person-share-card"
 import { JobShareCard } from "@/components/jobs/job-share-card"
@@ -225,6 +226,9 @@ export function RoomThread({
     setPendingAction("join")
     try {
       await onJoin()
+      if (usesServer) {
+        void mutateSwr(roomMembersPreviewKey(room.id))
+      }
     } finally {
       setPendingAction(null)
     }
@@ -235,6 +239,9 @@ export function RoomThread({
     setPendingAction("leave")
     try {
       await onLeave()
+      if (usesServer) {
+        void mutateSwr(roomMembersPreviewKey(room.id))
+      }
     } finally {
       setPendingAction(null)
     }
@@ -632,6 +639,7 @@ export function RoomThread({
             {room.description}
           </p>
         </div>
+        {usesServer ? <RoomMembersAvatarGroup roomId={room.id} /> : null}
         {pendingAction === "join" ? (
           <Button size="sm" className="shrink-0" disabled>
             Joining…

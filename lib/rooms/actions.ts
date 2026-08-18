@@ -66,6 +66,16 @@ export type RoomThreadResult =
   | { ok: true; messages: ThreadMessage[]; hasMore: boolean }
   | ActionError
 
+export type RoomMemberPreview = {
+  id: string
+  name: string
+  avatarUrl?: string
+}
+
+export type RoomMembersPreviewResult =
+  | { ok: true; members: RoomMemberPreview[]; totalCount: number }
+  | ActionError
+
 export type SendRoomMessageResult =
   | { ok: true; message: ThreadMessage }
   | ActionError
@@ -367,6 +377,69 @@ export async function getRoomThread(
       ok: true,
       messages,
       hasMore: Boolean(payload.has_more),
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+type RoomMembershipProfileRow = {
+  profile_id: string
+  profiles:
+    | {
+        id: string
+        full_name: string | null
+        avatar_url: string | null
+      }
+    | {
+        id: string
+        full_name: string | null
+        avatar_url: string | null
+      }[]
+    | null
+}
+
+function profileFromMembershipRow(
+  row: RoomMembershipProfileRow,
+): RoomMemberPreview | null {
+  const profile = Array.isArray(row.profiles)
+    ? row.profiles[0]
+    : row.profiles
+  if (!profile) return null
+
+  return {
+    id: profile.id,
+    name: profile.full_name?.trim() || "Member",
+    avatarUrl: profile.avatar_url ?? undefined,
+  }
+}
+
+export async function getRoomMembersPreview(
+  roomId: string,
+): Promise<RoomMembersPreviewResult> {
+  try {
+    if (!isUuid(roomId)) {
+      return { ok: false, error: "Invalid room id." }
+    }
+
+    await requireUserId()
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from("room_memberships")
+      .select("profile_id, profiles(id, full_name, avatar_url)")
+      .eq("room_id", roomId)
+
+    if (error) return { ok: false, error: error.message }
+
+    const members = ((data ?? []) as unknown as RoomMembershipProfileRow[])
+      .map(profileFromMembershipRow)
+      .filter((member): member is RoomMemberPreview => member != null)
+
+    return {
+      ok: true,
+      members,
+      totalCount: members.length,
     }
   } catch (error) {
     return actionError(error)
