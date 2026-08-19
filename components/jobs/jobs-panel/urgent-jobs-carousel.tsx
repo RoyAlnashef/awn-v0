@@ -37,40 +37,39 @@ export function UrgentJobsCarousel({
     setPreviewOpen(true)
   }
 
+  if (!isLoading && jobs.length === 0) {
+    return null
+  }
+
   return (
     <>
-      <section className="shrink-0 border-b px-4 py-3">
-        <h3 className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <section className="shrink-0 border-b py-3">
+        <h3 className="mb-3 px-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Urgent jobs
         </h3>
 
         {isLoading ? (
-          <div className="flex gap-3 overflow-hidden">
-            {[0, 1].map((i) => (
-              <div
-                key={i}
-                className="h-28 min-w-[85%] animate-pulse rounded-xl border bg-muted/40"
-              />
-            ))}
-          </div>
-        ) : jobs.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-            No urgent jobs right now
-          </p>
+          <div className="mx-4 h-28 animate-pulse rounded-xl border bg-muted/40" />
         ) : (
-          <div className="relative px-8">
+          <div className="relative pl-4">
             <Carousel
               opts={{
                 align: "start",
                 dragFree: true,
+                containScroll: "trimSnaps",
               }}
               className="w-full"
             >
-              <CarouselContent className="-ml-3">
+              <CarouselContent className="ml-0">
                 {jobs.map((job) => (
                   <CarouselItem
                     key={job.id}
-                    className="basis-[85%] pl-3 sm:basis-[75%]"
+                    className={cn(
+                      "pl-0",
+                      jobs.length > 1
+                        ? "basis-[88%] pr-3"
+                        : "basis-full pr-4",
+                    )}
                   >
                     <button
                       type="button"
@@ -104,8 +103,8 @@ export function UrgentJobsCarousel({
               </CarouselContent>
               {jobs.length > 1 ? (
                 <>
-                  <CarouselPrevious className="left-0 size-7 border bg-background/90 shadow-sm" />
-                  <CarouselNext className="right-0 size-7 border bg-background/90 shadow-sm" />
+                  <CarouselPrevious className="left-3 size-7 border bg-background/90 shadow-sm disabled:pointer-events-none disabled:opacity-0" />
+                  <CarouselNext className="right-3 size-7 border bg-background/90 shadow-sm" />
                 </>
               ) : null}
             </Carousel>
