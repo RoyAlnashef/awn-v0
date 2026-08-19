@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { NavUser, type NavUserData } from "@/components/nav-user"
 import { Messages } from "@/components/messages"
+import { JobsPanel } from "@/components/jobs-panel"
 import { Notifications } from "@/components/notifications"
 import { Rooms } from "@/components/rooms"
 
@@ -28,6 +29,7 @@ export function SiteHeader({ user }: { user: NavUserData }) {
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <Rooms />
         <Messages />
+        <JobsPanel />
         <Notifications />
         <Separator
           orientation="vertical"

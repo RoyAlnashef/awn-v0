@@ -51,6 +51,9 @@ export async function GET(request: Request) {
   const startFrom = parseDateOnly(url.searchParams.get("startFrom"))
   const startTo = parseDateOnly(url.searchParams.get("startTo"))
   const savedOnly = url.searchParams.get("saved") === "true"
+  const kindParam = url.searchParams.get("kind")
+  const kind =
+    kindParam === "urgent" || kindParam === "full" ? kindParam : null
 
   let savedJobIds: string[] | null = null
   if (savedOnly) {
@@ -103,6 +106,10 @@ export async function GET(request: Request) {
 
   if (savedJobIds) {
     query = query.in("id", savedJobIds)
+  }
+
+  if (kind) {
+    query = query.eq("kind", kind)
   }
 
   if (department && department !== "all") {

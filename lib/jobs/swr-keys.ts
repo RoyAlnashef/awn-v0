@@ -3,6 +3,8 @@ import type { EngagementType } from "@/lib/jobs-data"
 
 export const jobsListKey = "/api/jobs"
 
+export const urgentJobsKey = "/api/jobs?kind=urgent"
+
 export const myJobsKey = "/api/jobs/mine?tab=created"
 
 export const myApplicationsKey = "/api/jobs/mine?tab=applied"
