@@ -40,7 +40,18 @@ export default async function PopoutLayout({
             avatarUrl: sessionUser.avatarUrl,
           }}
         >
-          <AppSidebar showAdminNav={sessionUser.canAccessAdmin} />
+          <AppSidebar
+            showAdminNav={sessionUser.canAccessAdmin}
+            user={{
+              name: sessionUser.name,
+              title: sessionUser.title,
+              email: sessionUser.email,
+              avatarUrl: sessionUser.avatarUrl,
+              initials: sessionUser.initials,
+              appearOffline: sessionUser.appearOffline,
+              online: sessionUser.online,
+            }}
+          />
           <SidebarInset>
             <SiteHeader
               user={{

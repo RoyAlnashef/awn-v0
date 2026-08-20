@@ -35,7 +35,9 @@ export function SiteHeader({ user }: { user: NavUserData }) {
           orientation="vertical"
           className="mx-1 my-auto hidden h-6 sm:block"
         />
-        <NavUser user={user} />
+        <div className="hidden md:block">
+          <NavUser user={user} />
+        </div>
       </div>
     </header>
   )

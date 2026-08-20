@@ -39,7 +39,18 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           }}
         >
           <PresenceHeartbeat />
-          <AppSidebar showAdminNav={sessionUser.canAccessAdmin} />
+          <AppSidebar
+            showAdminNav={sessionUser.canAccessAdmin}
+            user={{
+              name: sessionUser.name,
+              title: sessionUser.title,
+              email: sessionUser.email,
+              avatarUrl: sessionUser.avatarUrl,
+              initials: sessionUser.initials,
+              appearOffline: sessionUser.appearOffline,
+              online: sessionUser.online,
+            }}
+          />
           <SidebarInset>
             <SiteHeader
               user={{

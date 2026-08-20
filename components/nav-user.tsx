@@ -32,7 +32,13 @@ const links = [
   { label: "Support", href: "/intel", icon: LifeBuoy },
 ]
 
-export function NavUser({ user }: { user: NavUserData }) {
+export function NavUser({
+  user,
+  variant = "header",
+}: {
+  user: NavUserData
+  variant?: "header" | "sidebar"
+}) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [appearOffline, setAppearOfflineState] = useState(user.appearOffline)
@@ -78,22 +84,51 @@ export function NavUser({ user }: { user: NavUserData }) {
     })
   }
 
+  const isSidebar = variant === "sidebar"
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="flex items-center gap-2 rounded-full py-1 pr-2 pl-1 outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
-        <Avatar className="size-8">
+      <PopoverTrigger
+        className={cn(
+          "flex items-center gap-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+          isSidebar
+            ? "w-full rounded-lg px-2 py-2 hover:bg-sidebar-accent focus-visible:ring-sidebar-ring"
+            : "rounded-full py-1 pr-2 pl-1 hover:bg-accent",
+        )}
+      >
+        <Avatar className="size-8 shrink-0">
           {user.avatarUrl ? (
             <AvatarImage src={user.avatarUrl} alt="" />
           ) : null}
           <AvatarFallback>{user.initials}</AvatarFallback>
         </Avatar>
-        <span className="hidden text-sm font-medium sm:inline-block">
-          {user.name}
-        </span>
-        <ChevronDown className="hidden size-4 text-muted-foreground sm:inline-block" />
+        {isSidebar ? (
+          <>
+            <div className="flex min-w-0 flex-1 flex-col leading-tight text-left">
+              <span className="truncate text-sm font-medium text-sidebar-foreground">
+                {user.name}
+              </span>
+              <span className="truncate text-xs text-sidebar-foreground/60">
+                {user.title || user.email}
+              </span>
+            </div>
+            <ChevronDown className="size-4 shrink-0 text-sidebar-foreground/60" />
+          </>
+        ) : (
+          <>
+            <span className="hidden text-sm font-medium sm:inline-block">
+              {user.name}
+            </span>
+            <ChevronDown className="hidden size-4 text-muted-foreground sm:inline-block" />
+          </>
+        )}
       </PopoverTrigger>
       {open ? (
-        <PopoverContent align="end" className="w-60 gap-0 p-0">
+        <PopoverContent
+          align={isSidebar ? "start" : "end"}
+          side="bottom"
+          className="w-60 gap-0 p-0"
+        >
           <div className="flex items-center gap-2.5 p-3">
             <Avatar className="size-9">
               {user.avatarUrl ? (

@@ -29,6 +29,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { AvailabilityCard } from "@/components/availability-card"
+import { NavUser, type NavUserData } from "@/components/nav-user"
 import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { useRoomsUnreadCount } from "@/lib/rooms/hooks/use-rooms-unread-count"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
@@ -187,8 +188,12 @@ function FlatNavItem({
 
 export function AppSidebar({
   showAdminNav,
+  user,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { showAdminNav: boolean }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  showAdminNav: boolean
+  user: NavUserData
+}) {
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
   const { unreadCount: messagesUnreadCount } = useUnreadCount()
@@ -225,6 +230,10 @@ export function AppSidebar({
           </div>
         </Link>
       </SidebarHeader>
+
+      <div className="border-b border-sidebar-border px-2 py-2 md:hidden">
+        <NavUser user={user} variant="sidebar" />
+      </div>
 
       <SidebarContent>
         <SidebarGroup>
