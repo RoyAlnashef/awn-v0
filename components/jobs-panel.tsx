@@ -87,9 +87,8 @@ export function JobsPanel() {
             ) : null}
           </SheetHeader>
 
-          <UrgentJobsCarousel enabled={open} />
-
           <ScrollArea className="min-h-0 flex-1">
+            <UrgentJobsCarousel enabled={open} />
             <JobsNotificationsList items={items} onToggleRead={toggleRead} />
           </ScrollArea>
 

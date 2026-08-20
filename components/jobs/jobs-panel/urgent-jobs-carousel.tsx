@@ -43,7 +43,7 @@ export function UrgentJobsCarousel({
 
   return (
     <>
-      <section className="shrink-0 border-b py-3">
+      <section className="border-b py-3">
         <h3 className="mb-3 px-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Urgent jobs
         </h3>
