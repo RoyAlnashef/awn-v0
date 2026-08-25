@@ -39,7 +39,7 @@ export function RoomsView({
   popout?: boolean
 }) {
   const router = useRouter()
-  const { sortedRooms, rooms, toggleJoin, markRoomRead, getRoom, isLoading } =
+  const { sortedRooms, rooms, toggleJoin, toggleMute, markRoomRead, getRoom, isLoading } =
     useRooms()
   const [active, setActive] = useState<Room | null>(null)
   const [composerShareJobId, setComposerShareJobId] = useState(
@@ -174,6 +174,8 @@ export function RoomsView({
             isLoading={isLoading}
             onSelectRoom={selectRoom}
             onToggleJoin={handleToggleJoin}
+            onToggleMute={toggleMute}
+            onLeave={handleToggleJoin}
           />
         </div>
 
@@ -193,7 +195,6 @@ export function RoomsView({
               onShareMemberConsumed={clearShareMemberFromUrl}
               onBack={() => setActive(null)}
               onJoin={() => handleToggleJoin(activeRoom.id)}
-              onLeave={() => handleToggleJoin(activeRoom.id)}
             />
           ) : (
             <Empty className="flex-1 border-none">

@@ -125,7 +125,6 @@ export function RoomThread({
   onShareMemberConsumed,
   onBack,
   onJoin,
-  onLeave,
 }: {
   room: Room
   initialShareJobId?: string
@@ -134,7 +133,6 @@ export function RoomThread({
   onShareMemberConsumed?: () => void
   onBack?: () => void
   onJoin?: () => void | Promise<void>
-  onLeave?: () => void | Promise<void>
 }) {
   const { currentUser, setActiveRoomId } = useRooms()
 
@@ -163,9 +161,7 @@ export function RoomThread({
   const [loadingMemberShare, setLoadingMemberShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [sentScrollToken, setSentScrollToken] = useState(0)
-  const [pendingAction, setPendingAction] = useState<"join" | "leave" | null>(
-    null,
-  )
+  const [pendingAction, setPendingAction] = useState<"join" | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profilePerson, setProfilePerson] = useState<Person | null>(null)
   const [profileOnline, setProfileOnline] = useState<boolean | undefined>(
@@ -226,19 +222,6 @@ export function RoomThread({
     setPendingAction("join")
     try {
       await onJoin()
-      if (usesServer) {
-        void mutateSwr(roomMembersPreviewKey(room.id))
-      }
-    } finally {
-      setPendingAction(null)
-    }
-  }
-
-  async function handleLeave() {
-    if (pendingAction || !onLeave) return
-    setPendingAction("leave")
-    try {
-      await onLeave()
       if (usesServer) {
         void mutateSwr(roomMembersPreviewKey(room.id))
       }
@@ -644,22 +627,9 @@ export function RoomThread({
           <Button size="sm" className="shrink-0" disabled>
             Joining…
           </Button>
-        ) : pendingAction === "leave" ? (
-          <Button size="sm" variant="outline" className="shrink-0" disabled>
-            Leaving…
-          </Button>
         ) : !room.joined ? (
           <Button size="sm" className="shrink-0" onClick={handleJoin}>
             Join
-          </Button>
-        ) : !room.isDefault ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0"
-            onClick={handleLeave}
-          >
-            Leave
           </Button>
         ) : null}
       </header>

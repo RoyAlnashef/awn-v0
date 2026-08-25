@@ -52,6 +52,8 @@ export type RoomRecord = {
   /** Whether there are unread messages for the current user (only relevant when joined). */
   unread: boolean
   unreadCount: number
+  /** Whether the current user has muted this room. */
+  muted: boolean
 }
 
 type ActionError = { ok: false; error: string }
@@ -59,6 +61,8 @@ type ActionError = { ok: false; error: string }
 export type ListRoomsResult = { ok: true; rooms: RoomRecord[] } | ActionError
 export type JoinRoomResult = { ok: true } | ActionError
 export type LeaveRoomResult = { ok: true } | ActionError
+export type MuteRoomResult = { ok: true } | ActionError
+export type UnmuteRoomResult = { ok: true } | ActionError
 export type MarkRoomReadResult = { ok: true } | ActionError
 export type UnreadCountResult = { ok: true; count: number } | ActionError
 
@@ -123,6 +127,7 @@ type RoomRpcRow = {
   last_message_at: string | null
   last_message_sender_id: string | null
   unread_count: number
+  muted: boolean
 }
 
 type ThreadRpcMessage = ReplyRpcRow &
@@ -245,8 +250,10 @@ function rpcRowToRoomRecord(row: RoomRpcRow, userId: string): RoomRecord {
   const time = row.last_message_at
     ? formatRelativeTime(row.last_message_at)
     : ""
+  const muted = row.muted ?? false
   const unread =
     row.joined &&
+    !muted &&
     row.unread_count > 0 &&
     row.last_message_sender_id !== userId
 
@@ -264,6 +271,7 @@ function rpcRowToRoomRecord(row: RoomRpcRow, userId: string): RoomRecord {
     time,
     unread,
     unreadCount: row.unread_count,
+    muted,
   }
 }
 
@@ -331,6 +339,48 @@ export async function leaveRoom(roomId: string): Promise<LeaveRoomResult> {
     const { error } = await supabase
       .from("room_memberships")
       .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function muteRoom(roomId: string): Promise<MuteRoomResult> {
+  try {
+    if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from("room_memberships")
+      .update({ muted_at: new Date().toISOString() })
+      .eq("room_id", roomId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function unmuteRoom(roomId: string): Promise<UnmuteRoomResult> {
+  try {
+    if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from("room_memberships")
+      .update({ muted_at: null })
       .eq("room_id", roomId)
       .eq("profile_id", userId)
 

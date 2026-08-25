@@ -14,6 +14,8 @@ import {
   joinRoom,
   leaveRoom,
   markRoomRead as markRoomReadAction,
+  muteRoom,
+  unmuteRoom,
 } from "@/lib/rooms/actions"
 import { resolveRoomEmoji } from "@/lib/rooms/emoji"
 import { useRoomsList } from "@/lib/rooms/hooks/use-rooms-list"
@@ -41,6 +43,7 @@ type RoomsContextValue = {
   activeRoomId: string | null
   setActiveRoomId: (id: string | null) => void
   toggleJoin: (id: string) => Promise<void>
+  toggleMute: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>
   markRoomRead: (id: string) => void
   getRoom: (id: string) => Room | undefined
 }
@@ -72,6 +75,7 @@ export function RoomsProvider({
         unread: r.unread,
         unreadCount: r.unreadCount,
         isDefault: r.isDefault,
+        muted: r.muted,
       }))
     }
     return []
@@ -134,6 +138,26 @@ export function RoomsProvider({
     return Promise.resolve()
   }, [serverRooms])
 
+  const toggleMute = useCallback((id: string): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const room = serverRooms.find((r) => r.id === id)
+    if (!room || !room.joined) {
+      return Promise.resolve({ ok: false, error: "Room not joined." })
+    }
+
+    if (!isUuid(id)) {
+      return Promise.resolve({ ok: false, error: "Invalid room id." })
+    }
+
+    const action = room.muted ? unmuteRoom(id) : muteRoom(id)
+    return action.then((result) => {
+      if (result.ok) {
+        void mutateSwr(roomsListKey)
+        void mutateSwr(roomsUnreadCountKey)
+      }
+      return result
+    })
+  }, [serverRooms])
+
   const markRoomRead = useCallback((id: string) => {
     // Optimistic: SWR will revalidate to confirm
     if (isUuid(id)) {
@@ -160,6 +184,7 @@ export function RoomsProvider({
         activeRoomId,
         setActiveRoomId,
         toggleJoin,
+        toggleMute,
         markRoomRead,
         getRoom,
       }}

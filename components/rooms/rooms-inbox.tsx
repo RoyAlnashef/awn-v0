@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Check, Search } from "lucide-react"
+import { useEffect, useMemo, useState, type MouseEvent } from "react"
+import { BellOff, Search } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
@@ -9,24 +9,56 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
+import { RoomActionsDropdown } from "@/components/rooms/room-actions-dropdown"
 import { RoomsInboxSkeleton } from "@/components/rooms/rooms-inbox-skeleton"
+
+type ToggleMuteResult = { ok: true } | { ok: false; error: string }
 
 export function RoomsInbox({
   activeId,
   rooms,
   onSelectRoom,
   onToggleJoin,
+  onToggleMute,
+  onLeave,
   isLoading = false,
   className,
 }: {
   activeId?: string
   rooms: Room[]
   onSelectRoom?: (room: Room) => void
-  onToggleJoin?: (roomId: string) => void
+  onToggleJoin?: (roomId: string) => void | Promise<void>
+  onToggleMute?: (roomId: string) => Promise<ToggleMuteResult>
+  onLeave?: (roomId: string) => void | Promise<void>
   isLoading?: boolean
   className?: string
 }) {
   const [query, setQuery] = useState("")
+  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!joiningRoomId) return
+    const joined = rooms.some((r) => r.id === joiningRoomId && r.joined)
+    if (joined) setJoiningRoomId(null)
+  }, [rooms, joiningRoomId])
+
+  useEffect(() => {
+    if (!joiningRoomId) return
+    const timeout = window.setTimeout(() => setJoiningRoomId(null), 15000)
+    return () => window.clearTimeout(timeout)
+  }, [joiningRoomId])
+
+  async function handleJoinClick(e: MouseEvent, roomId: string) {
+    e.stopPropagation()
+    if (joiningRoomId || !onToggleJoin) return
+    setJoiningRoomId(roomId)
+    try {
+      await onToggleJoin(roomId)
+    } catch {
+      setJoiningRoomId(null)
+    }
+  }
 
   const q = query.trim().toLowerCase()
 
@@ -73,6 +105,7 @@ export function RoomsInbox({
           <ul className="flex flex-col">
             {filteredRooms.map((room) => {
               const active = activeId === room.id
+              const isJoining = joiningRoomId === room.id
               return (
                 <li key={room.id}>
                   <div
@@ -117,25 +150,36 @@ export function RoomsInbox({
                       </div>
                     </button>
 
-                    <Button
-                      size="sm"
-                      variant={room.joined ? "outline" : "default"}
-                      className="shrink-0"
-                      aria-pressed={room.joined}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onToggleJoin?.(room.id)
-                      }}
-                    >
-                      {room.joined ? (
-                        <>
-                          <Check className="size-3.5" />
-                          Joined
-                        </>
-                      ) : (
-                        "Join"
-                      )}
-                    </Button>
+                    {room.joined ? (
+                      <div className="flex shrink-0 items-center gap-1">
+                        {room.muted ? (
+                          <BellOff
+                            className="size-3.5 shrink-0 text-muted-foreground/50"
+                            aria-label="Muted"
+                          />
+                        ) : null}
+                        <RoomActionsDropdown
+                          room={room}
+                          onToggleMute={onToggleMute}
+                          onLeave={onLeave}
+                        />
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="shrink-0 min-w-14"
+                        disabled={isJoining}
+                        aria-busy={isJoining}
+                        onClick={(e) => void handleJoinClick(e, room.id)}
+                      >
+                        {isJoining ? (
+                          <Spinner className="size-3.5" />
+                        ) : (
+                          "Join"
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </li>
               )

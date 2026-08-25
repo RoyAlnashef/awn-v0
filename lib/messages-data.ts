@@ -119,6 +119,8 @@ export interface Room {
   unreadCount?: number
   /** True for rooms that all members are auto-joined to (e.g. General). Cannot be left. */
   isDefault?: boolean
+  /** Whether the current user has muted notifications for this room. */
+  muted?: boolean
 }
 
 export const directConversations: DirectConversation[] = [

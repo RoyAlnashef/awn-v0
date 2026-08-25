@@ -19,7 +19,7 @@ import { useRooms } from "@/components/rooms/rooms-provider"
 export function Rooms() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const { sortedRooms, unreadCount, toggleJoin, markRoomRead, isLoading } =
+  const { sortedRooms, unreadCount, toggleJoin, toggleMute, markRoomRead, isLoading } =
     useRooms()
 
   function navigateToRoom(roomId: string) {
@@ -27,16 +27,18 @@ export function Rooms() {
     router.push(`/rooms?room=${roomId}`)
   }
 
-  function handleToggleJoin(id: string) {
+  function handleToggleJoin(id: string): Promise<void> {
     const room = sortedRooms.find((r) => r.id === id)
-    if (!room) return
+    if (!room) return Promise.resolve()
 
     const joining = !room.joined
-    toggleJoin(id)
+    const togglePromise = toggleJoin(id)
 
     if (joining) {
       navigateToRoom(id)
     }
+
+    return togglePromise
   }
 
   function handleSelectRoom(room: Room) {
@@ -90,6 +92,8 @@ export function Rooms() {
             isLoading={isLoading}
             onSelectRoom={handleSelectRoom}
             onToggleJoin={handleToggleJoin}
+            onToggleMute={toggleMute}
+            onLeave={handleToggleJoin}
           />
         </SheetContent>
       ) : null}
