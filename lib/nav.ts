@@ -4,7 +4,6 @@ import {
   Contact,
   MessagesSquare,
   Group,
-  Compass,
   UserCheck,
   Building2,
   Store,
@@ -76,13 +75,6 @@ export const mainNav: NavItem[] = [
       "Discipline-specific community channels for touring crew.",
     icon: Group,
     liveBadge: "rooms",
-  },
-  {
-    title: "Intel",
-    href: "/intel",
-    description:
-      "Venue notes, route intel, and the word on the street from the road.",
-    icon: Compass,
   },
 ]
 
