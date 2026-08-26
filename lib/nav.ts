@@ -5,14 +5,8 @@ import {
   MessagesSquare,
   Group,
   UserCheck,
-  Building2,
-  Store,
   ClipboardList,
   MailPlus,
-  Handshake,
-  MessageSquareText,
-  ListChecks,
-  Mail,
   type LucideIcon,
 } from "lucide-react"
 
@@ -87,18 +81,6 @@ export const adminNav: NavItem[] = [
     badge: "6",
   },
   {
-    title: "Employers",
-    href: "/employers",
-    description: "Production companies and promoters posting work on AWN.",
-    icon: Building2,
-  },
-  {
-    title: "Vendors",
-    href: "/vendors",
-    description: "Gear houses, transport, and service providers on the network.",
-    icon: Store,
-  },
-  {
     title: "Applications",
     href: "/applications",
     description: "Review membership applications and verify new crew.",
@@ -109,30 +91,6 @@ export const adminNav: NavItem[] = [
     href: "/invites",
     description: "Track sent invitations and manage pending referrals.",
     icon: MailPlus,
-  },
-  {
-    title: "Partnerships",
-    href: "/partnerships",
-    description: "Brand deals, sponsorships, and industry partnerships.",
-    icon: Handshake,
-  },
-  {
-    title: "Feedback",
-    href: "/feedback",
-    description: "Member feedback, feature requests, and bug reports.",
-    icon: MessageSquareText,
-  },
-  {
-    title: "The List",
-    href: "/the-list",
-    description: "The curated shortlist of vetted, top-tier touring crew.",
-    icon: ListChecks,
-  },
-  {
-    title: "Email",
-    href: "/email",
-    description: "Compose and manage broadcast emails to the network.",
-    icon: Mail,
   },
 ]
 
