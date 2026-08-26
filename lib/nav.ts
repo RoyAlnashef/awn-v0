@@ -42,7 +42,6 @@ export const mainNav: NavItem[] = [
     description:
       "Open calls, tour gigs, and one-off shifts matched to your skills.",
     icon: Briefcase,
-    badge: "12",
     items: [
       { title: "My Jobs", href: "/my-jobs/created" },
       { title: "My Applications", href: "/my-jobs/applications" },
@@ -78,7 +77,6 @@ export const adminNav: NavItem[] = [
     href: "/users",
     description: "Review, verify, and manage member accounts and invites.",
     icon: UserCheck,
-    badge: "6",
   },
   {
     title: "Applications",
