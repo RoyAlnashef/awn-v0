@@ -3,8 +3,10 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 
-const PUBLIC_PREFIXES = ["/login", "/auth/callback"]
-const PUBLIC_PATHS = ["/login/forgot-password"]
+const PUBLIC_PREFIXES = ["/login", "/auth/callback", "/apply"]
+const PUBLIC_PATHS = ["/login/forgot-password", "/login/reset-password"]
+
+const PENDING_GATE_EXEMPT_PREFIXES = ["/pending", "/apply", "/auth/callback", "/api"]
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.includes(pathname)) {
@@ -17,6 +19,12 @@ function isPublicPath(pathname: string) {
     }
     return pathname === prefix || pathname.startsWith(`${prefix}/`)
   })
+}
+
+function isPendingGateExempt(pathname: string) {
+  return PENDING_GATE_EXEMPT_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
 }
 
 export async function updateSession(request: NextRequest) {
@@ -34,24 +42,22 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           )
           supabaseResponse = NextResponse.next({
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           )
           Object.entries(headers).forEach(([key, value]) =>
-            supabaseResponse.headers.set(key, value)
+            supabaseResponse.headers.set(key, value),
           )
         },
       },
-    }
+    },
   )
 
-  // Refresh the auth token. Do not add logic between createServerClient and
-  // getClaims() — it can cause intermittent logouts.
   await supabase.auth.getClaims()
 
   const {
@@ -75,10 +81,43 @@ export async function updateSession(request: NextRequest) {
 
   if (hasSession && pathname === "/login") {
     const url = request.nextUrl.clone()
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_approved")
+      .eq("id", user!.id)
+      .maybeSingle()
+
+    if (profile && profile.is_approved === false) {
+      url.pathname = "/pending"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
+
     const next = safeRedirectPath(request.nextUrl.searchParams.get("next"))
     url.pathname = next
     url.search = ""
     return NextResponse.redirect(url)
+  }
+
+  if (
+    hasSession &&
+    user &&
+    !isPublicPath(pathname) &&
+    !isPendingGateExempt(pathname)
+  ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_approved")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (profile && profile.is_approved === false) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/pending"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

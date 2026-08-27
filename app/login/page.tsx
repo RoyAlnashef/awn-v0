@@ -14,6 +14,9 @@ export default async function LoginPage({
   const params = await searchParams
   const sessionUser = await getSessionUser()
   if (sessionUser) {
+    if (!sessionUser.isApproved) {
+      redirect("/pending")
+    }
     redirect(safeRedirectPath(params.next))
   }
 

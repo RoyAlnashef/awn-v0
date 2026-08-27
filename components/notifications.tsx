@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { Bell, Check } from "lucide-react"
 
+import { notificationIcons } from "@/lib/notifications-data"
 import {
-  notifications as initialNotifications,
-  notificationIcons,
-} from "@/lib/notifications-data"
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "@/lib/notifications/actions"
+import { useNotifications } from "@/lib/notifications/hooks/use-notifications"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,17 +23,45 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function Notifications() {
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState(initialNotifications)
-  const unreadCount = items.filter((n) => !n.read).length
+  const { notifications, mutate, isLoading } = useNotifications()
+  const unreadCount = notifications.filter((n) => !n.read).length
 
-  function markAllRead() {
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })))
+  async function markAllRead() {
+    const previous = notifications
+
+    await mutate(
+      previous.map((n) => ({ ...n, read: true })),
+      { revalidate: false },
+    )
+
+    const result = await markAllNotificationsRead()
+    if (!result.ok) {
+      await mutate(previous, { revalidate: false })
+      return
+    }
+
+    void mutate()
   }
 
-  function toggleRead(id: string) {
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n)),
+  async function toggleRead(id: string) {
+    const item = notifications.find((n) => n.id === id)
+    if (!item) return
+
+    const nextRead = !item.read
+    const previous = notifications
+
+    await mutate(
+      previous.map((n) => (n.id === id ? { ...n, read: nextRead } : n)),
+      { revalidate: false },
     )
+
+    const result = await markNotificationRead(id, nextRead)
+    if (!result.ok) {
+      await mutate(previous, { revalidate: false })
+      return
+    }
+
+    void mutate()
   }
 
   return (
@@ -77,7 +107,7 @@ export function Notifications() {
                 variant="ghost"
                 size="sm"
                 className="h-auto px-2 py-1 text-xs"
-                onClick={markAllRead}
+                onClick={() => void markAllRead()}
               >
                 <Check className="size-3.5" />
                 Mark all read
@@ -86,73 +116,83 @@ export function Notifications() {
           </SheetHeader>
 
           <ScrollArea className="min-h-0 flex-1">
-            <ul className="flex flex-col">
-              {items.map((n) => {
-                const Icon = notificationIcons[n.kind]
-                return (
-                  <li key={n.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggleRead(n.id)}
-                      aria-label={
-                        n.read
-                          ? `${n.title}. Mark as unread.`
-                          : `${n.title}. Mark as read.`
-                      }
-                      className={cn(
-                        "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                        !n.read && "bg-notification/6",
-                      )}
-                    >
-                      {!n.read ? (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-y-0 left-0 w-0.5 bg-notification"
-                        />
-                      ) : null}
-
-                      <span
-                        className={cn(
-                          "flex size-9 shrink-0 items-center justify-center rounded-full",
+            {isLoading && notifications.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                Loading notifications…
+              </p>
+            ) : notifications.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                No notifications yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col">
+                {notifications.map((n) => {
+                  const Icon = notificationIcons[n.kind]
+                  return (
+                    <li key={n.id}>
+                      <button
+                        type="button"
+                        onClick={() => void toggleRead(n.id)}
+                        aria-label={
                           n.read
-                            ? "bg-muted text-muted-foreground"
-                            : "bg-notification/15 text-notification",
+                            ? `${n.title}. Mark as unread.`
+                            : `${n.title}. Mark as read.`
+                        }
+                        className={cn(
+                          "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",
+                          !n.read && "bg-notification/6",
                         )}
                       >
-                        <Icon className="size-4" />
-                      </span>
+                        {!n.read ? (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-y-0 left-0 w-0.5 bg-notification"
+                          />
+                        ) : null}
 
-                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <p
-                            className={cn(
-                              "text-sm leading-snug text-pretty",
-                              n.read
-                                ? "font-normal text-muted-foreground"
-                                : "font-medium text-foreground",
-                            )}
-                          >
-                            {n.title}
-                          </p>
-                          {!n.read ? (
-                            <span
-                              aria-hidden="true"
-                              className="mt-1.5 size-2 shrink-0 rounded-full bg-notification"
-                            />
-                          ) : null}
-                        </div>
-                        <p className="line-clamp-2 text-xs leading-snug text-muted-foreground text-pretty">
-                          {n.body}
-                        </p>
-                        <span className="mt-0.5 text-[11px] text-muted-foreground/80">
-                          {n.time}
+                        <span
+                          className={cn(
+                            "flex size-9 shrink-0 items-center justify-center rounded-full",
+                            n.read
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-notification/15 text-notification",
+                          )}
+                        >
+                          <Icon className="size-4" />
                         </span>
-                      </div>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p
+                              className={cn(
+                                "text-sm leading-snug text-pretty",
+                                n.read
+                                  ? "font-normal text-muted-foreground"
+                                  : "font-medium text-foreground",
+                              )}
+                            >
+                              {n.title}
+                            </p>
+                            {!n.read ? (
+                              <span
+                                aria-hidden="true"
+                                className="mt-1.5 size-2 shrink-0 rounded-full bg-notification"
+                              />
+                            ) : null}
+                          </div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground text-pretty">
+                            {n.body}
+                          </p>
+                          <span className="mt-0.5 text-[11px] text-muted-foreground/80">
+                            {n.time}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </ScrollArea>
 
           <div className="shrink-0 border-t p-3">

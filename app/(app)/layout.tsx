@@ -18,6 +18,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/login")
   }
 
+  if (!sessionUser.isApproved) {
+    redirect("/pending")
+  }
+
   const cookieStore = await cookies()
   const sidebarState = cookieStore.get("sidebar_state")?.value
   const defaultOpen = sidebarState !== "false"

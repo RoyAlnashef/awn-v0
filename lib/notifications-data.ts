@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react"
 import {
   Briefcase,
   CalendarClock,
+  Mail,
   MessageSquare,
   ShieldCheck,
   UserPlus,
@@ -13,13 +14,14 @@ export type NotificationKind =
   | "connection"
   | "verification"
   | "deadline"
+  | "invite"
 
 export interface AppNotification {
   id: string
   kind: NotificationKind
   title: string
   body: string
-  /** Relative time label for placeholder display. */
+  /** Relative time label (e.g. 12m, 2h, 3d). */
   time: string
   read: boolean
 }
@@ -30,55 +32,14 @@ export const notificationIcons: Record<NotificationKind, LucideIcon> = {
   connection: UserPlus,
   verification: ShieldCheck,
   deadline: CalendarClock,
+  invite: Mail,
 }
 
-export const notifications: AppNotification[] = [
-  {
-    id: "1",
-    kind: "job",
-    title: "New role matches your profile",
-    body: "Monitor Engineer — Neon Tide, European Leg. Posted by Priya Anand.",
-    time: "12m ago",
-    read: false,
-  },
-  {
-    id: "2",
-    kind: "message",
-    title: "Marcus Bell sent you a message",
-    body: "“Are you around for the Ultraviolet stadium run in September?”",
-    time: "40m ago",
-    read: false,
-  },
-  {
-    id: "3",
-    kind: "connection",
-    title: "Sofia Marín wants to connect",
-    body: "Production Manager · 47 vouches · worked on Golden Hour.",
-    time: "2h ago",
-    read: false,
-  },
-  {
-    id: "4",
-    kind: "verification",
-    title: "Credit verified",
-    body: "Your role on Cassette Kids — World Tour was confirmed by the TM.",
-    time: "Yesterday",
-    read: true,
-  },
-  {
-    id: "5",
-    kind: "deadline",
-    title: "Application closing soon",
-    body: "Lighting Director — Sable Residency closes in 2 days.",
-    time: "Yesterday",
-    read: true,
-  },
-  {
-    id: "6",
-    kind: "message",
-    title: "Aisha Khan replied in Riverbend crew",
-    body: "“Load-in got pushed to 7am — heads up everyone.”",
-    time: "2d ago",
-    read: true,
-  },
-]
+const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
+
+/** Maps DB kind strings to UI icon/display kind. */
+export function notificationDisplayKind(kind: string): NotificationKind {
+  if (INVITE_DB_KINDS.has(kind)) return "invite"
+  if (kind in notificationIcons) return kind as NotificationKind
+  return "message"
+}
