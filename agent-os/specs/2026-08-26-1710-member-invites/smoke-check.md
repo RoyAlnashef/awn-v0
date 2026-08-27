@@ -39,10 +39,15 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [ ] Valid token loads the apply form (no login required)
 - [ ] Invalid or expired token shows a clear error state
 - [ ] Rescinded token shows a clear error state
-- [ ] Form collects: password, full name, title, email (pre-filled from invite), resume upload, social links
+- [ ] Form is a 3-step wizard with progress indicator (Step X of 3, percentage bar)
+- [ ] **Step 1 — Credentials:** email (pre-filled, locked), password with show/hide, confirm password with show/hide
+- [ ] Confirm password must match password; Continue blocked if mismatch or password under 8 characters
+- [ ] **Step 2 — Professional info:** full name, title / role, resume upload (PDF)
+- [ ] **Step 3 — Social links:** website, Instagram, X/Twitter, LinkedIn, YouTube
+- [ ] At least two social links required (Continue/Submit blocked with fewer)
+- [ ] Back button navigates to previous step and preserves entered data
 - [ ] Email field is locked to the invited address (cannot change to a different email)
 - [ ] Resume upload accepts PDF; rejects unsupported file types
-- [ ] At least one social link is required (or per validation rules)
 - [ ] Submit creates auth account with password (no magic-link signup)
 - [ ] Submit creates `membership_applications` row with status **pending**
 - [ ] Submit links application to the originating `member_invites` row

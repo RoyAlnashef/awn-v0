@@ -25,6 +25,7 @@ import {
 } from "@/lib/invites/data"
 import { createNotification } from "@/lib/notifications/actions"
 import {
+  hasMinimumSocialLinks,
   normalizeSocialField,
   SOCIAL_FIELD_IDS,
   type SocialFieldId,
@@ -109,11 +110,6 @@ function normalizeSocialLinksInput(
   return normalized
 }
 
-function hasAtLeastOneSocialLink(
-  links: Record<SocialFieldId, string | null>,
-): boolean {
-  return SOCIAL_FIELD_IDS.some((id) => Boolean(links[id]))
-}
 
 function socialLinksToJson(
   links: Record<SocialFieldId, string | null>,
@@ -208,10 +204,10 @@ export async function submitApplication(
     }
 
     const socialLinks = normalizeSocialLinksInput(socialInput)
-    if (!hasAtLeastOneSocialLink(socialLinks)) {
+    if (!hasMinimumSocialLinks(socialLinks)) {
       return {
         ok: false,
-        error: "Add at least one social link so admins can verify you.",
+        error: "Add at least two social links so admins can verify you.",
       }
     }
 

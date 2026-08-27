@@ -16,6 +16,8 @@ export const SOCIAL_FIELD_IDS = [
 
 export type SocialFieldId = (typeof SOCIAL_FIELD_IDS)[number]
 
+export const MIN_SOCIAL_LINKS = 2
+
 export interface SocialLinkDisplay {
   id: SocialFieldId
   label: string
@@ -111,6 +113,23 @@ export function normalizeSocialField(
     default:
       return null
   }
+}
+
+export function countFilledSocialLinks(
+  input: Record<SocialFieldId, string | null | undefined>,
+): number {
+  let count = 0
+  for (const id of SOCIAL_FIELD_IDS) {
+    if (normalizeSocialField(id, input[id] ?? null)) count++
+  }
+  return count
+}
+
+export function hasMinimumSocialLinks(
+  input: Record<SocialFieldId, string | null | undefined>,
+  min = MIN_SOCIAL_LINKS,
+): boolean {
+  return countFilledSocialLinks(input) >= min
 }
 
 export function buildSocialHref(
