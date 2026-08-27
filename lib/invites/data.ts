@@ -112,3 +112,24 @@ export function countActiveInviteSlots(
     (invite) => invite.status === "pending" || invite.status === "accepted",
   ).length
 }
+
+export function getInviteQuota(
+  session: { canAccessAdmin: boolean },
+  slotsUsed: number,
+) {
+  if (session.canAccessAdmin) {
+    return {
+      unlimitedInvites: true as const,
+      slotsUsed,
+      slotsRemaining: null,
+      maxSlots: null,
+    }
+  }
+
+  return {
+    unlimitedInvites: false as const,
+    slotsUsed,
+    slotsRemaining: Math.max(0, MAX_MEMBER_INVITES - slotsUsed),
+    maxSlots: MAX_MEMBER_INVITES,
+  }
+}

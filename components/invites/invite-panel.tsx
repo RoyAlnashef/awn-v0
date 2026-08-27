@@ -62,9 +62,14 @@ function InviteRow({
 export function InvitePanel({ open }: { open: boolean }) {
   const [email, setEmail] = useState("")
   const [invites, setInvites] = useState<MemberInvite[]>([])
-  const [slotsRemaining, setSlotsRemaining] = useState(5)
+  const [unlimitedInvites, setUnlimitedInvites] = useState(false)
+  const [slotsRemaining, setSlotsRemaining] = useState<number | null>(5)
+  const [maxSlots, setMaxSlots] = useState<number | null>(5)
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  const atInviteLimit =
+    !unlimitedInvites && slotsRemaining !== null && slotsRemaining <= 0
 
   useEffect(() => {
     if (!open) return
@@ -77,7 +82,9 @@ export function InvitePanel({ open }: { open: boolean }) {
         return
       }
       setInvites(result.invites)
+      setUnlimitedInvites(result.unlimitedInvites)
       setSlotsRemaining(result.slotsRemaining)
+      setMaxSlots(result.maxSlots)
     })
   }, [open])
 
@@ -88,7 +95,9 @@ export function InvitePanel({ open }: { open: boolean }) {
         return
       }
       setInvites(result.invites)
+      setUnlimitedInvites(result.unlimitedInvites)
       setSlotsRemaining(result.slotsRemaining)
+      setMaxSlots(result.maxSlots)
     })
   }
 
@@ -125,7 +134,10 @@ export function InvitePanel({ open }: { open: boolean }) {
           <span className="font-medium">Invite people</span>
           <span className="text-muted-foreground">
             {" "}
-            · {slotsRemaining} of 5 remaining
+            ·{" "}
+            {unlimitedInvites
+              ? "Unlimited invites"
+              : `${slotsRemaining} of ${maxSlots} remaining`}
           </span>
         </p>
       </div>
@@ -142,12 +154,12 @@ export function InvitePanel({ open }: { open: boolean }) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="crew@example.com"
             required
-            disabled={slotsRemaining <= 0 || isPending}
+            disabled={atInviteLimit || isPending}
             className="min-w-0 flex-1"
           />
           <Button
             type="submit"
-            disabled={slotsRemaining <= 0 || isPending}
+            disabled={atInviteLimit || isPending}
             className="shrink-0"
           >
             <MailPlus data-icon="inline-start" />

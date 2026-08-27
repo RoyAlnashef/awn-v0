@@ -11,7 +11,7 @@ import {
 } from "@/lib/email/templates/invite-email"
 import {
   countActiveInviteSlots,
-  MAX_MEMBER_INVITES,
+  getInviteQuota,
   type AdminMemberInvite,
   type MemberInvite,
   type MemberInviteStatus,
@@ -30,8 +30,10 @@ export type ListMyInvitesResult =
   | {
       ok: true
       invites: MemberInvite[]
+      unlimitedInvites: boolean
       slotsUsed: number
-      slotsRemaining: number
+      slotsRemaining: number | null
+      maxSlots: number | null
     }
   | ActionError
 
@@ -141,12 +143,16 @@ export async function listMyInvites(): Promise<ListMyInvitesResult> {
 
     const invites = ((data ?? []) as InviteRow[]).map(mapInviteRow)
     const slotsUsed = countActiveInviteSlots(invites)
+    const sessionUser = await getSessionUser()
+    const quota = getInviteQuota(
+      { canAccessAdmin: sessionUser?.canAccessAdmin ?? false },
+      slotsUsed,
+    )
 
     return {
       ok: true,
       invites,
-      slotsUsed,
-      slotsRemaining: Math.max(0, MAX_MEMBER_INVITES - slotsUsed),
+      ...quota,
     }
   } catch (error) {
     return actionError(error)
@@ -189,7 +195,11 @@ export async function sendInvite(email: string): Promise<SendInviteResult> {
       return { ok: false, error: listResult.error }
     }
 
-    if (listResult.slotsRemaining <= 0) {
+    if (
+      !listResult.unlimitedInvites &&
+      listResult.slotsRemaining !== null &&
+      listResult.slotsRemaining <= 0
+    ) {
       return {
         ok: false,
         error: "You've used all 5 invite slots. Rescind a pending invite to free one.",

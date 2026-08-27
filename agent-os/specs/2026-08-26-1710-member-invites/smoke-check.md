@@ -4,9 +4,9 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 ## Prerequisites
 
-- [ ] Migration applied: `member_invites`, `membership_applications`, `notifications` tables exist
-- [ ] Migration applied: `profiles.is_approved` column exists; existing active members backfilled to `is_approved = true`
-- [ ] Migration applied: `pending` added to `user_status` enum
+- [x] Migration applied: `member_invites`, `membership_applications`, `notifications` tables exist
+- [x] Migration applied: `profiles.is_approved` column exists; existing active members backfilled to `is_approved = true`
+- [x] Migration applied: `pending` added to `user_status` enum
 - [ ] `.env.local` has `RESEND_API_KEY` and email sender configured
 - [ ] Supabase Storage bucket for resumes exists with appropriate policies
 - [ ] Test accounts ready:
@@ -26,6 +26,8 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [ ] Sending to the same email twice shows an error (duplicate active invite)
 - [ ] Invalid email format shows validation error
 - [ ] After 5 active invites, send button is disabled and slot counter shows 0 remaining
+- [ ] **Admin/Owner** drawer shows **"Unlimited invites"** (not "X of 5 remaining")
+- [ ] **Admin/Owner** can send more than 5 active invites; send button stays enabled
 - [ ] **Rescind** on a pending invite removes it from the list and returns the slot
 - [ ] Rescinded invite token no longer works on `/apply`
 - [ ] Resending to a previously rescinded email succeeds and uses a new token
