@@ -4,17 +4,25 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { ApplyFormSteps } from "@/components/apply/apply-form-steps"
+import {
+  APPLY_STEPS,
+  ApplyFormSteps,
+  REQUEST_ACCESS_STEPS,
+} from "@/components/apply/apply-form-steps"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { PasswordField } from "@/components/auth/password-field"
 import { SOCIAL_FIELD_ICONS } from "@/components/icons/social-brand-icons"
-import { submitApplication } from "@/lib/applications/actions"
+import {
+  submitApplication,
+  submitRequestAccessApplication,
+} from "@/lib/applications/actions"
 import { createClient } from "@/lib/supabase/client"
 import {
   hasMinimumSocialLinks,
   SOCIAL_FIELD_IDS,
   type SocialFieldId,
 } from "@/lib/social-links"
+import { isValidEmail } from "@/lib/validation/email"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -28,18 +36,24 @@ const SOCIAL_LABELS: Record<SocialFieldId, string> = {
   youtube: "YouTube",
 }
 
-export function ApplyForm({
-  token,
-  inviteeEmail,
-  inviterName,
-}: {
-  token: string
-  inviteeEmail: string
-  inviterName: string
-}) {
+type ApplyFormProps =
+  | {
+      mode: "invite"
+      token: string
+      inviteeEmail: string
+      inviterName: string
+    }
+  | {
+      mode: "request_access"
+    }
+
+export function ApplyForm(props: ApplyFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [currentStep, setCurrentStep] = useState(0)
+  const [email, setEmail] = useState(
+    props.mode === "invite" ? props.inviteeEmail : "",
+  )
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -53,7 +67,23 @@ export function ApplyForm({
     youtube: "",
   })
 
+  const isRequestAccess = props.mode === "request_access"
+  const steps = isRequestAccess ? REQUEST_ACCESS_STEPS : APPLY_STEPS
+  const signInEmail = isRequestAccess ? email.trim().toLowerCase() : props.inviteeEmail
+
   function validateCredentials(): boolean {
+    if (isRequestAccess) {
+      const normalizedEmail = email.trim().toLowerCase()
+      if (!normalizedEmail) {
+        toast.error("Email is required.")
+        return false
+      }
+      if (!isValidEmail(normalizedEmail)) {
+        toast.error("Enter a valid email address.")
+        return false
+      }
+    }
+
     if (password.length < MIN_PASSWORD_LENGTH) {
       toast.error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
       return false
@@ -115,18 +145,26 @@ export function ApplyForm({
 
     startTransition(async () => {
       const formData = new FormData()
-      formData.set("token", token)
       formData.set("password", password)
       formData.set("fullName", fullName)
       formData.set("title", title)
       formData.set("resume", resume)
+
+      if (isRequestAccess) {
+        formData.set("email", signInEmail)
+      } else {
+        formData.set("token", props.token)
+      }
 
       for (const id of SOCIAL_FIELD_IDS) {
         const value = socials[id].trim()
         if (value) formData.set(id, value)
       }
 
-      const result = await submitApplication(formData)
+      const result = isRequestAccess
+        ? await submitRequestAccessApplication(formData)
+        : await submitApplication(formData)
+
       if (!result.ok) {
         toast.error(result.error)
         return
@@ -134,7 +172,7 @@ export function ApplyForm({
 
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({
-        email: inviteeEmail,
+        email: signInEmail,
         password,
       })
 
@@ -152,7 +190,11 @@ export function ApplyForm({
 
   return (
     <AuthShell
-      subtitle={`${inviterName} invited you to apply for AWN membership.`}
+      subtitle={
+        isRequestAccess
+          ? "Apply for AWN membership. Every application is reviewed by hand."
+          : `${props.inviterName} invited you to apply for AWN membership.`
+      }
       footer="Membership is invite-only and reviewed manually by our team."
     >
       <ApplyFormSteps
@@ -160,12 +202,24 @@ export function ApplyForm({
         onBack={handleBack}
         onContinue={handleContinue}
         isPending={isPending}
+        steps={steps}
       >
         {currentStep === 0 ? (
           <div className="flex flex-col gap-4">
             <div className="grid gap-2">
               <Label htmlFor="apply-email">Email</Label>
-              <Input id="apply-email" value={inviteeEmail} readOnly disabled />
+              {isRequestAccess ? (
+                <Input
+                  id="apply-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  disabled={isPending}
+                />
+              ) : (
+                <Input id="apply-email" value={email} readOnly disabled />
+              )}
             </div>
 
             <PasswordField

@@ -151,15 +151,21 @@ export function ApplicationsTable({
                     </TableCell>
                     <TableCell>{application.title}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="size-7">
-                          <AvatarImage src={application.inviterAvatarUrl ?? undefined} />
-                          <AvatarFallback className="text-[10px]">
-                            {initials(application.inviterName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{application.inviterName}</span>
-                      </div>
+                      {application.source === "request_access" ? (
+                        <span className="text-sm text-muted-foreground">
+                          {application.inviterName}
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Avatar className="size-7">
+                            <AvatarImage src={application.inviterAvatarUrl ?? undefined} />
+                            <AvatarFallback className="text-[10px]">
+                              {initials(application.inviterName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{application.inviterName}</span>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {formatRelativeTime(application.createdAt)} ago

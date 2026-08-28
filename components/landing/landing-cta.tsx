@@ -18,7 +18,12 @@ export function LandingCta() {
         </h2>
         <p className="mt-4 text-sm text-muted-foreground">{cta.subtitle}</p>
 
-        <Button size="lg" type="button" aria-disabled className="mt-10 min-w-48">
+        <Button
+          size="lg"
+          className="mt-10 min-w-48"
+          nativeButton={false}
+          render={<Link href="/request-access" />}
+        >
           {cta.button}
           <ChevronRight data-icon="inline-end" />
         </Button>

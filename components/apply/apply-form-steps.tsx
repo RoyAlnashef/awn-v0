@@ -5,7 +5,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
-export const APPLY_STEPS = [
+export type ApplyFormStep = {
+  title: string
+  description: string
+}
+
+export const APPLY_STEPS: ApplyFormStep[] = [
   {
     title: "Create your account",
     description:
@@ -21,23 +26,34 @@ export const APPLY_STEPS = [
     description:
       "Add at least two links so admins can verify your online presence.",
   },
-] as const
+]
+
+export const REQUEST_ACCESS_STEPS: ApplyFormStep[] = [
+  {
+    title: "Create your account",
+    description: "Enter the email you want on your AWN account and set a password.",
+  },
+  APPLY_STEPS[1],
+  APPLY_STEPS[2],
+]
 
 export function ApplyFormSteps({
   currentStep,
   onBack,
   onContinue,
   isPending,
+  steps = APPLY_STEPS,
   children,
 }: {
   currentStep: number
   onBack: () => void
   onContinue: () => void
   isPending?: boolean
+  steps?: readonly ApplyFormStep[]
   children: React.ReactNode
 }) {
-  const total = APPLY_STEPS.length
-  const step = APPLY_STEPS[currentStep]
+  const total = steps.length
+  const step = steps[currentStep]
   const percent = ((currentStep + 1) / total) * 100
   const isLastStep = currentStep === total - 1
 

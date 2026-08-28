@@ -20,7 +20,9 @@ import {
 import {
   type ApplicationNoteVisibility,
   type MembershipApplication,
+  type MembershipApplicationSource,
   type MembershipApplicationStatus,
+  REQUEST_ACCESS_INVITER_LABEL,
   type SocialLinksInput,
 } from "@/lib/invites/data"
 import { createNotification } from "@/lib/notifications/actions"
@@ -30,6 +32,7 @@ import {
   SOCIAL_FIELD_IDS,
   type SocialFieldId,
 } from "@/lib/social-links"
+import { isValidEmail } from "@/lib/validation/email"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { unwrapOne } from "@/lib/supabase/unwrap-one"
@@ -70,7 +73,8 @@ export type ResumeSignedUrlResult =
 
 type ApplicationRow = {
   id: string
-  invite_id: string
+  invite_id: string | null
+  source: MembershipApplicationSource
   invitee_user_id: string | null
   full_name: string
   email: string
@@ -123,9 +127,12 @@ function socialLinksToJson(
 
 function mapApplicationRow(row: ApplicationRow): MembershipApplication {
   const inviter = row.invite?.inviter
+  const isRequestAccess = row.source === "request_access"
+
   return {
     id: row.id,
     inviteId: row.invite_id,
+    source: row.source,
     inviteeUserId: row.invitee_user_id,
     fullName: row.full_name,
     email: row.email,
@@ -137,10 +144,12 @@ function mapApplicationRow(row: ApplicationRow): MembershipApplication {
     noteVisibility: row.note_visibility,
     reviewedAt: row.reviewed_at,
     createdAt: row.created_at,
-    inviterId: row.invite?.inviter_id ?? "",
-    inviterName: inviter?.full_name?.trim() || "Member",
-    inviterEmail: inviter?.email ?? "",
-    inviterAvatarUrl: inviter?.avatar_url ?? null,
+    inviterId: isRequestAccess ? "" : (row.invite?.inviter_id ?? ""),
+    inviterName: isRequestAccess
+      ? REQUEST_ACCESS_INVITER_LABEL
+      : inviter?.full_name?.trim() || "Member",
+    inviterEmail: isRequestAccess ? "" : (inviter?.email ?? ""),
+    inviterAvatarUrl: isRequestAccess ? null : (inviter?.avatar_url ?? null),
   }
 }
 
@@ -175,41 +184,198 @@ async function uploadResume(
   return `${base}/storage/v1/object/${RESUME_BUCKET}/${path}`
 }
 
+type ParsedApplicationFields = {
+  password: string
+  fullName: string
+  title: string
+  resume: File
+  socialLinks: Record<SocialFieldId, string | null>
+}
+
+function parseApplicationFields(formData: FormData): ParsedApplicationFields | ActionError {
+  const password = String(formData.get("password") ?? "")
+  const fullName = String(formData.get("fullName") ?? "").trim()
+  const title = String(formData.get("title") ?? "").trim()
+  const resume = formData.get("resume")
+
+  if (!fullName) return { ok: false, error: "Full name is required." }
+  if (!title) return { ok: false, error: "Title is required." }
+  if (!password || password.length < 8) {
+    return { ok: false, error: "Password must be at least 8 characters." }
+  }
+  if (!(resume instanceof File) || resume.size === 0) {
+    return { ok: false, error: "Resume PDF is required." }
+  }
+
+  const socialInput: Record<string, string | undefined> = {}
+  for (const id of SOCIAL_FIELD_IDS) {
+    const value = formData.get(id)
+    if (typeof value === "string" && value.trim()) {
+      socialInput[id] = value
+    }
+  }
+
+  const socialLinks = normalizeSocialLinksInput(socialInput)
+  if (!hasMinimumSocialLinks(socialLinks)) {
+    return {
+      ok: false,
+      error: "Add at least two social links so admins can verify you.",
+    }
+  }
+
+  return { password, fullName, title, resume, socialLinks }
+}
+
+async function ensureEmailAvailableForApplication(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string,
+): Promise<ActionError | null> {
+  const { data: existingMember } = await admin
+    .from("profiles")
+    .select("id, is_approved")
+    .ilike("email", email)
+    .maybeSingle()
+
+  if (existingMember?.is_approved) {
+    return {
+      ok: false,
+      error: "This email already belongs to an active AWN member.",
+    }
+  }
+
+  const { data: pendingApplication } = await admin
+    .from("membership_applications")
+    .select("id")
+    .eq("status", "pending")
+    .ilike("email", email)
+    .maybeSingle()
+
+  if (pendingApplication) {
+    return {
+      ok: false,
+      error: "An application for this email is already pending review.",
+    }
+  }
+
+  return null
+}
+
+async function createMembershipApplication(input: {
+  email: string
+  password: string
+  fullName: string
+  title: string
+  resume: File
+  socialLinks: Record<SocialFieldId, string | null>
+  inviteId: string | null
+  source: MembershipApplicationSource
+}): Promise<SubmitApplicationResult & { userId?: string }> {
+  const admin = createAdminClient()
+  const email = input.email.trim().toLowerCase()
+
+  const emailAvailabilityError = await ensureEmailAvailableForApplication(admin, email)
+  if (emailAvailabilityError) {
+    return emailAvailabilityError
+  }
+
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
+    email,
+    password: input.password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: input.fullName,
+      application_flow: true,
+    },
+  })
+
+  if (authError) {
+    if (authError.message.toLowerCase().includes("already")) {
+      return {
+        ok: false,
+        error: "An account with this email already exists. Try signing in.",
+      }
+    }
+    return { ok: false, error: authError.message }
+  }
+
+  const userId = authData.user?.id
+  if (!userId) {
+    return { ok: false, error: "Account created but user id was missing." }
+  }
+
+  const { data: application, error: appError } = await admin
+    .from("membership_applications")
+    .insert({
+      invite_id: input.inviteId,
+      source: input.source,
+      invitee_user_id: userId,
+      full_name: input.fullName,
+      email,
+      title: input.title,
+      social_links: socialLinksToJson(input.socialLinks),
+      status: "pending",
+    })
+    .select("id")
+    .single()
+
+  if (appError) {
+    await admin.auth.admin.deleteUser(userId)
+    return { ok: false, error: appError.message }
+  }
+
+  let resumeUrl: string
+  try {
+    resumeUrl = await uploadResume(admin, application.id, input.resume)
+  } catch (uploadError) {
+    await admin.from("membership_applications").delete().eq("id", application.id)
+    await admin.auth.admin.deleteUser(userId)
+    return actionError(uploadError)
+  }
+
+  const { error: resumeUpdateError } = await admin
+    .from("membership_applications")
+    .update({ resume_url: resumeUrl })
+    .eq("id", application.id)
+
+  if (resumeUpdateError) {
+    return { ok: false, error: resumeUpdateError.message }
+  }
+
+  await admin.from("profiles").upsert({
+    id: userId,
+    email,
+    full_name: input.fullName,
+    title: input.title,
+    status: "pending",
+    role: "member",
+    is_approved: false,
+  })
+
+  const emailResult = await sendEmail({
+    to: email,
+    subject: applicationConfirmationSubject,
+    html: applicationConfirmationHtml(),
+  })
+
+  if (!emailResult.ok && process.env.NODE_ENV !== "development") {
+    console.error("[createMembershipApplication] confirmation email failed", emailResult.error)
+  }
+
+  revalidatePath("/invites")
+  revalidatePath("/applications")
+
+  return { ok: true, userId }
+}
+
 export async function submitApplication(
   formData: FormData,
 ): Promise<SubmitApplicationResult> {
   try {
     const token = String(formData.get("token") ?? "").trim()
-    const password = String(formData.get("password") ?? "")
-    const fullName = String(formData.get("fullName") ?? "").trim()
-    const title = String(formData.get("title") ?? "").trim()
-    const resume = formData.get("resume")
-
     if (!token) return { ok: false, error: "Invalid invite link." }
-    if (!fullName) return { ok: false, error: "Full name is required." }
-    if (!title) return { ok: false, error: "Title is required." }
-    if (!password || password.length < 8) {
-      return { ok: false, error: "Password must be at least 8 characters." }
-    }
-    if (!(resume instanceof File) || resume.size === 0) {
-      return { ok: false, error: "Resume PDF is required." }
-    }
 
-    const socialInput: Record<string, string | undefined> = {}
-    for (const id of SOCIAL_FIELD_IDS) {
-      const value = formData.get(id)
-      if (typeof value === "string" && value.trim()) {
-        socialInput[id] = value
-      }
-    }
-
-    const socialLinks = normalizeSocialLinksInput(socialInput)
-    if (!hasMinimumSocialLinks(socialLinks)) {
-      return {
-        ok: false,
-        error: "Add at least two social links so admins can verify you.",
-      }
-    }
+    const parsed = parseApplicationFields(formData)
+    if ("ok" in parsed) return parsed
 
     const admin = createAdminClient()
 
@@ -235,80 +401,34 @@ export async function submitApplication(
     }
 
     const email = invite.invitee_email.trim().toLowerCase()
-
-    const { data: existingMember } = await admin
-      .from("profiles")
-      .select("id, is_approved")
-      .ilike("email", email)
-      .maybeSingle()
-
-    if (existingMember?.is_approved) {
-      return {
-        ok: false,
-        error: "This email already belongs to an active AWN member.",
-      }
-    }
-
-    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+    const result = await createMembershipApplication({
       email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        application_flow: true,
-      },
+      password: parsed.password,
+      fullName: parsed.fullName,
+      title: parsed.title,
+      resume: parsed.resume,
+      socialLinks: parsed.socialLinks,
+      inviteId: invite.id,
+      source: "invite",
     })
 
-    if (authError) {
-      if (authError.message.toLowerCase().includes("already")) {
-        return {
-          ok: false,
-          error: "An account with this email already exists. Try signing in.",
-        }
-      }
-      return { ok: false, error: authError.message }
+    if (!result.ok) {
+      return result
     }
 
-    const userId = authData.user?.id
-    if (!userId) {
-      return { ok: false, error: "Account created but user id was missing." }
-    }
-
-    const { data: application, error: appError } = await admin
+    const { data: application } = await admin
       .from("membership_applications")
-      .insert({
-        invite_id: invite.id,
-        invitee_user_id: userId,
-        full_name: fullName,
-        email,
-        title,
-        social_links: socialLinksToJson(socialLinks),
-        status: "pending",
-      })
       .select("id")
-      .single()
+      .eq("invitee_user_id", result.userId!)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    if (appError) {
-      await admin.auth.admin.deleteUser(userId)
-      return { ok: false, error: appError.message }
-    }
-
-    let resumeUrl: string
-    try {
-      resumeUrl = await uploadResume(admin, application.id, resume)
-    } catch (uploadError) {
-      await admin.from("membership_applications").delete().eq("id", application.id)
-      await admin.auth.admin.deleteUser(userId)
-      return actionError(uploadError)
-    }
-
-    const { error: resumeUpdateError } = await admin
-      .from("membership_applications")
-      .update({ resume_url: resumeUrl })
-      .eq("id", application.id)
-
-    if (resumeUpdateError) {
-      return { ok: false, error: resumeUpdateError.message }
+    if (!application) {
+      return {
+        ok: false,
+        error: "Application was created but could not be linked to invite.",
+      }
     }
 
     const now = new Date().toISOString()
@@ -325,30 +445,37 @@ export async function submitApplication(
       return { ok: false, error: inviteUpdateError.message }
     }
 
-    await admin.from("profiles").upsert({
-      id: userId,
-      email,
-      full_name: fullName,
-      title,
-      status: "pending",
-      role: "member",
-      is_approved: false,
-    })
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
 
-    const emailResult = await sendEmail({
-      to: email,
-      subject: applicationConfirmationSubject,
-      html: applicationConfirmationHtml(),
-    })
-
-    if (!emailResult.ok && process.env.NODE_ENV !== "development") {
-      console.error("[submitApplication] confirmation email failed", emailResult.error)
+export async function submitRequestAccessApplication(
+  formData: FormData,
+): Promise<SubmitApplicationResult> {
+  try {
+    const email = String(formData.get("email") ?? "").trim().toLowerCase()
+    if (!email) return { ok: false, error: "Email is required." }
+    if (!isValidEmail(email)) {
+      return { ok: false, error: "Enter a valid email address." }
     }
 
-    revalidatePath("/invites")
-    revalidatePath("/applications")
+    const parsed = parseApplicationFields(formData)
+    if ("ok" in parsed) return parsed
 
-    return { ok: true }
+    const result = await createMembershipApplication({
+      email,
+      password: parsed.password,
+      fullName: parsed.fullName,
+      title: parsed.title,
+      resume: parsed.resume,
+      socialLinks: parsed.socialLinks,
+      inviteId: null,
+      source: "request_access",
+    })
+
+    return result.ok ? { ok: true } : result
   } catch (error) {
     return actionError(error)
   }
@@ -416,6 +543,7 @@ export async function listApplications(): Promise<ListApplicationsResult> {
         `
         id,
         invite_id,
+        source,
         invitee_user_id,
         full_name,
         email,
@@ -453,7 +581,8 @@ export async function listApplications(): Promise<ListApplicationsResult> {
 
         return mapApplicationRow({
           id: String(record.id),
-          invite_id: String(record.invite_id),
+          invite_id: (record.invite_id as string | null) ?? null,
+          source: (record.source as MembershipApplicationSource) ?? "invite",
           invitee_user_id: (record.invitee_user_id as string | null) ?? null,
           full_name: String(record.full_name),
           email: String(record.email),

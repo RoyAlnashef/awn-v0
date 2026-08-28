@@ -32,6 +32,7 @@ export default async function ApplyPage({
 
   return (
     <ApplyForm
+      mode="invite"
       token={token}
       inviteeEmail={result.invite.inviteeEmail}
       inviterName={result.invite.inviterName}

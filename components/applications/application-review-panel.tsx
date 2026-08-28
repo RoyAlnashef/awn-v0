@@ -107,20 +107,24 @@ export function ApplicationReviewPanel({
               <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 Invited by
               </h3>
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10">
-                  <AvatarImage src={application.inviterAvatarUrl ?? undefined} />
-                  <AvatarFallback>
-                    {initials(application.inviterName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{application.inviterName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {application.inviterEmail}
-                  </p>
+              {application.source === "request_access" ? (
+                <p className="text-sm text-muted-foreground">{application.inviterName}</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-10">
+                    <AvatarImage src={application.inviterAvatarUrl ?? undefined} />
+                    <AvatarFallback>
+                      {initials(application.inviterName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{application.inviterName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {application.inviterEmail}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </section>
 
             <section className="space-y-2">

@@ -16,7 +16,12 @@ export function LandingHero() {
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
-        <Button size="lg" type="button" aria-disabled className="min-w-40">
+        <Button
+          size="lg"
+          className="min-w-40"
+          nativeButton={false}
+          render={<Link href="/request-access" />}
+        >
           {hero.primaryCta}
         </Button>
         <Button

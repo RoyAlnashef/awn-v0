@@ -20,6 +20,7 @@ import { buildInviteApplyUrl } from "@/lib/invites/urls"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { unwrapOne } from "@/lib/supabase/unwrap-one"
+import { isValidEmail } from "@/lib/validation/email"
 
 export type ActionError = { ok: false; error: string }
 
@@ -95,10 +96,6 @@ function mapInviteRow(row: InviteRow): MemberInvite {
 
 function createInviteToken(): string {
   return randomBytes(24).toString("base64url")
-}
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 async function requireApprovedMember() {

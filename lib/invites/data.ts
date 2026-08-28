@@ -36,6 +36,16 @@ export const MEMBERSHIP_APPLICATION_STATUSES = [
 export type MembershipApplicationStatus =
   (typeof MEMBERSHIP_APPLICATION_STATUSES)[number]
 
+export const MEMBERSHIP_APPLICATION_SOURCES = [
+  "invite",
+  "request_access",
+] as const
+
+export type MembershipApplicationSource =
+  (typeof MEMBERSHIP_APPLICATION_SOURCES)[number]
+
+export const REQUEST_ACCESS_INVITER_LABEL = "Request access"
+
 export type ApplicationNoteVisibility = "invitee_only" | "both"
 
 export type SocialLinksInput = {
@@ -48,7 +58,8 @@ export type SocialLinksInput = {
 
 export type MembershipApplication = {
   id: string
-  inviteId: string
+  inviteId: string | null
+  source: MembershipApplicationSource
   inviteeUserId: string | null
   fullName: string
   email: string

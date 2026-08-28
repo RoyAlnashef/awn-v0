@@ -3,10 +3,16 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 
-const PUBLIC_PREFIXES = ["/login", "/auth/callback", "/apply"]
+const PUBLIC_PREFIXES = ["/login", "/auth/callback", "/apply", "/request-access"]
 const PUBLIC_PATHS = ["/login/forgot-password", "/login/reset-password"]
 
-const PENDING_GATE_EXEMPT_PREFIXES = ["/pending", "/apply", "/auth/callback", "/api"]
+const PENDING_GATE_EXEMPT_PREFIXES = [
+  "/pending",
+  "/apply",
+  "/request-access",
+  "/auth/callback",
+  "/api",
+]
 
 function isPublicPath(pathname: string) {
   if (pathname === "/") {
