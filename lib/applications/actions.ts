@@ -188,7 +188,7 @@ type ParsedApplicationFields = {
   password: string
   fullName: string
   title: string
-  resume: File
+  resume: File | null
   socialLinks: Record<SocialFieldId, string | null>
 }
 
@@ -196,15 +196,14 @@ function parseApplicationFields(formData: FormData): ParsedApplicationFields | A
   const password = String(formData.get("password") ?? "")
   const fullName = String(formData.get("fullName") ?? "").trim()
   const title = String(formData.get("title") ?? "").trim()
-  const resume = formData.get("resume")
+  const resumeRaw = formData.get("resume")
+  const resume =
+    resumeRaw instanceof File && resumeRaw.size > 0 ? resumeRaw : null
 
   if (!fullName) return { ok: false, error: "Full name is required." }
   if (!title) return { ok: false, error: "Title is required." }
   if (!password || password.length < 8) {
     return { ok: false, error: "Password must be at least 8 characters." }
-  }
-  if (!(resume instanceof File) || resume.size === 0) {
-    return { ok: false, error: "Resume PDF is required." }
   }
 
   const socialInput: Record<string, string | undefined> = {}
@@ -265,7 +264,7 @@ async function createMembershipApplication(input: {
   password: string
   fullName: string
   title: string
-  resume: File
+  resume: File | null
   socialLinks: Record<SocialFieldId, string | null>
   inviteId: string | null
   source: MembershipApplicationSource
@@ -323,22 +322,24 @@ async function createMembershipApplication(input: {
     return { ok: false, error: appError.message }
   }
 
-  let resumeUrl: string
-  try {
-    resumeUrl = await uploadResume(admin, application.id, input.resume)
-  } catch (uploadError) {
-    await admin.from("membership_applications").delete().eq("id", application.id)
-    await admin.auth.admin.deleteUser(userId)
-    return actionError(uploadError)
-  }
+  if (input.resume) {
+    let resumeUrl: string
+    try {
+      resumeUrl = await uploadResume(admin, application.id, input.resume)
+    } catch (uploadError) {
+      await admin.from("membership_applications").delete().eq("id", application.id)
+      await admin.auth.admin.deleteUser(userId)
+      return actionError(uploadError)
+    }
 
-  const { error: resumeUpdateError } = await admin
-    .from("membership_applications")
-    .update({ resume_url: resumeUrl })
-    .eq("id", application.id)
+    const { error: resumeUpdateError } = await admin
+      .from("membership_applications")
+      .update({ resume_url: resumeUrl })
+      .eq("id", application.id)
 
-  if (resumeUpdateError) {
-    return { ok: false, error: resumeUpdateError.message }
+    if (resumeUpdateError) {
+      return { ok: false, error: resumeUpdateError.message }
+    }
   }
 
   await admin.from("profiles").upsert({

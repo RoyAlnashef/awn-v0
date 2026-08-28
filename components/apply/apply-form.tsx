@@ -104,10 +104,6 @@ export function ApplyForm(props: ApplyFormProps) {
       toast.error("Title is required.")
       return false
     }
-    if (!resume) {
-      toast.error("Upload your resume (PDF).")
-      return false
-    }
     return true
   }
 
@@ -141,14 +137,12 @@ export function ApplyForm(props: ApplyFormProps) {
   }
 
   function submitForm() {
-    if (!resume) return
-
     startTransition(async () => {
       const formData = new FormData()
       formData.set("password", password)
       formData.set("fullName", fullName)
       formData.set("title", title)
-      formData.set("resume", resume)
+      if (resume) formData.set("resume", resume)
 
       if (isRequestAccess) {
         formData.set("email", signInEmail)
