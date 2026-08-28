@@ -30,18 +30,7 @@ export function LandingHero() {
         </Button>
       </div>
 
-      <div className="mt-16 flex flex-col items-center gap-8 sm:flex-row sm:gap-16">
-        {hero.stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col items-center gap-1">
-            <span className="font-heading text-4xl font-medium">{stat.value}</span>
-            <span className="text-xs tracking-widest text-muted-foreground uppercase">
-              {stat.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <p className="mt-12 text-xs tracking-widest text-muted-foreground uppercase">
+      <p className="mt-10 text-xs tracking-widest text-muted-foreground uppercase">
         — {hero.tagline} —
       </p>
     </section>

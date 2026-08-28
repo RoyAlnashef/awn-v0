@@ -7,11 +7,6 @@ export type LandingFeature = {
   description: string
 }
 
-export type LandingStat = {
-  value: string
-  label: string
-}
-
 export const landingContent = {
   brand: "awn.",
   header: {
@@ -24,10 +19,6 @@ export const landingContent = {
       "By invitation only. Every member is vetted by hand. If you don't have a code, you're not in — yet.",
     primaryCta: "Request access",
     secondaryCta: "Sign in",
-    stats: [
-      { value: "42", label: "Countries represented" },
-      { value: "3", label: "Tour types" },
-    ] satisfies LandingStat[],
     tagline: "Not open to the public",
   },
   features: [
