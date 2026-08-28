@@ -15,12 +15,6 @@ export function LandingHeader() {
       </Link>
 
       <nav className="flex items-center gap-4 sm:gap-6">
-        <a
-          href="#"
-          className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline"
-        >
-          {header.hireLink}
-        </a>
         <Link
           href="/login"
           className="text-xs font-medium tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"

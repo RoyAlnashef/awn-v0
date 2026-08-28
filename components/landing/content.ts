@@ -10,7 +10,6 @@ export type LandingFeature = {
 export const landingContent = {
   brand: "awn.",
   header: {
-    hireLink: "Looking to hire?",
     signIn: "Sign in",
   },
   hero: {
