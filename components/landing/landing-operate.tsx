@@ -16,9 +16,9 @@ export function LandingOperate() {
           {operate.body}
         </p>
 
-        <div className="mt-12 grid gap-8 text-left sm:grid-cols-2 sm:gap-12">
+        <div className="mt-12 flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-10">
           {operate.bullets.map((column, columnIndex) => (
-            <ul key={columnIndex} className="flex flex-col gap-4">
+            <ul key={columnIndex} className="flex flex-col gap-3">
               {column.map((item) => (
                 <li
                   key={item}
