@@ -9,6 +9,10 @@ const PUBLIC_PATHS = ["/login/forgot-password", "/login/reset-password"]
 const PENDING_GATE_EXEMPT_PREFIXES = ["/pending", "/apply", "/auth/callback", "/api"]
 
 function isPublicPath(pathname: string) {
+  if (pathname === "/") {
+    return true
+  }
+
   if (PUBLIC_PATHS.includes(pathname)) {
     return true
   }
