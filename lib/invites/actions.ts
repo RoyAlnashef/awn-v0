@@ -16,6 +16,7 @@ import {
   type MemberInvite,
   type MemberInviteStatus,
 } from "@/lib/invites/data"
+import { buildInviteApplyUrl } from "@/lib/invites/urls"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { unwrapOne } from "@/lib/supabase/unwrap-one"
@@ -56,6 +57,7 @@ export type GetInviteByTokenResult =
 type InviteRow = {
   id: string
   invitee_email: string
+  token: string
   status: MemberInviteStatus
   sent_at: string
   rescinded_at: string | null
@@ -392,6 +394,7 @@ export async function listAllInvites(): Promise<ListAllInvitesResult> {
         id,
         inviter_id,
         invitee_email,
+        token,
         status,
         sent_at,
         rescinded_at,
@@ -427,6 +430,7 @@ export async function listAllInvites(): Promise<ListAllInvitesResult> {
           unwrapOne(inviteRow.inviter)?.full_name?.trim() || "Member",
         inviterEmail: unwrapOne(inviteRow.inviter)?.email ?? "",
         applicationStatus: unwrapOne(inviteRow.application)?.status ?? null,
+        applyUrl: buildInviteApplyUrl(inviteRow.token),
       }
     })
 

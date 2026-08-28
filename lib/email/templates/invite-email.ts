@@ -1,5 +1,5 @@
-import { getAppOrigin } from "@/lib/email/constants"
 import { emailButton, emailLayout } from "@/lib/email/templates/base"
+import { buildInviteApplyUrl } from "@/lib/invites/urls"
 
 export function inviteEmailHtml({
   inviterName,
@@ -8,7 +8,7 @@ export function inviteEmailHtml({
   inviterName: string
   token: string
 }) {
-  const applyUrl = `${getAppOrigin()}/apply?token=${encodeURIComponent(token)}`
+  const applyUrl = buildInviteApplyUrl(token)
   const preview = `${inviterName} invited you to join AWN`
 
   const body = `

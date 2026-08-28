@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { Copy, Search } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   applicationStatusConfig,
@@ -24,6 +25,36 @@ import {
 import { formatRelativeTime } from "@/lib/messages/format"
 
 const ALL = "all"
+
+function InviteApplyLink({ url }: { url: string }) {
+  function handleCopy() {
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Apply link copied"),
+      () => toast.error("Could not copy link"),
+    )
+  }
+
+  return (
+    <div className="flex min-w-56 max-w-xs items-center gap-1.5">
+      <Input
+        readOnly
+        value={url}
+        aria-label="Apply link"
+        className="h-8 font-mono text-xs"
+        onFocus={(event) => event.target.select()}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        aria-label="Copy apply link"
+        onClick={handleCopy}
+      >
+        <Copy />
+      </Button>
+    </div>
+  )
+}
 
 export function AdminInvitesTable({
   initialInvites,
@@ -105,6 +136,7 @@ export function AdminInvitesTable({
                 <TableHead>Sent</TableHead>
                 <TableHead>Invite status</TableHead>
                 <TableHead>Application</TableHead>
+                <TableHead>Apply link</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -147,6 +179,9 @@ export function AdminInvitesTable({
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <InviteApplyLink url={invite.applyUrl} />
                     </TableCell>
                   </TableRow>
                 )

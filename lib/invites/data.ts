@@ -24,6 +24,7 @@ export type AdminMemberInvite = MemberInvite & {
   inviterName: string
   inviterEmail: string
   applicationStatus: MembershipApplicationStatus | null
+  applyUrl: string
 }
 
 export const MEMBERSHIP_APPLICATION_STATUSES = [
