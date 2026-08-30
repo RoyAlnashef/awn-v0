@@ -198,7 +198,7 @@ export function JobDetailContent({
                   disabled={preview}
                   onClick={() => setFollowed((prev) => !prev)}
                 >
-                  {followed ? "Following" : "Follow"}
+                  {followed ? "Connected" : "Connect"}
                 </Button>
               </div>
             </section>

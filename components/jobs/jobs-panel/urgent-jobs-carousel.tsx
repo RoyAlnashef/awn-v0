@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { MapPin } from "lucide-react"
 
-import { JobPreviewDrawer } from "@/components/jobs/job-preview-drawer"
+import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import {
   Carousel,
@@ -13,10 +13,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { useUrgentJobs } from "@/lib/jobs/hooks/use-urgent-jobs"
-import {
-  formatJobPostedAt,
-  urgentJobCardBorderStyles,
-} from "@/lib/jobs/format"
+import { urgentJobCardBorderStyles } from "@/lib/jobs/format"
 import type { Job } from "@/lib/jobs-data"
 import { cn } from "@/lib/utils"
 
@@ -28,13 +25,13 @@ export function UrgentJobsCarousel({
   onSelectJob?: () => void
 }) {
   const { jobs, isLoading } = useUrgentJobs({ enabled })
-  const [previewJob, setPreviewJob] = useState<Job | null>(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
 
   function handleSelectJob(job: Job) {
     onSelectJob?.()
-    setPreviewJob(job)
-    setPreviewOpen(true)
+    setSelectedJobId(job.id)
+    setDetailOpen(true)
   }
 
   if (!isLoading && jobs.length === 0) {
@@ -93,9 +90,7 @@ export function UrgentJobsCarousel({
                           <MapPin className="size-3 shrink-0" />
                           <span className="truncate">{job.location}</span>
                         </span>
-                        <span className="shrink-0">
-                          {formatJobPostedAt(job.postedAt)}
-                        </span>
+                        <span className="shrink-0">{job.postedAt}</span>
                       </div>
                     </button>
                   </CarouselItem>
@@ -112,13 +107,14 @@ export function UrgentJobsCarousel({
         )}
       </section>
 
-      {previewJob ? (
-        <JobPreviewDrawer
-          job={previewJob}
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-        />
-      ) : null}
+      <JobDetailDrawer
+        jobId={selectedJobId}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open)
+          if (!open) setSelectedJobId(null)
+        }}
+      />
     </>
   )
 }
