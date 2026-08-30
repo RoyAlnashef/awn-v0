@@ -7,7 +7,7 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Migration applied: `member_invites`, `membership_applications`, `notifications` tables exist
 - [x] Migration applied: `profiles.is_approved` column exists; existing active members backfilled to `is_approved = true`
 - [x] Migration applied: `pending` added to `user_status` enum
-- [ ] Migration applied: `denied` added to `user_status` enum; denied-application profiles backfilled
+- [x] Migration applied: `denied` added to `user_status` enum; denied-application profiles backfilled
 - [x] `.env.local` has `RESEND_API_KEY` and email sender configured
 - [x] Supabase Storage bucket for resumes exists with appropriate policies
 - [x] Test accounts ready:
@@ -23,7 +23,7 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Clicking Invite opens the drawer
 - [x] Drawer shows remaining invite slots (e.g. "3 of 5 remaining")
 - [x] Enter a valid email → Send → invite appears in the list with **Pending** status
-- [ ] Invitee receives invite email with CTA link to `/apply?token=TOKEN`
+- [x] Invitee receives invite email with CTA link to `/apply?token=TOKEN`
 - [ ] Sending to the same email twice shows an error (duplicate active invite)
 - [ ] Invalid email format shows validation error
 - [ ] After 5 active invites, send button is disabled and slot counter shows 0 remaining
@@ -37,7 +37,7 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 ## Invitee Apply Flow (`/apply?token=TOKEN`)
 
-- [ ] Valid token loads the apply form (no login required)
+- [x] Valid token loads the apply form (no login required)
 - [ ] Invalid or expired token shows a clear error state
 - [ ] Rescinded token shows a clear error state
 - [x] Form is a 3-step wizard with progress indicator (Step X of 3, percentage bar)
@@ -53,8 +53,8 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Submit creates `membership_applications` row with status **pending**
 - [x] Submit links application to the originating `member_invites` row
 - [x] Invite status updates to **accepted** after successful submit
-- [ ] Invitee receives confirmation email with link to check application status
-- [ ] Submitting with an email that already has an approved account shows an error
+- [x] Invitee receives confirmation email with link to check application status
+- [x] Submitting with an email that already has an approved account shows an error
 
 ---
 
@@ -89,18 +89,18 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] **Deny** with note (invitee only) sends denial email to invitee; inviter does not receive notification
 - [x] **Deny** with note (both) sends denial email to invitee and creates `application_denied` notification for inviter
 - [x] **Deny** without note still denies the application; no emails or notifications sent
-- [ ] **Deny** sets invitee profile `is_approved = false` and `status = denied`
-- [ ] Denied invitee sees denial note on `/pending` when visibility includes them
+- [x] **Deny** sets invitee profile `is_approved = false` and `status = denied`
+- [x] Denied invitee sees denial note on `/pending` when visibility includes them
 
 ---
 
 ## Admin Users Page (`/users`)
 
-- [ ] Applicants awaiting review show status **Pending** (amber dot)
-- [ ] Denied applicants show status **Denied** (red dot), not Active or Pending
-- [ ] Filter by **Pending** shows only awaiting-review applicants
-- [ ] Filter by **Denied** shows only denied applicants
-- [ ] Member can still send an invite to a denied applicant's email address
+- [x] Applicants awaiting review show status **Pending** (amber dot)
+- [x] Denied applicants show status **Denied** (red dot), not Active or Pending
+- [x] Filter by **Pending** shows only awaiting-review applicants
+- [x] Filter by **Denied** shows only denied applicants
+- [x] Member can still send an invite to a denied applicant's email address
 
 ---
 
@@ -108,30 +108,30 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 - [x] Page loads a table of all member invites across the network (not placeholder)
 - [x] Table shows: inviter name, invitee email, status, sent date
-- [ ] Application link or status visible when invitee has submitted
-- [ ] Filter by status works (pending / accepted / rescinded)
-- [ ] Only admins can access the page
+- [x] Application link or status visible when invitee has submitted
+- [x] Filter by status works (pending / accepted / rescinded)
+- [x] Only admins can access the page
 
 ---
 
 ## Notifications Panel
 
-- [ ] Notifications panel loads real data from DB (not static mock array)
-- [ ] Unread count badge in header reflects actual unread notifications
-- [ ] Inviting member receives **invite accepted** notification when admin approves their invitee
-- [ ] Inviting member receives **application denied** notification when admin denies with visibility set to both
-- [ ] Mark as read updates the notification and decrements unread count
-- [ ] Mark all read clears all unread notifications
-- [ ] Notifications persist across page refresh
+- [x] Notifications panel loads real data from DB (not static mock array)
+- [x] Unread count badge in header reflects actual unread notifications
+- [x] Inviting member receives **invite accepted** notification when admin approves their invitee
+- [x] Inviting member receives **application denied** notification when admin denies with visibility set to both
+- [x] Mark as read updates the notification and decrements unread count
+- [x] Mark all read clears all unread notifications
+- [x] Notifications persist across page refresh
 
 ---
 
 ## Email (Resend)
 
-- [ ] **Invite email** — sent on member invite; link contains valid token
+- [x] **Invite email** — sent on member invite; link contains valid token
 - [ ] **Confirmation email** — sent on application submit; link goes to `/pending`
 - [ ] **Approval email** — sent on admin approve; login link works
-- [ ] **Denial email** — sent on admin deny when note is provided; includes admin note text
+- [x] **Denial email** — sent on admin deny when note is provided; includes admin note text
 
 ---
 
