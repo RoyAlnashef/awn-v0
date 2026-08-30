@@ -7,6 +7,7 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Migration applied: `member_invites`, `membership_applications`, `notifications` tables exist
 - [x] Migration applied: `profiles.is_approved` column exists; existing active members backfilled to `is_approved = true`
 - [x] Migration applied: `pending` added to `user_status` enum
+- [ ] Migration applied: `denied` added to `user_status` enum; denied-application profiles backfilled
 - [x] `.env.local` has `RESEND_API_KEY` and email sender configured
 - [x] Supabase Storage bucket for resumes exists with appropriate policies
 - [x] Test accounts ready:
@@ -79,23 +80,34 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Social links render as clickable icons; each opens in a new tab
 - [x] Resume renders in a view-only viewer (PDF via signed URL)
 - [x] **Approve** updates application status to **approved**
-- [ ] **Approve** sets invitee profile `is_approved = true`
+- [x] **Approve** sets invitee profile `is_approved = true`
 - [ ] **Approve** sends approval email to invitee with login link
-- [ ] **Approve** creates `invite_accepted` notification for the inviting member
-- [ ] After approval, invitee can log in and access the full app
-- [ ] **Deny** opens dialog with optional note textarea
-- [ ] **Deny** dialog has visibility toggle: invitee only / invitee and inviter
-- [ ] **Deny** with note (invitee only) sends denial email to invitee; inviter does not receive notification
-- [ ] **Deny** with note (both) sends denial email to invitee and creates `application_denied` notification for inviter
-- [ ] **Deny** without note still denies the application; no emails or notifications sent
+- [x] **Approve** creates `invite_accepted` notification for the inviting member
+- [x] After approval, invitee can log in and access the full app
+- [x] **Deny** opens dialog with optional note textarea
+- [x] **Deny** dialog has visibility toggle: invitee only / invitee and inviter
+- [x] **Deny** with note (invitee only) sends denial email to invitee; inviter does not receive notification
+- [x] **Deny** with note (both) sends denial email to invitee and creates `application_denied` notification for inviter
+- [x] **Deny** without note still denies the application; no emails or notifications sent
+- [ ] **Deny** sets invitee profile `is_approved = false` and `status = denied`
 - [ ] Denied invitee sees denial note on `/pending` when visibility includes them
+
+---
+
+## Admin Users Page (`/users`)
+
+- [ ] Applicants awaiting review show status **Pending** (amber dot)
+- [ ] Denied applicants show status **Denied** (red dot), not Active or Pending
+- [ ] Filter by **Pending** shows only awaiting-review applicants
+- [ ] Filter by **Denied** shows only denied applicants
+- [ ] Member can still send an invite to a denied applicant's email address
 
 ---
 
 ## Admin Invites Page (`/invites`)
 
-- [ ] Page loads a table of all member invites across the network (not placeholder)
-- [ ] Table shows: inviter name, invitee email, status, sent date
+- [x] Page loads a table of all member invites across the network (not placeholder)
+- [x] Table shows: inviter name, invitee email, status, sent date
 - [ ] Application link or status visible when invitee has submitted
 - [ ] Filter by status works (pending / accepted / rescinded)
 - [ ] Only admins can access the page
@@ -127,6 +139,7 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 - [ ] Member cannot invite their own email address
 - [ ] Member cannot invite an email that already belongs to an active AWN member
+- [ ] Member can invite an email belonging to a denied (unapproved) applicant
 - [ ] Two different members can invite the same email address independently
 - [ ] Rescinding an invite after the invitee has already submitted is blocked (or shows appropriate state)
 - [ ] Magic link login (`shouldCreateUser: false`) still does not create new accounts for unknown emails

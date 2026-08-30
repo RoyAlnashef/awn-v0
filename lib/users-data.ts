@@ -4,15 +4,31 @@ export type UserRole = "Owner" | "Admin" | "Manager" | "Member"
 export const userRoles: UserRole[] = ["Owner", "Admin", "Manager", "Member"]
 
 /** Account lifecycle status (UI labels). */
-export type UserStatus = "Active" | "Invited" | "Suspended"
+export type UserStatus =
+  | "Active"
+  | "Invited"
+  | "Pending"
+  | "Denied"
+  | "Suspended"
 
-export const userStatuses: UserStatus[] = ["Active", "Invited", "Suspended"]
+export const userStatuses: UserStatus[] = [
+  "Active",
+  "Invited",
+  "Pending",
+  "Denied",
+  "Suspended",
+]
 
 /** DB enum values for `public.user_role`. */
 export type DbUserRole = "owner" | "admin" | "manager" | "member"
 
 /** DB enum values for `public.user_status`. */
-export type DbUserStatus = "active" | "invited" | "suspended"
+export type DbUserStatus =
+  | "active"
+  | "invited"
+  | "pending"
+  | "denied"
+  | "suspended"
 
 /**
  * Visual treatment for each status badge, kept within the app palette:
@@ -25,6 +41,8 @@ export const statusConfig: Record<
 > = {
   Active: { variant: "default", dot: "bg-success" },
   Invited: { variant: "secondary", dot: "bg-foreground/40" },
+  Pending: { variant: "secondary", dot: "bg-amber-500" },
+  Denied: { variant: "outline", dot: "bg-red-500" },
   Suspended: { variant: "outline", dot: "bg-destructive" },
 }
 
@@ -71,12 +89,16 @@ const roleFromDb: Record<DbUserRole, UserRole> = {
 const statusToDb: Record<UserStatus, DbUserStatus> = {
   Active: "active",
   Invited: "invited",
+  Pending: "pending",
+  Denied: "denied",
   Suspended: "suspended",
 }
 
 const statusFromDb: Record<DbUserStatus, UserStatus> = {
   active: "Active",
   invited: "Invited",
+  pending: "Pending",
+  denied: "Denied",
   suspended: "Suspended",
 }
 
@@ -93,7 +115,7 @@ export function toDbStatus(status: UserStatus): DbUserStatus {
 }
 
 export function fromDbStatus(status: string): UserStatus {
-  return statusFromDb[status as DbUserStatus] ?? "Active"
+  return statusFromDb[status as DbUserStatus] ?? "Pending"
 }
 
 export function initials(name: string) {
@@ -109,6 +131,7 @@ export function formatLastActiveLabel(
   lastActiveAt: string | null | undefined,
 ): string {
   if (status === "Invited") return "Pending"
+  if (status === "Pending" || status === "Denied") return "—"
   if (!lastActiveAt) return "—"
 
   const then = new Date(lastActiveAt).getTime()

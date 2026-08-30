@@ -720,6 +720,7 @@ export async function approveApplication(
 
     revalidatePath("/applications")
     revalidatePath("/invites")
+    revalidatePath("/users")
 
     return { ok: true }
   } catch (error) {
@@ -747,6 +748,7 @@ export async function denyApplication(input: {
         full_name,
         status,
         source,
+        invitee_user_id,
         invite:member_invites!membership_applications_invite_id_fkey (
           inviter_id
         )
@@ -759,6 +761,11 @@ export async function denyApplication(input: {
     if (!application) return { ok: false, error: "Application not found." }
     if (application.status !== "pending") {
       return { ok: false, error: "Only pending applications can be denied." }
+    }
+
+    const inviteeUserId = application.invitee_user_id
+    if (!inviteeUserId) {
+      return { ok: false, error: "Application is missing an invitee account." }
     }
 
     const noteVisibility = note
@@ -779,6 +786,16 @@ export async function denyApplication(input: {
       .eq("id", input.applicationId)
 
     if (appError) return { ok: false, error: appError.message }
+
+    const { error: profileError } = await admin
+      .from("profiles")
+      .update({
+        is_approved: false,
+        status: "denied",
+      })
+      .eq("id", inviteeUserId)
+
+    if (profileError) return { ok: false, error: profileError.message }
 
     if (note) {
       await sendEmail({
@@ -807,6 +824,7 @@ export async function denyApplication(input: {
 
     revalidatePath("/applications")
     revalidatePath("/pending")
+    revalidatePath("/users")
 
     return { ok: true }
   } catch (error) {
