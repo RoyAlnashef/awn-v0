@@ -45,7 +45,7 @@ export function UrgentJobsCarousel({
     <>
       <section className="border-b py-3">
         <h3 className="mb-3 px-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Urgent jobs
+          Help Now
         </h3>
 
         {isLoading ? (

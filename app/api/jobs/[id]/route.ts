@@ -212,11 +212,27 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   }
   if (body.role !== undefined) {
-    patch.role = body.role.trim()
-    patch.department = departmentByRole[patch.role as string] ?? "Production"
+    const role = body.role.trim()
+    if (resolvedKind === "urgent" && !role) {
+      return jsonError("Role is required", 400)
+    }
+    patch.role = role
+    patch.department = departmentByRole[role] ?? "Production"
   }
-  if (body.production !== undefined) patch.production = body.production.trim()
-  if (body.location !== undefined) patch.location = body.location.trim()
+  if (body.production !== undefined) {
+    const production = body.production.trim()
+    if (resolvedKind === "urgent" && !production) {
+      return jsonError("Date & time is required", 400)
+    }
+    patch.production = production
+  }
+  if (body.location !== undefined) {
+    const location = body.location.trim()
+    if (resolvedKind === "urgent" && !location) {
+      return jsonError("Location is required", 400)
+    }
+    patch.location = location
+  }
   if (body.payRate !== undefined) patch.pay_rate = body.payRate.trim()
   if (body.startDate !== undefined) {
     const startDate = parseDateOnly(body.startDate)
@@ -232,7 +248,13 @@ export async function PATCH(request: Request, context: RouteContext) {
     patch.deadline = parseDateOnly(body.deadline)
   }
   if (body.engagement !== undefined) patch.engagement = body.engagement
-  if (body.details !== undefined) patch.details = body.details.trim()
+  if (body.details !== undefined) {
+    const details = body.details.trim()
+    if (resolvedKind === "urgent" && details.length > 280) {
+      return jsonError("Details must be 280 characters or fewer", 400)
+    }
+    patch.details = details
+  }
 
   if (Object.keys(patch).length === 0) {
     return jsonError("No fields to update", 400)

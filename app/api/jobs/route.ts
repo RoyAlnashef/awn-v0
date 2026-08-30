@@ -239,10 +239,27 @@ export async function POST(request: Request) {
 
   if (!role) return jsonError("Role is required", 400)
 
-  const startDate = parseDateOnly(body.startDate) ?? (isDraft ? todayDateOnly() : null)
-  const endDate = parseDateOnly(body.endDate) ?? (isDraft ? startDate : null)
+  const isUrgent = kind === "urgent"
+  const location = body.location?.trim() ?? ""
+  const production = body.production?.trim() ?? ""
 
-  if (!isDraft) {
+  if (isUrgent && !isDraft) {
+    if (!location) return jsonError("Location is required", 400)
+    if (!production) return jsonError("Date & time is required", 400)
+    const details = body.details?.trim() ?? ""
+    if (details.length > 280) {
+      return jsonError("Details must be 280 characters or fewer", 400)
+    }
+  }
+
+  const startDate = isUrgent
+    ? todayDateOnly()
+    : parseDateOnly(body.startDate) ?? (isDraft ? todayDateOnly() : null)
+  const endDate = isUrgent
+    ? todayDateOnly()
+    : parseDateOnly(body.endDate) ?? (isDraft ? startDate : null)
+
+  if (!isDraft && !isUrgent) {
     if (!startDate) return jsonError("Start date is required", 400)
     if (!endDate) return jsonError("End date is required", 400)
     if (endDate < startDate) {
@@ -264,13 +281,13 @@ export async function POST(request: Request) {
       poster_id: user.id,
       role,
       department,
-      production: body.production?.trim() ?? "",
-      location: body.location?.trim() ?? "",
+      production,
+      location,
       pay_rate: body.payRate?.trim() ?? "",
       start_date: startDate ?? todayDateOnly(),
       end_date: endDate ?? startDate ?? todayDateOnly(),
       deadline,
-      engagement: body.engagement ?? "Touring",
+      engagement: body.engagement ?? (isUrgent ? "One-Off" : "Touring"),
       details: body.details?.trim() ?? "",
       expires_at: expiresAt,
     })

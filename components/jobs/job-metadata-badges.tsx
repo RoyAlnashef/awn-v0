@@ -35,7 +35,8 @@ export function JobMetadataBadges({
   showPlaceholders = false,
   className,
 }: JobMetadataBadgesProps) {
-  const hasDates = Boolean(job.startDate && job.endDate)
+  const hasDates =
+    job.kind !== "urgent" && Boolean(job.startDate && job.endDate)
   const hasDeadline = Boolean(job.deadline)
   const showApplicants = applicantCount !== null && applicantCount !== undefined
 
@@ -63,7 +64,9 @@ export function JobMetadataBadges({
         </span>
       </Badge>
       <Badge variant="secondary">{job.engagement}</Badge>
-      <Badge variant="secondary">{job.department}</Badge>
+      {job.kind !== "urgent" ? (
+        <Badge variant="secondary">{job.department}</Badge>
+      ) : null}
       {includeDeadline ? (
         hasDeadline ? (
           <Badge variant="secondary" className="font-normal">

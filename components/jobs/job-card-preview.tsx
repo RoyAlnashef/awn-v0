@@ -3,6 +3,34 @@ import {
   type Job,
   type JobPoster,
 } from "@/lib/jobs-data"
+import type { HelpNowFormValues } from "@/lib/jobs/help-now"
+
+export function helpNowToPreviewJob(
+  values: HelpNowFormValues,
+  poster: JobPoster,
+): Job {
+  return {
+    id: "preview",
+    kind: "urgent",
+    status: "open",
+    posterId: "",
+    role: values.role,
+    department: "Production",
+    production: values.dateTime,
+    location: values.location,
+    payRate: values.rate,
+    startDate: "",
+    endDate: "",
+    deadline: "",
+    engagement: "One-Off",
+    details: values.details,
+    postedBy: poster,
+    postedAt: "Preview",
+    saved: false,
+    applied: false,
+  }
+}
+
 
 export function formToPreviewJob(
   form: {

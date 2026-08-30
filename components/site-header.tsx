@@ -6,6 +6,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { NavUser, type NavUserData } from "@/components/nav-user"
+import { HelpNowHeaderButton } from "@/components/help-now/help-now-header-button"
 import { Messages } from "@/components/messages"
 import { JobsPanel } from "@/components/jobs-panel"
 import { Notifications } from "@/components/notifications"
@@ -27,6 +28,7 @@ export function SiteHeader({ user }: { user: NavUserData }) {
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <HelpNowHeaderButton />
         <Rooms />
         <Messages />
         <JobsPanel />
