@@ -7,9 +7,9 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [x] Migration applied: `member_invites`, `membership_applications`, `notifications` tables exist
 - [x] Migration applied: `profiles.is_approved` column exists; existing active members backfilled to `is_approved = true`
 - [x] Migration applied: `pending` added to `user_status` enum
-- [ ] `.env.local` has `RESEND_API_KEY` and email sender configured
-- [ ] Supabase Storage bucket for resumes exists with appropriate policies
-- [ ] Test accounts ready:
+- [x] `.env.local` has `RESEND_API_KEY` and email sender configured
+- [x] Supabase Storage bucket for resumes exists with appropriate policies
+- [x] Test accounts ready:
   - **Member** — active, approved member (not admin)
   - **Admin** — owner or admin role
   - **Fresh emails** — 6+ addresses you control for invitee testing
@@ -18,10 +18,10 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 ## Member Invites Drawer (People page)
 
-- [ ] "Invite" button appears in the People page header (right side of PageShell actions)
-- [ ] Clicking Invite opens the drawer
-- [ ] Drawer shows remaining invite slots (e.g. "3 of 5 remaining")
-- [ ] Enter a valid email → Send → invite appears in the list with **Pending** status
+- [x] "Invite" button appears in the People page header (right side of PageShell actions)
+- [x] Clicking Invite opens the drawer
+- [x] Drawer shows remaining invite slots (e.g. "3 of 5 remaining")
+- [x] Enter a valid email → Send → invite appears in the list with **Pending** status
 - [ ] Invitee receives invite email with CTA link to `/apply?token=TOKEN`
 - [ ] Sending to the same email twice shows an error (duplicate active invite)
 - [ ] Invalid email format shows validation error
@@ -39,19 +39,19 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 - [ ] Valid token loads the apply form (no login required)
 - [ ] Invalid or expired token shows a clear error state
 - [ ] Rescinded token shows a clear error state
-- [ ] Form is a 3-step wizard with progress indicator (Step X of 3, percentage bar)
-- [ ] **Step 1 — Credentials:** email (pre-filled, locked), password with show/hide, confirm password with show/hide
-- [ ] Confirm password must match password; Continue blocked if mismatch or password under 8 characters
-- [ ] **Step 2 — Professional info:** full name, title / role, resume upload (PDF)
-- [ ] **Step 3 — Social links:** website, Instagram, X/Twitter, LinkedIn, YouTube
-- [ ] At least two social links required (Continue/Submit blocked with fewer)
-- [ ] Back button navigates to previous step and preserves entered data
-- [ ] Email field is locked to the invited address (cannot change to a different email)
-- [ ] Resume upload accepts PDF; rejects unsupported file types
-- [ ] Submit creates auth account with password (no magic-link signup)
-- [ ] Submit creates `membership_applications` row with status **pending**
-- [ ] Submit links application to the originating `member_invites` row
-- [ ] Invite status updates to **accepted** after successful submit
+- [x] Form is a 3-step wizard with progress indicator (Step X of 3, percentage bar)
+- [x] **Step 1 — Credentials:** email (pre-filled, locked), password with show/hide, confirm password with show/hide
+- [x] Confirm password must match password; Continue blocked if mismatch or password under 8 characters
+- [x] **Step 2 — Professional info:** full name, title / role, resume upload (PDF)
+- [x] **Step 3 — Social links:** website, Instagram, X/Twitter, LinkedIn, YouTube
+- [x] At least two social links required (Continue/Submit blocked with fewer)
+- [x] Back button navigates to previous step and preserves entered data
+- [x] Email field is locked to the invited address (cannot change to a different email)
+- [x] Resume upload accepts PDF; rejects unsupported file types
+- [x] Submit creates auth account with password (no magic-link signup)
+- [x] Submit creates `membership_applications` row with status **pending**
+- [x] Submit links application to the originating `member_invites` row
+- [x] Invite status updates to **accepted** after successful submit
 - [ ] Invitee receives confirmation email with link to check application status
 - [ ] Submitting with an email that already has an approved account shows an error
 
@@ -59,26 +59,26 @@ Run after applying migrations in Supabase SQL Editor and configuring Resend. Use
 
 ## Pending / Approval Gate
 
-- [ ] After submitting, invitee can log in with their password
-- [ ] Unapproved user is redirected to `/pending` when visiting app routes (e.g. `/now`, `/people`)
-- [ ] `/pending` shows application status (pending / denied with note if applicable)
-- [ ] Unapproved user can still access `/pending` and `/apply/*`
-- [ ] Unapproved user cannot access the main app shell
-- [ ] Approved user (existing member) is not affected by the gate
+- [x] After submitting, invitee can log in with their password
+- [x] Unapproved user is redirected to `/pending` when visiting app routes (e.g. `/now`, `/people`)
+- [x] `/pending` shows application status (pending / denied with note if applicable)
+- [x] Unapproved user can still access `/pending` and `/apply/*`
+- [x] Unapproved user cannot access the main app shell
+- [x] Approved user (existing member) is not affected by the gate
 
 ---
 
 ## Admin Applications Page (`/applications`)
 
-- [ ] Page loads a table of submitted applications (not placeholder)
-- [ ] Table shows: invitee name, email, title, invited by (member name), submitted date, status badge
-- [ ] Only admins can access the page; members are redirected or blocked
-- [ ] Clicking a row opens the review panel
-- [ ] Review panel shows invitee name, title, email
-- [ ] Review panel shows **Invited by** with member name and avatar
-- [ ] Social links render as clickable icons; each opens in a new tab
-- [ ] Resume renders in a view-only viewer (PDF via signed URL)
-- [ ] **Approve** updates application status to **approved**
+- [x] Page loads a table of submitted applications (not placeholder)
+- [x] Table shows: invitee name, email, title, invited by (member name), submitted date, status badge
+- [x] Only admins can access the page; members are redirected or blocked
+- [x] Clicking a row opens the review panel
+- [x] Review panel shows invitee name, title, email
+- [x] Review panel shows **Invited by** with member name and avatar
+- [x] Social links render as clickable icons; each opens in a new tab
+- [x] Resume renders in a view-only viewer (PDF via signed URL)
+- [x] **Approve** updates application status to **approved**
 - [ ] **Approve** sets invitee profile `is_approved = true`
 - [ ] **Approve** sends approval email to invitee with login link
 - [ ] **Approve** creates `invite_accepted` notification for the inviting member

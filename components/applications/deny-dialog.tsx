@@ -27,6 +27,14 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
+const NOTE_VISIBILITY_OPTIONS: {
+  value: ApplicationNoteVisibility
+  label: string
+}[] = [
+  { value: "invitee_only", label: "Notify invitee only" },
+  { value: "both", label: "Notify invitee and inviter" },
+]
+
 export function DenyDialog({
   application,
   open,
@@ -51,11 +59,15 @@ export function DenyDialog({
   function handleDeny() {
     if (!application) return
 
+    const trimmedNote = note.trim()
+    const noteVisibility =
+      trimmedNote && application.source === "invite" ? visibility : undefined
+
     startTransition(async () => {
       const result = await denyApplication({
         applicationId: application.id,
-        note: note.trim() || undefined,
-        noteVisibility: note.trim() ? visibility : undefined,
+        note: trimmedNote || undefined,
+        noteVisibility,
       })
 
       if (!result.ok) {
@@ -95,12 +107,16 @@ export function DenyDialog({
               id="deny-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Share context for the applicant or inviter…"
+              placeholder={
+                application?.source === "request_access"
+                  ? "Share context for the applicant…"
+                  : "Share context for the applicant or inviter…"
+              }
               rows={4}
             />
           </div>
 
-          {note.trim() ? (
+          {application?.source === "invite" ? (
             <div className="grid gap-2">
               <Label>Note visibility</Label>
               <Select
@@ -110,15 +126,20 @@ export function DenyDialog({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value) =>
+                      NOTE_VISIBILITY_OPTIONS.find(
+                        (option) => option.value === value
+                      )?.label ?? value
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="invitee_only">
-                    Notify invitee only
-                  </SelectItem>
-                  <SelectItem value="both">
-                    Notify invitee and inviter
-                  </SelectItem>
+                  {NOTE_VISIBILITY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

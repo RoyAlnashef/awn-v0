@@ -738,8 +738,6 @@ export async function denyApplication(input: {
     const now = new Date().toISOString()
 
     const note = input.note?.trim() || null
-    const noteVisibility = note ? input.noteVisibility ?? "invitee_only" : null
-
     const { data: application, error: fetchError } = await admin
       .from("membership_applications")
       .select(
@@ -748,6 +746,7 @@ export async function denyApplication(input: {
         email,
         full_name,
         status,
+        source,
         invite:member_invites!membership_applications_invite_id_fkey (
           inviter_id
         )
@@ -761,6 +760,12 @@ export async function denyApplication(input: {
     if (application.status !== "pending") {
       return { ok: false, error: "Only pending applications can be denied." }
     }
+
+    const noteVisibility = note
+      ? application.source === "request_access"
+        ? "invitee_only"
+        : (input.noteVisibility ?? "invitee_only")
+      : null
 
     const { error: appError } = await admin
       .from("membership_applications")

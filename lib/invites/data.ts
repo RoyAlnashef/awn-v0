@@ -44,7 +44,7 @@ export const MEMBERSHIP_APPLICATION_SOURCES = [
 export type MembershipApplicationSource =
   (typeof MEMBERSHIP_APPLICATION_SOURCES)[number]
 
-export const REQUEST_ACCESS_INVITER_LABEL = "Request access"
+export const REQUEST_ACCESS_INVITER_LABEL = "Sign up form"
 
 export type ApplicationNoteVisibility = "invitee_only" | "both"
 
