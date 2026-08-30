@@ -63,15 +63,25 @@ export function JobManagementDetail({ job }: { job: Job }) {
       title={job.role}
       description={job.production || "Job management"}
       actions={
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={<Link href={`/jobs/${job.id}/edit`} />}
-        >
-          <Pencil />
-          Edit
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/my-jobs/created" />}
+          >
+            My Jobs
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href={`/jobs/${job.id}/edit`} />}
+          >
+            <Pencil />
+            Edit
+          </Button>
+        </div>
       }
       previewJob={job}
     >
