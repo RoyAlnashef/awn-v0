@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto"
 import { revalidatePath } from "next/cache"
 
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { getRequestAppOrigin } from "@/lib/email/constants"
 import { sendEmail } from "@/lib/email/send"
 import {
   inviteEmailHtml,
@@ -230,11 +231,12 @@ export async function sendInvite(email: string): Promise<SendInviteResult> {
     }
 
     const invite = mapInviteRow(data as InviteRow)
+    const origin = await getRequestAppOrigin()
 
     const emailResult = await sendEmail({
       to: inviteeEmail,
       subject: inviteEmailSubject(inviterName),
-      html: inviteEmailHtml({ inviterName, token }),
+      html: inviteEmailHtml({ inviterName, token, origin }),
     })
 
     if (!emailResult.ok) {
@@ -412,6 +414,8 @@ export async function listAllInvites(): Promise<ListAllInvitesResult> {
       return { ok: false, error: error.message }
     }
 
+    const origin = await getRequestAppOrigin()
+
     const invites = (data ?? []).map((row) => {
       const inviteRow = row as AdminInviteRow & {
         inviter: AdminInviteRow["inviter"] | NonNullable<AdminInviteRow["inviter"]>[]
@@ -427,7 +431,7 @@ export async function listAllInvites(): Promise<ListAllInvitesResult> {
           unwrapOne(inviteRow.inviter)?.full_name?.trim() || "Member",
         inviterEmail: unwrapOne(inviteRow.inviter)?.email ?? "",
         applicationStatus: unwrapOne(inviteRow.application)?.status ?? null,
-        applyUrl: buildInviteApplyUrl(inviteRow.token),
+        applyUrl: buildInviteApplyUrl(inviteRow.token, origin),
       }
     })
 

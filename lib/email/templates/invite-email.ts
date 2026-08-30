@@ -4,11 +4,13 @@ import { buildInviteApplyUrl } from "@/lib/invites/urls"
 export function inviteEmailHtml({
   inviterName,
   token,
+  origin,
 }: {
   inviterName: string
   token: string
+  origin?: string
 }) {
-  const applyUrl = buildInviteApplyUrl(token)
+  const applyUrl = buildInviteApplyUrl(token, origin)
   const preview = `${inviterName} invited you to join AWN`
 
   const body = `
