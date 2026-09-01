@@ -5,8 +5,6 @@ import {
   MessagesSquare,
   Group,
   UserCheck,
-  ClipboardList,
-  MailPlus,
   Mail,
   type LucideIcon,
 } from "lucide-react"
@@ -14,6 +12,7 @@ import {
 export type NavSubItem = {
   title: string
   href: string
+  description?: string
 }
 
 export type NavItem = {
@@ -76,20 +75,20 @@ export const adminNav: NavItem[] = [
   {
     title: "Users",
     href: "/users",
-    description: "Review, verify, and manage member accounts and invites.",
+    description: "Review, verify, and manage member accounts.",
     icon: UserCheck,
-  },
-  {
-    title: "Applications",
-    href: "/applications",
-    description: "Review membership applications and verify new crew.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Invites",
-    href: "/invites",
-    description: "Track sent invitations and manage pending referrals.",
-    icon: MailPlus,
+    items: [
+      {
+        title: "Invites",
+        href: "/invites",
+        description: "Track sent invitations and manage pending referrals.",
+      },
+      {
+        title: "Applications",
+        href: "/applications",
+        description: "Review membership applications and verify new crew.",
+      },
+    ],
   },
   {
     title: "Emails",
@@ -99,5 +98,21 @@ export const adminNav: NavItem[] = [
     icon: Mail,
   },
 ]
+
+export function findNavItem(href: string) {
+  for (const item of [...mainNav, ...adminNav]) {
+    if (item.href === href) {
+      return { title: item.title, description: item.description }
+    }
+    for (const sub of item.items ?? []) {
+      if (sub.href === href) {
+        return {
+          title: sub.title,
+          description: sub.description ?? item.description,
+        }
+      }
+    }
+  }
+}
 
 export const allNav: NavItem[] = [...mainNav, ...adminNav]

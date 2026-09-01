@@ -5,9 +5,9 @@ import { InvitePopoverTrigger } from "@/components/invites/invite-popover"
 import { PageShell } from "@/components/page-shell"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { listAllInvites } from "@/lib/invites/actions"
-import { adminNav } from "@/lib/nav"
+import { findNavItem } from "@/lib/nav"
 
-const item = adminNav.find((i) => i.href === "/invites")!
+const item = findNavItem("/invites")!
 
 export default async function InvitesPage() {
   const sessionUser = await getSessionUser()

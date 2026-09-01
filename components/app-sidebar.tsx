@@ -205,8 +205,6 @@ export function AppSidebar({
     }
   }, [pathname, isMobile, setOpenMobile])
 
-  const isActive = (item: NavItem) => isSubActive(pathname, item.href)
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -267,21 +265,25 @@ export function AppSidebar({
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminNav.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive(item)}
-                      tooltip={item.title}
-                      render={<Link href={item.href} />}
-                    >
-                      <item.icon className="text-sidebar-foreground/70" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                    {item.badge ? (
-                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                    ) : null}
-                  </SidebarMenuItem>
-                ))}
+                {adminNav.map((item) =>
+                  item.items && item.items.length > 0 ? (
+                    <CollapsibleNavItem
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      messagesUnreadCount={messagesUnreadCount}
+                      roomsUnreadCount={roomsUnreadCount}
+                    />
+                  ) : (
+                    <FlatNavItem
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      messagesUnreadCount={messagesUnreadCount}
+                      roomsUnreadCount={roomsUnreadCount}
+                    />
+                  ),
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

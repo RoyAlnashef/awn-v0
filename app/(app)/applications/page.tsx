@@ -4,9 +4,9 @@ import { ApplicationsTable } from "@/components/applications/applications-table"
 import { PageShell } from "@/components/page-shell"
 import { listApplications } from "@/lib/applications/actions"
 import { getSessionUser } from "@/lib/auth/get-session-user"
-import { adminNav } from "@/lib/nav"
+import { findNavItem } from "@/lib/nav"
 
-const item = adminNav.find((i) => i.href === "/applications")!
+const item = findNavItem("/applications")!
 
 export default async function ApplicationsPage() {
   const sessionUser = await getSessionUser()
