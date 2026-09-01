@@ -44,12 +44,12 @@ export function EmailLayoutShell({
             <EmailNav />
           </div>
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
-            <div className="flex min-h-0 flex-col overflow-auto lg:col-span-5">
+            <div className="flex min-h-0 flex-col overflow-auto lg:col-span-4">
               <div className="min-w-0 rounded-xl border border-border bg-background p-6">
                 {children}
               </div>
             </div>
-            <aside className="hidden min-h-0 lg:col-span-7 lg:flex lg:flex-col lg:p-5 xl:px-12 xl:pb-12 xl:pt-4 bg-card/20 rounded-4xl">
+            <aside className="hidden min-h-0 lg:col-span-8 lg:flex lg:flex-col lg:p-5 xl:px-12 xl:pb-12 xl:pt-4 bg-card/20 rounded-4xl">
               <EmailPreviewPanel />
             </aside>
           </div>
