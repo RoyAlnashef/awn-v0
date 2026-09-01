@@ -7,6 +7,7 @@ import {
   UserCheck,
   ClipboardList,
   MailPlus,
+  Mail,
   type LucideIcon,
 } from "lucide-react"
 
@@ -89,6 +90,13 @@ export const adminNav: NavItem[] = [
     href: "/invites",
     description: "Track sent invitations and manage pending referrals.",
     icon: MailPlus,
+  },
+  {
+    title: "Emails",
+    href: "/email",
+    description:
+      "Preview transactional templates and broadcast messages to members.",
+    icon: Mail,
   },
 ]
 

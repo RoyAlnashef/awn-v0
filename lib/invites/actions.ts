@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto"
 import { revalidatePath } from "next/cache"
 
 import { getSessionUser } from "@/lib/auth/get-session-user"
-import { getRequestAppOrigin } from "@/lib/email/constants"
+import { getRequestAppOrigin } from "@/lib/email/constants.server"
 import { sendEmail } from "@/lib/email/send"
 import {
   inviteEmailHtml,
