@@ -34,9 +34,6 @@ export function TemplateEditorHeader({
       </Button>
       <div className="min-w-0 flex-1">
         <h2 className="truncate text-sm font-semibold">{entry.name}</h2>
-        <p className="hidden truncate text-xs text-muted-foreground lg:block">
-          {entry.description}
-        </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <Button
