@@ -26,7 +26,7 @@ export function TemplatesPageContent({
 }: {
   initialContent: AllTemplateContentMap
 }) {
-  const { setHtml, setEmptyMessage, setClipboardCopy, previewTheme } =
+  const { setHtml, setEmptyMessage, setClipboardCopy, previewTheme, openPreviewDrawer } =
     useEmailPreview()
   const [query, setQuery] = useState("")
   const [selectedId, setSelectedId] = useState(emailTemplateCatalog[0]?.id ?? "")
@@ -107,6 +107,14 @@ export function TemplatesPageContent({
     }
   }, [filtered, selectedId])
 
+  function handlePreview(id: string) {
+    setSelectedId(id)
+    if (isEmailTemplateId(id)) {
+      setHtml(getTemplatePreviewHtml(id, previewTheme, contentMap[id]))
+    }
+    openPreviewDrawer()
+  }
+
   function openEditor(id: string) {
     if (!isEmailTemplateId(id)) return
 
@@ -171,6 +179,7 @@ export function TemplatesPageContent({
             selectedId={selected?.id ?? ""}
             onSelect={setSelectedId}
             onEdit={openEditor}
+            onPreview={handlePreview}
           />
         </div>
 

@@ -25,6 +25,9 @@ type EmailPreviewContextValue = {
   setClipboardCopy: (copy: ClipboardCopy | null) => void
   previewTheme: EmailTheme
   setPreviewTheme: (theme: EmailTheme) => void
+  previewDrawerOpen: boolean
+  setPreviewDrawerOpen: (open: boolean) => void
+  openPreviewDrawer: () => void
 }
 
 const EmailPreviewContext = createContext<EmailPreviewContextValue | null>(null)
@@ -38,6 +41,7 @@ export function EmailPreviewProvider({ children }: { children: ReactNode }) {
     null,
   )
   const [previewTheme, setPreviewThemeState] = useState<EmailTheme>("dark")
+  const [previewDrawerOpen, setPreviewDrawerOpenState] = useState(false)
 
   const setHtml = useCallback((next: string | null) => {
     setHtmlState(next)
@@ -55,6 +59,14 @@ export function EmailPreviewProvider({ children }: { children: ReactNode }) {
     setPreviewThemeState(theme)
   }, [])
 
+  const setPreviewDrawerOpen = useCallback((open: boolean) => {
+    setPreviewDrawerOpenState(open)
+  }, [])
+
+  const openPreviewDrawer = useCallback(() => {
+    setPreviewDrawerOpenState(true)
+  }, [])
+
   const value = useMemo(
     () => ({
       html,
@@ -65,6 +77,9 @@ export function EmailPreviewProvider({ children }: { children: ReactNode }) {
       setClipboardCopy,
       previewTheme,
       setPreviewTheme,
+      previewDrawerOpen,
+      setPreviewDrawerOpen,
+      openPreviewDrawer,
     }),
     [
       html,
@@ -75,6 +90,9 @@ export function EmailPreviewProvider({ children }: { children: ReactNode }) {
       setClipboardCopy,
       previewTheme,
       setPreviewTheme,
+      previewDrawerOpen,
+      setPreviewDrawerOpen,
+      openPreviewDrawer,
     ],
   )
 

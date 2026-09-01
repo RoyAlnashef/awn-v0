@@ -26,7 +26,11 @@ export default async function EmailTemplatesPage() {
     : fallbackContent()
 
   return (
-    <EmailLayoutShell title={item.title} description={item.description}>
+    <EmailLayoutShell
+      title={item.title}
+      description={item.description}
+      showMobilePagePreview={false}
+    >
       <div className="w-full overflow-hidden">
         <TemplatesPageContent initialContent={initialContent} />
       </div>

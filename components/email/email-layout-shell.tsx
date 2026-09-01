@@ -1,41 +1,49 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { Eye } from "lucide-react"
 
 import { EmailNav } from "@/components/email/email-nav"
 import { EmailPreviewDrawer } from "@/components/email/email-preview-drawer"
 import { EmailPreviewPanel } from "@/components/email/email-preview-panel"
-import { EmailPreviewProvider } from "@/components/email/email-preview-provider"
+import {
+  EmailPreviewProvider,
+  useEmailPreview,
+} from "@/components/email/email-preview-provider"
 import { PageShell } from "@/components/page-shell"
 import { Button } from "@/components/ui/button"
 
-export function EmailLayoutShell({
+function EmailLayoutShellContent({
   title,
   description,
   children,
+  showMobilePagePreview = true,
 }: {
   title: string
   description?: string
   children: ReactNode
+  showMobilePagePreview?: boolean
 }) {
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const { previewDrawerOpen, setPreviewDrawerOpen, openPreviewDrawer } =
+    useEmailPreview()
 
   return (
-    <EmailPreviewProvider>
+    <>
       <PageShell
         title={title}
         description={description}
         actions={
-          <Button
-            size="sm"
-            variant="outline"
-            className="lg:hidden"
-            onClick={() => setPreviewOpen(true)}
-          >
-            <Eye />
-            Preview
-          </Button>
+          showMobilePagePreview ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="lg:hidden"
+              onClick={openPreviewDrawer}
+            >
+              <Eye />
+              Preview
+            </Button>
+          ) : undefined
         }
         fillViewport
       >
@@ -56,7 +64,34 @@ export function EmailLayoutShell({
         </div>
       </PageShell>
 
-      <EmailPreviewDrawer open={previewOpen} onOpenChange={setPreviewOpen} />
+      <EmailPreviewDrawer
+        open={previewDrawerOpen}
+        onOpenChange={setPreviewDrawerOpen}
+      />
+    </>
+  )
+}
+
+export function EmailLayoutShell({
+  title,
+  description,
+  children,
+  showMobilePagePreview = true,
+}: {
+  title: string
+  description?: string
+  children: ReactNode
+  showMobilePagePreview?: boolean
+}) {
+  return (
+    <EmailPreviewProvider>
+      <EmailLayoutShellContent
+        title={title}
+        description={description}
+        showMobilePagePreview={showMobilePagePreview}
+      >
+        {children}
+      </EmailLayoutShellContent>
     </EmailPreviewProvider>
   )
 }

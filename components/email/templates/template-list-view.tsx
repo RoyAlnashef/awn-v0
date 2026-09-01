@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Search } from "lucide-react"
+import { Eye, Pencil, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,11 +12,13 @@ function TemplateListItem({
   selected,
   onSelect,
   onEdit,
+  onPreview,
 }: {
   entry: EmailTemplateEntry
   selected: boolean
   onSelect: () => void
   onEdit: () => void
+  onPreview: () => void
 }) {
   return (
     <div
@@ -37,6 +39,19 @@ function TemplateListItem({
           {entry.description}
         </span>
       </button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="shrink-0 text-muted-foreground/60 hover:text-muted-foreground lg:hidden"
+        aria-label={`Preview ${entry.name}`}
+        onClick={(event) => {
+          event.stopPropagation()
+          onPreview()
+        }}
+      >
+        <Eye />
+      </Button>
       <Button
         type="button"
         variant="ghost"
@@ -63,6 +78,7 @@ export function TemplateListView({
   selectedId,
   onSelect,
   onEdit,
+  onPreview,
 }: {
   query: string
   onQueryChange: (value: string) => void
@@ -72,6 +88,7 @@ export function TemplateListView({
   selectedId: string
   onSelect: (id: string) => void
   onEdit: (id: string) => void
+  onPreview: (id: string) => void
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -99,6 +116,7 @@ export function TemplateListView({
                   selected={selectedId === entry.id}
                   onSelect={() => onSelect(entry.id)}
                   onEdit={() => onEdit(entry.id)}
+                  onPreview={() => onPreview(entry.id)}
                 />
               ))}
             </div>
@@ -118,6 +136,7 @@ export function TemplateListView({
                   selected={selectedId === entry.id}
                   onSelect={() => onSelect(entry.id)}
                   onEdit={() => onEdit(entry.id)}
+                  onPreview={() => onPreview(entry.id)}
                 />
               ))}
             </div>
