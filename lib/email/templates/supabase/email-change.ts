@@ -1,29 +1,28 @@
-import type { EmailTheme } from "@/lib/email/templates/base"
 import {
-  renderSupabaseTemplate,
-  substituteSupabaseTags,
-} from "@/lib/email/templates/supabase/shared"
+  getTemplateDefaults,
+  renderTemplateHtml,
+  renderTemplateSupabaseHtml,
+  type EmailTemplateContent,
+} from "@/lib/email/template-content"
+import type { EmailTheme } from "@/lib/email/templates/base"
 
-export const emailChangeSubject = "Confirm your new AWN email"
+export const emailChangeSubject =
+  getTemplateDefaults("supabase-email-change").subject
 
-function emailChangeTemplate(theme: EmailTheme = "dark") {
-  return {
-    preview: "Confirm your new AWN email address",
-    heading: "Confirm email change",
-    paragraphs: [
-      "You requested to change the email on your AWN account from {{ .OldEmail }} to {{ .NewEmail }}.",
-      "Confirm this change using the button below.",
-    ],
-    buttonLabel: "Confirm new email",
-    buttonHref: "{{ .ConfirmationURL }}",
-    theme,
-  }
+export function emailChangeSupabaseHtml(content?: EmailTemplateContent): string {
+  return renderTemplateSupabaseHtml(
+    "supabase-email-change",
+    content ?? getTemplateDefaults("supabase-email-change"),
+  )
 }
 
-export function emailChangeSupabaseHtml(): string {
-  return renderSupabaseTemplate(emailChangeTemplate("dark"))
-}
-
-export function emailChangePreviewHtml(theme: EmailTheme = "dark"): string {
-  return substituteSupabaseTags(renderSupabaseTemplate(emailChangeTemplate(theme)))
+export function emailChangePreviewHtml(
+  theme: EmailTheme = "dark",
+  content?: EmailTemplateContent,
+): string {
+  return renderTemplateHtml(
+    "supabase-email-change",
+    content ?? getTemplateDefaults("supabase-email-change"),
+    { theme },
+  )
 }

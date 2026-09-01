@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { getRequestAppOrigin } from "@/lib/email/constants.server"
 import { sendEmail } from "@/lib/email/send"
+import { resolveEmailTemplateContent } from "@/lib/email/template-actions"
 import {
   inviteEmailHtml,
   inviteEmailSubject,
@@ -232,11 +233,12 @@ export async function sendInvite(email: string): Promise<SendInviteResult> {
 
     const invite = mapInviteRow(data as InviteRow)
     const origin = await getRequestAppOrigin()
+    const inviteContent = await resolveEmailTemplateContent("invite")
 
     const emailResult = await sendEmail({
       to: inviteeEmail,
-      subject: inviteEmailSubject(inviterName),
-      html: inviteEmailHtml({ inviterName, token, origin }),
+      subject: inviteEmailSubject(inviterName, inviteContent),
+      html: inviteEmailHtml({ inviterName, token, origin, content: inviteContent }),
     })
 
     if (!emailResult.ok) {

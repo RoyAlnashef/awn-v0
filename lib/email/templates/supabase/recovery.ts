@@ -1,32 +1,27 @@
-import type { EmailTheme } from "@/lib/email/templates/base"
-import { emailThemeColors } from "@/lib/email/templates/base"
 import {
-  renderSupabaseTemplate,
-  substituteSupabaseTags,
-} from "@/lib/email/templates/supabase/shared"
+  getTemplateDefaults,
+  renderTemplateHtml,
+  renderTemplateSupabaseHtml,
+  type EmailTemplateContent,
+} from "@/lib/email/template-content"
+import type { EmailTheme } from "@/lib/email/templates/base"
 
-export const recoverySubject = "Reset your AWN password"
+export const recoverySubject = getTemplateDefaults("supabase-recovery").subject
 
-function recoveryTemplate(theme: EmailTheme = "dark") {
-  const colors = emailThemeColors(theme)
-  return {
-    preview: "Reset your A Wright Network password",
-    heading: "Reset your password",
-    paragraphs: [
-      "We received a request to reset the password for your AWN account.",
-      "If you didn't request a reset, you can ignore this email.",
-    ],
-    buttonLabel: "Reset password",
-    buttonHref: "{{ .ConfirmationURL }}",
-    footerNote: `Or enter this code: <strong style="color:${colors.strong};">{{ .Token }}</strong>`,
-    theme,
-  }
+export function recoverySupabaseHtml(content?: EmailTemplateContent): string {
+  return renderTemplateSupabaseHtml(
+    "supabase-recovery",
+    content ?? getTemplateDefaults("supabase-recovery"),
+  )
 }
 
-export function recoverySupabaseHtml(): string {
-  return renderSupabaseTemplate(recoveryTemplate("dark"))
-}
-
-export function recoveryPreviewHtml(theme: EmailTheme = "dark"): string {
-  return substituteSupabaseTags(renderSupabaseTemplate(recoveryTemplate(theme)))
+export function recoveryPreviewHtml(
+  theme: EmailTheme = "dark",
+  content?: EmailTemplateContent,
+): string {
+  return renderTemplateHtml(
+    "supabase-recovery",
+    content ?? getTemplateDefaults("supabase-recovery"),
+    { theme },
+  )
 }

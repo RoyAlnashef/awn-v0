@@ -1,3 +1,10 @@
+import {
+  getTemplateDefaults,
+  isEmailTemplateId,
+  renderTemplateHtml,
+  renderTemplateSupabaseHtml,
+  type EmailTemplateContent,
+} from "@/lib/email/template-content"
 import { inviteEmailHtml, inviteEmailSubject } from "@/lib/email/templates/invite-email"
 import {
   applicationConfirmationHtml,
@@ -84,7 +91,7 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
     description: "Sent when an invitee submits their membership application.",
     source: "resend",
     category: "transactional",
-    defaultSubject: applicationConfirmationSubject,
+    defaultSubject: applicationConfirmationSubject(),
     previewHtml: applicationConfirmationHtml(),
   },
   {
@@ -93,7 +100,7 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
     description: "Sent when an admin approves a membership application.",
     source: "resend",
     category: "transactional",
-    defaultSubject: applicationApprovedSubject,
+    defaultSubject: applicationApprovedSubject(),
     previewHtml: applicationApprovedHtml(),
   },
   {
@@ -102,7 +109,7 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
     description: "Sent when an admin denies an application with an optional note.",
     source: "resend",
     category: "transactional",
-    defaultSubject: applicationDeniedSubject,
+    defaultSubject: applicationDeniedSubject(),
     previewHtml: applicationDeniedHtml({
       note: "Thanks for your interest. We're keeping membership focused on active touring crew for now.",
     }),
@@ -175,41 +182,55 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
   },
 ]
 
+const SAMPLE_DENIED_NOTE =
+  "Thanks for your interest. We're keeping membership focused on active touring crew for now."
+
 export function getTemplatePreviewHtml(
   id: string,
   theme: EmailTheme = "dark",
+  contentOverride?: EmailTemplateContent,
 ): string {
-  switch (id) {
-    case "invite":
-      return inviteEmailHtml({
-        inviterName: "Alex Rivera",
-        token: "sample-invite-token",
-        theme,
-      })
-    case "application-confirmation":
-      return applicationConfirmationHtml(theme)
-    case "application-approved":
-      return applicationApprovedHtml(theme)
-    case "application-denied":
-      return applicationDeniedHtml({
-        note: "Thanks for your interest. We're keeping membership focused on active touring crew for now.",
-        theme,
-      })
-    case "supabase-magic-link":
-      return magicLinkPreviewHtml(theme)
-    case "supabase-recovery":
-      return recoveryPreviewHtml(theme)
-    case "supabase-confirmation":
-      return confirmationPreviewHtml(theme)
-    case "supabase-invite-user":
-      return inviteUserPreviewHtml(theme)
-    case "supabase-email-change":
-      return emailChangePreviewHtml(theme)
-    case "supabase-reauthentication":
-      return reauthenticationPreviewHtml(theme)
-    default:
-      return getEmailTemplateById(id)?.previewHtml ?? ""
+  if (!isEmailTemplateId(id)) {
+    return getEmailTemplateById(id)?.previewHtml ?? ""
   }
+
+  const content = contentOverride ?? getTemplateDefaults(id)
+
+  if (id === "invite") {
+    return inviteEmailHtml({
+      inviterName: "Alex Rivera",
+      token: "sample-invite-token",
+      theme,
+      content,
+    })
+  }
+
+  if (id === "application-denied") {
+    return applicationDeniedHtml({
+      note: SAMPLE_DENIED_NOTE,
+      theme,
+      content,
+    })
+  }
+
+  return renderTemplateHtml(id, content, {
+    theme,
+    inviterName: "Alex Rivera",
+    token: "sample-invite-token",
+  })
+}
+
+export function getTemplateSupabaseHtml(
+  id: string,
+  contentOverride?: EmailTemplateContent,
+): string | undefined {
+  if (!isEmailTemplateId(id)) return undefined
+
+  const entry = getEmailTemplateById(id)
+  if (entry?.source !== "supabase") return undefined
+
+  const content = contentOverride ?? getTemplateDefaults(id)
+  return renderTemplateSupabaseHtml(id, content)
 }
 
 export function getEmailTemplateById(id: string): EmailTemplateEntry | undefined {

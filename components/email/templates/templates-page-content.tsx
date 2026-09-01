@@ -1,50 +1,46 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useEmailPreview } from "@/components/email/email-preview-provider"
-import { Input } from "@/components/ui/input"
+import { TemplateEditorForm } from "@/components/email/templates/template-editor-form"
+import { TemplateListView } from "@/components/email/templates/template-list-view"
+import { UnsavedChangesPopover } from "@/components/email/templates/unsaved-changes-popover"
 import {
   emailTemplateCatalog,
+  getEmailTemplateById,
   getTemplatePreviewHtml,
-  type EmailTemplateEntry,
+  getTemplateSupabaseHtml,
 } from "@/lib/email/catalog"
+import {
+  cloneTemplateContent,
+  isEmailTemplateId,
+  templateContentEquals,
+  type EmailTemplateContent,
+} from "@/lib/email/template-content"
+import type { AllTemplateContentMap, SavedTemplateContent } from "@/lib/email/template-actions"
 import { cn } from "@/lib/utils"
 
-function TemplateListItem({
-  entry,
-  selected,
-  onSelect,
+export function TemplatesPageContent({
+  initialContent,
 }: {
-  entry: EmailTemplateEntry
-  selected: boolean
-  onSelect: () => void
+  initialContent: AllTemplateContentMap
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "flex w-full flex-col gap-1 rounded-lg border px-3 py-3 text-left transition-colors",
-        selected
-          ? "border-primary/40 bg-primary/5"
-          : "border-border bg-card/40 hover:bg-muted/40",
-      )}
-    >
-      <span className="font-medium text-sm">{entry.name}</span>
-      <span className="text-xs text-muted-foreground line-clamp-2">
-        {entry.description}
-      </span>
-    </button>
-  )
-}
-
-export function TemplatesPageContent() {
   const { setHtml, setEmptyMessage, setClipboardCopy, previewTheme } =
     useEmailPreview()
   const [query, setQuery] = useState("")
   const [selectedId, setSelectedId] = useState(emailTemplateCatalog[0]?.id ?? "")
+  const [view, setView] = useState<"list" | "edit">("list")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [contentMap, setContentMap] = useState(initialContent)
+  const [draftContent, setDraftContent] = useState<EmailTemplateContent | null>(
+    null,
+  )
+  const [savedSnapshot, setSavedSnapshot] = useState<EmailTemplateContent | null>(
+    null,
+  )
+  const [discardPopoverOpen, setDiscardPopoverOpen] = useState(false)
+  const backAnchorRef = useRef<HTMLDivElement>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -60,34 +56,50 @@ export function TemplatesPageContent() {
   const resendEntries = filtered.filter((e) => e.source === "resend")
   const supabaseEntries = filtered.filter((e) => e.source === "supabase")
 
-  const selected =
-    emailTemplateCatalog.find((e) => e.id === selectedId) ?? filtered[0]
+  const selected = getEmailTemplateById(selectedId) ?? filtered[0]
+  const editingEntry = editingId ? getEmailTemplateById(editingId) : null
+
+  const previewContent = useMemo(() => {
+    if (!selected) return null
+    if (view === "edit" && editingId === selectedId && draftContent) {
+      return draftContent
+    }
+    if (isEmailTemplateId(selected.id)) {
+      return contentMap[selected.id]
+    }
+    return null
+  }, [selected, view, editingId, selectedId, draftContent, contentMap])
 
   useEffect(() => {
     setEmptyMessage("Select a template to preview.")
   }, [setEmptyMessage])
 
   useEffect(() => {
-    if (selected) {
-      setHtml(getTemplatePreviewHtml(selected.id, previewTheme))
-    } else {
+    if (!selected || !previewContent) {
       setHtml(null)
+      return
     }
-  }, [selected, previewTheme, setHtml])
+
+    setHtml(getTemplatePreviewHtml(selected.id, previewTheme, previewContent))
+  }, [selected, previewContent, previewTheme, setHtml])
 
   useEffect(() => {
-    if (
-      selected?.source === "supabase" &&
-      selected.supabaseHtml
-    ) {
-      setClipboardCopy({
-        label: "HTML",
-        value: selected.supabaseHtml,
-      })
+    if (!selected || selected.source !== "supabase") {
+      setClipboardCopy(null)
+      return
+    }
+
+    const supabaseHtml = getTemplateSupabaseHtml(
+      selected.id,
+      previewContent ?? undefined,
+    )
+
+    if (supabaseHtml) {
+      setClipboardCopy({ label: "HTML", value: supabaseHtml })
     } else {
       setClipboardCopy(null)
     }
-  }, [selected, setClipboardCopy])
+  }, [selected, previewContent, setClipboardCopy])
 
   useEffect(() => {
     if (filtered.length > 0 && !filtered.some((e) => e.id === selectedId)) {
@@ -95,60 +107,94 @@ export function TemplatesPageContent() {
     }
   }, [filtered, selectedId])
 
+  function openEditor(id: string) {
+    if (!isEmailTemplateId(id)) return
+
+    setSelectedId(id)
+    setEditingId(id)
+    const saved = contentMap[id]
+    const snapshot = cloneTemplateContent(saved)
+    setDraftContent(snapshot)
+    setSavedSnapshot(cloneTemplateContent(saved))
+    setView("edit")
+  }
+
+  function closeEditor() {
+    setView("list")
+    setEditingId(null)
+    setDraftContent(null)
+    setSavedSnapshot(null)
+    setDiscardPopoverOpen(false)
+  }
+
+  function handleBackRequest() {
+    if (
+      draftContent &&
+      savedSnapshot &&
+      !templateContentEquals(draftContent, savedSnapshot)
+    ) {
+      setDiscardPopoverOpen(true)
+      return
+    }
+    closeEditor()
+  }
+
+  function handleSaved(id: string, saved: SavedTemplateContent) {
+    if (!isEmailTemplateId(id)) return
+
+    setContentMap((current) => ({
+      ...current,
+      [id]: saved,
+    }))
+    const snapshot = cloneTemplateContent(saved)
+    setDraftContent(snapshot)
+    setSavedSnapshot(snapshot)
+  }
+
+  const isEditing = view === "edit" && editingEntry && draftContent && savedSnapshot
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search templates…"
-          className="pl-9"
-        />
-      </div>
+    <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+      <div
+        className={cn(
+          "flex h-full w-[200%] transition-transform duration-300 ease-in-out",
+          view === "edit" && "-translate-x-1/2",
+        )}
+      >
+        <div className="flex w-1/2 min-h-0 flex-col pr-0">
+          <TemplateListView
+            query={query}
+            onQueryChange={setQuery}
+            resendEntries={resendEntries}
+            supabaseEntries={supabaseEntries}
+            filteredCount={filtered.length}
+            selectedId={selected?.id ?? ""}
+            onSelect={setSelectedId}
+            onEdit={openEditor}
+          />
+        </div>
 
-      <div className="flex flex-col gap-4">
-        {resendEntries.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              App emails (Resend)
-            </h2>
-            <div className="flex flex-col gap-2">
-              {resendEntries.map((entry) => (
-                <TemplateListItem
-                  key={entry.id}
-                  entry={entry}
-                  selected={selected?.id === entry.id}
-                  onSelect={() => setSelectedId(entry.id)}
-                />
-              ))}
+        <div className="flex w-1/2 min-h-0 flex-col pl-0">
+          {isEditing ? (
+            <div ref={backAnchorRef} className="flex min-h-0 flex-1 flex-col">
+              <TemplateEditorForm
+                entry={editingEntry}
+                content={draftContent}
+                savedSnapshot={savedSnapshot}
+                onBack={handleBackRequest}
+                onChange={setDraftContent}
+                onSaved={(saved) => handleSaved(editingEntry.id, saved)}
+              />
+              <UnsavedChangesPopover
+                open={discardPopoverOpen}
+                onOpenChange={setDiscardPopoverOpen}
+                anchor={backAnchorRef}
+                onDiscard={closeEditor}
+                onKeepEditing={() => setDiscardPopoverOpen(false)}
+              />
             </div>
-          </section>
-        ) : null}
-
-        {supabaseEntries.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              Auth emails (Supabase)
-            </h2>
-            <div className="flex flex-col gap-2">
-              {supabaseEntries.map((entry) => (
-                <TemplateListItem
-                  key={entry.id}
-                  entry={entry}
-                  selected={selected?.id === entry.id}
-                  onSelect={() => setSelectedId(entry.id)}
-                />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No templates match your search.
-          </p>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   )

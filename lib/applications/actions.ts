@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { sendEmail } from "@/lib/email/send"
+import { resolveEmailTemplateContent } from "@/lib/email/template-actions"
 import {
   applicationApprovedHtml,
   applicationApprovedSubject,
@@ -352,10 +353,14 @@ async function createMembershipApplication(input: {
     is_approved: false,
   })
 
+  const confirmationContent = await resolveEmailTemplateContent(
+    "application-confirmation",
+  )
+
   const emailResult = await sendEmail({
     to: email,
-    subject: applicationConfirmationSubject,
-    html: applicationConfirmationHtml(),
+    subject: applicationConfirmationSubject(confirmationContent),
+    html: applicationConfirmationHtml("dark", confirmationContent),
   })
 
   if (!emailResult.ok && process.env.NODE_ENV !== "development") {
@@ -695,10 +700,12 @@ export async function approveApplication(
 
     if (profileError) return { ok: false, error: profileError.message }
 
+    const approvedContent = await resolveEmailTemplateContent("application-approved")
+
     await sendEmail({
       to: application.email,
-      subject: applicationApprovedSubject,
-      html: applicationApprovedHtml(),
+      subject: applicationApprovedSubject(approvedContent),
+      html: applicationApprovedHtml("dark", approvedContent),
     })
 
     const inviterId = unwrapOne(
@@ -798,10 +805,12 @@ export async function denyApplication(input: {
     if (profileError) return { ok: false, error: profileError.message }
 
     if (note) {
+      const deniedContent = await resolveEmailTemplateContent("application-denied")
+
       await sendEmail({
         to: application.email,
-        subject: applicationDeniedSubject,
-        html: applicationDeniedHtml({ note }),
+        subject: applicationDeniedSubject(deniedContent),
+        html: applicationDeniedHtml({ note, content: deniedContent }),
       })
     }
 

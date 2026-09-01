@@ -1,28 +1,30 @@
-import type { EmailTheme } from "@/lib/email/templates/base"
 import {
-  renderSupabaseTemplate,
-  substituteSupabaseTags,
-} from "@/lib/email/templates/supabase/shared"
+  getTemplateDefaults,
+  renderTemplateHtml,
+  renderTemplateSupabaseHtml,
+  type EmailTemplateContent,
+} from "@/lib/email/template-content"
+import type { EmailTheme } from "@/lib/email/templates/base"
 
-export const confirmationSubject = "Confirm your AWN account"
+export const confirmationSubject =
+  getTemplateDefaults("supabase-confirmation").subject
 
-function confirmationTemplate(theme: EmailTheme = "dark") {
-  return {
-    preview: "Confirm your A Wright Network account",
-    heading: "Confirm your email",
-    paragraphs: [
-      "Thanks for signing up for A Wright Network. Confirm your email address to finish setting up your account.",
-    ],
-    buttonLabel: "Confirm email",
-    buttonHref: "{{ .ConfirmationURL }}",
-    theme,
-  }
+export function confirmationSupabaseHtml(
+  content?: EmailTemplateContent,
+): string {
+  return renderTemplateSupabaseHtml(
+    "supabase-confirmation",
+    content ?? getTemplateDefaults("supabase-confirmation"),
+  )
 }
 
-export function confirmationSupabaseHtml(): string {
-  return renderSupabaseTemplate(confirmationTemplate("dark"))
-}
-
-export function confirmationPreviewHtml(theme: EmailTheme = "dark"): string {
-  return substituteSupabaseTags(renderSupabaseTemplate(confirmationTemplate(theme)))
+export function confirmationPreviewHtml(
+  theme: EmailTheme = "dark",
+  content?: EmailTemplateContent,
+): string {
+  return renderTemplateHtml(
+    "supabase-confirmation",
+    content ?? getTemplateDefaults("supabase-confirmation"),
+    { theme },
+  )
 }
