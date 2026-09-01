@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { Search } from "lucide-react"
 
 import { useEmailPreview } from "@/components/email/email-preview-provider"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
   emailTemplateCatalog,
@@ -33,12 +32,7 @@ function TemplateListItem({
           : "border-border bg-card/40 hover:bg-muted/40",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="font-medium text-sm">{entry.name}</span>
-        <Badge variant={entry.source === "supabase" ? "secondary" : "outline"}>
-          {entry.source === "supabase" ? "Supabase" : "Resend"}
-        </Badge>
-      </div>
+      <span className="font-medium text-sm">{entry.name}</span>
       <span className="text-xs text-muted-foreground line-clamp-2">
         {entry.description}
       </span>
