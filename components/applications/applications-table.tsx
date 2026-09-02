@@ -129,7 +129,9 @@ export function ApplicationsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Applicant</TableHead>
-                <TableHead>Title</TableHead>
+                <TableHead className="max-w-xs whitespace-normal">
+                  Title
+                </TableHead>
                 <TableHead>Invited by</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
@@ -149,7 +151,9 @@ export function ApplicationsTable({
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell>{application.title}</TableCell>
+                    <TableCell className="max-w-xs whitespace-normal wrap-break-word">
+                      {application.title}
+                    </TableCell>
                     <TableCell>
                       {application.source === "request_access" ? (
                         <span className="text-sm text-muted-foreground">
