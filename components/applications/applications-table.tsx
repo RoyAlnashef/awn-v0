@@ -3,9 +3,13 @@
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Search } from "lucide-react"
 
 import { ApplicationReviewPanel } from "@/components/applications/application-review-panel"
+import {
+  ApplicationsFilters,
+  getApplicationFilterCount,
+  type ApplicationFilters,
+} from "@/components/applications/applications-filters"
 import { DenyDialog } from "@/components/applications/deny-dialog"
 import {
   applicationStatusConfig,
@@ -16,7 +20,6 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -28,7 +31,11 @@ import {
 import { initials } from "@/lib/users-data"
 import { formatRelativeTime } from "@/lib/messages/format"
 
-const ALL = "all"
+const defaultFilters: ApplicationFilters = {
+  search: "",
+  statuses: [],
+  sources: [],
+}
 
 export function ApplicationsTable({
   initialApplications,
@@ -39,20 +46,27 @@ export function ApplicationsTable({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [query, setQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<
-    MembershipApplication["status"] | typeof ALL
-  >(ALL)
+  const [filters, setFilters] = useState<ApplicationFilters>(defaultFilters)
   const [selected, setSelected] = useState<MembershipApplication | null>(null)
   const [denyTarget, setDenyTarget] = useState<MembershipApplication | null>(
     null,
   )
 
-  const q = query.trim().toLowerCase()
+  const q = filters.search.trim().toLowerCase()
+  const activeFilterCount = getApplicationFilterCount(filters)
 
   const filtered = useMemo(() => {
     return initialApplications.filter((application) => {
-      if (statusFilter !== ALL && application.status !== statusFilter) {
+      if (
+        filters.statuses.length > 0 &&
+        !filters.statuses.includes(application.status)
+      ) {
+        return false
+      }
+      if (
+        filters.sources.length > 0 &&
+        !filters.sources.includes(application.source)
+      ) {
         return false
       }
       if (!q) return true
@@ -63,7 +77,7 @@ export function ApplicationsTable({
         application.inviterName.toLowerCase().includes(q)
       )
     })
-  }, [initialApplications, q, statusFilter])
+  }, [initialApplications, filters.sources, filters.statuses, q])
 
   function handleApprove(application: MembershipApplication) {
     startTransition(async () => {
@@ -86,34 +100,12 @@ export function ApplicationsTable({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search applicants, inviter…"
-            className="pl-9"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {[ALL, "pending", "approved", "denied"].map((status) => (
-            <Button
-              key={status}
-              size="sm"
-              variant={statusFilter === status ? "default" : "outline"}
-              onClick={() =>
-                setStatusFilter(status as MembershipApplication["status"] | typeof ALL)
-              }
-            >
-              {status === ALL
-                ? "All"
-                : applicationStatusConfig[status as MembershipApplication["status"]]
-                    .label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <ApplicationsFilters
+        filters={filters}
+        onChange={(next) => setFilters((current) => ({ ...current, ...next }))}
+        onClear={() => setFilters(defaultFilters)}
+        activeCount={activeFilterCount}
+      />
 
       {filtered.length === 0 ? (
         <div className="flex min-h-[40vh] flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center">
@@ -132,10 +124,10 @@ export function ApplicationsTable({
                 <TableHead className="max-w-xs whitespace-normal">
                   Title
                 </TableHead>
-                <TableHead>Invited by</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]" />
+                <TableHead className="w-25" />
               </TableRow>
             </TableHeader>
             <TableBody>
