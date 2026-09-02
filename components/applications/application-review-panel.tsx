@@ -156,9 +156,27 @@ export function ApplicationReviewPanel({
             </section>
 
             <section className="space-y-2">
-              <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Resume
-              </h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  Resume
+                </h3>
+                {resumeUrl ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    render={
+                      <a
+                        href={resumeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                  >
+                    View
+                    <ExternalLink />
+                  </Button>
+                ) : null}
+              </div>
               {resumeUrl ? (
                 <iframe
                   title={`Resume for ${application.fullName}`}
