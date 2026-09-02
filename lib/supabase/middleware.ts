@@ -3,7 +3,15 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 
-const PUBLIC_PREFIXES = ["/login", "/auth/callback", "/apply", "/request-access"]
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/auth/callback",
+  "/apply",
+  "/request-access",
+  "/privacy",
+  "/terms",
+  "/faqs",
+]
 const PUBLIC_PATHS = ["/login/forgot-password", "/login/reset-password"]
 
 const PENDING_GATE_EXEMPT_PREFIXES = [

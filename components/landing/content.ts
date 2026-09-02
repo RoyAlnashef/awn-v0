@@ -7,8 +7,18 @@ export type LandingFeature = {
   description: string
 }
 
+export type LandingNavLink = {
+  label: string
+  href: string
+}
+
 export const landingContent = {
   brand: "awn.",
+  navLinks: [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+    { label: "FAQs", href: "/faqs" },
+  ] satisfies LandingNavLink[],
   header: {
     signIn: "Sign in",
   },
