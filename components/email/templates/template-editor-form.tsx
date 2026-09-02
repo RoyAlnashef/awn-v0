@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import type { EmailTemplateEntry } from "@/lib/email/catalog"
 import {
@@ -20,6 +21,8 @@ import {
   type SavedTemplateContent,
 } from "@/lib/email/template-actions"
 import { TemplateEditorHeader } from "@/components/email/templates/template-editor-header"
+
+const NEW_PARAGRAPH_PLACEHOLDER = "Your paragraph text here."
 
 export function TemplateEditorForm({
   entry,
@@ -61,7 +64,10 @@ export function TemplateEditorForm({
   }
 
   function addParagraph() {
-    onChange({ ...content, paragraphs: [...content.paragraphs, ""] })
+    onChange({
+      ...content,
+      paragraphs: [...content.paragraphs, NEW_PARAGRAPH_PLACEHOLDER],
+    })
   }
 
   function removeParagraph(index: number) {
@@ -133,6 +139,8 @@ export function TemplateEditorForm({
           </p>
         </div>
 
+        <Separator className="my-2" />
+
         <div className="flex flex-col gap-2">
           <Label htmlFor="template-heading">Heading</Label>
           <Input
@@ -152,7 +160,7 @@ export function TemplateEditorForm({
               onClick={addParagraph}
             >
               <Plus data-icon="inline-start" />
-              Add paragraph
+              Add
             </Button>
           </div>
 
