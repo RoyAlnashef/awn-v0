@@ -218,12 +218,9 @@ export function AppSidebar({
           >
             A
           </div>
-          <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+          <div className="group-data-[collapsible=icon]:hidden">
             <span className="font-heading text-base font-semibold tracking-tight">
               A Wright Network
-            </span>
-            <span className="text-xs text-sidebar-foreground/60">
-              Touring crew, connected
             </span>
           </div>
         </Link>
