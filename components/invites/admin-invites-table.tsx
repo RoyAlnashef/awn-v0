@@ -127,7 +127,7 @@ export function AdminInvitesTable({
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border">
+        <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
