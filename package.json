@@ -25,6 +25,7 @@
     "emoji-picker-react": "^4.19.1",
     "input-otp": "1.4.1",
     "lucide-react": "latest",
+    "motion": "^13.2.0",
     "next": "16.1.6",
     "next-themes": "latest",
     "react": "^19.2.4",

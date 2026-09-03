@@ -1,8 +1,11 @@
-import type { LucideIcon } from "lucide-react"
-import { BookOpen, Radio, ShieldCheck, Users } from "lucide-react"
+export type LandingFeatureIcon =
+  | "radio"
+  | "users"
+  | "book-text"
+  | "shield-check"
 
 export type LandingFeature = {
-  icon: LucideIcon
+  icon: LandingFeatureIcon
   title: string
   description: string
 }
@@ -32,25 +35,25 @@ export const landingContent = {
   },
   features: [
     {
-      icon: Radio,
+      icon: "radio",
       title: "Now",
       description:
         "The live pulse. Who's on the road, who's between tours, who needs crew today. Not a directory — a room that's always moving.",
     },
     {
-      icon: Users,
+      icon: "users",
       title: "People",
       description:
         "Every vetted member. Tour managers, production managers, engineers, backline, wardrobe, drivers, and every discipline in between. If you work behind the show, you belong here.",
     },
     {
-      icon: BookOpen,
+      icon: "book-text",
       title: "Intel",
       description:
         "The collective knowledge of the road. Trusted vendors and honest reviews from people who've actually worked them — the intel that used to live in someone else's phone.",
     },
     {
-      icon: ShieldCheck,
+      icon: "shield-check",
       title: "Trust",
       description:
         "Reputation is everything on tour. Peer-verified credits, private messaging, and a network where what you've done speaks for itself.",

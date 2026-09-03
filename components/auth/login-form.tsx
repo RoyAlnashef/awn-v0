@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { Loader2, Mail, KeyRound } from "lucide-react"
 
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { MailCheckIcon } from "@/components/ui/mail-check"
+
 import { createClient } from "@/lib/supabase/client"
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 import { PasswordField } from "@/components/auth/password-field"
@@ -85,7 +88,7 @@ export function LoginForm({
     return (
       <div className="grid gap-4 text-center">
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Mail className="size-6" />
+          <AnimatedIcon icon={MailCheckIcon} size={24} />
         </div>
         <div className="grid gap-1">
           <h2 className="font-heading text-xl font-medium">Check your email</h2>

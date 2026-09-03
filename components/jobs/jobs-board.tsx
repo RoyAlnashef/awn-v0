@@ -1,7 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, SearchX } from "lucide-react"
+import { Loader2 } from "lucide-react"
+
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { SearchIcon } from "@/components/ui/search"
 import useSWR from "swr"
 
 import { fetchJobs } from "@/lib/jobs/fetch"
@@ -77,7 +80,7 @@ export function JobsBoard() {
 
         {error ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-            <SearchX className="size-8 text-muted-foreground" />
+            <AnimatedIcon icon={SearchIcon} size={32} className="text-muted-foreground" />
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium">Could not load jobs</p>
               <p className="text-sm text-muted-foreground">
@@ -91,7 +94,7 @@ export function JobsBoard() {
           </div>
         ) : jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-            <SearchX className="size-8 text-muted-foreground" />
+            <AnimatedIcon icon={SearchIcon} size={32} className="text-muted-foreground" />
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium">
                 {filters.saved

@@ -8,7 +8,10 @@ import {
   useState,
 } from "react"
 import { useRouter } from "next/navigation"
-import { MessagesSquare, SquarePen } from "lucide-react"
+import { SquarePen } from "lucide-react"
+
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { MessageSquareIcon } from "@/components/ui/message-square"
 
 import { parsePersonConversationId } from "@/lib/messages/format"
 import {
@@ -555,7 +558,7 @@ export function MessagesView({
             <Empty className="flex-1 border-none">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <MessagesSquare />
+                  <AnimatedIcon icon={MessageSquareIcon} size={24} />
                 </EmptyMedia>
                 <EmptyTitle>Your messages</EmptyTitle>
                 <EmptyDescription>

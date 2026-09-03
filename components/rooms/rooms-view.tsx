@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Users } from "lucide-react"
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { UsersIcon } from "@/components/ui/users"
 
 import { type Room } from "@/lib/messages-data"
 import { buildPopoutUrl } from "@/lib/popout"
@@ -200,7 +201,7 @@ export function RoomsView({
             <Empty className="flex-1 border-none">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <Users />
+                  <AnimatedIcon icon={UsersIcon} size={24} />
                 </EmptyMedia>
                 <EmptyTitle>Community groups</EmptyTitle>
                 <EmptyDescription>

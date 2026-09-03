@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Send } from "lucide-react"
+import { Plus } from "lucide-react"
+
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { SendIcon } from "@/components/ui/send"
 import useSWR from "swr"
 
 import { fetchMyApplications } from "@/lib/jobs/fetch"
@@ -30,7 +33,11 @@ function JobRowSkeleton() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center">
-      <Send className="size-8 text-muted-foreground/50" />
+      <AnimatedIcon
+        icon={SendIcon}
+        size={32}
+        className="text-muted-foreground/50"
+      />
       <p className="text-sm text-muted-foreground">
         You haven&apos;t applied to any jobs yet.
       </p>

@@ -1,7 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { MessagesSquare, Search, SquarePen } from "lucide-react"
+import { Search, SquarePen } from "lucide-react"
+
+import { AnimatedIcon } from "@/components/icons/animated-icon"
+import { MessageSquareIcon } from "@/components/ui/message-square"
 
 import {
   directConversations,
@@ -171,7 +174,7 @@ export function MessagesInbox({
           <Empty className="border-none p-6 py-8">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <MessagesSquare />
+                <AnimatedIcon icon={MessageSquareIcon} size={24} />
               </EmptyMedia>
               <EmptyTitle>No conversations yet</EmptyTitle>
               <EmptyDescription>
