@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Group } from "lucide-react"
+import { Users } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,7 @@ export function Rooms() {
 
   function navigateToRoom(roomId: string) {
     setOpen(false)
-    router.push(`/rooms?room=${roomId}`)
+    router.push(`/groups?group=${roomId}`)
   }
 
   function handleToggleJoin(id: string): Promise<void> {
@@ -58,10 +58,10 @@ export function Rooms() {
             size="icon"
             className="relative"
             aria-label={
-              unreadCount > 0 ? `Rooms, ${unreadCount} unread` : "Rooms"
+              unreadCount > 0 ? `Groups, ${unreadCount} unread` : "Groups"
             }
           >
-            <Group className="size-5" />
+            <Users className="size-5" />
             {unreadCount > 0 ? (
               <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground ring-2 ring-background">
                 {unreadCount}
@@ -78,7 +78,7 @@ export function Rooms() {
         >
           <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b p-4 pr-14">
             <div className="flex items-center gap-2">
-              <SheetTitle>Rooms</SheetTitle>
+              <SheetTitle>Groups</SheetTitle>
               {unreadCount > 0 ? (
                 <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-xs font-medium text-success">
                   {unreadCount} new

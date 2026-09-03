@@ -238,7 +238,7 @@ export async function getMemberSharePayloadFromProfile(
 function revalidatePeoplePaths() {
   revalidatePath("/people")
   revalidatePath("/messages")
-  revalidatePath("/rooms")
+  revalidatePath("/groups")
 }
 
 export async function requestConnection(

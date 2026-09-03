@@ -4,8 +4,8 @@ export function roomThreadWithSharePath(options: {
   shareMember?: string
 }) {
   const params = new URLSearchParams()
-  params.set("room", options.roomId)
+  params.set("group", options.roomId)
   if (options.shareJob) params.set("shareJob", options.shareJob)
   if (options.shareMember) params.set("shareMember", options.shareMember)
-  return `/rooms?${params.toString()}`
+  return `/groups?${params.toString()}`
 }

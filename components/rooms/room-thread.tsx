@@ -605,7 +605,7 @@ export function RoomThread({
             variant="ghost"
             size="icon"
             className="md:hidden"
-            aria-label="Back to rooms"
+            aria-label="Back to groups"
             onClick={onBack}
           >
             <ArrowLeft className="size-5" />
@@ -921,7 +921,7 @@ export function RoomThread({
           )}
         >
           <p className="flex-1 text-sm text-muted-foreground">
-            Join this room to participate in the conversation.
+            Join this group to participate in the conversation.
           </p>
           <Button className="shrink-0" onClick={onJoin}>
             Join {room.name}

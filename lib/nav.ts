@@ -3,7 +3,7 @@ import {
   Briefcase,
   Contact,
   MessagesSquare,
-  Group,
+  Users,
   UserCheck,
   Mail,
   type LucideIcon,
@@ -62,11 +62,11 @@ export const mainNav: NavItem[] = [
     liveBadge: "messages",
   },
   {
-    title: "Rooms",
-    href: "/rooms",
+    title: "Groups",
+    href: "/groups",
     description:
       "Discipline-specific community channels for touring crew.",
-    icon: Group,
+    icon: Users,
     liveBadge: "rooms",
   },
 ]

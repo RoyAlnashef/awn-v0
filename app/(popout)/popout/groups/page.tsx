@@ -1,12 +1,17 @@
 import { mainNav } from "@/lib/nav"
 import { RoomsView } from "@/components/rooms/rooms-view"
 
-const item = mainNav.find((i) => i.href === "/rooms")!
+const item = mainNav.find((i) => i.href === "/groups")!
 
-export default async function PopoutRoomsPage({
+export default async function PopoutGroupsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ room?: string; shareJob?: string; shareMember?: string }>
+  searchParams: Promise<{
+    group?: string
+    room?: string
+    shareJob?: string
+    shareMember?: string
+  }>
 }) {
   const params = await searchParams
 
@@ -15,7 +20,7 @@ export default async function PopoutRoomsPage({
       <RoomsView
         title={item.title}
         description={item.description}
-        initialRoomId={params.room}
+        initialRoomId={params.group ?? params.room}
         initialShareJobId={params.shareJob}
         initialShareMemberId={params.shareMember}
         popout

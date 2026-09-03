@@ -103,16 +103,16 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
         render={
           <Button size="sm" disabled={disabled}>
             <Plus className="size-4" />
-            New room
+            New group
           </Button>
         }
       />
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create room</DialogTitle>
+            <DialogTitle>Create group</DialogTitle>
             <DialogDescription>
-              Add a new community room for touring crew to join.
+              Add a new community group for touring crew to join.
             </DialogDescription>
           </DialogHeader>
 
@@ -151,7 +151,7 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
                 id="room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is this room for?"
+                placeholder="What is this group for?"
                 rows={2}
               />
             </div>
@@ -193,7 +193,7 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
               Cancel
             </Button>
             <Button type="submit" disabled={isPending || !name.trim() || !slug.trim()}>
-              {isPending ? "Creating…" : "Create room"}
+              {isPending ? "Creating…" : "Create group"}
             </Button>
           </DialogFooter>
         </form>

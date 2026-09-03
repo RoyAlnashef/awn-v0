@@ -2,12 +2,17 @@ import { mainNav } from "@/lib/nav"
 import { RoomsView } from "@/components/rooms/rooms-view"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 
-const item = mainNav.find((i) => i.href === "/rooms")!
+const item = mainNav.find((i) => i.href === "/groups")!
 
-export default async function RoomsPage({
+export default async function GroupsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ room?: string; shareJob?: string; shareMember?: string }>
+  searchParams: Promise<{
+    group?: string
+    room?: string
+    shareJob?: string
+    shareMember?: string
+  }>
 }) {
   const [params, sessionUser] = await Promise.all([
     searchParams,
@@ -19,7 +24,7 @@ export default async function RoomsPage({
       <RoomsView
         title={item.title}
         description={item.description}
-        initialRoomId={params.room}
+        initialRoomId={params.group ?? params.room}
         initialShareJobId={params.shareJob}
         initialShareMemberId={params.shareMember}
         canManageRooms={sessionUser?.canAccessAdmin ?? false}

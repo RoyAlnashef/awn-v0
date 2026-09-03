@@ -1,7 +1,7 @@
 export const POPOUT_WINDOW_FEATURES =
   "width=390,height=844,menubar=no,toolbar=no,location=no,status=no,resizable=yes"
 
-export type PopoutPath = "/popout/messages" | "/popout/rooms"
+export type PopoutPath = "/popout/messages" | "/popout/groups"
 
 export function buildPopoutUrl(
   path: PopoutPath,

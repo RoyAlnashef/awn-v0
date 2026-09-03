@@ -16,26 +16,26 @@ import { getSessionUser } from "@/lib/auth/get-session-user"
 import { mainNav } from "@/lib/nav"
 import { adminListRooms } from "@/lib/rooms/actions"
 
-const roomsNav = mainNav.find((item) => item.href === "/rooms")!
+const groupsNav = mainNav.find((item) => item.href === "/groups")!
 
-export default async function RoomsSettingsPage() {
+export default async function GroupsSettingsPage() {
   const sessionUser = await getSessionUser()
 
   if (!sessionUser?.canAccessAdmin) {
-    redirect("/rooms")
+    redirect("/groups")
   }
 
   const result = await adminListRooms()
 
   return (
     <PageShell
-      title="Manage rooms"
+      title="Manage groups"
       breadcrumb={
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/rooms" />}>
-                {roomsNav.title}
+              <BreadcrumbLink render={<Link href="/groups" />}>
+                {groupsNav.title}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

@@ -76,7 +76,7 @@ export function RoomsTable({
   if (loadError) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
-        <p className="text-sm font-medium text-destructive">Failed to load rooms</p>
+        <p className="text-sm font-medium text-destructive">Failed to load groups</p>
         <p className="text-sm text-muted-foreground">{loadError}</p>
       </div>
     )
@@ -91,7 +91,7 @@ export function RoomsTable({
         {showCreateButton ? (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {activeRooms.length} active room{activeRooms.length !== 1 ? "s" : ""}
+              {activeRooms.length} active group{activeRooms.length !== 1 ? "s" : ""}
               {archivedRooms.length > 0
                 ? `, ${archivedRooms.length} archived`
                 : ""}
@@ -100,7 +100,7 @@ export function RoomsTable({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {activeRooms.length} active room{activeRooms.length !== 1 ? "s" : ""}
+            {activeRooms.length} active group{activeRooms.length !== 1 ? "s" : ""}
             {archivedRooms.length > 0
               ? `, ${archivedRooms.length} archived`
               : ""}
@@ -111,7 +111,7 @@ export function RoomsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Room</TableHead>
+                <TableHead>Group</TableHead>
                 <TableHead className="hidden sm:table-cell">Members</TableHead>
                 <TableHead className="hidden md:table-cell">Created</TableHead>
                 <TableHead className="hidden lg:table-cell">Status</TableHead>
@@ -125,7 +125,7 @@ export function RoomsTable({
                     colSpan={5}
                     className="py-10 text-center text-sm text-muted-foreground"
                   >
-                    No rooms yet. Create the first one with New room.
+                    No groups yet. Create the first one with New group.
                   </TableCell>
                 </TableRow>
               ) : (

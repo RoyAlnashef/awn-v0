@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { Group, MapPin, MessagesSquare, Share } from "lucide-react"
+import { Users, MapPin, MessagesSquare, Share } from "lucide-react"
 
 import {
   availabilityConfig,
@@ -105,8 +105,8 @@ export function PersonCard({ person }: { person: Person }) {
           </Button>
         </PersonShareToMessagesButton>
         <PersonShareToRoomsButton person={person}>
-          <Button size="icon" variant="outline" aria-label="Share to a room">
-            <Group className="size-4" />
+          <Button size="icon" variant="outline" aria-label="Share to a group">
+            <Users className="size-4" />
           </Button>
         </PersonShareToRoomsButton>
         <Button size="icon" variant="outline" aria-label={`Message ${person.name}`}>

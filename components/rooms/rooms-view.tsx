@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Group } from "lucide-react"
+import { Users } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { buildPopoutUrl } from "@/lib/popout"
@@ -141,21 +141,21 @@ export function RoomsView({
               size="sm"
               className="hidden shrink-0 md:inline-flex"
               nativeButton={false}
-              render={<Link href="/rooms/settings" />}
+              render={<Link href="/groups/settings" />}
             >
-              Manage Rooms
+              Manage Groups
             </Button>
           ) : null}
           {!popout ? (
             <PopOutButton
               href={buildPopoutUrl(
-                "/popout/rooms",
-                activeRoom ? { room: activeRoom.id } : undefined,
+                "/popout/groups",
+                activeRoom ? { group: activeRoom.id } : undefined,
               )}
               windowName={
-                activeRoom ? `room-${activeRoom.id}` : "rooms-popout"
+                activeRoom ? `group-${activeRoom.id}` : "groups-popout"
               }
-              aria-label="Pop out Rooms"
+              aria-label="Pop out Groups"
             />
           ) : null}
         </div>
@@ -200,11 +200,11 @@ export function RoomsView({
             <Empty className="flex-1 border-none">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <Group />
+                  <Users />
                 </EmptyMedia>
-                <EmptyTitle>Community rooms</EmptyTitle>
+                <EmptyTitle>Community groups</EmptyTitle>
                 <EmptyDescription>
-                  Select a room to preview the conversation, or join to start
+                  Select a group to preview the conversation, or join to start
                   chatting with the crew.
                 </EmptyDescription>
               </EmptyHeader>

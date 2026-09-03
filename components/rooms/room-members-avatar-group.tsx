@@ -64,7 +64,7 @@ export function RoomMembersAvatarGroup({ roomId }: { roomId: string }) {
   return (
     <TooltipProvider>
       <AvatarGroup
-        aria-label={`${totalCount} members in this room`}
+        aria-label={`${totalCount} members in this group`}
         className="**:data-[slot=avatar]:ring-card"
       >
         {preview.map((member) => (

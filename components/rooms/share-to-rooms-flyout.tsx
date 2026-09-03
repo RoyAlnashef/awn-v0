@@ -112,8 +112,8 @@ export function ShareToRoomsPanel({
   }
 
   const emptyMessage = shareContext?.kind === "member"
-    ? "Join a room to share this member."
-    : "Join a room to share this job."
+    ? "Join a group to share this member."
+    : "Join a group to share this job."
 
   return (
     <>
@@ -122,15 +122,15 @@ export function ShareToRoomsPanel({
           <DrawerTitle>Share with…</DrawerTitle>
           <DrawerDescription>
             {shareContext
-              ? `Choose which room to send ${shareContext.label} to.`
-              : "Choose a room to share to."}
+              ? `Choose which group to send ${shareContext.label} to.`
+              : "Choose a group to share to."}
           </DrawerDescription>
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search rooms…"
+            placeholder="Search groups…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="pl-9"
@@ -169,7 +169,7 @@ export function ShareToRoomsPanel({
           </ul>
         ) : (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            {q ? "No rooms match your search." : emptyMessage}
+            {q ? "No groups match your search." : emptyMessage}
           </p>
         )}
       </ScrollArea>

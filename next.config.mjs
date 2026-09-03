@@ -13,6 +13,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  redirects: async () => [
+    { source: "/rooms", destination: "/groups", permanent: true },
+    {
+      source: "/rooms/settings",
+      destination: "/groups/settings",
+      permanent: true,
+    },
+    { source: "/popout/rooms", destination: "/popout/groups", permanent: true },
+  ],
 }
 
 export default nextConfig

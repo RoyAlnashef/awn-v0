@@ -73,7 +73,7 @@ export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Edit room</DialogTitle>
+            <DialogTitle>Edit group</DialogTitle>
             <DialogDescription>
               Update details for <strong>{room?.name}</strong>.
             </DialogDescription>
@@ -97,7 +97,7 @@ export function EditRoomDialog({ room, open, onOpenChange, onUpdated }: Props) {
                 id="edit-room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is this room for?"
+                placeholder="What is this group for?"
                 rows={2}
               />
             </div>

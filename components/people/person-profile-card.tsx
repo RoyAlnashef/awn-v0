@@ -7,7 +7,7 @@ import {
   CalendarClock,
   ExternalLink,
   Flag,
-  Group,
+  Users,
   MessageSquare,
   Plane,
   Plus,
@@ -401,12 +401,12 @@ export function PersonProfileCard({
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Share to a room"
+                aria-label="Share to a group"
                 disabled={isPreview}
                 aria-disabled={isPreview}
                 onClick={() => setShareRoomOpen(true)}
               >
-                <Group className="size-4" />
+                <Users className="size-4" />
               </Button>
             </PreviewTooltip>
           </div>

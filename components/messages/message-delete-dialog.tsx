@@ -22,7 +22,7 @@ const copy = {
   },
   delete: {
     title: "Delete message?",
-    description: "This will remove the message for everyone in this room.",
+    description: "This will remove the message for everyone in this group.",
     confirm: "Delete",
   },
 } as const

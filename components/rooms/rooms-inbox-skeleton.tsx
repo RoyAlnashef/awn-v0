@@ -17,7 +17,7 @@ export function RoomsInboxSkeleton() {
     <div
       className="flex flex-col"
       aria-busy="true"
-      aria-label="Loading rooms"
+      aria-label="Loading groups"
     >
       {Array.from({ length: 8 }, (_, index) => (
         <SkeletonRow key={index} />
