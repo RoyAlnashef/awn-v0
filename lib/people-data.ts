@@ -96,6 +96,7 @@ export interface Person {
   memberSince?: string
   website?: string
   instagram?: string
+  facebook?: string
   twitter?: string
   linkedin?: string
   youtube?: string

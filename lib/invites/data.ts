@@ -51,6 +51,7 @@ export type ApplicationNoteVisibility = "invitee_only" | "both"
 export type SocialLinksInput = {
   website?: string
   instagram?: string
+  facebook?: string
   twitter?: string
   linkedin?: string
   youtube?: string

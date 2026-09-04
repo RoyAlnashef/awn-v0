@@ -59,6 +59,7 @@ export interface MemberProfileRow {
   is_founding_member: boolean | null
   website: string | null
   instagram: string | null
+  facebook: string | null
   twitter: string | null
   linkedin: string | null
   youtube: string | null
@@ -103,6 +104,7 @@ export interface MemberProfileUpdate {
   banner_position_y?: number
   website?: string | null
   instagram?: string | null
+  facebook?: string | null
   twitter?: string | null
   linkedin?: string | null
   youtube?: string | null
@@ -261,6 +263,7 @@ export function toPersonFromProfile(
     memberSince: formatMemberSince(row.created_at),
     website: row.website?.trim() || undefined,
     instagram: row.instagram?.trim() || undefined,
+    facebook: row.facebook?.trim() || undefined,
     twitter: row.twitter?.trim() || undefined,
     linkedin: row.linkedin?.trim() || undefined,
     youtube: row.youtube?.trim() || undefined,
@@ -288,6 +291,7 @@ export function toProfileUpdateFromPerson(person: Person): MemberProfileUpdate {
     banner_position_y: clampBannerPositionY(person.bannerPositionY),
     website: social.website,
     instagram: social.instagram,
+    facebook: social.facebook,
     twitter: social.twitter,
     linkedin: social.linkedin,
     youtube: social.youtube,
@@ -318,6 +322,7 @@ export const MEMBER_PROFILE_SELECT = [
   "is_founding_member",
   "website",
   "instagram",
+  "facebook",
   "twitter",
   "linkedin",
   "youtube",

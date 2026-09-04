@@ -31,6 +31,7 @@ const MIN_PASSWORD_LENGTH = 8
 const SOCIAL_LABELS: Record<SocialFieldId, string> = {
   website: "Website",
   instagram: "Instagram",
+  facebook: "Facebook",
   twitter: "X / Twitter",
   linkedin: "LinkedIn",
   youtube: "YouTube",
@@ -62,6 +63,7 @@ export function ApplyForm(props: ApplyFormProps) {
   const [socials, setSocials] = useState<Record<SocialFieldId, string>>({
     website: "",
     instagram: "",
+    facebook: "",
     twitter: "",
     linkedin: "",
     youtube: "",

@@ -39,6 +39,13 @@ const SOCIAL_FIELDS: SocialFieldConfig[] = [
     icon: SOCIAL_FIELD_ICONS.instagram,
   },
   {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "username",
+    prefix: "facebook.com/",
+    icon: SOCIAL_FIELD_ICONS.facebook,
+  },
+  {
     id: "twitter",
     label: "X / Twitter",
     placeholder: "username",

@@ -9,6 +9,7 @@ import type { Person } from "@/lib/people-data"
 export const SOCIAL_FIELD_IDS = [
   "website",
   "instagram",
+  "facebook",
   "twitter",
   "linkedin",
   "youtube",
@@ -45,6 +46,12 @@ const SOCIAL_CONFIG: Record<
     icon: SOCIAL_FIELD_ICONS.instagram,
     displayPrefix: "instagram.com/",
     hrefPrefix: "https://instagram.com/",
+  },
+  facebook: {
+    label: "Facebook",
+    icon: SOCIAL_FIELD_ICONS.facebook,
+    displayPrefix: "facebook.com/",
+    hrefPrefix: "https://facebook.com/",
   },
   twitter: {
     label: "X / Twitter",
@@ -101,6 +108,17 @@ export function normalizeSocialField(
           "instagr.am/",
         ]) || null
       )
+    case "facebook":
+      return (
+        normalizeUsername(raw, [
+          "facebook.com/",
+          "facebook.com",
+          "m.facebook.com/",
+          "m.facebook.com",
+          "fb.com/",
+          "fb.com",
+        ]) || null
+      )
     case "twitter":
       return (
         normalizeUsername(raw, ["x.com/", "x.com", "twitter.com/", "twitter.com"]) ||
@@ -140,7 +158,7 @@ export function buildSocialHref(
   if (!normalized) return null
 
   const config = SOCIAL_CONFIG[id]
-  if (id === "instagram" || id === "twitter") {
+  if (id === "instagram" || id === "facebook" || id === "twitter") {
     return `${config.hrefPrefix}${normalized}`
   }
   return `${config.hrefPrefix}${normalized}`
@@ -188,6 +206,7 @@ export function socialFieldsFromPerson(
   return {
     website: normalizeSocialField("website", person.website),
     instagram: normalizeSocialField("instagram", person.instagram),
+    facebook: normalizeSocialField("facebook", person.facebook),
     twitter: normalizeSocialField("twitter", person.twitter),
     linkedin: normalizeSocialField("linkedin", person.linkedin),
     youtube: normalizeSocialField("youtube", person.youtube),

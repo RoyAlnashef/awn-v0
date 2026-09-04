@@ -33,6 +33,7 @@ import { initials } from "@/lib/users-data"
 const SOCIAL_LABELS: Record<SocialFieldId, string> = {
   website: "Website",
   instagram: "Instagram",
+  facebook: "Facebook",
   twitter: "X / Twitter",
   linkedin: "LinkedIn",
   youtube: "YouTube",
