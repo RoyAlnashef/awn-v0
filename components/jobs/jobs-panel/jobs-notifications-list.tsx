@@ -86,18 +86,6 @@ export function JobsNotificationsList({
           )
         })}
       </ul>
-
-      <section className="border-t px-4 py-4">
-        <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Saved searches
-        </h3>
-        <div className="rounded-xl border border-dashed px-4 py-5 text-center">
-          <p className="text-sm font-medium text-foreground">Coming soon</p>
-          <p className="mt-1 text-xs text-muted-foreground text-pretty">
-            Get notified when new jobs match your saved searches.
-          </p>
-        </div>
-      </section>
     </div>
   )
 }
