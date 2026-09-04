@@ -15,6 +15,7 @@ export type SessionUser = {
   canAccessAdmin: boolean
   isApproved: boolean
   appearOffline: boolean
+  availableForWork: boolean
   online: boolean
 }
 
@@ -33,7 +34,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, title, avatar_url, role, status, is_approved, appear_offline, last_active_at",
+      "full_name, email, title, avatar_url, role, status, is_approved, appear_offline, last_active_at, availability",
     )
     .eq("id", user.id)
     .maybeSingle()
@@ -57,6 +58,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     canAccessAdmin: canAccessAdmin(profile),
     isApproved: profile?.is_approved ?? false,
     appearOffline,
+    availableForWork: profile?.availability === "available_now",
     online: profileIsOnline(
       profile?.last_active_at ?? null,
       appearOffline,

@@ -22,7 +22,7 @@ export function AvailabilityCard() {
             />
           </span>
           <span className="text-sm font-medium">
-            {available ? "Available" : "Off the grid"}
+            {available ? "Available for work" : "Off the grid"}
           </span>
         </div>
         <Switch
@@ -31,11 +31,6 @@ export function AvailabilityCard() {
           aria-label="Toggle availability"
         />
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-sidebar-foreground/60">
-        {available
-          ? "Your network can see you're open for work."
-          : "You're hidden from availability search."}
-      </p>
     </div>
   )
 }

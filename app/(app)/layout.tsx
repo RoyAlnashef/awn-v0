@@ -52,6 +52,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               avatarUrl: sessionUser.avatarUrl,
               initials: sessionUser.initials,
               appearOffline: sessionUser.appearOffline,
+              availableForWork: sessionUser.availableForWork,
               online: sessionUser.online,
             }}
           />
@@ -64,6 +65,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                 avatarUrl: sessionUser.avatarUrl,
                 initials: sessionUser.initials,
                 appearOffline: sessionUser.appearOffline,
+                availableForWork: sessionUser.availableForWork,
                 online: sessionUser.online,
               }}
             />

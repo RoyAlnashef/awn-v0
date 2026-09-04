@@ -84,6 +84,39 @@ async function deleteUserBannerObjects(
   }
 }
 
+export async function setAvailableForWork(
+  enabled: boolean,
+): Promise<ProfileActionResult> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { ok: false, error: "Unauthorized" }
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        availability: enabled ? "available_now" : "between_tours",
+      })
+      .eq("id", user.id)
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+
+    revalidatePath("/", "layout")
+    revalidatePath("/now")
+    revalidatePath("/people")
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
 export async function getMemberProfile(): Promise<Person | null> {
   const supabase = await createClient()
   const {

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Briefcase, ChevronsUpDown, LifeBuoy, LogOut, User } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
+import { setAvailableForWork } from "@/lib/account/profile-actions"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
 import { iconWithTextDimClass } from "@/lib/icon-styles"
 import { cn } from "@/lib/utils"
@@ -23,6 +24,7 @@ export type NavUserData = {
   avatarUrl?: string
   initials: string
   appearOffline: boolean
+  availableForWork: boolean
   online: boolean
 }
 
@@ -42,14 +44,18 @@ export function NavUser({
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [appearOffline, setAppearOfflineState] = useState(user.appearOffline)
+  const [availableForWork, setAvailableForWorkState] = useState(
+    user.availableForWork,
+  )
   const [online, setOnline] = useState(user.online)
 
   const showOnlineDot = online && !appearOffline
 
   useEffect(() => {
     setAppearOfflineState(user.appearOffline)
+    setAvailableForWorkState(user.availableForWork)
     setOnline(user.online)
-  }, [user.appearOffline, user.online])
+  }, [user.appearOffline, user.availableForWork, user.online])
 
   useEffect(() => {
     if (!appearOffline) {
@@ -61,6 +67,18 @@ export function NavUser({
     setOpen(false)
     startTransition(async () => {
       await signOut()
+    })
+  }
+
+  function handleAvailableForWorkChange(checked: boolean) {
+    const previousAvailableForWork = availableForWork
+
+    setAvailableForWorkState(checked)
+
+    void setAvailableForWork(checked).then((result) => {
+      if (!result.ok) {
+        setAvailableForWorkState(previousAvailableForWork)
+      }
     })
   }
 
@@ -143,6 +161,21 @@ export function NavUser({
                 {user.title || user.email}
               </span>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+            <label
+              htmlFor="available-for-work"
+              className="text-sm font-medium leading-none"
+            >
+              Available for work
+            </label>
+            <Switch
+              id="available-for-work"
+              checked={availableForWork}
+              onCheckedChange={handleAvailableForWorkChange}
+              aria-label="Available for work"
+            />
           </div>
 
           <div className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
