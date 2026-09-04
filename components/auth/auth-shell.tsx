@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import Link from "next/link"
 
 const DEFAULT_FOOTER =
   "Invite-only. Need access? Ask a member for an invite."
@@ -22,9 +23,12 @@ export function AuthShell({
       />
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="font-heading text-3xl font-medium tracking-tight text-balance">
+          <Link
+            href="/"
+            className="font-heading text-3xl font-medium tracking-tight text-balance transition-opacity hover:opacity-80"
+          >
             {title}
-          </p>
+          </Link>
           <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
         </div>
 
