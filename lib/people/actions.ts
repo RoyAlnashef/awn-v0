@@ -199,7 +199,23 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
 
     const row = profileResult.data as unknown as MemberProfileRow
     const creditRows = (creditsResult.data ?? []) as unknown as TourCreditRow[]
-    const tourCredits = toTourCreditsFromRows(creditRows)
+
+    // Fetch which credits the current user has already vouched for
+    const creditIds = creditRows.map((c) => c.id)
+    let vouchedCreditIds: Set<string> | undefined
+
+    if (creditIds.length > 0) {
+      const { data: myVouches } = await supabase
+        .from("credit_vouches")
+        .select("credit_id")
+        .in("credit_id", creditIds)
+        .eq("voucher_id", userId)
+      if (myVouches) {
+        vouchedCreditIds = new Set(myVouches.map((v) => v.credit_id as string))
+      }
+    }
+
+    const tourCredits = toTourCreditsFromRows(creditRows, vouchedCreditIds)
 
     const extras = extrasMap.get(profileId) ?? {
       tourCreditCount: tourCredits.length,

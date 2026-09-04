@@ -102,10 +102,20 @@ export interface Person {
 }
 
 export interface TourCredit {
+  /** DB id — present when loaded from the server; absent in preview/mock data. */
+  id?: string
   title: string
   venueTier: VenueTier
   role: string
   years: string
+  engagementType?: string
+  startedAt?: string
+  endedAt?: string
+  isCurrent?: boolean
+  /** Total vouch count for this credit. */
+  vouchCount?: number
+  /** Whether the currently signed-in user has already vouched for this credit. */
+  hasVouched?: boolean
 }
 
 export interface PersonProfile {

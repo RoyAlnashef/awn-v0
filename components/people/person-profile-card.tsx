@@ -23,6 +23,10 @@ import {
   type Person,
   type TourCredit,
 } from "@/lib/people-data"
+import {
+  createCreditVouch,
+  deleteCreditVouch,
+} from "@/lib/account/tour-credits-actions"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { toggleConnection } from "@/lib/people/actions"
@@ -55,6 +59,64 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <h3 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
       {children}
     </h3>
+  )
+}
+
+/**
+ * A single vouch button for a tour credit. Manages its own optimistic state
+ * so the full card doesn't need to re-render on every vouch action.
+ */
+function VouchButton({
+  credit,
+}: {
+  credit: TourCredit
+}) {
+  const [hasVouched, setHasVouched] = useState(credit.hasVouched ?? false)
+  const [vouchCount, setVouchCount] = useState(credit.vouchCount ?? 0)
+  const [isPending, startTransition] = useTransition()
+
+  if (!credit.id) return null
+
+  function handleVouch() {
+    if (!credit.id) return
+    const willVouch = !hasVouched
+
+    // Optimistic update
+    setHasVouched(willVouch)
+    setVouchCount((c) => c + (willVouch ? 1 : -1))
+
+    startTransition(async () => {
+      const result = willVouch
+        ? await createCreditVouch(credit.id!)
+        : await deleteCreditVouch(credit.id!)
+
+      if (!result.ok) {
+        // Revert
+        setHasVouched(!willVouch)
+        setVouchCount((c) => c + (willVouch ? -1 : 1))
+        toast.error(result.error)
+      }
+    })
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleVouch}
+      disabled={isPending}
+      aria-pressed={hasVouched}
+      className={`mt-1 inline-flex items-center gap-1.5 self-start rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-60 ${
+        hasVouched
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border bg-background text-foreground hover:border-primary/50 hover:text-primary"
+      }`}
+    >
+      <ThumbsUp className="size-3" />
+      {hasVouched ? "Vouched" : "Vouch for this"}
+      {vouchCount > 0 && (
+        <span className="ml-0.5 text-muted-foreground">· {vouchCount}</span>
+      )}
+    </button>
   )
 }
 
@@ -288,7 +350,7 @@ export function PersonProfileCard({
                 <ul className="flex flex-col gap-2.5">
                   {resolvedTourCredits.map((credit, index) => (
                     <li
-                      key={`${credit.title}-${index}`}
+                      key={credit.id ?? `${credit.title}-${index}`}
                       className="relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5"
                     >
                       <span
@@ -302,24 +364,22 @@ export function PersonProfileCard({
                               {credit.title}
                             </span>
                             <span className="text-[10px] font-semibold tracking-wide text-primary uppercase">
-                              {credit.venueTier}
+                              {credit.engagementType ?? credit.venueTier}
                             </span>
                           </div>
                           <span className="text-xs text-muted-foreground">
                             {credit.role}
                           </span>
-                          <PreviewTooltip preview={isPreview}>
-                            <Button
-                              variant="outline"
-                              size="xs"
-                              className="mt-1 self-start"
-                              disabled={isPreview}
-                              aria-disabled={isPreview}
-                            >
-                              <ThumbsUp />
-                              Vouch for this
-                            </Button>
-                          </PreviewTooltip>
+                          {isPreview ? (
+                            <PreviewTooltip preview={isPreview}>
+                              <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground">
+                                <ThumbsUp className="size-3" />
+                                Vouch for this
+                              </span>
+                            </PreviewTooltip>
+                          ) : (
+                            <VouchButton credit={credit} />
+                          )}
                         </div>
                         <span className="shrink-0 text-xs text-muted-foreground">
                           {credit.years}

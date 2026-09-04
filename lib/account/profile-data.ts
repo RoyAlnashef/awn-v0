@@ -75,6 +75,14 @@ export interface TourCreditRow {
   years: string | null
   sort_order: number
   created_at: string
+  // Work History fields (added in tour_credits_v2 migration)
+  engagement_type: string | null
+  started_at: string | null
+  ended_at: string | null
+  is_current: boolean
+  notes: string | null
+  // Vouch count aggregated via join
+  credit_vouches?: { count: number }[] | null
 }
 
 export interface MemberProfileUpdate {
@@ -191,15 +199,26 @@ export function connectionStatusToFollowed(
   return status === "connected"
 }
 
-export function toTourCreditsFromRows(rows: TourCreditRow[]): TourCredit[] {
-  return rows.map((row) => ({
-    title: row.title,
-    venueTier: row.venue_tier
-      ? venueTierToUi[row.venue_tier]
-      : "Arena",
-    role: row.role,
-    years: row.years?.trim() || "—",
-  }))
+export function toTourCreditsFromRows(
+  rows: TourCreditRow[],
+  vouchedCreditIds?: Set<string>,
+): TourCredit[] {
+  return rows.map((row) => {
+    const vouchCount = row.credit_vouches?.[0]?.count ?? 0
+    return {
+      id: row.id,
+      title: row.title,
+      venueTier: row.venue_tier ? venueTierToUi[row.venue_tier] : "Arena",
+      role: row.role,
+      years: row.years?.trim() || "—",
+      engagementType: (row.engagement_type as import("@/lib/account-profile").EngagementType | undefined) ?? undefined,
+      startedAt: row.started_at ?? undefined,
+      endedAt: row.ended_at ?? undefined,
+      isCurrent: row.is_current ?? false,
+      vouchCount,
+      hasVouched: vouchedCreditIds ? vouchedCreditIds.has(row.id) : undefined,
+    }
+  })
 }
 
 export function toPersonFromProfile(
@@ -306,9 +325,10 @@ export const MEMBER_PROFILE_SELECT = [
 ].join(", ")
 
 export const TOUR_CREDIT_SELECT =
-  "id, profile_id, title, artist, role, venue_tier, years, sort_order, created_at"
+  "id, profile_id, title, artist, role, venue_tier, years, sort_order, created_at, engagement_type, started_at, ended_at, is_current, notes, credit_vouches(count)"
 
 export function tourCreditRowToAccountCredit(row: TourCreditRow) {
+  const vouchCount = row.credit_vouches?.[0]?.count ?? 0
   return {
     id: row.id,
     title: row.title,
@@ -316,7 +336,12 @@ export function tourCreditRowToAccountCredit(row: TourCreditRow) {
     role: row.role,
     venueTier: row.venue_tier ? venueTierToUi[row.venue_tier] : "Arena",
     years: row.years?.trim() || "—",
-    vouches: 0,
+    engagementType: (row.engagement_type as import("@/lib/account-profile").EngagementType | null) ?? null,
+    startedAt: row.started_at ?? null,
+    endedAt: row.ended_at ?? null,
+    isCurrent: row.is_current ?? false,
+    notes: row.notes?.trim() || "",
+    vouches: vouchCount,
   }
 }
 

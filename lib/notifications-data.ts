@@ -5,6 +5,7 @@ import {
   Mail,
   MessageSquare,
   ShieldCheck,
+  ThumbsUp,
   UserPlus,
 } from "lucide-react"
 
@@ -15,6 +16,7 @@ export type NotificationKind =
   | "verification"
   | "deadline"
   | "invite"
+  | "vouch"
 
 export interface AppNotification {
   id: string
@@ -33,13 +35,16 @@ export const notificationIcons: Record<NotificationKind, LucideIcon> = {
   verification: ShieldCheck,
   deadline: CalendarClock,
   invite: Mail,
+  vouch: ThumbsUp,
 }
 
 const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
+const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
 
 /** Maps DB kind strings to UI icon/display kind. */
 export function notificationDisplayKind(kind: string): NotificationKind {
   if (INVITE_DB_KINDS.has(kind)) return "invite"
+  if (VOUCH_DB_KINDS.has(kind)) return "vouch"
   if (kind in notificationIcons) return kind as NotificationKind
   return "message"
 }
