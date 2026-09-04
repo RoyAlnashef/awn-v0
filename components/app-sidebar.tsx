@@ -226,10 +226,6 @@ export function AppSidebar({
         </Link>
       </SidebarHeader>
 
-      <div className="border-b border-sidebar-border px-2 py-2 md:hidden">
-        <NavUser user={user} variant="sidebar" />
-      </div>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -289,6 +285,9 @@ export function AppSidebar({
 
       <SidebarFooter>
         <AvailabilityCard />
+        <div className="border-t border-sidebar-border pt-2 md:hidden">
+          <NavUser user={user} variant="sidebar" />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

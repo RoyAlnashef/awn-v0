@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
-import { Briefcase, ChevronDown, LifeBuoy, LogOut, User } from "lucide-react"
+import { Briefcase, ChevronsUpDown, LifeBuoy, LogOut, User } from "lucide-react"
 
 import { signOut } from "@/lib/auth/sign-out"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
@@ -112,14 +112,14 @@ export function NavUser({
                 {user.title || user.email}
               </span>
             </div>
-            <ChevronDown className="size-4 shrink-0 text-sidebar-foreground/60" />
+            <ChevronsUpDown className="size-4 shrink-0 text-sidebar-foreground/60" />
           </>
         ) : (
           <>
             <span className="hidden text-sm font-medium sm:inline-block">
               {user.name}
             </span>
-            <ChevronDown className="hidden size-4 text-muted-foreground sm:inline-block" />
+            <ChevronsUpDown className="hidden size-4 text-muted-foreground sm:inline-block" />
           </>
         )}
       </PopoverTrigger>
