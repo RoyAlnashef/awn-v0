@@ -19,7 +19,7 @@ export const APPLY_STEPS: ApplyFormStep[] = [
   {
     title: "Professional info",
     description:
-      "Share your name and current role so our team can review your application. You can optionally include a resume.",
+      "Share your name, current role, and resume so our team can review your application.",
   },
   {
     title: "Social links",

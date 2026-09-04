@@ -106,6 +106,10 @@ export function ApplyForm(props: ApplyFormProps) {
       toast.error("Title is required.")
       return false
     }
+    if (!resume) {
+      toast.error("Resume is required.")
+      return false
+    }
     return true
   }
 
@@ -140,11 +144,16 @@ export function ApplyForm(props: ApplyFormProps) {
 
   function submitForm() {
     startTransition(async () => {
+      if (!resume) {
+        toast.error("Resume is required.")
+        return
+      }
+
       const formData = new FormData()
       formData.set("password", password)
       formData.set("fullName", fullName)
       formData.set("title", title)
-      if (resume) formData.set("resume", resume)
+      formData.set("resume", resume)
 
       if (isRequestAccess) {
         formData.set("email", signInEmail)
@@ -270,6 +279,7 @@ export function ApplyForm(props: ApplyFormProps) {
                 id="apply-resume"
                 type="file"
                 accept="application/pdf"
+                required
                 onChange={(e) => setResume(e.target.files?.[0] ?? null)}
               />
             </div>

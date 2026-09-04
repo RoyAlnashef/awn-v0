@@ -189,7 +189,7 @@ type ParsedApplicationFields = {
   password: string
   fullName: string
   title: string
-  resume: File | null
+  resume: File
   socialLinks: Record<SocialFieldId, string | null>
 }
 
@@ -203,6 +203,7 @@ function parseApplicationFields(formData: FormData): ParsedApplicationFields | A
 
   if (!fullName) return { ok: false, error: "Full name is required." }
   if (!title) return { ok: false, error: "Title is required." }
+  if (!resume) return { ok: false, error: "Resume is required." }
   if (!password || password.length < 8) {
     return { ok: false, error: "Password must be at least 8 characters." }
   }
@@ -265,7 +266,7 @@ async function createMembershipApplication(input: {
   password: string
   fullName: string
   title: string
-  resume: File | null
+  resume: File
   socialLinks: Record<SocialFieldId, string | null>
   inviteId: string | null
   source: MembershipApplicationSource
@@ -323,24 +324,22 @@ async function createMembershipApplication(input: {
     return { ok: false, error: appError.message }
   }
 
-  if (input.resume) {
-    let resumeUrl: string
-    try {
-      resumeUrl = await uploadResume(admin, application.id, input.resume)
-    } catch (uploadError) {
-      await admin.from("membership_applications").delete().eq("id", application.id)
-      await admin.auth.admin.deleteUser(userId)
-      return actionError(uploadError)
-    }
+  let resumeUrl: string
+  try {
+    resumeUrl = await uploadResume(admin, application.id, input.resume)
+  } catch (uploadError) {
+    await admin.from("membership_applications").delete().eq("id", application.id)
+    await admin.auth.admin.deleteUser(userId)
+    return actionError(uploadError)
+  }
 
-    const { error: resumeUpdateError } = await admin
-      .from("membership_applications")
-      .update({ resume_url: resumeUrl })
-      .eq("id", application.id)
+  const { error: resumeUpdateError } = await admin
+    .from("membership_applications")
+    .update({ resume_url: resumeUrl })
+    .eq("id", application.id)
 
-    if (resumeUpdateError) {
-      return { ok: false, error: resumeUpdateError.message }
-    }
+  if (resumeUpdateError) {
+    return { ok: false, error: resumeUpdateError.message }
   }
 
   await admin.from("profiles").upsert({
