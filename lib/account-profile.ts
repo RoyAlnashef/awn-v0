@@ -36,7 +36,7 @@ export interface AccountTourCredit {
 }
 
 export function toProfileTourCredits(credits: AccountTourCredit[]): TourCredit[] {
-  return credits.map(({ title, venueTier, role, years, engagementType, startedAt, endedAt, isCurrent }) => ({
+  return credits.map(({ title, venueTier, role, years, engagementType, startedAt, endedAt, isCurrent, vouches }) => ({
     title,
     venueTier: venueTier as VenueTier,
     role,
@@ -45,5 +45,6 @@ export function toProfileTourCredits(credits: AccountTourCredit[]): TourCredit[]
     startedAt: startedAt ?? undefined,
     endedAt: endedAt ?? undefined,
     isCurrent,
+    vouchCount: vouches,
   }))
 }

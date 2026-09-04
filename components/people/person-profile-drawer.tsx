@@ -39,7 +39,11 @@ export function PersonProfileDrawer({
 
   useEffect(() => {
     setResolvedPerson(person)
-    setResolvedTourCredits(tourCredits ?? [])
+    // Only sync from props when explicitly provided — avoids wiping credits
+    // fetched by getMemberById when parent re-renders after revalidatePath.
+    if (tourCredits !== undefined) {
+      setResolvedTourCredits(tourCredits)
+    }
   }, [person, tourCredits])
 
   useEffect(() => {

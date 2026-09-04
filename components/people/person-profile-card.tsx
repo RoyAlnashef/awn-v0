@@ -112,7 +112,7 @@ function VouchButton({
       }`}
     >
       <ThumbsUp className="size-3" />
-      {hasVouched ? "Vouched" : "Vouch for this"}
+      {hasVouched ? "Vouched" : "Vouch"}
       {vouchCount > 0 && (
         <span className="ml-0.5 text-muted-foreground">· {vouchCount}</span>
       )}
@@ -371,12 +371,11 @@ export function PersonProfileCard({
                             {credit.role}
                           </span>
                           {isPreview ? (
-                            <PreviewTooltip preview={isPreview}>
-                              <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground">
-                                <ThumbsUp className="size-3" />
-                                Vouch for this
-                              </span>
-                            </PreviewTooltip>
+                            <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                              <ThumbsUp className="size-3" />
+                              {credit.vouchCount ?? 0}{" "}
+                              {(credit.vouchCount ?? 0) === 1 ? "vouch" : "vouches"}
+                            </span>
                           ) : (
                             <VouchButton credit={credit} />
                           )}
