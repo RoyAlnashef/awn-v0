@@ -8,7 +8,6 @@ import { ChevronRight } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -28,7 +27,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { AvailabilityCard } from "@/components/availability-card"
 import { NavUser, type NavUserData } from "@/components/nav-user"
 import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { useRoomsUnreadCount } from "@/lib/rooms/hooks/use-rooms-unread-count"
@@ -226,6 +224,10 @@ export function AppSidebar({
         </Link>
       </SidebarHeader>
 
+      <div className="border-y border-sidebar-border px-2 py-2 md:hidden">
+        <NavUser user={user} variant="sidebar" />
+      </div>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -282,13 +284,6 @@ export function AppSidebar({
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-
-      <SidebarFooter>
-        <AvailabilityCard />
-        <div className="border-t border-sidebar-border pt-2 md:hidden">
-          <NavUser user={user} variant="sidebar" />
-        </div>
-      </SidebarFooter>
     </Sidebar>
   )
 }
