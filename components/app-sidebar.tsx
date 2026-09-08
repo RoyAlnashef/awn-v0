@@ -212,9 +212,13 @@ export function AppSidebar({
         >
           <div
             aria-hidden
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary font-heading text-lg font-semibold text-primary-foreground group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:text-base"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary group-data-[collapsible=icon]:size-8"
           >
-            A
+            <img
+              src="/awn-logo-mark.svg"
+              alt=""
+              className="h-5 w-auto max-w-[calc(100%-0.5rem)] object-contain group-data-[collapsible=icon]:h-4"
+            />
           </div>
           <div className="group-data-[collapsible=icon]:hidden">
             <span className="font-heading text-base font-semibold tracking-tight">
