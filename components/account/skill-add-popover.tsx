@@ -59,7 +59,7 @@ export function SkillAddPopover({
             type="button"
             disabled={disabled}
             className={cn(
-              "inline-flex items-center gap-0.5 rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
+              "inline-flex items-center gap-0.5 rounded-md border border-dashed border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
             )}
           >
             <Plus className="size-2.5" />

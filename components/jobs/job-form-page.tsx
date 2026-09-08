@@ -338,7 +338,7 @@ export function JobFormPage({
                   onClick={() => setPostingKind(value)}
                   aria-pressed={active}
                   className={cn(
-                    "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                    "rounded-md border px-4 py-1.5 text-sm font-medium transition-colors",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -464,7 +464,7 @@ export function JobFormPage({
                       onClick={() => update({ engagement: type })}
                       aria-pressed={active}
                       className={cn(
-                        "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                        "rounded-md border px-4 py-1.5 text-sm font-medium transition-colors",
                         active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",

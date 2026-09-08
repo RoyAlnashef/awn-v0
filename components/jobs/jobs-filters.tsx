@@ -171,7 +171,7 @@ export function JobsFilters({
                     onClick={() => toggleEngagement(type)}
                     aria-pressed={active}
                     className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                      "rounded-md border px-3 py-1 text-xs font-medium transition-colors",
                       active
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",

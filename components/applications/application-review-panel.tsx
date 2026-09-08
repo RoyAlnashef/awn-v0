@@ -144,7 +144,7 @@ export function ApplicationReviewPanel({
                         href={link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-accent"
+                        className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent"
                       >
                         <Icon className="size-4" />
                         {link.label}

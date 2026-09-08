@@ -111,7 +111,7 @@ export function NavUser({
           "flex items-center gap-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
           isSidebar
             ? "w-full rounded-lg px-2 py-2 hover:bg-sidebar-accent focus-visible:ring-sidebar-ring"
-            : "rounded-full py-1 pr-2 pl-1 hover:bg-accent",
+            : "rounded-md py-1 pr-2 pl-1 hover:bg-accent",
         )}
       >
         <Avatar className="size-8 shrink-0">

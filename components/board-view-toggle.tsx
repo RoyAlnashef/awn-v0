@@ -13,7 +13,7 @@ export function BoardViewToggle({
   onViewChange: (view: BoardViewMode) => void
 }) {
   return (
-    <div className="inline-flex items-center gap-0.5 rounded-full border border-border bg-card p-0.5">
+    <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-card p-0.5">
       <Button
         type="button"
         size="icon-sm"

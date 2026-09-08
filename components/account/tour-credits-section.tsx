@@ -173,7 +173,7 @@ function CreditFormDialog({
                   key={type}
                   type="button"
                   onClick={() => update({ engagementType: type })}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
                     selectedType === type
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-foreground hover:border-primary/50"

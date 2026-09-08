@@ -127,14 +127,14 @@ export function LoginForm({
       <div
         role="tablist"
         aria-label="Sign-in method"
-        className="grid grid-cols-2 gap-1 rounded-full border bg-muted/40 p-1"
+        className="grid grid-cols-2 gap-1 rounded-md border bg-muted/40 p-1"
       >
         <button
           type="button"
           role="tab"
           aria-selected={mode === "password"}
           className={cn(
-            "flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm transition-colors",
+            "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm transition-colors",
             mode === "password"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -149,7 +149,7 @@ export function LoginForm({
           role="tab"
           aria-selected={mode === "magic"}
           className={cn(
-            "flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm transition-colors",
+            "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm transition-colors",
             mode === "magic"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
