@@ -23,6 +23,23 @@ export default function NowPage() {
           </Button>
         </>
       }
-    />
+    >
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
+        <div className="flex flex-col gap-4 lg:col-span-7">
+          <div className="flex min-h-[60vh] flex-1 items-center justify-center rounded-xl border border-dashed">
+            <p className="text-sm text-muted-foreground">
+              Primary column (7)
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-5">
+          <div className="flex min-h-[60vh] flex-1 items-center justify-center rounded-xl border border-dashed">
+            <p className="text-sm text-muted-foreground">
+              Secondary column (5)
+            </p>
+          </div>
+        </div>
+      </div>
+    </PageShell>
   )
 }
