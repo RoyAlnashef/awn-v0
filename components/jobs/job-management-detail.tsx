@@ -97,6 +97,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
           </Button>
         </div>
       }
+      bareContent
     >
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <section className="flex flex-col gap-4 lg:col-span-4">
