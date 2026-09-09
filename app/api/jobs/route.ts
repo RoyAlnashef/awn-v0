@@ -1,0 +1,339 @@
+import { departmentByRole, type EngagementType, type JobKind } from "@/lib/jobs-data"
+import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { parseDateOnly } from "@/lib/jobs/format"
+import { normalizeJobKind, urgentExpiresAt } from "@/lib/jobs/kind"
+import { mapJobPostingRow } from "@/lib/jobs/map"
+import { parseEngagementParam } from "@/lib/jobs/swr-keys"
+
+type PosterJoin = {
+  full_name: string | null
+  title: string | null
+  avatar_url: string | null
+}
+
+type JobRow = {
+  id: string
+  kind: string
+  status: string
+  poster_id: string
+  role: string
+  department: string
+  production: string
+  location: string
+  pay_rate: string
+  start_date: string
+  end_date: string
+  deadline: string | null
+  engagement: string
+  details: string
+  expires_at: string | null
+  filled_at: string | null
+  created_at: string
+  updated_at: string
+  poster: PosterJoin | PosterJoin[] | null
+}
+
+function normalizePoster(
+  poster: PosterJoin | PosterJoin[] | null,
+): PosterJoin | null {
+  if (!poster) return null
+  return Array.isArray(poster) ? (poster[0] ?? null) : poster
+}
+
+export async function GET(request: Request) {
+  const { supabase, user, error } = await requireApiUser()
+  if (!user) return jsonError(error, 401)
+
+  const url = new URL(request.url)
+  const search = url.searchParams.get("search")?.trim().toLowerCase() ?? ""
+  const department = url.searchParams.get("department")
+  const engagements = parseEngagementParam(url.searchParams.get("engagement"))
+  const startFrom = parseDateOnly(url.searchParams.get("startFrom"))
+  const startTo = parseDateOnly(url.searchParams.get("startTo"))
+  const savedOnly = url.searchParams.get("saved") === "true"
+  const kindParam = url.searchParams.get("kind")
+  const kind =
+    kindParam === "urgent" || kindParam === "full" ? kindParam : null
+
+  let savedJobIds: string[] | null = null
+  if (savedOnly) {
+    const { data: savedRows, error: savedError } = await supabase
+      .from("saved_jobs")
+      .select("job_id")
+      .eq("user_id", user.id)
+
+    if (savedError) {
+      return jsonError(savedError.message, 500)
+    }
+
+    savedJobIds = (savedRows ?? []).map((row) => row.job_id)
+    if (savedJobIds.length === 0) {
+      return Response.json({ jobs: [] })
+    }
+  }
+
+  let query = supabase
+    .from("job_postings")
+    .select(
+      `
+      id,
+      kind,
+      status,
+      poster_id,
+      role,
+      department,
+      production,
+      location,
+      pay_rate,
+      start_date,
+      end_date,
+      deadline,
+      engagement,
+      details,
+      expires_at,
+      filled_at,
+      created_at,
+      updated_at,
+      poster:profiles!job_postings_poster_id_fkey (
+        full_name,
+        title,
+        avatar_url
+      )
+    `,
+    )
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+
+  if (savedJobIds) {
+    query = query.in("id", savedJobIds)
+  }
+
+  if (kind) {
+    query = query.eq("kind", kind)
+  }
+
+  if (department && department !== "all") {
+    query = query.eq("department", department)
+  }
+
+  if (engagements.length > 0) {
+    query = query.in("engagement", engagements)
+  }
+
+  if (startFrom) {
+    query = query.gte("start_date", startFrom)
+  }
+
+  if (startTo) {
+    query = query.lte("start_date", startTo)
+  }
+
+  const { data: rows, error: listError } = await query
+
+  if (listError) {
+    return jsonError(listError.message, 500)
+  }
+
+  const now = Date.now()
+  const filtered = ((rows ?? []) as JobRow[]).filter((row) => {
+    if (row.expires_at && new Date(row.expires_at).getTime() <= now) {
+      return false
+    }
+    if (row.deadline && row.deadline < new Date().toISOString().slice(0, 10)) {
+      return false
+    }
+    if (search) {
+      const haystack =
+        `${row.role} ${row.production} ${row.location}`.toLowerCase()
+      if (!haystack.includes(search)) return false
+    }
+    return true
+  })
+
+  const jobIds = filtered.map((row) => row.id)
+
+  const [savedResult, appliedResult] = await Promise.all([
+    jobIds.length > 0
+      ? supabase
+          .from("saved_jobs")
+          .select("job_id")
+          .eq("user_id", user.id)
+          .in("job_id", jobIds)
+      : Promise.resolve({ data: [] as { job_id: string }[], error: null }),
+    jobIds.length > 0
+      ? supabase
+          .from("job_applications")
+          .select("job_id")
+          .eq("applicant_id", user.id)
+          .in("job_id", jobIds)
+          .neq("status", "withdrawn")
+      : Promise.resolve({ data: [] as { job_id: string }[], error: null }),
+  ])
+
+  if (savedResult.error) {
+    return jsonError(savedResult.error.message, 500)
+  }
+  if (appliedResult.error) {
+    return jsonError(appliedResult.error.message, 500)
+  }
+
+  const savedIds = new Set(
+    (savedResult.data ?? []).map((row) => row.job_id),
+  )
+  const appliedIds = new Set(
+    (appliedResult.data ?? []).map((row) => row.job_id),
+  )
+
+  const jobs = filtered.map((row) =>
+    mapJobPostingRow(
+      {
+        ...row,
+        kind: row.kind as JobKind,
+        engagement: row.engagement as EngagementType,
+        poster: normalizePoster(row.poster),
+      },
+      {
+        saved: savedIds.has(row.id),
+        applied: appliedIds.has(row.id),
+      },
+    ),
+  )
+
+  return Response.json({ jobs })
+}
+
+type CreateJobBody = {
+  kind?: JobKind
+  role?: string
+  production?: string
+  location?: string
+  payRate?: string
+  startDate?: string
+  endDate?: string
+  deadline?: string | null
+  engagement?: EngagementType
+  details?: string
+  status?: "draft" | "open"
+}
+
+function todayDateOnly(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+export async function POST(request: Request) {
+  const { supabase, user, error } = await requireApiUser()
+  if (!user) return jsonError(error, 401)
+
+  let body: CreateJobBody
+  try {
+    body = (await request.json()) as CreateJobBody
+  } catch {
+    return jsonError("Invalid JSON body", 400)
+  }
+
+  const kind = normalizeJobKind(body.kind)
+  const role = body.role?.trim() ?? ""
+  const requestedStatus =
+    kind === "urgent" ? "open" : body.status === "draft" ? "draft" : "open"
+  const isDraft = requestedStatus === "draft"
+
+  if (!role) return jsonError("Role is required", 400)
+
+  const isUrgent = kind === "urgent"
+  const location = body.location?.trim() ?? ""
+  const production = body.production?.trim() ?? ""
+
+  if (isUrgent && !isDraft) {
+    if (!location) return jsonError("Location is required", 400)
+    if (!production) return jsonError("Date & time is required", 400)
+    const details = body.details?.trim() ?? ""
+    if (details.length > 280) {
+      return jsonError("Details must be 280 characters or fewer", 400)
+    }
+  }
+
+  const startDate = isUrgent
+    ? todayDateOnly()
+    : parseDateOnly(body.startDate) ?? (isDraft ? todayDateOnly() : null)
+  const endDate = isUrgent
+    ? todayDateOnly()
+    : parseDateOnly(body.endDate) ?? (isDraft ? startDate : null)
+
+  if (!isDraft && !isUrgent) {
+    if (!startDate) return jsonError("Start date is required", 400)
+    if (!endDate) return jsonError("End date is required", 400)
+    if (endDate < startDate) {
+      return jsonError("End date must be on or after start date", 400)
+    }
+  }
+
+  const department = departmentByRole[role] ?? "Production"
+  const expiresAt = kind === "urgent" ? urgentExpiresAt() : null
+
+  const deadline =
+    kind === "full" ? parseDateOnly(body.deadline ?? null) : null
+
+  const { data: row, error: insertError } = await supabase
+    .from("job_postings")
+    .insert({
+      kind,
+      status: requestedStatus,
+      poster_id: user.id,
+      role,
+      department,
+      production,
+      location,
+      pay_rate: body.payRate?.trim() ?? "",
+      start_date: startDate ?? todayDateOnly(),
+      end_date: endDate ?? startDate ?? todayDateOnly(),
+      deadline,
+      engagement: body.engagement ?? (isUrgent ? "One-Off" : "Touring"),
+      details: body.details?.trim() ?? "",
+      expires_at: expiresAt,
+    })
+    .select(
+      `
+      id,
+      kind,
+      status,
+      poster_id,
+      role,
+      department,
+      production,
+      location,
+      pay_rate,
+      start_date,
+      end_date,
+      deadline,
+      engagement,
+      details,
+      expires_at,
+      filled_at,
+      created_at,
+      updated_at,
+      poster:profiles!job_postings_poster_id_fkey (
+        full_name,
+        title,
+        avatar_url
+      )
+    `,
+    )
+    .single()
+
+  if (insertError) {
+    return jsonError(insertError.message, 500)
+  }
+
+  const typedRow = row as JobRow
+  const job = mapJobPostingRow(
+    {
+      ...typedRow,
+      kind: typedRow.kind as JobKind,
+      engagement: typedRow.engagement as EngagementType,
+      poster: normalizePoster(typedRow.poster),
+    },
+    { saved: false, applied: false },
+  )
+
+  return Response.json({ job }, { status: 201 })
+}

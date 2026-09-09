@@ -1,0 +1,178 @@
+"use client"
+
+import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import {
+  JobActionTooltip,
+  JobActionTooltips,
+} from "@/components/jobs/job-action-tooltip"
+import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
+import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
+import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
+import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
+import { Bookmark, Users, Share } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
+import { mutate } from "swr"
+
+import {
+  urgentAccentTextStyles,
+  urgentApplyButtonStyles,
+  urgentBookmarkSavedStyles,
+  urgentJobCardBorderStyles,
+} from "@/lib/jobs/format"
+import { type Job } from "@/lib/jobs-data"
+import { toggleSaveJob } from "@/lib/jobs/fetch"
+import { jobsListKey } from "@/lib/jobs/swr-keys"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+
+function revalidateJobs() {
+  void mutate((key) => typeof key === "string" && key.startsWith(jobsListKey))
+}
+
+export function JobRow({ job }: { job: Job }) {
+  const [saved, setSaved] = useState(job.saved)
+  const [applied, setApplied] = useState(job.applied)
+  const [applyOpen, setApplyOpen] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const isUrgent = job.kind === "urgent"
+
+  async function handleSave() {
+    const previous = saved
+    setSaved(!saved)
+    setSaving(true)
+    try {
+      const result = await toggleSaveJob(job.id)
+      setSaved(result.saved)
+      void revalidateJobs()
+    } catch (error) {
+      setSaved(previous)
+      toast.error(error instanceof Error ? error.message : "Could not save job")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <article
+        className={cn(
+          "relative flex flex-col gap-4 rounded-xl border bg-card p-4 transition-colors sm:flex-row sm:items-center",
+          job.kind === "urgent"
+            ? urgentJobCardBorderStyles
+            : "border-border hover:border-primary/40",
+        )}
+      >
+        {/* Stretched trigger opens the detail drawer; action buttons use pointer-events-auto. */}
+        <button
+          type="button"
+          className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-label={`View ${job.role} details`}
+          onClick={() => setDetailOpen(true)}
+        />
+
+        <div className="pointer-events-none flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h3 className="font-heading text-base font-semibold tracking-tight">
+              {job.role}
+            </h3>
+            {job.production ? (
+              <p className="min-w-0 text-sm text-muted-foreground text-pretty">
+                {job.production}
+              </p>
+            ) : null}
+          </div>
+          <JobMetadataBadges
+            job={job}
+            includeUrgentBadge
+            className="mt-2.5"
+          />
+        </div>
+
+        <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:justify-end">
+          <span
+            className={cn(
+              "font-heading text-base font-semibold",
+              isUrgent ? urgentAccentTextStyles : "text-primary-bright",
+            )}
+          >
+            {job.payRate}
+          </span>
+          <div className="pointer-events-auto relative z-10 flex items-center gap-2">
+            <JobActionTooltips>
+              <JobActionTooltip
+                label={saved ? "Remove bookmark" : "Bookmark job"}
+              >
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-label={saved ? "Remove bookmark" : "Bookmark job"}
+                  aria-pressed={saved}
+                  disabled={saving}
+                  onClick={() => void handleSave()}
+                >
+                  <Bookmark
+                    className={cn(
+                      "size-4",
+                      saved &&
+                        (isUrgent
+                          ? urgentBookmarkSavedStyles
+                          : "fill-current text-primary"),
+                    )}
+                  />
+                </Button>
+              </JobActionTooltip>
+              <JobActionTooltip label="Share as a message" wrap>
+                <JobShareToMessagesButton job={job}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Share as a message"
+                  >
+                    <Share className="size-4" />
+                  </Button>
+                </JobShareToMessagesButton>
+              </JobActionTooltip>
+              <JobActionTooltip label="Share to a group" wrap>
+                <JobShareToRoomsButton job={job}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Share to a group"
+                  >
+                    <Users className="size-4" />
+                  </Button>
+                </JobShareToRoomsButton>
+              </JobActionTooltip>
+            </JobActionTooltips>
+            <Button
+              size="sm"
+              className={cn(isUrgent && urgentApplyButtonStyles)}
+              disabled={applied}
+              onClick={() => setApplyOpen(true)}
+            >
+              {applied ? "Applied" : "Apply"}
+            </Button>
+          </div>
+        </div>
+      </article>
+
+      <JobDetailDrawer
+        jobId={job.id}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
+
+      <ApplyJobDialog
+        job={job}
+        open={applyOpen}
+        onOpenChange={setApplyOpen}
+        onApplied={() => {
+          setApplied(true)
+          void revalidateJobs()
+        }}
+      />
+    </>
+  )
+}

@@ -1,0 +1,36 @@
+import Link from "next/link"
+import { Plus } from "lucide-react"
+
+import { PageShell } from "@/components/page-shell"
+import { JobsBoard } from "@/components/jobs/jobs-board"
+import { Button } from "@/components/ui/button"
+import { mainNav } from "@/lib/nav"
+
+const item = mainNav.find((i) => i.href === "/jobs")!
+
+export default function JobsPage() {
+  return (
+    <PageShell
+      title="Search for jobs"
+      description={item.description}
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/my-jobs" />}
+          >
+            My Jobs
+          </Button>
+          <Button size="sm" nativeButton={false} render={<Link href="/jobs/new" />}>
+            <Plus />
+            Post a Job
+          </Button>
+        </div>
+      }
+    >
+      <JobsBoard />
+    </PageShell>
+  )
+}

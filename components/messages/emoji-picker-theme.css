@@ -1,0 +1,151 @@
+/* Message reaction surfaces sit on bg-card; use secondary as the base layer and
+   mix foreground in for hover/emphasis so states stay visible in dark mode. */
+.message-reaction-surface {
+  --message-reaction-hover: color-mix(
+    in oklch,
+    var(--secondary),
+    var(--foreground) 8%
+  );
+  --message-reaction-emphasis: color-mix(
+    in oklch,
+    var(--secondary),
+    var(--foreground) 5%
+  );
+}
+
+/* Ghost buttons default to hover:bg-muted, which matches secondary surfaces. */
+.message-reaction-surface [data-slot="button"]:hover,
+.message-reaction-surface [data-slot="button"]:focus-visible {
+  background-color: var(--message-reaction-hover) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+/* emoji-picker-react injects its own stylesheet on mount and sets --epr-* vars
+   directly on .EmojiPickerReact, overriding inherited parent vars. Target the
+   picker root with higher specificity + !important so AWN tokens win. */
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme {
+  --epr-dark: var(--secondary) !important;
+  --epr-dark-bg-color: var(--secondary) !important;
+  --epr-dark-text-color: var(--muted-foreground) !important;
+  --epr-dark-highlight-color: var(--primary) !important;
+  --epr-dark-picker-border-color: transparent !important;
+  --epr-dark-category-icon-active-color: var(--primary) !important;
+  --epr-dark-search-input-bg-color: color-mix(
+    in oklch,
+    var(--input) 30%,
+    transparent
+  ) !important;
+  --epr-dark-search-input-bg-color-active: color-mix(
+    in oklch,
+    var(--input) 30%,
+    transparent
+  ) !important;
+  --epr-dark-hover-bg-color: var(--message-reaction-hover) !important;
+  --epr-dark-hover-bg-color-reduced-opacity: color-mix(
+    in oklch,
+    var(--message-reaction-hover) 50%,
+    transparent
+  ) !important;
+  --epr-dark-focus-bg-color: var(--message-reaction-hover) !important;
+  --epr-dark-category-label-bg-color: var(--secondary) !important;
+  --epr-dark-reactions-bg-color: var(--secondary) !important;
+  --epr-dark-emoji-variation-picker-bg-color: var(--secondary) !important;
+  --epr-dark-emoji-variation-indicator-color: var(--border) !important;
+  --epr-dark-skin-tone-picker-menu-color: var(--secondary) !important;
+  --epr-dark-skin-tone-outer-border-color: var(--border) !important;
+
+  /* Remapped active vars (.epr-dark-theme block) */
+  --epr-bg-color: var(--secondary) !important;
+  --epr-text-color: var(--muted-foreground) !important;
+  --epr-highlight-color: var(--primary) !important;
+  --epr-picker-border-color: transparent !important;
+  --epr-category-icon-active-color: var(--primary) !important;
+  --epr-search-input-bg-color: color-mix(
+    in oklch,
+    var(--input) 30%,
+    transparent
+  ) !important;
+  --epr-search-input-bg-color-active: color-mix(
+    in oklch,
+    var(--input) 30%,
+    transparent
+  ) !important;
+  --epr-search-input-text-color: var(--foreground) !important;
+  --epr-search-input-placeholder-color: var(--muted-foreground) !important;
+  --epr-search-border-color: var(--border) !important;
+  --epr-search-border-color-active: var(--ring) !important;
+  --epr-hover-bg-color: var(--message-reaction-hover) !important;
+  --epr-focus-bg-color: var(--message-reaction-hover) !important;
+  --epr-category-label-bg-color: var(--secondary) !important;
+  --epr-category-label-text-color: var(--muted-foreground) !important;
+
+  /* Layout tokens aligned with AWN Input + popover */
+  --epr-picker-border-radius: calc(var(--radius) * 1.8) !important;
+  --epr-search-input-height: 2.25rem !important;
+  --epr-search-input-border-radius: calc(var(--radius) * 2.6) !important;
+  --epr-search-input-padding: 0 2.25rem !important;
+  --epr-horizontal-padding: 0.75rem !important;
+  --epr-header-padding: 0.75rem var(--epr-horizontal-padding) !important;
+
+  border: none !important;
+  box-shadow: none !important;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji-category-content,
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji-list {
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji-category-content {
+  justify-content: center !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-search-container input {
+  background-color: color-mix(in oklch, var(--input) 30%, transparent) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-search-container input::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-search-container input:focus {
+  background-color: color-mix(in oklch, var(--input) 30%, transparent) !important;
+  border-color: var(--ring) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent) !important;
+  outline: none;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji-category-label {
+  background-color: var(--secondary) !important;
+  color: var(--muted-foreground) !important;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-cat-btn:focus::before {
+  border-color: var(--primary) !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji:hover {
+  background-color: var(--message-reaction-hover) !important;
+}
+
+.emoji-picker-awn .EmojiPickerReact.epr-dark-theme .epr-emoji:focus {
+  background-color: var(--message-reaction-hover) !important;
+}
