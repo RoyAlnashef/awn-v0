@@ -98,8 +98,8 @@ export function JobManagementDetail({ job }: { job: Job }) {
         </div>
       }
     >
-      <div className="flex flex-col gap-8">
-        <section className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <section className="flex flex-col gap-4 lg:col-span-4">
           <div className="flex items-center gap-2">
             <span
               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide capitalize ${jobStatusStyles[job.status]}`}
@@ -111,7 +111,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex flex-col gap-3">
             <StatCard label="Views" value={job.viewCount ?? 0} icon={Eye} />
             <StatCard
               label="Applicants"
@@ -122,7 +122,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
           </div>
         </section>
 
-        <section className="flex flex-col gap-3 border-t border-border pt-8">
+        <section className="flex flex-col gap-3 lg:col-span-8">
           <div className="flex items-center justify-between">
             <h3 className="font-heading text-base font-semibold">Applicants</h3>
             <span className="text-xs text-muted-foreground">
