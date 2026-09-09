@@ -16,6 +16,14 @@ import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
 
 function initials(name: string) {
@@ -46,8 +54,14 @@ function StatCard({
   )
 }
 
-function ApplicantSkeleton() {
-  return <Skeleton className="h-16 w-full rounded-xl" />
+function ApplicantRowSkeleton() {
+  return (
+    <TableRow>
+      <TableCell colSpan={4}>
+        <Skeleton className="h-9 w-full rounded-md" />
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export function JobManagementDetail({ job }: { job: Job }) {
@@ -83,39 +97,32 @@ export function JobManagementDetail({ job }: { job: Job }) {
           </Button>
         </div>
       }
-      previewJob={job}
     >
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide capitalize ${jobStatusStyles[job.status]}`}
-          >
-            {job.status}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Posted {job.postedAt}
-          </span>
-        </div>
+      <div className="flex flex-col gap-8">
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide capitalize ${jobStatusStyles[job.status]}`}
+            >
+              {job.status}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Posted {job.postedAt}
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <StatCard
-            label="Views"
-            value={job.viewCount ?? 0}
-            icon={Eye}
-          />
-          <StatCard
-            label="Applicants"
-            value={job.applicationCount ?? 0}
-            icon={Users}
-          />
-          <StatCard
-            label="Status"
-            value={job.status}
-            icon={CircleDot}
-          />
-        </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatCard label="Views" value={job.viewCount ?? 0} icon={Eye} />
+            <StatCard
+              label="Applicants"
+              value={job.applicationCount ?? 0}
+              icon={Users}
+            />
+            <StatCard label="Status" value={job.status} icon={CircleDot} />
+          </div>
+        </section>
 
-        <div className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3 border-t border-border pt-8">
           <div className="flex items-center justify-between">
             <h3 className="font-heading text-base font-semibold">Applicants</h3>
             <span className="text-xs text-muted-foreground">
@@ -129,65 +136,76 @@ export function JobManagementDetail({ job }: { job: Job }) {
                 ? error.message
                 : "Could not load applicants"}
             </p>
-          ) : isLoading ? (
-            <div className="flex flex-col gap-2">
-              <ApplicantSkeleton />
-              <ApplicantSkeleton />
-            </div>
-          ) : applications.length === 0 ? (
+          ) : applications.length === 0 && !isLoading ? (
             <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
               <p className="text-sm text-muted-foreground">
                 No applications yet. Share your listing to reach crew on AWN.
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {applications.map((application) => (
-                <div
-                  key={application.id}
-                  className="flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <Avatar className="size-9 shrink-0">
-                      <AvatarImage
-                        src={application.applicant.avatar}
-                        alt=""
-                      />
-                      <AvatarFallback className="text-xs">
-                        {initials(application.applicant.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <p className="text-sm font-medium">
-                        {application.applicant.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {application.applicant.title}
-                      </p>
-                      {application.note ? (
-                        <p className="line-clamp-2 text-xs text-muted-foreground">
-                          {application.note}
-                        </p>
-                      ) : null}
-                      <p className="text-[10px] text-muted-foreground">
-                        Applied{" "}
-                        {format(
-                          new Date(application.createdAt),
-                          "MMM d, yyyy",
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
-                  >
-                    {application.status}
-                  </span>
-                </div>
-              ))}
+            <div className="rounded-xl border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Applicant</TableHead>
+                    <TableHead>Note</TableHead>
+                    <TableHead>Applied</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <>
+                      <ApplicantRowSkeleton />
+                      <ApplicantRowSkeleton />
+                    </>
+                  ) : (
+                    applications.map((application) => (
+                      <TableRow key={application.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-9 shrink-0">
+                              <AvatarImage
+                                src={application.applicant.avatar}
+                                alt=""
+                              />
+                              <AvatarFallback className="text-xs">
+                                {initials(application.applicant.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex min-w-0 flex-col">
+                              <span className="text-sm font-medium">
+                                {application.applicant.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {application.applicant.title}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <span className="line-clamp-2 whitespace-normal text-sm text-muted-foreground">
+                            {application.note || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(new Date(application.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
+                          >
+                            {application.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           )}
-        </div>
+        </section>
       </div>
     </JobPageLayout>
   )
