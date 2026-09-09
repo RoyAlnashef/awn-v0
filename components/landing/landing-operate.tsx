@@ -6,13 +6,13 @@ export function LandingOperate() {
   return (
     <section className="relative z-10 px-6 py-16 text-center sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="text-xs font-semibold tracking-widest text-primary uppercase">
+        <p className="text-body-mini font-semibold tracking-widest text-primary uppercase">
           {operate.eyebrow}
         </p>
-        <h2 className="mt-4 font-heading text-3xl font-medium tracking-tight text-balance sm:text-4xl">
+        <h2 className="mt-4 font-heading text-h2 font-medium tracking-tight text-balance">
           {operate.title}
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-sm text-muted-foreground text-pretty sm:text-base">
+        <p className="mx-auto mt-6 max-w-xl text-body-sm text-muted-foreground text-pretty sm:text-body">
           {operate.body}
         </p>
 

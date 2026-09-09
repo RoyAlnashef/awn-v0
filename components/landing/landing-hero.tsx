@@ -8,10 +8,10 @@ export function LandingHero() {
 
   return (
     <section className="relative z-10 flex flex-col items-center px-6 py-24 text-center sm:px-8 sm:py-32">
-      <h1 className="max-w-2xl font-heading text-4xl font-medium tracking-tight text-balance sm:text-5xl">
+      <h1 className="max-w-2xl font-heading text-h1 font-medium tracking-tight text-balance">
         {hero.title}
       </h1>
-      <p className="mt-6 max-w-xl text-sm text-muted-foreground text-pretty sm:text-base">
+      <p className="mt-6 max-w-xl text-body-sm text-muted-foreground text-pretty sm:text-body">
         {hero.subtitle}
       </p>
 
@@ -35,7 +35,7 @@ export function LandingHero() {
         </Button>
       </div>
 
-      <p className="mt-10 text-xs tracking-widest text-muted-foreground uppercase">
+      <p className="mt-10 text-body-mini tracking-widest text-muted-foreground uppercase">
         — {hero.tagline} —
       </p>
     </section>

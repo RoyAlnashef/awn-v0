@@ -13,10 +13,10 @@ export function LandingCta() {
       className="relative z-10 px-6 py-16 text-center sm:px-8 sm:py-24"
     >
       <div className="mx-auto max-w-3xl">
-        <h2 className="font-heading text-3xl font-medium tracking-tight text-balance sm:text-4xl">
+        <h2 className="font-heading text-h2 font-medium tracking-tight text-balance">
           {cta.title}
         </h2>
-        <p className="mt-4 text-sm text-muted-foreground">{cta.subtitle}</p>
+        <p className="mt-4 text-body-sm text-muted-foreground">{cta.subtitle}</p>
 
         <Button
           size="lg"

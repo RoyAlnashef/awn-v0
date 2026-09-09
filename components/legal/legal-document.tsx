@@ -13,7 +13,7 @@ export function LegalDocumentView({ document }: LegalDocumentProps) {
 
       {document.sections.map((section) => (
         <section key={section.id} id={section.id} className="scroll-mt-24">
-          <h2 className="font-heading text-xl font-medium tracking-tight sm:text-2xl">
+          <h2 className="font-heading text-h4 font-medium tracking-tight sm:text-h3">
             {section.title}
           </h2>
           <div className="mt-4 space-y-4">

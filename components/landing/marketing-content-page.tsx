@@ -22,11 +22,11 @@ export function MarketingContentPage({
       <main className="relative z-10 px-6 py-16 sm:px-8 sm:py-24">
         <article className="mx-auto max-w-3xl">
           <header className="mb-12">
-            <h1 className="font-heading text-4xl font-medium tracking-tight text-balance sm:text-5xl">
+            <h1 className="font-heading text-h1 font-medium tracking-tight text-balance">
               {title}
             </h1>
             {subtitle ? (
-              <p className="mt-4 text-sm text-muted-foreground text-pretty sm:text-base">
+              <p className="mt-4 text-body-sm text-muted-foreground text-pretty sm:text-body">
                 {subtitle}
               </p>
             ) : null}

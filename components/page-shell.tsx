@@ -29,11 +29,11 @@ export function PageShell({
         <div className="flex flex-col gap-2">
           {breadcrumb}
           <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            <h1 className="font-heading text-h3 font-semibold tracking-tight">
               {title}
             </h1>
             {description ? (
-              <p className="text-sm text-muted-foreground text-pretty">
+              <p className="text-body-sm text-muted-foreground text-pretty">
                 {description}
               </p>
             ) : null}

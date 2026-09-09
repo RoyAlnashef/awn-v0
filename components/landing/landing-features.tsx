@@ -44,7 +44,7 @@ export function LandingFeatures() {
                   <div className="mb-3 flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <AnimatedIcon icon={Icon} size={16} />
                   </div>
-                  <CardTitle className="font-heading text-xl font-medium">
+                  <CardTitle className="font-heading text-h4 font-medium">
                     {feature.title}
                   </CardTitle>
                 </CardHeader>

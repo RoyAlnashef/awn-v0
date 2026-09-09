@@ -57,6 +57,48 @@
 --animate-typing-dot: typing-dot 1.4s ease-in-out infinite;
 --animate-message-enter: message-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 --animate-message-exit: message-exit 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+
+  /* Typescale — body */
+  --text-body-mini: 0.75rem;
+  --text-body-mini--line-height: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.125rem;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.75rem;
+
+  /* Typescale — headings */
+  --text-h4: 1.25rem;
+  --text-h4--line-height: 1.5rem;
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.75rem;
+  --text-h2: 1.875rem;
+  --text-h2--line-height: 2.25rem;
+  --text-h1: 3rem;
+  --text-h1--line-height: 3.25rem;
+
+  /* Map Tailwind text utilities to typescale */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.5rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 3.25rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 3.25rem;
 }
 
 :root {
@@ -147,7 +189,7 @@ body {
   position: relative;
 }
   html {
-    @apply font-sans;
+    @apply font-sans text-base;
 }
 }
 

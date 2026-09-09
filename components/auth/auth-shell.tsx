@@ -25,7 +25,7 @@ export function AuthShell({
         <div className="mb-8 text-center">
           <Link
             href="/"
-            className="font-heading text-3xl font-medium tracking-tight text-balance transition-opacity hover:opacity-80"
+            className="font-heading text-h2 font-medium tracking-tight text-balance transition-opacity hover:opacity-80"
           >
             {title}
           </Link>
