@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Figtree, Merriweather } from "next/font/google";
+import { DM_Mono, DM_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
-const merriweatherHeading = Merriweather({
+const outfitHeading = Outfit({
   subsets: ["latin"],
   variable: "--font-heading",
 });
 
-const figtree = Figtree({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +44,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("bg-background", "font-sans", figtree.variable, merriweatherHeading.variable)}
+      className={cn(
+        "bg-background",
+        "font-sans",
+        dmSans.variable,
+        outfitHeading.variable,
+        dmMono.variable,
+      )}
     >
       <body className="antialiased">
         <ThemeProvider defaultTheme="dark">
