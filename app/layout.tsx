@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { DM_Mono, DM_Sans, Outfit } from "next/font/google";
+import { DM_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
-
-const outfitHeading = Outfit({
-  subsets: ["latin"],
-  variable: "--font-heading",
-});
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -48,7 +43,6 @@ export default function RootLayout({
         "bg-background",
         "font-sans",
         dmSans.variable,
-        outfitHeading.variable,
         dmMono.variable,
       )}
     >
