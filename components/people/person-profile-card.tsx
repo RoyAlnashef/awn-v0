@@ -220,7 +220,12 @@ export function PersonProfileCard({
           ) : null}
 
           <div className="px-6 pb-2">
-            <Avatar className="-mt-10 size-20 ring-4 ring-popover">
+            <Avatar
+              className={cn(
+                "-mt-10 size-20 ring-4",
+                availability.avatarRing,
+              )}
+            >
               <AvatarImage src={person.avatar || undefined} alt="" />
               <AvatarFallback className="text-lg">
                 {initials(person.name)}

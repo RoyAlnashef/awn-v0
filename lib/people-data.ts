@@ -13,15 +13,35 @@ export const availabilityStatuses: Availability[] = [
  */
 export const availabilityConfig: Record<
   Availability,
-  { dot: string; ping: boolean; label: string }
+  {
+    dot: string
+    ping: boolean
+    label: string
+    avatarBorder: string
+    avatarRing: string
+  }
 > = {
-  "Available Now": { dot: "bg-success", ping: true, label: "Available Now" },
+  "Available Now": {
+    dot: "bg-success",
+    ping: true,
+    label: "Available Now",
+    avatarBorder: "border-success",
+    avatarRing: "ring-success",
+  },
   "Between Tours": {
     dot: "bg-foreground/50",
     ping: false,
     label: "Between Tours",
+    avatarBorder: "border-border",
+    avatarRing: "ring-popover",
   },
-  "On Tour": { dot: "bg-foreground/40", ping: false, label: "On Tour" },
+  "On Tour": {
+    dot: "bg-foreground/40",
+    ping: false,
+    label: "On Tour",
+    avatarBorder: "border-border",
+    avatarRing: "ring-popover",
+  },
 }
 
 /** Home-base cities offered as quick chips. Anything else falls under "Other". */

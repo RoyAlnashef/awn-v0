@@ -45,7 +45,12 @@ export function PersonRow({ person }: { person: Person }) {
         onClick={() => setOpen(true)}
       />
 
-      <Avatar className="size-11 shrink-0">
+      <Avatar
+        className={cn(
+          "size-11 shrink-0 border-2",
+          config.avatarBorder,
+        )}
+      >
         <AvatarImage src={person.avatar || undefined} alt="" />
         <AvatarFallback>{initials(person.name)}</AvatarFallback>
       </Avatar>

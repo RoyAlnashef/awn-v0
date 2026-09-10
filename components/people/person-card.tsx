@@ -34,6 +34,7 @@ function AvailabilityDot({ availability }: { availability: Person["availability"
 
 export function PersonCard({ person }: { person: Person }) {
   const [open, setOpen] = useState(false)
+  const availability = availabilityConfig[person.availability]
 
   return (
     <article className="relative flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-primary/40">
@@ -44,7 +45,12 @@ export function PersonCard({ person }: { person: Person }) {
         onClick={() => setOpen(true)}
       />
 
-      <Avatar className="size-16 shrink-0 border-2 border-border">
+      <Avatar
+        className={cn(
+          "size-16 shrink-0 border-2",
+          availability.avatarBorder,
+        )}
+      >
         <AvatarImage src={person.avatar || undefined} alt="" />
         <AvatarFallback className="text-base">{initials(person.name)}</AvatarFallback>
       </Avatar>
