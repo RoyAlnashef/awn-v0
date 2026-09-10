@@ -128,25 +128,22 @@ export function PeopleBoard({
         </p>
       ) : null}
 
-      <PeopleFilters
-        filters={filters}
-        onChange={updateFilters}
-        onClear={() => setFilters(initialFilters)}
-        activeCount={activeCount}
-        cityOptions={cityOptions}
-      />
-
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground" aria-live="polite">
-            <span className="font-medium text-foreground">{filtered.length}</span>{" "}
-            {filtered.length === 1 ? "contact" : "contacts"}
-          </p>
-
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <PeopleFilters
+            filters={filters}
+            onChange={updateFilters}
+            onClear={() => setFilters(initialFilters)}
+            activeCount={activeCount}
+            cityOptions={cityOptions}
+          />
+        </div>
+        <div className="shrink-0 self-end sm:self-auto">
           <BoardViewToggle view={view} onViewChange={setView} />
         </div>
+      </div>
 
-        {filtered.length === 0 ? (
+      {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
             <AnimatedIcon icon={SearchIcon} size={32} className="text-muted-foreground" />
             <div className="flex flex-col gap-1">
@@ -188,7 +185,6 @@ export function PeopleBoard({
             )}
           </div>
         )}
-      </div>
     </div>
   )
 }

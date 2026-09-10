@@ -31,7 +31,7 @@ export function JobsBoard() {
     [filters],
   )
 
-  const { data, error, isLoading, isValidating } = useSWR(listKey, fetchJobs, {
+  const { data, error, isLoading } = useSWR(listKey, fetchJobs, {
     dedupingInterval: 2000,
     revalidateOnFocus: true,
   })
@@ -49,36 +49,21 @@ export function JobsBoard() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <JobsFilters
-        filters={filters}
-        onChange={updateFilters}
-        onClear={clearFilters}
-        activeCount={activeCount}
-      />
-
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground" aria-live="polite">
-            {loading ? (
-              "Loading roles..."
-            ) : (
-              <>
-                <span className="font-medium text-foreground">{jobs.length}</span>{" "}
-                {jobs.length === 1 ? "role" : "roles"}
-                {isValidating && !loading ? (
-                  <span className="ml-2 inline-flex items-center gap-1 text-xs">
-                    <Loader2 className="size-3 animate-spin" />
-                    Updating
-                  </span>
-                ) : null}
-              </>
-            )}
-          </p>
-
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <JobsFilters
+            filters={filters}
+            onChange={updateFilters}
+            onClear={clearFilters}
+            activeCount={activeCount}
+          />
+        </div>
+        <div className="shrink-0 self-end sm:self-auto">
           <BoardViewToggle view={view} onViewChange={setView} />
         </div>
+      </div>
 
-        {error ? (
+      {error ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
             <AnimatedIcon icon={SearchIcon} size={32} className="text-muted-foreground" />
             <div className="flex flex-col gap-1">
@@ -130,7 +115,6 @@ export function JobsBoard() {
             )}
           </div>
         )}
-      </div>
     </div>
   )
 }
