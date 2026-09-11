@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { BadgeCheck, Users, MapPin, MessageSquare, Share } from "lucide-react"
+import { BadgeCheck, Users, MapPin, MessageSquare, MessagesSquare } from "lucide-react"
 
 import { availabilityConfig, initials, type Person } from "@/lib/people-data"
 import { toggleConnection } from "@/lib/people/actions"
@@ -115,7 +115,7 @@ export function PersonRow({ person }: { person: Person }) {
         </Button>
         <PersonShareToMessagesButton person={person}>
           <Button size="icon" variant="outline" aria-label="Share as a message">
-            <Share className="size-4" />
+            <MessagesSquare className="size-4" />
           </Button>
         </PersonShareToMessagesButton>
         <PersonShareToRoomsButton person={person}>

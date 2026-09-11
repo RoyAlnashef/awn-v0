@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { mutate } from "swr"
-import { Bookmark, Flag, Users, Share } from "lucide-react"
+import { Bookmark, Flag, MessagesSquare, Users } from "lucide-react"
 import { toast } from "sonner"
 
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
@@ -237,7 +237,7 @@ export function JobDetailContent({
                 disabled={preview}
                 onClick={() => setShareOpen(true)}
               >
-                <Share className="size-4" />
+                <MessagesSquare className="size-4" />
               </Button>
             </JobActionTooltip>
             <JobActionTooltip label="Share to a group" wrap>

@@ -9,9 +9,9 @@ import {
   Flag,
   Users,
   MessageSquare,
+  MessagesSquare,
   Plane,
   Plus,
-  Share,
   Sparkles,
   ThumbsUp,
 } from "lucide-react"
@@ -458,7 +458,7 @@ export function PersonProfileCard({
                 aria-disabled={isPreview}
                 onClick={() => setShareOpen(true)}
               >
-                <Share className="size-4" />
+                <MessagesSquare className="size-4" />
               </Button>
             </PreviewTooltip>
             <PreviewTooltip preview={isPreview}>
