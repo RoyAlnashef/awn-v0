@@ -23,8 +23,8 @@ export function PageShell({
       className={cn(
         "flex flex-col",
         fillViewport
-          ? "h-[calc(100svh-4rem)] gap-4 p-4 md:p-6"
-          : "mx-auto w-full max-w-[1400px] flex-1 gap-8 px-4 py-8 md:px-6",
+          ? "mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col gap-8 px-4 py-8 md:px-6 overflow-x-hidden"
+          : "mx-auto w-full max-w-[1400px] min-w-0 flex-1 gap-8 px-4 py-8 md:px-6",
       )}
     >
       <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
