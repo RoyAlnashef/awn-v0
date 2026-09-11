@@ -1,6 +1,12 @@
 "use client"
 
-import { useRef, useState, useTransition, type RefObject } from "react"
+import {
+  useRef,
+  useState,
+  useTransition,
+  type ReactElement,
+  type RefObject,
+} from "react"
 import { toast } from "sonner"
 import {
   BadgeCheck,
@@ -34,6 +40,7 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { JobActionTooltip } from "@/components/jobs/job-action-tooltip"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
 import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -123,18 +130,32 @@ function VouchButton({
 function PreviewTooltip({
   children,
   preview,
+  label,
+  wrap = false,
 }: {
   children: React.ReactNode
   preview: boolean
+  label?: string
+  wrap?: boolean
 }) {
-  if (!preview) return children
+  if (preview) {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={<span className="contents">{children}</span>} />
+        <TooltipContent>Preview only</TooltipContent>
+      </Tooltip>
+    )
+  }
 
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="contents">{children}</span>} />
-      <TooltipContent>Preview only</TooltipContent>
-    </Tooltip>
-  )
+  if (label) {
+    return (
+      <JobActionTooltip label={label} wrap={wrap}>
+        {children as ReactElement}
+      </JobActionTooltip>
+    )
+  }
+
+  return children
 }
 
 export function PersonProfileCard({
@@ -414,7 +435,10 @@ export function PersonProfileCard({
         {/* Footer actions */}
         <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-popover p-4">
           <div className="flex items-center gap-2">
-            <PreviewTooltip preview={isPreview}>
+            <PreviewTooltip
+              preview={isPreview}
+              label={followed ? "Unfollow" : "Follow"}
+            >
               <Button
                 variant="outline"
                 size="icon"
@@ -427,7 +451,7 @@ export function PersonProfileCard({
                 {followed ? <BadgeCheck /> : <Plus />}
               </Button>
             </PreviewTooltip>
-            <PreviewTooltip preview={isPreview}>
+            <PreviewTooltip preview={isPreview} label="Message">
               <Button
                 className="min-w-0 flex-1 shrink"
                 disabled={isPreview}
@@ -438,7 +462,7 @@ export function PersonProfileCard({
                 Message
               </Button>
             </PreviewTooltip>
-            <PreviewTooltip preview={isPreview}>
+            <PreviewTooltip preview={isPreview} label="View full profile" wrap>
               <Button
                 variant="ghost"
                 size="icon"
@@ -449,7 +473,7 @@ export function PersonProfileCard({
                 <ExternalLink />
               </Button>
             </PreviewTooltip>
-            <PreviewTooltip preview={isPreview}>
+            <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
               <Button
                 variant="ghost"
                 size="icon"
@@ -461,7 +485,7 @@ export function PersonProfileCard({
                 <MessagesSquare className="size-4" />
               </Button>
             </PreviewTooltip>
-            <PreviewTooltip preview={isPreview}>
+            <PreviewTooltip preview={isPreview} label="Share to a group" wrap>
               <Button
                 variant="ghost"
                 size="icon"
@@ -474,7 +498,7 @@ export function PersonProfileCard({
               </Button>
             </PreviewTooltip>
           </div>
-          <PreviewTooltip preview={isPreview}>
+          <PreviewTooltip preview={isPreview} label="Report member">
             <Button
               variant="ghost"
               size="sm"
