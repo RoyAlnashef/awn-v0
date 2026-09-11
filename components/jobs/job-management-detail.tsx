@@ -35,6 +35,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { findNavItem } from "@/lib/nav"
 
 function initials(name: string) {
   return name
@@ -259,30 +268,37 @@ export function JobManagementDetail({ job }: { job: Job }) {
     })
   }
 
+  const myJobsNav = findNavItem("/my-jobs/created")
+
   return (
     <JobPageLayout
       title={job.role}
       description={job.production || "Job management"}
+      breadcrumb={
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link href="/my-jobs/created" />}>
+                {myJobsNav?.title ?? "My Jobs"}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{job.role}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      }
       actions={
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            nativeButton={false}
-            render={<Link href="/my-jobs/created" />}
-          >
-            My Jobs
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            nativeButton={false}
-            render={<Link href={`/jobs/${job.id}/edit`} />}
-          >
-            <Pencil />
-            Edit
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          nativeButton={false}
+          render={<Link href={`/jobs/${job.id}/edit`} />}
+        >
+          <Pencil />
+          Edit
+        </Button>
       }
       previewJob={job}
     >

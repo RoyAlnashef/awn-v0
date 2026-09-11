@@ -12,12 +12,14 @@ import { JobPreviewPanel } from "@/components/jobs/job-preview-panel"
 export function JobPageLayout({
   title,
   description,
+  breadcrumb,
   actions,
   children,
   previewJob,
 }: {
   title: string
   description?: string
+  breadcrumb?: ReactNode
   actions?: ReactNode
   children: ReactNode
   previewJob: Job
@@ -28,6 +30,7 @@ export function JobPageLayout({
     <PageShell
       title={title}
       description={description}
+      breadcrumb={breadcrumb}
       actions={
         <div className="flex items-center gap-2">
           {actions}

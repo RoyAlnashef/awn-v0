@@ -28,7 +28,7 @@ export function PageShell({
       )}
     >
       <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-2">
+        <div className={cn("flex flex-col", breadcrumb ? "gap-4" : "gap-2")}>
           {breadcrumb}
           <div className="flex flex-col gap-1">
             <h1 className="font-heading text-h3 font-semibold tracking-tight">
