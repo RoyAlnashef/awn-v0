@@ -3,23 +3,37 @@
 import type { ComponentType } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { Eye, ExternalLink, Pencil, Users, CircleDot } from "lucide-react"
-import { useTransition } from "react"
+import { Eye, Pencil, Share2, Users, CircleDot } from "lucide-react"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
 
 import type { Job } from "@/lib/jobs-data"
-import { fetchJobApplications, type JobApplication } from "@/lib/jobs/fetch"
-import { getJobApplicationResumeSignedUrl } from "@/lib/jobs/resume-actions"
+import {
+  fetchJobApplications,
+  updateJobApplicationStatus,
+  type JobApplication,
+  type ReviewApplicationStatus,
+} from "@/lib/jobs/fetch"
 import {
   applicationStatusStyles,
   jobStatusStyles,
 } from "@/lib/jobs/format"
 import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
+import type { Person } from "@/lib/people-data"
+import { JobApplicationReviewDrawer } from "@/components/jobs/job-application-review-drawer"
+import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Spinner } from "@/components/ui/spinner"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
 
 function initials(name: string) {
@@ -28,6 +42,36 @@ function initials(name: string) {
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
+}
+
+function personFromApplication(application: JobApplication): Person {
+  const { applicant, applicantId } = application
+  return {
+    id: applicantId,
+    name: applicant.name,
+    role: applicant.title,
+    department: "",
+    homeBase: "",
+    city: "",
+    availability: "Between Tours",
+    availableFrom: "",
+    availableTo: "",
+    venueTiers: [],
+    workAuth: [],
+    yearsExperience: 0,
+    credits: 0,
+    vouches: 0,
+    topTours: [],
+    skills: [],
+    avatar: applicant.avatar,
+    followed: false,
+    website: applicant.socialLinks.website,
+    instagram: applicant.socialLinks.instagram,
+    facebook: applicant.socialLinks.facebook,
+    twitter: applicant.socialLinks.twitter,
+    linkedin: applicant.socialLinks.linkedin,
+    youtube: applicant.socialLinks.youtube,
+  }
 }
 
 function StatCard({
@@ -50,48 +94,170 @@ function StatCard({
   )
 }
 
-function ApplicantSkeleton() {
-  return <Skeleton className="h-16 w-full rounded-xl" />
+function ApplicantTableSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 2 }).map((_, index) => (
+        <TableRow key={index} className="hover:bg-transparent">
+          <TableCell>
+            <Skeleton className="h-9 w-40" />
+          </TableCell>
+          <TableCell className="hidden sm:table-cell">
+            <Skeleton className="h-4 w-full max-w-xs" />
+          </TableCell>
+          <TableCell className="hidden md:table-cell">
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </TableCell>
+          <TableCell className="text-right">
+            <Skeleton className="ml-auto h-4 w-20" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  )
 }
 
-function ApplicantResumeLink({ application }: { application: JobApplication }) {
-  const [isPending, startTransition] = useTransition()
-
-  if (!application.resumeUrl) return null
-
-  function handleViewResume() {
-    startTransition(async () => {
-      const result = await getJobApplicationResumeSignedUrl(application.id)
-      if (!result.ok) {
-        toast.error(result.error)
-        return
-      }
-      window.open(result.url, "_blank", "noopener,noreferrer")
-    })
-  }
-
+function ApplicantTableRow({
+  application,
+  onReview,
+  onOpenProfile,
+}: {
+  application: JobApplication
+  onReview: (application: JobApplication) => void
+  onOpenProfile: (application: JobApplication) => void
+}) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="h-7 px-2 text-xs"
-      disabled={isPending}
-      onClick={handleViewResume}
-    >
-      {isPending ? <Spinner className="size-3.5" /> : <ExternalLink className="size-3.5" />}
-      View resume
-    </Button>
+    <TableRow>
+      <TableCell>
+        <button
+          type="button"
+          className="group flex min-w-0 items-center gap-3 rounded-md text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          aria-label={`View ${application.applicant.name}'s profile`}
+          onClick={() => onOpenProfile(application)}
+        >
+          <Avatar className="size-8 shrink-0">
+            <AvatarImage src={application.applicant.avatar} alt="" />
+            <AvatarFallback className="text-xs">
+              {initials(application.applicant.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium group-hover:underline">
+              {application.applicant.name}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {application.applicant.title}
+            </p>
+          </div>
+        </button>
+      </TableCell>
+      <TableCell className="hidden max-w-xs whitespace-normal sm:table-cell">
+        {application.note ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {application.note}
+          </p>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
+        {format(new Date(application.createdAt), "MMM d, yyyy")}
+      </TableCell>
+      <TableCell>
+        <span
+          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
+        >
+          {application.status}
+        </span>
+      </TableCell>
+      <TableCell className="text-right">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onReview(application)}
+        >
+          Review
+        </Button>
+      </TableCell>
+    </TableRow>
   )
 }
 
 export function JobManagementDetail({ job }: { job: Job }) {
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     jobApplicationsKey(job.id),
     () => fetchJobApplications(job.id),
   )
+  const [selectedApplication, setSelectedApplication] =
+    useState<JobApplication | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [profilePerson, setProfilePerson] = useState<Person | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [isUpdating, startUpdateTransition] = useTransition()
 
   const applications = data?.applications ?? []
+
+  function handleReviewApplication(application: JobApplication) {
+    setSelectedApplication(application)
+    setDrawerOpen(true)
+  }
+
+  function handleDrawerOpenChange(open: boolean) {
+    setDrawerOpen(open)
+    if (!open) setSelectedApplication(null)
+  }
+
+  function handleOpenProfile(application: JobApplication) {
+    setProfilePerson(personFromApplication(application))
+    setProfileOpen(true)
+  }
+
+  function handleProfileOpenChange(open: boolean) {
+    setProfileOpen(open)
+    if (!open) setProfilePerson(null)
+  }
+
+  function handleStatusChange(status: ReviewApplicationStatus) {
+    if (!selectedApplication) return
+
+    startUpdateTransition(async () => {
+      try {
+        await updateJobApplicationStatus(job.id, selectedApplication.id, status)
+        toast.success(
+          status === "approved"
+            ? "Application approved"
+            : status === "maybe"
+              ? "Application marked as maybe"
+              : "Application declined",
+        )
+        setSelectedApplication((current) =>
+          current ? { ...current, status } : null,
+        )
+        void mutate(
+          (current) =>
+            current
+              ? {
+                  applications: current.applications.map((application) =>
+                    application.id === selectedApplication.id
+                      ? { ...application, status }
+                      : application,
+                  ),
+                }
+              : current,
+          { revalidate: false },
+        )
+      } catch (updateError) {
+        toast.error(
+          updateError instanceof Error
+            ? updateError.message
+            : "Could not update application",
+        )
+      }
+    })
+  }
 
   return (
     <JobPageLayout
@@ -132,7 +298,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Views"
             value={job.viewCount ?? 0}
@@ -144,6 +310,11 @@ export function JobManagementDetail({ job }: { job: Job }) {
             icon={Users}
           />
           <StatCard
+            label="Shares"
+            value={job.shareCount ?? 0}
+            icon={Share2}
+          />
+          <StatCard
             label="Status"
             value={job.status}
             icon={CircleDot}
@@ -151,12 +322,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-heading text-base font-semibold">Applicants</h3>
-            <span className="text-xs text-muted-foreground">
-              Application management coming soon
-            </span>
-          </div>
+          <h3 className="font-heading text-base font-semibold">Applicants</h3>
 
           {error ? (
             <p className="text-sm text-destructive">
@@ -164,69 +330,63 @@ export function JobManagementDetail({ job }: { job: Job }) {
                 ? error.message
                 : "Could not load applicants"}
             </p>
-          ) : isLoading ? (
-            <div className="flex flex-col gap-2">
-              <ApplicantSkeleton />
-              <ApplicantSkeleton />
-            </div>
-          ) : applications.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                No applications yet. Share your listing to reach crew on AWN.
-              </p>
-            </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {applications.map((application) => (
-                <div
-                  key={application.id}
-                  className="flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <Avatar className="size-9 shrink-0">
-                      <AvatarImage
-                        src={application.applicant.avatar}
-                        alt=""
+            <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Applicant</TableHead>
+                    <TableHead className="hidden sm:table-cell">Note</TableHead>
+                    <TableHead className="hidden md:table-cell">Applied</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-25" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <ApplicantTableSkeleton />
+                  ) : applications.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={5}
+                        className="h-24 text-center text-sm text-muted-foreground"
+                      >
+                        No applications yet. Share your listing to reach crew on
+                        AWN.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    applications.map((application) => (
+                      <ApplicantTableRow
+                        key={application.id}
+                        application={application}
+                        onReview={handleReviewApplication}
+                        onOpenProfile={handleOpenProfile}
                       />
-                      <AvatarFallback className="text-xs">
-                        {initials(application.applicant.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <p className="text-sm font-medium">
-                        {application.applicant.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {application.applicant.title}
-                      </p>
-                      {application.note ? (
-                        <p className="line-clamp-2 text-xs text-muted-foreground">
-                          {application.note}
-                        </p>
-                      ) : null}
-                      <p className="text-[10px] text-muted-foreground">
-                        Applied{" "}
-                        {format(
-                          new Date(application.createdAt),
-                          "MMM d, yyyy",
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-2">
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
-                    >
-                      {application.status}
-                    </span>
-                    <ApplicantResumeLink application={application} />
-                  </div>
-                </div>
-              ))}
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>
       </div>
+
+      <JobApplicationReviewDrawer
+        application={selectedApplication}
+        open={drawerOpen}
+        onOpenChange={handleDrawerOpenChange}
+        onStatusChange={handleStatusChange}
+        updating={isUpdating}
+      />
+
+      {profilePerson ? (
+        <PersonProfileDrawer
+          person={profilePerson}
+          open={profileOpen}
+          onOpenChange={handleProfileOpenChange}
+        />
+      ) : null}
     </JobPageLayout>
   )
 }

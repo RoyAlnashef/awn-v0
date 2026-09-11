@@ -75,3 +75,14 @@ export const applicationStatusStyles: Record<ApplicationStatus, string> = {
   declined: "border-border bg-muted text-muted-foreground",
   withdrawn: "border-border bg-muted text-muted-foreground",
 }
+
+export const applicationStatusConfig: Record<
+  ApplicationStatus,
+  { label: string; className: string }
+> = {
+  pending: { label: "Pending", className: applicationStatusStyles.pending },
+  approved: { label: "Approved", className: applicationStatusStyles.approved },
+  maybe: { label: "Maybe", className: applicationStatusStyles.maybe },
+  declined: { label: "Declined", className: applicationStatusStyles.declined },
+  withdrawn: { label: "Withdrawn", className: applicationStatusStyles.withdrawn },
+}

@@ -178,11 +178,13 @@ export function buildSocialDisplay(
   return normalized
 }
 
-export function getPersonSocialLinks(person: Person): SocialLinkDisplay[] {
+export function getSocialLinksFromFields(
+  fields: Partial<Record<SocialFieldId, string | null | undefined>>,
+): SocialLinkDisplay[] {
   const links: SocialLinkDisplay[] = []
 
   for (const id of SOCIAL_FIELD_IDS) {
-    const stored = person[id]
+    const stored = fields[id]
     const href = buildSocialHref(id, stored)
     const display = buildSocialDisplay(id, stored)
     if (!href || !display) continue
@@ -198,6 +200,10 @@ export function getPersonSocialLinks(person: Person): SocialLinkDisplay[] {
   }
 
   return links
+}
+
+export function getPersonSocialLinks(person: Person): SocialLinkDisplay[] {
+  return getSocialLinksFromFields(person)
 }
 
 export function socialFieldsFromPerson(

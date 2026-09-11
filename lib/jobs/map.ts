@@ -29,6 +29,7 @@ export type JobPostingSource = {
   engagement: EngagementType | string
   details: string
   view_count?: number
+  share_count?: number
   created_at: string
   poster?: PosterProfile | null
 }
@@ -49,6 +50,7 @@ export function mapJobPostingRow(
     savedAt?: string
     viewCount?: number
     applicationCount?: number
+    shareCount?: number
   } = {},
 ): Job {
   return {
@@ -76,5 +78,6 @@ export function mapJobPostingRow(
     savedAt: options.savedAt,
     viewCount: options.viewCount ?? row.view_count,
     applicationCount: options.applicationCount,
+    shareCount: options.shareCount ?? row.share_count,
   }
 }

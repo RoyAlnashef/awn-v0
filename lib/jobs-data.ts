@@ -37,6 +37,7 @@ export interface JobPostingRow {
   expires_at: string | null
   filled_at: string | null
   view_count: number
+  share_count: number
   created_at: string
   updated_at: string
 }
@@ -281,4 +282,6 @@ export interface Job {
   viewCount?: number
   /** Populated on poster management views. */
   applicationCount?: number
+  /** Populated on poster management views. */
+  shareCount?: number
 }

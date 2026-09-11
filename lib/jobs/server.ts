@@ -26,6 +26,7 @@ type JobRow = {
   engagement: string
   details: string
   view_count: number
+  share_count: number
   created_at: string
   poster: PosterJoin | PosterJoin[] | null
 }
@@ -46,6 +47,7 @@ const JOB_SELECT = `
   engagement,
   details,
   view_count,
+  share_count,
   created_at,
   poster:profiles!job_postings_poster_id_fkey (
     full_name,
@@ -93,6 +95,7 @@ export const getJobForManagement = cache(
       {
         viewCount: typedRow.view_count,
         applicationCount: applicationCount ?? 0,
+        shareCount: typedRow.share_count,
       },
     )
   },

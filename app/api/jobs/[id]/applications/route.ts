@@ -1,10 +1,30 @@
 import type { ApplicationStatus } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { SOCIAL_FIELD_IDS, type SocialFieldId } from "@/lib/social-links"
 
 type ApplicantJoin = {
   full_name: string | null
   title: string | null
   avatar_url: string | null
+  email: string | null
+  website: string | null
+  instagram: string | null
+  facebook: string | null
+  twitter: string | null
+  linkedin: string | null
+  youtube: string | null
+  resume_filename: string | null
+}
+
+function socialLinksFromProfile(
+  profile: ApplicantJoin,
+): Partial<Record<SocialFieldId, string>> {
+  const links: Partial<Record<SocialFieldId, string>> = {}
+  for (const id of SOCIAL_FIELD_IDS) {
+    const value = profile[id]?.trim()
+    if (value) links[id] = value
+  }
+  return links
 }
 
 type ApplicationRow = {
@@ -66,7 +86,15 @@ export async function GET(_request: Request, context: RouteContext) {
       applicant:profiles!job_applications_applicant_id_fkey (
         full_name,
         title,
-        avatar_url
+        avatar_url,
+        email,
+        website,
+        instagram,
+        facebook,
+        twitter,
+        linkedin,
+        youtube,
+        resume_filename
       )
     `,
     )
@@ -90,6 +118,9 @@ export async function GET(_request: Request, context: RouteContext) {
         name: profile?.full_name?.trim() || "Member",
         title: profile?.title?.trim() || "Member",
         avatar: profile?.avatar_url ?? undefined,
+        email: profile?.email?.trim() || "",
+        socialLinks: profile ? socialLinksFromProfile(profile) : {},
+        resumeFileName: profile?.resume_filename?.trim() || undefined,
       },
     }
   })

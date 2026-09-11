@@ -1,6 +1,7 @@
 "use client"
 
 import type { EngagementType, Job, JobKind, JobStatus, ApplicationStatus } from "@/lib/jobs-data"
+import type { SocialFieldId } from "@/lib/social-links"
 import {
   accountJobsKey,
   jobsListKey,
@@ -79,8 +80,16 @@ export type JobApplication = {
     name: string
     title: string
     avatar?: string
+    email: string
+    socialLinks: Partial<Record<SocialFieldId, string>>
+    resumeFileName?: string
   }
 }
+
+export type ReviewApplicationStatus = Extract<
+  ApplicationStatus,
+  "approved" | "maybe" | "declined"
+>
 
 export type JobApplicationsResponse = {
   applications: JobApplication[]
@@ -121,6 +130,22 @@ export async function fetchJobApplications(
 ): Promise<JobApplicationsResponse> {
   const response = await fetch(`/api/jobs/${jobId}/applications`)
   return parseJson<JobApplicationsResponse>(response)
+}
+
+export async function updateJobApplicationStatus(
+  jobId: string,
+  applicationId: string,
+  status: ReviewApplicationStatus,
+): Promise<{ ok: true; status: ReviewApplicationStatus }> {
+  const response = await fetch(
+    `/api/jobs/${jobId}/applications/${applicationId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+  )
+  return parseJson(response)
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<{ job: Job }> {
