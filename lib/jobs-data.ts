@@ -46,6 +46,7 @@ export interface JobApplicationRow {
   job_id: string
   applicant_id: string
   note: string
+  resume_url: string | null
   status: ApplicationStatus
   created_at: string
   updated_at: string

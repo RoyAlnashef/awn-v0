@@ -3,11 +3,14 @@
 import type { ComponentType } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { Eye, Pencil, Users, CircleDot } from "lucide-react"
+import { Eye, ExternalLink, Pencil, Users, CircleDot } from "lucide-react"
+import { useTransition } from "react"
+import { toast } from "sonner"
 import useSWR from "swr"
 
 import type { Job } from "@/lib/jobs-data"
-import { fetchJobApplications } from "@/lib/jobs/fetch"
+import { fetchJobApplications, type JobApplication } from "@/lib/jobs/fetch"
+import { getJobApplicationResumeSignedUrl } from "@/lib/jobs/resume-actions"
 import {
   applicationStatusStyles,
   jobStatusStyles,
@@ -16,6 +19,7 @@ import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
 
 function initials(name: string) {
@@ -48,6 +52,37 @@ function StatCard({
 
 function ApplicantSkeleton() {
   return <Skeleton className="h-16 w-full rounded-xl" />
+}
+
+function ApplicantResumeLink({ application }: { application: JobApplication }) {
+  const [isPending, startTransition] = useTransition()
+
+  if (!application.resumeUrl) return null
+
+  function handleViewResume() {
+    startTransition(async () => {
+      const result = await getJobApplicationResumeSignedUrl(application.id)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      window.open(result.url, "_blank", "noopener,noreferrer")
+    })
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="h-7 px-2 text-xs"
+      disabled={isPending}
+      onClick={handleViewResume}
+    >
+      {isPending ? <Spinner className="size-3.5" /> : <ExternalLink className="size-3.5" />}
+      View resume
+    </Button>
+  )
 }
 
 export function JobManagementDetail({ job }: { job: Job }) {
@@ -178,11 +213,14 @@ export function JobManagementDetail({ job }: { job: Job }) {
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
-                  >
-                    {application.status}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
+                    >
+                      {application.status}
+                    </span>
+                    <ApplicantResumeLink application={application} />
+                  </div>
                 </div>
               ))}
             </div>

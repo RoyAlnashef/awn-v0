@@ -72,6 +72,7 @@ export type JobApplication = {
   jobId: string
   applicantId: string
   note: string
+  resumeUrl?: string
   status: ApplicationStatus
   createdAt: string
   applicant: {

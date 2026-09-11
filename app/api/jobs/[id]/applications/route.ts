@@ -12,6 +12,7 @@ type ApplicationRow = {
   job_id: string
   applicant_id: string
   note: string
+  resume_url: string | null
   status: ApplicationStatus
   created_at: string
   applicant: ApplicantJoin | ApplicantJoin[] | null
@@ -59,6 +60,7 @@ export async function GET(_request: Request, context: RouteContext) {
       job_id,
       applicant_id,
       note,
+      resume_url,
       status,
       created_at,
       applicant:profiles!job_applications_applicant_id_fkey (
@@ -81,6 +83,7 @@ export async function GET(_request: Request, context: RouteContext) {
       jobId: row.job_id,
       applicantId: row.applicant_id,
       note: row.note,
+      resumeUrl: row.resume_url ?? undefined,
       status: row.status,
       createdAt: row.created_at,
       applicant: {
