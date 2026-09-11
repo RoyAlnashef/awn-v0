@@ -6,10 +6,8 @@ import {
   JobActionTooltips,
 } from "@/components/jobs/job-action-tooltip"
 import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
-import { JobShareToRoomsButton } from "@/components/jobs/job-share-to-rooms-button"
-import { JobShareToMessagesButton } from "@/components/jobs/job-share-to-messages-button"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
-import { Bookmark, Users, Share } from "lucide-react"
+import { Bookmark } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -122,28 +120,6 @@ export function JobRow({ job }: { job: Job }) {
                     )}
                   />
                 </Button>
-              </JobActionTooltip>
-              <JobActionTooltip label="Share as a message" wrap>
-                <JobShareToMessagesButton job={job}>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    aria-label="Share as a message"
-                  >
-                    <Share className="size-4" />
-                  </Button>
-                </JobShareToMessagesButton>
-              </JobActionTooltip>
-              <JobActionTooltip label="Share to a group" wrap>
-                <JobShareToRoomsButton job={job}>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    aria-label="Share to a group"
-                  >
-                    <Users className="size-4" />
-                  </Button>
-                </JobShareToRoomsButton>
               </JobActionTooltip>
             </JobActionTooltips>
             <Button
