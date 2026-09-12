@@ -426,12 +426,7 @@ export function PersonProfileCard({
             {/* Tour credits */}
             {resolvedTourCredits.length > 0 ? (
               <section className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <SectionLabel>Tour Credits</SectionLabel>
-                  <span className="text-xs text-muted-foreground">
-                    {resolvedTourCredits.length}
-                  </span>
-                </div>
+                <SectionLabel>Tour Credits</SectionLabel>
                 <ul className="flex flex-col gap-2.5">
                   {resolvedTourCredits.map((credit, index) => (
                     <li
