@@ -1,4 +1,4 @@
-import { CalendarClock, Clock, MapPin, Users } from "lucide-react"
+import { CalendarClock, Clock, Eye, MapPin, Users } from "lucide-react"
 
 import { formatDateRange, type Job } from "@/lib/jobs-data"
 import { formatJobDeadline } from "@/lib/jobs/format"
@@ -21,7 +21,9 @@ type JobMetadataBadgesProps = {
   includePostedAt?: boolean
   includeDeadline?: boolean
   includeUrgentBadge?: boolean
+  includeCategoryBadges?: boolean
   applicantCount?: number | null
+  viewCount?: number | null
   showPlaceholders?: boolean
   className?: string
 }
@@ -31,7 +33,9 @@ export function JobMetadataBadges({
   includePostedAt = true,
   includeDeadline = false,
   includeUrgentBadge = false,
+  includeCategoryBadges = true,
   applicantCount,
+  viewCount,
   showPlaceholders = false,
   className,
 }: JobMetadataBadgesProps) {
@@ -39,6 +43,7 @@ export function JobMetadataBadges({
     job.kind !== "urgent" && Boolean(job.startDate && job.endDate)
   const hasDeadline = Boolean(job.deadline)
   const showApplicants = applicantCount !== null && applicantCount !== undefined
+  const showViews = viewCount !== null && viewCount !== undefined
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
@@ -63,9 +68,13 @@ export function JobMetadataBadges({
             (showPlaceholders ? "Location / routing" : job.location)}
         </span>
       </Badge>
-      <Badge variant="secondary">{job.engagement}</Badge>
-      {job.kind !== "urgent" ? (
-        <Badge variant="secondary">{job.department}</Badge>
+      {includeCategoryBadges ? (
+        <>
+          <Badge variant="secondary">{job.engagement}</Badge>
+          {job.kind !== "urgent" ? (
+            <Badge variant="secondary">{job.department}</Badge>
+          ) : null}
+        </>
       ) : null}
       {includeDeadline ? (
         hasDeadline ? (
@@ -88,6 +97,12 @@ export function JobMetadataBadges({
         <Badge variant="secondary" className="gap-1 font-normal">
           <Users className="size-3" />
           {applicantCount} applicant{applicantCount === 1 ? "" : "s"}
+        </Badge>
+      ) : null}
+      {showViews ? (
+        <Badge variant="secondary" className="gap-1 font-normal">
+          <Eye className="size-3" />
+          {viewCount} view{viewCount === 1 ? "" : "s"}
         </Badge>
       ) : null}
     </div>

@@ -5,8 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
-import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
-import { Copy, Eye, Pause, Pencil } from "lucide-react"
+import { Copy, Pause, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
@@ -84,26 +83,26 @@ export function MyJobRow({ job }: { job: Job }) {
       />
 
       <div className="pointer-events-none flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-heading text-base font-semibold tracking-tight">
-              {job.role}
-            </h3>
-            {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
-          </div>
-          <p className="text-sm text-muted-foreground">{job.production}</p>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+          <h3 className="font-heading text-base font-semibold tracking-tight">
+            {job.role}
+          </h3>
+          {job.production ? (
+            <p className="min-w-0 text-sm text-muted-foreground text-pretty">
+              {job.production}
+            </p>
+          ) : null}
         </div>
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <JobStatusBadge status={job.status} />
           <JobMetadataBadges
             job={job}
+            includeUrgentBadge
+            includeCategoryBadges={false}
             applicantCount={job.applicationCount ?? 0}
+            viewCount={job.viewCount ?? 0}
           />
-          <JobStatusBadge status={job.status} />
         </div>
-        <span className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-          <Eye className="size-3.5" />
-          {job.viewCount ?? 0} views
-        </span>
       </div>
 
       <div className="pointer-events-none flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">

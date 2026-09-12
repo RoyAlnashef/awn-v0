@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
-import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -72,24 +71,22 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
 
         <div className="pointer-events-none flex flex-col gap-4">
           <div className="flex flex-col">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="min-w-0 font-heading text-lg font-semibold tracking-tight text-balance">
-                  {job.role}
-                </h3>
-                <div className="flex shrink-0 items-center gap-2">
-                  {job.kind === "urgent" ? (
-                    <JobUrgentHelpBadge className="shrink-0" />
-                  ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    Applied {appliedAtLabel}
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">{job.production}</p>
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+              <h3 className="min-w-0 font-heading text-lg font-semibold tracking-tight text-balance">
+                {job.role}
+              </h3>
+              {job.production ? (
+                <p className="min-w-0 text-sm text-muted-foreground text-pretty">
+                  {job.production}
+                </p>
+              ) : null}
             </div>
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <JobMetadataBadges job={job} includePostedAt={false} />
+              <JobMetadataBadges
+                job={job}
+                includeUrgentBadge
+                includePostedAt={false}
+              />
               <span
                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[job.application.status]}`}
               >
@@ -113,7 +110,10 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
             >
               {job.payRate || "Rate TBD"}
             </span>
-            <div className="pointer-events-auto relative z-10">
+            <div className="pointer-events-auto relative z-10 flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Applied {appliedAtLabel}
+              </span>
               <Button
                 size="xs"
                 variant="outline"
