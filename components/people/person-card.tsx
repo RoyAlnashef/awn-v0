@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 
-function AvailabilityDot({ availability }: { availability: Person["availability"] }) {
+function AvailabilityBadge({ availability }: { availability: Person["availability"] }) {
   const config = availabilityConfig[availability]
   if (!config) return null
   return (
-    <span className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+    <span className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium backdrop-blur-sm">
       <span className="relative flex size-2">
         {config.ping ? (
           <span
@@ -55,12 +55,14 @@ export function PersonCard({ person }: { person: Person }) {
         <AvatarFallback className="text-base">{initials(person.name)}</AvatarFallback>
       </Avatar>
 
-      <div className="flex min-w-0 flex-col items-center gap-1">
-        <h3 className="font-heading text-base font-semibold tracking-tight text-balance">
-          {person.name}
-        </h3>
-        <p className="text-sm text-foreground/90">{person.role}</p>
-        <AvailabilityDot availability={person.availability} />
+      <div className="flex min-w-0 flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-0.5">
+          <h3 className="font-heading text-base font-semibold tracking-tight text-balance">
+            {person.name}
+          </h3>
+          <p className="text-sm text-muted-foreground">{person.role}</p>
+        </div>
+        <AvailabilityBadge availability={person.availability} />
       </div>
 
       <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />
