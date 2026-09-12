@@ -111,9 +111,6 @@ function ApplicantTableSkeleton() {
           <TableCell>
             <Skeleton className="h-9 w-40" />
           </TableCell>
-          <TableCell className="hidden sm:table-cell">
-            <Skeleton className="h-4 w-full max-w-xs" />
-          </TableCell>
           <TableCell className="hidden md:table-cell">
             <Skeleton className="h-4 w-24" />
           </TableCell>
@@ -162,15 +159,6 @@ function ApplicantTableRow({
             </p>
           </div>
         </button>
-      </TableCell>
-      <TableCell className="hidden max-w-xs whitespace-normal sm:table-cell">
-        {application.note ? (
-          <p className="line-clamp-2 text-xs text-muted-foreground">
-            {application.note}
-          </p>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
       </TableCell>
       <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
         {format(new Date(application.createdAt), "MMM d, yyyy")}
@@ -347,7 +335,6 @@ export function JobManagementDetail({ job }: { job: Job }) {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Applicant</TableHead>
-                    <TableHead className="hidden sm:table-cell">Note</TableHead>
                     <TableHead className="hidden md:table-cell">Applied</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-25" />
@@ -359,7 +346,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
                   ) : applications.length === 0 ? (
                     <TableRow className="hover:bg-transparent">
                       <TableCell
-                        colSpan={5}
+                        colSpan={4}
                         className="h-24 text-center text-sm text-muted-foreground"
                       >
                         No applications yet. Share your listing to reach crew on
