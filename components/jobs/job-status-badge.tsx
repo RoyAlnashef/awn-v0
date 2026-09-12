@@ -1,5 +1,5 @@
 import type { JobStatus } from "@/lib/jobs-data"
-import { jobStatusStyles } from "@/lib/jobs/format"
+import { jobStatusLabels, jobStatusStyles } from "@/lib/jobs/format"
 import { cn } from "@/lib/utils"
 
 export function JobStatusBadge({
@@ -12,12 +12,12 @@ export function JobStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize",
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide",
         jobStatusStyles[status],
         className,
       )}
     >
-      {status}
+      {jobStatusLabels[status]}
     </span>
   )
 }

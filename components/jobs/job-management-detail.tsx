@@ -15,10 +15,9 @@ import {
   type JobApplication,
   type ReviewApplicationStatus,
 } from "@/lib/jobs/fetch"
-import {
-  applicationStatusStyles,
-  jobStatusStyles,
-} from "@/lib/jobs/format"
+import { applicationStatusStyles } from "@/lib/jobs/format"
+import { JobStatusSelect } from "@/components/jobs/job-status-select"
+import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import type { Person } from "@/lib/people-data"
 import { JobApplicationReviewDrawer } from "@/components/jobs/job-application-review-drawer"
@@ -183,10 +182,11 @@ function ApplicantTableRow({
   )
 }
 
-export function JobManagementDetail({ job }: { job: Job }) {
+export function JobManagementDetail({ job: initialJob }: { job: Job }) {
+  const [currentJob, setCurrentJob] = useState(initialJob)
   const { data, isLoading, error, mutate } = useSWR(
-    jobApplicationsKey(job.id),
-    () => fetchJobApplications(job.id),
+    jobApplicationsKey(initialJob.id),
+    () => fetchJobApplications(initialJob.id),
   )
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null)
@@ -222,7 +222,11 @@ export function JobManagementDetail({ job }: { job: Job }) {
 
     startUpdateTransition(async () => {
       try {
-        await updateJobApplicationStatus(job.id, selectedApplication.id, status)
+        await updateJobApplicationStatus(
+          currentJob.id,
+          selectedApplication.id,
+          status,
+        )
         toast.success(
           status === "approved"
             ? "Application approved"
@@ -260,8 +264,8 @@ export function JobManagementDetail({ job }: { job: Job }) {
 
   return (
     <JobPageLayout
-      title={job.role}
-      description={job.production || "Job management"}
+      title={currentJob.role}
+      description={currentJob.production || "Job management"}
       breadcrumb={
         <Breadcrumb>
           <BreadcrumbList>
@@ -272,50 +276,56 @@ export function JobManagementDetail({ job }: { job: Job }) {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{job.role}</BreadcrumbPage>
+              <BreadcrumbPage>{currentJob.role}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       }
       actions={
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={<Link href={`/jobs/${job.id}/edit`} />}
-        >
-          <Pencil />
-          Edit
-        </Button>
+        <>
+          <JobStatusSelect
+            jobId={currentJob.id}
+            status={currentJob.status}
+            onStatusChange={(_status, updatedJob) => setCurrentJob(updatedJob)}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href={`/jobs/${currentJob.id}/edit`} />}
+          >
+            <Pencil />
+            Edit
+          </Button>
+        </>
       }
-      previewJob={job}
+      previewJob={currentJob}
     >
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide capitalize ${jobStatusStyles[job.status]}`}
-          >
-            {job.status}
-          </span>
+          <JobStatusBadge
+            status={currentJob.status}
+            className="px-2.5 text-xs"
+          />
           <span className="text-xs text-muted-foreground">
-            Posted {job.postedAt}
+            Posted {currentJob.postedAt}
           </span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             label="Views"
-            value={job.viewCount ?? 0}
+            value={currentJob.viewCount ?? 0}
             icon={Eye}
           />
           <StatCard
             label="Applicants"
-            value={job.applicationCount ?? 0}
+            value={currentJob.applicationCount ?? 0}
             icon={Users}
           />
           <StatCard
             label="Shares"
-            value={job.shareCount ?? 0}
+            value={currentJob.shareCount ?? 0}
             icon={Share2}
           />
         </div>

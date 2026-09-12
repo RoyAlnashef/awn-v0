@@ -88,6 +88,19 @@ export const jobStatusStyles: Record<JobStatus, string> = {
   deleted: "border-border bg-muted text-muted-foreground",
 }
 
+export const jobStatusLabels: Record<JobStatus, string> = {
+  open: "Open",
+  draft: "Paused",
+  filled: "Filled",
+  expired: "Expired",
+  deleted: "Deleted",
+}
+
+export function employerSelectableStatuses(current: JobStatus): JobStatus[] {
+  if (current === "expired" || current === "deleted") return ["open"]
+  return ["open", "draft", "filled"]
+}
+
 export const applicationStatusStyles: Record<ApplicationStatus, string> = {
   pending: urgentBadgeStyles,
   approved: "border-success/30 bg-success/10 text-success",
