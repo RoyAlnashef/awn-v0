@@ -34,6 +34,7 @@ export function canAccessAdmin(
   )
 }
 
+/** Posting is open to all active members. The employer role is reserved for future use. */
 export function canPostJobs(
   profile:
     | {
@@ -43,13 +44,7 @@ export function canPostJobs(
     | null
     | undefined,
 ): boolean {
-  return (
-    !!profile &&
-    profile.status === "active" &&
-    (profile.role === "owner" ||
-      profile.role === "admin" ||
-      profile.role === "employer")
-  )
+  return !!profile && profile.status === "active"
 }
 
 /**

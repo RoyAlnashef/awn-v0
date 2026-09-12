@@ -232,7 +232,7 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (!canPostJobs(profile)) {
-    return jsonError("Only employers can post jobs", 403)
+    return jsonError("Only active members can post jobs", 403)
   }
 
   let body: CreateJobBody

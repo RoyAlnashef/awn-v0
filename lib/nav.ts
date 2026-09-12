@@ -43,9 +43,9 @@ export const mainNav: NavItem[] = [
       "Open calls, tour gigs, and one-off shifts matched to your skills.",
     icon: Briefcase,
     items: [
-      { title: "Jobs Posted", href: "/my-jobs/created" },
       { title: "Saved Jobs", href: "/my-jobs/saved" },
       { title: "My Applications", href: "/my-jobs/applications" },
+      { title: "Jobs Posted", href: "/my-jobs/created" },
     ],
   },
   {

@@ -7,10 +7,10 @@ import { Bookmark, Briefcase, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
-const EMPLOYER_NAV_ITEMS = [
-  { label: "Jobs Posted", href: "/my-jobs/created", icon: Briefcase },
+const FULL_NAV_ITEMS = [
   { label: "Saved Jobs", href: "/my-jobs/saved", icon: Bookmark },
   { label: "My Applications", href: "/my-jobs/applications", icon: Send },
+  { label: "Jobs Posted", href: "/my-jobs/created", icon: Briefcase },
 ]
 
 const MEMBER_NAV_ITEMS = [
@@ -22,7 +22,7 @@ export function MyJobsNav({ canPostJobs }: { canPostJobs: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const navItems = canPostJobs ? EMPLOYER_NAV_ITEMS : MEMBER_NAV_ITEMS
+  const navItems = canPostJobs ? FULL_NAV_ITEMS : MEMBER_NAV_ITEMS
 
   const activeItem = navItems.find(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
