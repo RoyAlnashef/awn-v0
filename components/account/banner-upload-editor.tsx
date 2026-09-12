@@ -146,7 +146,7 @@ export function BannerUploadEditor({
 
       <div
         className={cn(
-          "group relative h-24 w-full select-none overflow-hidden rounded-xl bg-muted",
+          "group relative aspect-32/9 w-full select-none overflow-hidden rounded-xl bg-muted",
           banner && !isDragging && "cursor-ns-resize",
           isDragging && "cursor-grabbing",
         )}

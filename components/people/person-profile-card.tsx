@@ -234,13 +234,13 @@ export function PersonProfileCard({
               src={person.banner}
               alt=""
               draggable={false}
-              className="h-24 w-full object-cover"
+              className="aspect-32/9 w-full object-cover"
               style={{
                 objectPosition: `center ${person.bannerPositionY ?? 50}%`,
               }}
             />
           ) : (
-            <div className="h-24 bg-muted" />
+            <div className="aspect-32/9 w-full bg-muted" />
           )}
           {availability ? (
             <div
