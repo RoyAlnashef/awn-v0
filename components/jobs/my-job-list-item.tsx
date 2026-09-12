@@ -1,72 +1,15 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
-import { Copy, Pause, Pencil } from "lucide-react"
-import { toast } from "sonner"
-import { mutate } from "swr"
+import { MyJobActionsDropdown } from "@/components/jobs/my-job-actions-dropdown"
 
 import { type Job } from "@/lib/jobs-data"
-import { createJob, updateJob } from "@/lib/jobs/fetch"
-import { urgentAccentTextStyles, urgentJobCardBorderStyles } from "@/lib/jobs/format"
-import { myJobsKey } from "@/lib/jobs/swr-keys"
+import { urgentJobCardBorderStyles } from "@/lib/jobs/format"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 
 export function MyJobListItem({ job }: { job: Job }) {
-  const router = useRouter()
-  const [pausing, setPausing] = React.useState(false)
-  const [duplicating, setDuplicating] = React.useState(false)
-
-  async function handlePause() {
-    if (job.status === "draft") {
-      toast.info("This job is already paused")
-      return
-    }
-
-    setPausing(true)
-    try {
-      await updateJob(job.id, { status: "draft" })
-      toast.success("Job paused — hidden from the board")
-      void mutate(myJobsKey)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not pause job")
-    } finally {
-      setPausing(false)
-    }
-  }
-
-  async function handleDuplicate() {
-    setDuplicating(true)
-    try {
-      const { job: created } = await createJob({
-        kind: job.kind,
-        role: job.role,
-        production: job.production,
-        location: job.location,
-        payRate: job.payRate,
-        startDate: job.startDate,
-        endDate: job.endDate,
-        deadline: job.deadline !== job.endDate ? job.deadline : null,
-        engagement: job.engagement,
-        details: job.details,
-        status: "draft",
-      })
-      toast.success("Draft copy created")
-      void mutate(myJobsKey)
-      router.push(`/jobs/${created.id}/edit`)
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not duplicate job",
-      )
-    } finally {
-      setDuplicating(false)
-    }
-  }
-
   return (
     <article
       className={cn(
@@ -99,7 +42,9 @@ export function MyJobListItem({ job }: { job: Job }) {
             <JobMetadataBadges
               job={job}
               includeUrgentBadge
+              includeLocationBadge={false}
               includeCategoryBadges={false}
+              includePostedAt={false}
               applicantCount={job.applicationCount ?? 0}
               viewCount={job.viewCount ?? 0}
             />
@@ -110,47 +55,9 @@ export function MyJobListItem({ job }: { job: Job }) {
           {job.details}
         </p>
 
-        <div className="mt-auto flex flex-wrap items-center justify-between border-t border-border gap-3 pt-4">
-          <span
-            className={cn(
-              "font-heading text-md font-semibold",
-              job.kind === "urgent"
-                ? urgentAccentTextStyles
-                : "text-primary-bright",
-            )}
-          >
-            {job.payRate || "Rate TBD"}
-          </span>
-          <div className="pointer-events-auto relative z-10 flex flex-wrap items-center justify-end gap-1.5">
-            <Button
-              size="xs"
-              variant="outline"
-              nativeButton={false}
-              render={<Link href={`/jobs/${job.id}/edit`} />}
-            >
-              <Pencil className="size-3" />
-              Edit
-            </Button>
-            {job.status === "open" ? (
-              <Button
-                size="xs"
-                variant="outline"
-                disabled={pausing}
-                onClick={() => void handlePause()}
-              >
-                <Pause className="size-3" />
-                Pause
-              </Button>
-            ) : null}
-            <Button
-              size="xs"
-              variant="outline"
-              disabled={duplicating}
-              onClick={() => void handleDuplicate()}
-            >
-              <Copy className="size-3" />
-              Duplicate
-            </Button>
+        <div className="mt-auto flex justify-end border-t border-border pt-4">
+          <div className="pointer-events-auto relative z-10">
+            <MyJobActionsDropdown job={job} />
           </div>
         </div>
       </div>

@@ -21,6 +21,7 @@ type JobMetadataBadgesProps = {
   includePostedAt?: boolean
   includeDeadline?: boolean
   includeUrgentBadge?: boolean
+  includeLocationBadge?: boolean
   includeCategoryBadges?: boolean
   applicantCount?: number | null
   viewCount?: number | null
@@ -33,6 +34,7 @@ export function JobMetadataBadges({
   includePostedAt = true,
   includeDeadline = false,
   includeUrgentBadge = false,
+  includeLocationBadge = true,
   includeCategoryBadges = true,
   applicantCount,
   viewCount,
@@ -61,13 +63,15 @@ export function JobMetadataBadges({
           Dates TBD
         </Badge>
       ) : null}
-      <Badge variant="secondary" className="gap-1 font-normal">
-        <MapPin className="size-3" />
-        <span className="text-pretty">
-          {job.location ||
-            (showPlaceholders ? "Location / routing" : job.location)}
-        </span>
-      </Badge>
+      {includeLocationBadge ? (
+        <Badge variant="secondary" className="gap-1 font-normal">
+          <MapPin className="size-3" />
+          <span className="text-pretty">
+            {job.location ||
+              (showPlaceholders ? "Location / routing" : job.location)}
+          </span>
+        </Badge>
+      ) : null}
       {includeCategoryBadges ? (
         <>
           <Badge variant="secondary">{job.engagement}</Badge>
