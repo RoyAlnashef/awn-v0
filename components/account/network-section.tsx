@@ -128,7 +128,7 @@ function MemberCard({ member }: { member: FollowedMember }) {
         className="mt-auto w-full gap-1 text-muted-foreground hover:text-foreground"
       >
         <UserMinus className="size-3" />
-        Unfollow
+        Disconnect
       </Button>
     </div>
   )
@@ -137,12 +137,7 @@ function MemberCard({ member }: { member: FollowedMember }) {
 export function NetworkSection() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-0.5">
-        <h3 className="font-heading text-base font-semibold">Network</h3>
-        <p className="text-sm text-muted-foreground">
-          {MOCK_FOLLOWING.length} members you follow.
-        </p>
-      </div>
+      <h3 className="font-heading text-base font-semibold">Connections</h3>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {MOCK_FOLLOWING.map((member) => (

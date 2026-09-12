@@ -437,12 +437,12 @@ export function PersonProfileCard({
           <div className="flex items-center gap-2">
             <PreviewTooltip
               preview={isPreview}
-              label={followed ? "Unfollow" : "Follow"}
+              label={followed ? "Disconnect" : "Connect"}
             >
               <Button
                 variant="outline"
                 size="icon"
-                aria-label={followed ? "Following" : "Follow"}
+                aria-label={followed ? "Disconnect" : "Connect"}
                 aria-pressed={followed}
                 disabled={isPreview || isPending}
                 aria-disabled={isPreview}
