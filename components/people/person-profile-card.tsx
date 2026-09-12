@@ -447,15 +447,10 @@ export function PersonProfileCard({
                           <span className="font-heading text-sm font-semibold">
                             {credit.title}
                           </span>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {credit.engagementType ?? credit.venueTier ? (
-                              <Badge variant="secondary" className="font-normal">
-                                {credit.engagementType ?? credit.venueTier}
-                              </Badge>
-                            ) : null}
-                            <span className="text-xs text-muted-foreground">
-                              {credit.role}
-                            </span>
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+                            {credit.role ? <span>{credit.role}</span> : null}
+                            {credit.role && credit.years ? <span>·</span> : null}
+                            {credit.years ? <span>{credit.years}</span> : null}
                           </div>
                           {isPreview ? (
                             <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
@@ -467,9 +462,11 @@ export function PersonProfileCard({
                             <VouchButton credit={credit} />
                           )}
                         </div>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {credit.years}
-                        </span>
+                        {credit.engagementType ?? credit.venueTier ? (
+                          <Badge variant="secondary" className="shrink-0 font-normal">
+                            {credit.engagementType ?? credit.venueTier}
+                          </Badge>
+                        ) : null}
                       </div>
                     </li>
                   ))}
