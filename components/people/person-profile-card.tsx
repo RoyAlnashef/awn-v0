@@ -17,8 +17,9 @@ import {
   MessageSquare,
   MessagesSquare,
   Plane,
-  Plus,
   Sparkles,
+  UserMinus,
+  UserPlus,
   ThumbsUp,
 } from "lucide-react"
 
@@ -448,7 +449,7 @@ export function PersonProfileCard({
                 aria-disabled={isPreview}
                 onClick={handleFollowToggle}
               >
-                {followed ? <BadgeCheck /> : <Plus />}
+                {followed ? <UserMinus /> : <UserPlus />}
               </Button>
             </PreviewTooltip>
             <PreviewTooltip preview={isPreview} label="Message">
