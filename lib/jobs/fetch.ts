@@ -1,6 +1,13 @@
 "use client"
 
-import type { EngagementType, Job, JobKind, JobStatus, ApplicationStatus } from "@/lib/jobs-data"
+import type {
+  ApplicationStatus,
+  EngagementType,
+  Job,
+  JobKind,
+  JobStatus,
+} from "@/lib/jobs-data"
+import type { ApplicantApplicationStatus } from "@/lib/jobs/format"
 import type { SocialFieldId } from "@/lib/social-links"
 import {
   accountJobsKey,
@@ -15,7 +22,7 @@ export type JobsListResponse = {
 export type AppliedJob = Job & {
   application: {
     id: string
-    status: ApplicationStatus
+    status: ApplicantApplicationStatus
     appliedAt: string
     note: string
   }

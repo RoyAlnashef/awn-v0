@@ -4,7 +4,10 @@ import {
   type JobKind,
 } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
-import { formatJobSavedAt } from "@/lib/jobs/format"
+import {
+  formatJobSavedAt,
+  toApplicantApplicationStatus,
+} from "@/lib/jobs/format"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 
 type PosterJoin = {
@@ -142,7 +145,9 @@ export async function GET(request: Request) {
           ...mapRow(jobRow, { applied: true }),
           application: {
             id: row.id,
-            status: row.status as ApplicationStatus,
+            status: toApplicantApplicationStatus(
+              row.status as ApplicationStatus,
+            ),
             appliedAt: row.created_at,
             note: row.note,
           },

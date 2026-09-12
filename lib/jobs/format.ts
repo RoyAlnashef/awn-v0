@@ -86,3 +86,25 @@ export const applicationStatusConfig: Record<
   declined: { label: "Declined", className: applicationStatusStyles.declined },
   withdrawn: { label: "Withdrawn", className: applicationStatusStyles.withdrawn },
 }
+
+/** Statuses visible to job applicants (excludes employer-only `maybe`). */
+export type ApplicantApplicationStatus = Extract<
+  ApplicationStatus,
+  "pending" | "approved" | "declined"
+>
+
+export function toApplicantApplicationStatus(
+  status: ApplicationStatus,
+): ApplicantApplicationStatus {
+  if (status === "maybe" || status === "withdrawn") return "pending"
+  return status
+}
+
+export const applicantApplicationStatusConfig: Record<
+  ApplicantApplicationStatus,
+  { label: string; className: string }
+> = {
+  pending: applicationStatusConfig.pending,
+  approved: applicationStatusConfig.approved,
+  declined: applicationStatusConfig.declined,
+}

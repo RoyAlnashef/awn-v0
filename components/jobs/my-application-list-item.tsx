@@ -8,7 +8,7 @@ import { mutate } from "swr"
 
 import { type AppliedJob, withdrawFromJob } from "@/lib/jobs/fetch"
 import {
-  applicationStatusStyles,
+  applicantApplicationStatusConfig,
   formatJobPostedAt,
   urgentAccentTextStyles,
   urgentJobCardBorderStyles,
@@ -34,6 +34,7 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
   const [withdrawing, setWithdrawing] = React.useState(false)
 
   const appliedAtLabel = formatJobPostedAt(job.application.appliedAt)
+  const status = applicantApplicationStatusConfig[job.application.status]
 
   async function handleWithdraw() {
     setWithdrawing(true)
@@ -88,9 +89,9 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
                 includePostedAt={false}
               />
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[job.application.status]}`}
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${status.className}`}
               >
-                {job.application.status}
+                {status.label}
               </span>
             </div>
           </div>
