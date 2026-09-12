@@ -198,23 +198,31 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
   const applications = data?.applications ?? []
 
   function handleReviewApplication(application: JobApplication) {
+    const isFirstMount = selectedApplication === null
     setSelectedApplication(application)
-    setDrawerOpen(true)
+    if (isFirstMount) {
+      requestAnimationFrame(() => setDrawerOpen(true))
+    } else {
+      setDrawerOpen(true)
+    }
   }
 
   function handleDrawerOpenChange(open: boolean) {
     setDrawerOpen(open)
-    if (!open) setSelectedApplication(null)
   }
 
   function handleOpenProfile(application: JobApplication) {
+    const isFirstMount = profilePerson === null
     setProfilePerson(personFromApplication(application))
-    setProfileOpen(true)
+    if (isFirstMount) {
+      requestAnimationFrame(() => setProfileOpen(true))
+    } else {
+      setProfileOpen(true)
+    }
   }
 
   function handleProfileOpenChange(open: boolean) {
     setProfileOpen(open)
-    if (!open) setProfilePerson(null)
   }
 
   function handleStatusChange(status: ReviewApplicationStatus) {

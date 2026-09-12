@@ -48,6 +48,7 @@ export function ApplicationsTable({
   const [isPending, startTransition] = useTransition()
   const [filters, setFilters] = useState<ApplicationFilters>(defaultFilters)
   const [selected, setSelected] = useState<MembershipApplication | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const [denyTarget, setDenyTarget] = useState<MembershipApplication | null>(
     null,
   )
@@ -79,6 +80,20 @@ export function ApplicationsTable({
     })
   }, [initialApplications, filters.sources, filters.statuses, q])
 
+  function handleOpenReview(application: MembershipApplication) {
+    const isFirstMount = selected === null
+    setSelected(application)
+    if (isFirstMount) {
+      requestAnimationFrame(() => setReviewOpen(true))
+    } else {
+      setReviewOpen(true)
+    }
+  }
+
+  function handleReviewOpenChange(open: boolean) {
+    setReviewOpen(open)
+  }
+
   function handleApprove(application: MembershipApplication) {
     startTransition(async () => {
       const result = await approveApplication(application.id)
@@ -87,7 +102,7 @@ export function ApplicationsTable({
         return
       }
       toast.success(`${application.fullName} approved`)
-      setSelected(null)
+      setReviewOpen(false)
       router.refresh()
     })
   }
@@ -178,7 +193,7 @@ export function ApplicationsTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setSelected(application)}
+                        onClick={() => handleOpenReview(application)}
                       >
                         Review
                       </Button>
@@ -193,13 +208,11 @@ export function ApplicationsTable({
 
       <ApplicationReviewPanel
         application={selected}
-        open={Boolean(selected)}
-        onOpenChange={(open) => {
-          if (!open) setSelected(null)
-        }}
+        open={reviewOpen}
+        onOpenChange={handleReviewOpenChange}
         onApprove={handleApprove}
         onDeny={(application) => {
-          setSelected(null)
+          setReviewOpen(false)
           setDenyTarget(application)
         }}
         approving={isPending}
