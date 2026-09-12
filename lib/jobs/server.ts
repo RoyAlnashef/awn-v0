@@ -1,6 +1,7 @@
 import { cache } from "react"
 
 import type { Job } from "@/lib/jobs-data"
+import { expireStaleJobs } from "@/lib/jobs/expire"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 import { createClient } from "@/lib/supabase/server"
 
@@ -66,6 +67,8 @@ function normalizePoster(
 export const getJobForManagement = cache(
   async (jobId: string, userId: string): Promise<Job | null> => {
     const supabase = await createClient()
+
+    await expireStaleJobs(supabase)
 
     const { data: row, error } = await supabase
       .from("job_postings")

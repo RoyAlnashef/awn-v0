@@ -36,6 +36,10 @@ export async function POST(_request: Request, context: RouteContext) {
 
   if (existingError) return jsonError(existingError.message, 500)
 
+  if (!existing && job.status !== "open") {
+    return jsonError("This job is no longer available to save", 400)
+  }
+
   if (existing) {
     const { error: deleteError } = await supabase
       .from("saved_jobs")

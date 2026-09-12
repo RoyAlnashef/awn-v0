@@ -4,6 +4,7 @@ import {
   type JobKind,
 } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { expireStaleJobs } from "@/lib/jobs/expire"
 import {
   formatJobSavedAt,
   toApplicantApplicationStatus,
@@ -112,6 +113,15 @@ function mapRow(
 export async function GET(request: Request) {
   const { supabase, user, error } = await requireApiUser()
   if (!user) return jsonError(error, 401)
+
+  try {
+    await expireStaleJobs(supabase)
+  } catch (expireError) {
+    return jsonError(
+      expireError instanceof Error ? expireError.message : "Could not expire jobs",
+      500,
+    )
+  }
 
   const tab = new URL(request.url).searchParams.get("tab")
   if (tab !== "created" && tab !== "saved" && tab !== "applied") {

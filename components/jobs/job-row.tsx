@@ -13,6 +13,8 @@ import { toast } from "sonner"
 import { mutate } from "swr"
 
 import {
+  canApplyToJob,
+  jobApplyButtonLabel,
   urgentAccentTextStyles,
   urgentApplyButtonStyles,
   urgentBookmarkSavedStyles,
@@ -35,6 +37,7 @@ export function JobRow({ job }: { job: Job }) {
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const isUrgent = job.kind === "urgent"
+  const applyEnabled = canApplyToJob({ status: job.status, applied })
 
   async function handleSave() {
     const previous = saved
@@ -124,11 +127,11 @@ export function JobRow({ job }: { job: Job }) {
             </JobActionTooltips>
             <Button
               size="sm"
-              className={cn(isUrgent && urgentApplyButtonStyles)}
-              disabled={applied}
+              className={cn(isUrgent && applyEnabled && urgentApplyButtonStyles)}
+              disabled={!applyEnabled}
               onClick={() => setApplyOpen(true)}
             >
-              {applied ? "Applied" : "Apply"}
+              {jobApplyButtonLabel({ status: job.status, applied, kind: job.kind })}
             </Button>
           </div>
         </div>

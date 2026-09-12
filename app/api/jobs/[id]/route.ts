@@ -1,10 +1,12 @@
 import type { EngagementType, JobKind, JobStatus } from "@/lib/jobs-data"
 import { departmentByRole } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { expireStaleJobs } from "@/lib/jobs/expire"
 import { parseDateOnly } from "@/lib/jobs/format"
 import {
   kindTransitionPatch,
   normalizeJobKind,
+  urgentExpiresAt,
 } from "@/lib/jobs/kind"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 
@@ -60,6 +62,15 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { id } = await context.params
   if (!isUuid(id)) return jsonError("Invalid job id", 400)
+
+  try {
+    await expireStaleJobs(supabase)
+  } catch (expireError) {
+    return jsonError(
+      expireError instanceof Error ? expireError.message : "Could not expire jobs",
+      500,
+    )
+  }
 
   const { data: row, error: fetchError } = await supabase
     .from("job_postings")
@@ -173,6 +184,15 @@ export async function PATCH(request: Request, context: RouteContext) {
   const { id } = await context.params
   if (!isUuid(id)) return jsonError("Invalid job id", 400)
 
+  try {
+    await expireStaleJobs(supabase)
+  } catch (expireError) {
+    return jsonError(
+      expireError instanceof Error ? expireError.message : "Could not expire jobs",
+      500,
+    )
+  }
+
   let body: PatchJobBody
   try {
     body = (await request.json()) as PatchJobBody
@@ -209,6 +229,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     patch.status = body.status
     if (body.status === "filled") {
       patch.filled_at = new Date().toISOString()
+    }
+    if (body.status === "open" && resolvedKind === "urgent") {
+      patch.expires_at = urgentExpiresAt()
     }
   }
   if (body.role !== undefined) {

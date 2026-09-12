@@ -2,6 +2,7 @@ import { departmentByRole, type EngagementType, type JobKind } from "@/lib/jobs-
 import { canPostJobs } from "@/lib/auth/require-admin"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { parseDateOnly } from "@/lib/jobs/format"
+import { expireStaleJobs } from "@/lib/jobs/expire"
 import { normalizeJobKind, urgentExpiresAt } from "@/lib/jobs/kind"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 import { parseEngagementParam } from "@/lib/jobs/swr-keys"
@@ -44,6 +45,15 @@ function normalizePoster(
 export async function GET(request: Request) {
   const { supabase, user, error } = await requireApiUser()
   if (!user) return jsonError(error, 401)
+
+  try {
+    await expireStaleJobs(supabase)
+  } catch (expireError) {
+    return jsonError(
+      expireError instanceof Error ? expireError.message : "Could not expire jobs",
+      500,
+    )
+  }
 
   const url = new URL(request.url)
   const search = url.searchParams.get("search")?.trim().toLowerCase() ?? ""
@@ -135,14 +145,7 @@ export async function GET(request: Request) {
     return jsonError(listError.message, 500)
   }
 
-  const now = Date.now()
   const filtered = ((rows ?? []) as JobRow[]).filter((row) => {
-    if (row.expires_at && new Date(row.expires_at).getTime() <= now) {
-      return false
-    }
-    if (row.deadline && row.deadline < new Date().toISOString().slice(0, 10)) {
-      return false
-    }
     if (search) {
       const haystack =
         `${row.role} ${row.production} ${row.location}`.toLowerCase()

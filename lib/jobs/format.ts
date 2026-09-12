@@ -1,4 +1,4 @@
-import type { ApplicationStatus, JobStatus } from "@/lib/jobs-data"
+import type { ApplicationStatus, JobKind, JobStatus } from "@/lib/jobs-data"
 import { parseDateOnly as parseJobDateOnly } from "@/lib/jobs-data"
 import { differenceInCalendarDays, format, startOfDay } from "date-fns"
 
@@ -59,6 +59,26 @@ export const urgentBookmarkSavedStyles =
 
 export const urgentApplyButtonStyles =
   "bg-amber-800 text-white hover:bg-amber-800/90 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-700/90"
+
+export function canApplyToJob(job: {
+  status: JobStatus
+  applied?: boolean
+}): boolean {
+  return job.status === "open" && !job.applied
+}
+
+export function jobApplyButtonLabel(job: {
+  status: JobStatus
+  applied?: boolean
+  kind: JobKind
+}): string {
+  if (job.applied) return "Applied"
+  if (job.status === "open") return "Apply"
+  if (job.status === "expired") {
+    return job.kind === "urgent" ? "Expired" : "Closed"
+  }
+  return "Closed"
+}
 
 export const jobStatusStyles: Record<JobStatus, string> = {
   open: "border-success/30 bg-success/10 text-success",

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
+import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -88,6 +89,9 @@ export function MyApplicationListItem({ job }: { job: AppliedJob }) {
                 includeUrgentBadge
                 includePostedAt={false}
               />
+              {job.status !== "open" ? (
+                <JobStatusBadge status={job.status} />
+              ) : null}
               <span
                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${status.className}`}
               >

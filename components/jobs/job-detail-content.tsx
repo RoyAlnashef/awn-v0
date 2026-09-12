@@ -5,6 +5,7 @@ import { mutate } from "swr"
 import { Bookmark, Flag, MessagesSquare, Users } from "lucide-react"
 import { toast } from "sonner"
 
+import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
 import {
@@ -18,6 +19,8 @@ import { jobToSharePayload } from "@/lib/messages/job-share"
 import { type Job } from "@/lib/jobs-data"
 import { toggleSaveJob } from "@/lib/jobs/fetch"
 import {
+  canApplyToJob,
+  jobApplyButtonLabel,
   urgentAccentTextStyles,
   urgentApplyButtonStyles,
   urgentBookmarkSavedStyles,
@@ -72,6 +75,7 @@ export function JobDetailContent({
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const isUrgent = job.kind === "urgent"
+  const applyEnabled = canApplyToJob({ status: job.status, applied })
 
   async function handleSave() {
     const previous = saved
@@ -134,9 +138,14 @@ export function JobDetailContent({
                 <h2 className="min-w-0 font-heading text-xl font-semibold tracking-tight text-balance">
                   {job.role || "Role title"}
                 </h2>
-                {job.kind === "urgent" ? (
-                  <JobUrgentHelpBadge className="shrink-0" />
-                ) : null}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {job.status !== "open" && !preview ? (
+                    <JobStatusBadge status={job.status} />
+                  ) : null}
+                  {job.kind === "urgent" ? (
+                    <JobUrgentHelpBadge className="shrink-0" />
+                  ) : null}
+                </div>
               </div>
               <p className="text-sm text-muted-foreground">
                 {job.production ||
@@ -263,12 +272,15 @@ export function JobDetailContent({
             </JobActionTooltip>
           </div>
           <Button
-            className={cn("min-w-0 flex-1", isUrgent && urgentApplyButtonStyles)}
+            className={cn(
+              "min-w-0 flex-1",
+              isUrgent && applyEnabled && urgentApplyButtonStyles,
+            )}
             size="sm"
-            disabled={preview || applied}
+            disabled={preview || !applyEnabled}
             onClick={() => setApplyOpen(true)}
           >
-            {applied ? "Applied" : "Apply"}
+            {jobApplyButtonLabel({ status: job.status, applied, kind: job.kind })}
           </Button>
         </div>
 

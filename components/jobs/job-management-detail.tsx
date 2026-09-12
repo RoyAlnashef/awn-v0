@@ -3,7 +3,7 @@
 import type { ComponentType } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { Eye, Pencil, Share2, Users, CircleDot } from "lucide-react"
+import { Eye, Pencil, Share2, Users } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
@@ -314,7 +314,7 @@ export function JobManagementDetail({ job }: { job: Job }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             label="Views"
             value={job.viewCount ?? 0}
@@ -329,11 +329,6 @@ export function JobManagementDetail({ job }: { job: Job }) {
             label="Shares"
             value={job.shareCount ?? 0}
             icon={Share2}
-          />
-          <StatCard
-            label="Status"
-            value={job.status}
-            icon={CircleDot}
           />
         </div>
 

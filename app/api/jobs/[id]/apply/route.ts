@@ -1,4 +1,5 @@
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { expireStaleJobs } from "@/lib/jobs/expire"
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -31,9 +32,18 @@ export async function POST(request: Request, context: RouteContext) {
     return jsonError("Invalid JSON body", 400)
   }
 
+  try {
+    await expireStaleJobs(supabase)
+  } catch (expireError) {
+    return jsonError(
+      expireError instanceof Error ? expireError.message : "Could not expire jobs",
+      500,
+    )
+  }
+
   const { data: job, error: jobError } = await supabase
     .from("job_postings")
-    .select("id, poster_id, status, expires_at, deadline")
+    .select("id, poster_id, status")
     .eq("id", id)
     .maybeSingle()
 
@@ -42,14 +52,11 @@ export async function POST(request: Request, context: RouteContext) {
   if (job.poster_id === user.id) {
     return jsonError("You cannot apply to your own posting", 400)
   }
+  if (job.status === "expired") {
+    return jsonError("This job has expired and is no longer accepting applications", 400)
+  }
   if (job.status !== "open") {
     return jsonError("This job is no longer accepting applications", 400)
-  }
-  if (job.expires_at && new Date(job.expires_at).getTime() <= Date.now()) {
-    return jsonError("This urgent request has expired", 400)
-  }
-  if (job.deadline && job.deadline < new Date().toISOString().slice(0, 10)) {
-    return jsonError("The application deadline has passed", 400)
   }
 
   const { data: existing } = await supabase
