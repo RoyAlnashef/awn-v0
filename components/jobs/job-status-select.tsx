@@ -40,11 +40,13 @@ export function JobStatusSelect({
   status,
   onStatusChange,
   className,
+  disabled = false,
 }: {
   jobId: string
   status: JobStatus
   onStatusChange: (status: JobStatus, job: Job) => void
   className?: string
+  disabled?: boolean
 }) {
   const [isUpdating, startUpdateTransition] = useTransition()
   const options = employerSelectableStatuses(status)
@@ -69,7 +71,7 @@ export function JobStatusSelect({
     <Select
       value={status}
       onValueChange={(value) => handleValueChange(value as JobStatus)}
-      disabled={isUpdating}
+      disabled={disabled || isUpdating}
     >
       <SelectTrigger
         size="sm"

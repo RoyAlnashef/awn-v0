@@ -49,6 +49,7 @@ import {
   helpNowToPreviewJob,
 } from "@/components/jobs/job-card-preview"
 import { JobPageLayout } from "@/components/jobs/job-page-layout"
+import { JobStatusSelect } from "@/components/jobs/job-status-select"
 
 interface PostJobForm {
   kind: JobKind
@@ -62,6 +63,8 @@ interface PostJobForm {
   engagement: EngagementType
   details: string
 }
+
+const JOB_FORM_ID = "job-role-form"
 
 const emptyForm: PostJobForm = {
   kind: "full",
@@ -115,6 +118,89 @@ function jobToForm(job: Job): PostJobForm {
   }
 }
 
+type EditFormSnapshot =
+  | {
+      kind: "full"
+      role: string
+      production: string
+      location: string
+      rate: string
+      startDate: string | null
+      endDate: string | null
+      deadline: string | null
+      engagement: EngagementType
+      details: string
+    }
+  | {
+      kind: "urgent"
+      role: string
+      location: string
+      dateTime: string
+      rate: string
+      details: string
+    }
+
+function snapshotFromJob(job: Job): EditFormSnapshot {
+  if (job.kind === "urgent") {
+    const helpNow = jobToHelpNowForm(job)
+    return {
+      kind: "urgent",
+      role: helpNow.role,
+      location: helpNow.location,
+      dateTime: helpNow.dateTime,
+      rate: helpNow.rate,
+      details: helpNow.details,
+    }
+  }
+
+  const form = jobToForm(job)
+  return {
+    kind: "full",
+    role: form.role,
+    production: form.production,
+    location: form.location,
+    rate: form.rate,
+    startDate: form.startDate ? toDateOnly(form.startDate) : null,
+    endDate: form.endDate ? toDateOnly(form.endDate) : null,
+    deadline: form.deadline ? toDateOnly(form.deadline) : null,
+    engagement: form.engagement,
+    details: form.details,
+  }
+}
+
+function snapshotFromForm(
+  form: PostJobForm,
+  helpNowValues: HelpNowFormValues,
+): EditFormSnapshot {
+  if (form.kind === "urgent") {
+    return {
+      kind: "urgent",
+      role: helpNowValues.role,
+      location: helpNowValues.location,
+      dateTime: helpNowValues.dateTime,
+      rate: helpNowValues.rate,
+      details: helpNowValues.details,
+    }
+  }
+
+  return {
+    kind: "full",
+    role: form.role,
+    production: form.production,
+    location: form.location,
+    rate: form.rate,
+    startDate: form.startDate ? toDateOnly(form.startDate) : null,
+    endDate: form.endDate ? toDateOnly(form.endDate) : null,
+    deadline: form.deadline ? toDateOnly(form.deadline) : null,
+    engagement: form.engagement,
+    details: form.details,
+  }
+}
+
+function snapshotsEqual(a: EditFormSnapshot, b: EditFormSnapshot): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 function revalidateJobs() {
   void mutate(
     (key) =>
@@ -139,13 +225,27 @@ export function JobFormPage({
     job && job.kind === "urgent" ? jobToHelpNowForm(job) : emptyHelpNowForm,
   )
   const [submitting, setSubmitting] = React.useState(false)
+  const [jobStatus, setJobStatus] = React.useState<JobStatus>(
+    job?.status ?? "draft",
+  )
+
+  const initialSnapshot = React.useMemo(
+    () => (job ? snapshotFromJob(job) : null),
+    [job],
+  )
+
+  const hasFormChanges =
+    isEdit &&
+    initialSnapshot !== null &&
+    !snapshotsEqual(snapshotFromForm(form, helpNowValues), initialSnapshot)
 
   const previewJob = React.useMemo(() => {
-    if (form.kind === "urgent") {
-      return helpNowToPreviewJob(helpNowValues, poster)
-    }
-    return formToPreviewJob(form, poster)
-  }, [form, helpNowValues, poster])
+    const base =
+      form.kind === "urgent"
+        ? helpNowToPreviewJob(helpNowValues, poster)
+        : formToPreviewJob(form, poster)
+    return isEdit ? { ...base, status: jobStatus } : base
+  }, [form, helpNowValues, poster, isEdit, jobStatus])
 
   function setPostingKind(kind: JobKind) {
     if (kind === form.kind) return
@@ -278,10 +378,8 @@ export function JobFormPage({
           router.push(`/jobs/${created.id}`)
         }
       } else if (isEdit && job) {
-        await updateJob(job.id, {
-          ...buildPayload("open"),
-          status: "open",
-        })
+        const { status: _status, ...fields } = buildPayload("open")
+        await updateJob(job.id, fields)
         toast.success("Role updated")
         revalidateJobs()
         router.push(`/jobs/${job.id}`)
@@ -305,19 +403,51 @@ export function JobFormPage({
       title={isEdit ? "Edit role" : "Post a role"}
       description="Touring, festival, one-off, or residency — share it with the AWN network."
       actions={
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={<Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs/created"} />}
-        >
-          <ArrowLeft />
-          {isEdit ? "Back to job" : "My Jobs"}
-        </Button>
+        <>
+          {isEdit && job ? (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                nativeButton={false}
+                render={<Link href={`/jobs/${job.id}`} />}
+              >
+                Cancel
+              </Button>
+              <JobStatusSelect
+                jobId={job.id}
+                status={jobStatus}
+                disabled={submitting}
+                onStatusChange={(status) => setJobStatus(status)}
+              />
+              {hasFormChanges ? (
+                <Button
+                  size="sm"
+                  type="submit"
+                  form={JOB_FORM_ID}
+                  disabled={submitting}
+                >
+                  {submitting ? "Saving..." : "Save"}
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/my-jobs/created" />}
+            >
+              <ArrowLeft />
+              My Jobs
+            </Button>
+          )}
+        </>
       }
       previewJob={previewJob}
     >
       <form
+        id={JOB_FORM_ID}
         onSubmit={(event) => void handlePublish(event)}
         className="flex flex-col gap-5"
       >
@@ -490,40 +620,36 @@ export function JobFormPage({
           </>
         )}
 
-        <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={submitting}
-            nativeButton={false}
-            render={
-              <Link href={isEdit && job ? `/jobs/${job.id}` : "/my-jobs/created"} />
-            }
-          >
-            Cancel
-          </Button>
-          {form.kind === "full" ? (
+        {!isEdit ? (
+          <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
               disabled={submitting}
-              onClick={() => void handleDraft()}
+              nativeButton={false}
+              render={<Link href="/my-jobs/created" />}
             >
-              {submitting ? "Saving..." : "Save draft"}
+              Cancel
             </Button>
-          ) : null}
-          <Button type="submit" disabled={submitting}>
-            {submitting
-              ? isEdit
-                ? "Saving..."
-                : "Posting..."
-              : isEdit
-                ? "Save changes →"
+            {form.kind === "full" ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={submitting}
+                onClick={() => void handleDraft()}
+              >
+                {submitting ? "Saving..." : "Save draft"}
+              </Button>
+            ) : null}
+            <Button type="submit" disabled={submitting}>
+              {submitting
+                ? "Posting..."
                 : form.kind === "urgent"
                   ? "Post urgent role →"
                   : "Post role →"}
-          </Button>
-        </div>
+            </Button>
+          </div>
+        ) : null}
       </form>
     </JobPageLayout>
   )
