@@ -16,9 +16,21 @@ import { AuthError } from "@/lib/auth/require-admin"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import type { Person, TourCredit } from "@/lib/people-data"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
+
+const RESUME_BUCKET = "resumes"
+
+export type MemberResumeResult =
+  | { ok: true; url: string; fileName: string }
+  | ActionError
+
+function normalizeResumeFileName(name: string | null | undefined): string {
+  const trimmed = name?.trim()
+  return trimmed || "resume.pdf"
+}
 
 export type ListDirectoryMembersResult =
   | { ok: true; people: Person[] }
@@ -232,6 +244,51 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
       person: toPersonFromProfile(row, extras),
       tourCredits,
     }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function getMemberResumeSignedUrl(
+  profileId: string,
+): Promise<MemberResumeResult> {
+  try {
+    await requireUserId()
+    const supabase = await createClient()
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("resume_url, resume_filename, status")
+      .eq("id", profileId)
+      .maybeSingle()
+
+    if (profileError) {
+      return { ok: false, error: profileError.message }
+    }
+
+    if (!profile || profile.status !== "active") {
+      return { ok: false, error: "Member not found." }
+    }
+
+    const resumePath = profile.resume_url?.trim()
+    if (!resumePath) {
+      return { ok: false, error: "No resume on file." }
+    }
+
+    const fileName = normalizeResumeFileName(profile.resume_filename)
+    const admin = createAdminClient()
+    const { data: signed, error: signError } = await admin.storage
+      .from(RESUME_BUCKET)
+      .createSignedUrl(resumePath, 60 * 10, { download: fileName })
+
+    if (signError || !signed?.signedUrl) {
+      return {
+        ok: false,
+        error: signError?.message || "Could not download resume.",
+      }
+    }
+
+    return { ok: true, url: signed.signedUrl, fileName }
   } catch (error) {
     return actionError(error)
   }

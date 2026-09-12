@@ -1,6 +1,6 @@
 "use client"
 
-import { BadgeCheck, UserMinus } from "lucide-react"
+import { BadgeCheck } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -125,9 +125,8 @@ function MemberCard({ member }: { member: FollowedMember }) {
       <Button
         variant="outline"
         size="xs"
-        className="mt-auto w-full gap-1 text-muted-foreground hover:text-foreground"
+        className="mt-auto w-full text-muted-foreground hover:text-foreground"
       >
-        <UserMinus className="size-3" />
         Disconnect
       </Button>
     </div>

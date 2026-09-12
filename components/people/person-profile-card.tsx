@@ -12,15 +12,16 @@ import {
   BadgeCheck,
   CalendarClock,
   ExternalLink,
+  FileDown,
   Flag,
   Users,
   MessageSquare,
   MessagesSquare,
   Plane,
+  Plus,
   Sparkles,
-  UserMinus,
-  UserPlus,
   ThumbsUp,
+  UserMinus,
 } from "lucide-react"
 
 import {
@@ -36,7 +37,7 @@ import {
 } from "@/lib/account/tour-credits-actions"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
-import { toggleConnection } from "@/lib/people/actions"
+import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -167,6 +168,7 @@ export function PersonProfileCard({
   className,
   heroRef: heroRefProp,
   onMessage,
+  reserveTopRightForClose = false,
 }: {
   person: Person
   tourCredits?: TourCredit[]
@@ -175,6 +177,8 @@ export function PersonProfileCard({
   className?: string
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
+  /** Leave room for a drawer close button at the hero's top-right. */
+  reserveTopRightForClose?: boolean
 }) {
   const profile = getPersonProfile(person, tourCreditsOverride ?? [])
   const resolvedTourCredits = tourCreditsOverride ?? profile.tourCredits
@@ -187,6 +191,7 @@ export function PersonProfileCard({
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [isResumePending, startResumeTransition] = useTransition()
 
   function handleFollowToggle() {
     startTransition(async () => {
@@ -196,6 +201,24 @@ export function PersonProfileCard({
         return
       }
       setFollowed(result.connected)
+    })
+  }
+
+  function handleResumeDownload() {
+    startResumeTransition(async () => {
+      const result = await getMemberResumeSignedUrl(person.id)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      const link = document.createElement("a")
+      link.href = result.url
+      link.download = result.fileName
+      link.rel = "noreferrer"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     })
   }
 
@@ -220,7 +243,12 @@ export function PersonProfileCard({
             <div className="h-24 bg-muted" />
           )}
           {availability ? (
-            <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">
+            <div
+              className={cn(
+                "absolute top-4 flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-xs font-medium backdrop-blur-sm",
+                reserveTopRightForClose ? "right-14" : "right-4",
+              )}
+            >
               <span className="relative flex size-2">
                 {availability.ping ? (
                   <span
@@ -242,18 +270,48 @@ export function PersonProfileCard({
           ) : null}
 
           <div className="px-6 pb-2">
-            <Avatar
-              className={cn(
-                "-mt-10 size-20 ring-4",
-                availability.avatarRing,
-              )}
-            >
-              <AvatarImage src={person.avatar || undefined} alt="" />
-              <AvatarFallback className="text-lg">
-                {initials(person.name)}
-              </AvatarFallback>
-              <AvatarBadge online={isOnline} className="size-3.5" />
-            </Avatar>
+            <div className="flex items-start justify-between gap-3">
+              <Avatar
+                className={cn(
+                  "-mt-10 size-20 shrink-0 ring-4",
+                  availability.avatarRing,
+                )}
+              >
+                <AvatarImage src={person.avatar || undefined} alt="" />
+                <AvatarFallback className="text-lg">
+                  {initials(person.name)}
+                </AvatarFallback>
+                <AvatarBadge online={isOnline} className="size-3.5" />
+              </Avatar>
+
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 pt-6">
+                <PreviewTooltip preview={isPreview} label="View full profile" wrap>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isPreview}
+                    aria-disabled={isPreview}
+                  >
+                    <ExternalLink />
+                    Profile
+                  </Button>
+                </PreviewTooltip>
+                {person.hasResume ? (
+                  <PreviewTooltip preview={isPreview} label="Download resume" wrap>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={isPreview || isResumePending}
+                      aria-disabled={isPreview}
+                      onClick={handleResumeDownload}
+                    >
+                      <FileDown />
+                      Resume
+                    </Button>
+                  </PreviewTooltip>
+                ) : null}
+              </div>
+            </div>
 
             <div className="mt-3 flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
@@ -436,44 +494,6 @@ export function PersonProfileCard({
         {/* Footer actions */}
         <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-popover p-4">
           <div className="flex items-center gap-2">
-            <PreviewTooltip
-              preview={isPreview}
-              label={followed ? "Disconnect" : "Connect"}
-            >
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={followed ? "Disconnect" : "Connect"}
-                aria-pressed={followed}
-                disabled={isPreview || isPending}
-                aria-disabled={isPreview}
-                onClick={handleFollowToggle}
-              >
-                {followed ? <UserMinus /> : <UserPlus />}
-              </Button>
-            </PreviewTooltip>
-            <PreviewTooltip preview={isPreview} label="Message">
-              <Button
-                className="min-w-0 flex-1 shrink"
-                disabled={isPreview}
-                aria-disabled={isPreview}
-                onClick={onMessage}
-              >
-                <MessageSquare />
-                Message
-              </Button>
-            </PreviewTooltip>
-            <PreviewTooltip preview={isPreview} label="View full profile" wrap>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="View full profile"
-                disabled={isPreview}
-                aria-disabled={isPreview}
-              >
-                <ExternalLink />
-              </Button>
-            </PreviewTooltip>
             <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
               <Button
                 variant="ghost"
@@ -496,6 +516,33 @@ export function PersonProfileCard({
                 onClick={() => setShareRoomOpen(true)}
               >
                 <Users className="size-4" />
+              </Button>
+            </PreviewTooltip>
+            <PreviewTooltip
+              preview={isPreview}
+              label={followed ? "Disconnect" : "Connect"}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={followed ? "Disconnect" : "Connect"}
+                aria-pressed={followed}
+                disabled={isPreview || isPending}
+                aria-disabled={isPreview}
+                onClick={handleFollowToggle}
+              >
+                {followed ? <UserMinus /> : <Plus />}
+              </Button>
+            </PreviewTooltip>
+            <PreviewTooltip preview={isPreview} label="Message">
+              <Button
+                className="min-w-0 flex-1 shrink"
+                disabled={isPreview}
+                aria-disabled={isPreview}
+                onClick={onMessage}
+              >
+                <MessageSquare />
+                Message
               </Button>
             </PreviewTooltip>
           </div>

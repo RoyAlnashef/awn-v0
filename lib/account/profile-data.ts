@@ -63,6 +63,7 @@ export interface MemberProfileRow {
   twitter: string | null
   linkedin: string | null
   youtube: string | null
+  resume_url: string | null
   created_at: string
 }
 
@@ -267,6 +268,7 @@ export function toPersonFromProfile(
     twitter: row.twitter?.trim() || undefined,
     linkedin: row.linkedin?.trim() || undefined,
     youtube: row.youtube?.trim() || undefined,
+    hasResume: Boolean(row.resume_url?.trim()),
   }
 }
 
@@ -326,6 +328,7 @@ export const MEMBER_PROFILE_SELECT = [
   "twitter",
   "linkedin",
   "youtube",
+  "resume_url",
   "created_at",
 ].join(", ")
 

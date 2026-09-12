@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { updateMemberProfile } from "@/lib/account/profile-actions"
 import { departments } from "@/lib/jobs-data"
 import {
+  availabilityConfig,
   availabilityStatuses,
   venueTiers,
   workAuthOptions,
@@ -232,7 +233,7 @@ export function ProfileSection() {
                       : "inline-flex items-center rounded-md border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                   }
                 >
-                  {status}
+                  {availabilityConfig[status].label}
                 </button>
               ))}
             </div>

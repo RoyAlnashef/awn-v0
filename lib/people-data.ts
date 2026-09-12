@@ -120,6 +120,7 @@ export interface Person {
   twitter?: string
   linkedin?: string
   youtube?: string
+  hasResume?: boolean
 }
 
 export interface TourCredit {

@@ -184,7 +184,7 @@ export function PeopleFilters({
                         active ? "bg-primary-foreground" : availabilityConfig[status].dot,
                       )}
                     />
-                    {status}
+                    {availabilityConfig[status].label}
                   </button>
                 )
               })}

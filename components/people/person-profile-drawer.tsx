@@ -80,6 +80,7 @@ export function PersonProfileDrawer({
           online={online}
           heroRef={heroRef}
           onMessage={handleMessage}
+          reserveTopRightForClose
           className="min-h-0 flex-1"
         />
       </DrawerContent>
