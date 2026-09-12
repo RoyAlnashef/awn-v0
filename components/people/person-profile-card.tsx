@@ -443,18 +443,20 @@ export function PersonProfileCard({
                         className="absolute inset-y-0 left-0 w-1 bg-primary"
                       />
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-heading text-sm font-semibold">
-                              {credit.title}
-                            </span>
-                            <span className="text-[10px] font-semibold tracking-wide text-primary uppercase">
-                              {credit.engagementType ?? credit.venueTier}
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="font-heading text-sm font-semibold">
+                            {credit.title}
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {credit.engagementType ?? credit.venueTier ? (
+                              <Badge variant="secondary" className="font-normal">
+                                {credit.engagementType ?? credit.venueTier}
+                              </Badge>
+                            ) : null}
+                            <span className="text-xs text-muted-foreground">
+                              {credit.role}
                             </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {credit.role}
-                          </span>
                           {isPreview ? (
                             <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
                               <ThumbsUp className="size-3" />
