@@ -10,21 +10,10 @@ import useSWR from "swr"
 
 import { fetchMyApplications } from "@/lib/jobs/fetch"
 import { myApplicationsKey } from "@/lib/jobs/swr-keys"
-import {
-  jobsGridClassName,
-  jobsListClassName,
-} from "@/lib/jobs/view-mode"
-import { cn } from "@/lib/utils"
-import { useBoardViewMode } from "@/hooks/use-board-view-mode"
-import { BoardViewToggle } from "@/components/board-view-toggle"
-import { MyApplicationListItem } from "@/components/jobs/my-application-list-item"
+import { jobsListClassName } from "@/lib/jobs/view-mode"
 import { MyApplicationRow } from "@/components/jobs/my-application-row"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-
-function JobCardSkeleton() {
-  return <Skeleton className="h-80 w-full rounded-xl" />
-}
 
 function JobRowSkeleton() {
   return <Skeleton className="h-28 w-full rounded-xl" />
@@ -54,7 +43,6 @@ function EmptyState() {
 }
 
 export function ApplicationsSection() {
-  const [view, setView] = useBoardViewMode("my-applications")
   const { data, error, isLoading } = useSWR(myApplicationsKey, fetchMyApplications)
 
   const jobs = data?.jobs ?? []
@@ -70,24 +58,11 @@ export function ApplicationsSection() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-8 w-18 rounded-full" />
-        </div>
-        <div className={view === "grid" ? jobsGridClassName : jobsListClassName}>
-          {view === "grid" ? (
-            <>
-              <JobCardSkeleton />
-              <JobCardSkeleton />
-              <JobCardSkeleton />
-            </>
-          ) : (
-            <>
-              <JobRowSkeleton />
-              <JobRowSkeleton />
-              <JobRowSkeleton />
-            </>
-          )}
+        <Skeleton className="h-5 w-24" />
+        <div className={jobsListClassName}>
+          <JobRowSkeleton />
+          <JobRowSkeleton />
+          <JobRowSkeleton />
         </div>
       </div>
     )
@@ -99,21 +74,14 @@ export function ApplicationsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          <span className="font-medium text-foreground">{jobs.length}</span>{" "}
-          {jobs.length === 1 ? "application" : "applications"}
-        </p>
-        <BoardViewToggle view={view} onViewChange={setView} />
-      </div>
-      <div className={cn(view === "grid" ? jobsGridClassName : jobsListClassName)}>
-        {jobs.map((job) =>
-          view === "grid" ? (
-            <MyApplicationListItem key={job.application.id} job={job} />
-          ) : (
-            <MyApplicationRow key={job.application.id} job={job} />
-          ),
-        )}
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        <span className="font-medium text-foreground">{jobs.length}</span>{" "}
+        {jobs.length === 1 ? "application" : "applications"}
+      </p>
+      <div className={jobsListClassName}>
+        {jobs.map((job) => (
+          <MyApplicationRow key={job.application.id} job={job} />
+        ))}
       </div>
     </div>
   )
