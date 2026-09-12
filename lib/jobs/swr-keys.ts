@@ -7,6 +7,8 @@ export const urgentJobsKey = "/api/jobs?kind=urgent"
 
 export const myJobsKey = "/api/jobs/mine?tab=created"
 
+export const mySavedJobsKey = "/api/jobs/mine?tab=saved"
+
 export const myApplicationsKey = "/api/jobs/mine?tab=applied"
 
 export function accountJobsKey(tab: "created" | "saved" | "applied"): string {

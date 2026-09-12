@@ -4,11 +4,15 @@ import { Plus } from "lucide-react"
 import { PageShell } from "@/components/page-shell"
 import { JobsBoard } from "@/components/jobs/jobs-board"
 import { Button } from "@/components/ui/button"
+import { getSessionUser } from "@/lib/auth/get-session-user"
 import { mainNav } from "@/lib/nav"
 
 const item = mainNav.find((i) => i.href === "/jobs")!
 
-export default function JobsPage() {
+export default async function JobsPage() {
+  const sessionUser = await getSessionUser()
+  const canPostJobs = sessionUser?.canPostJobs ?? false
+
   return (
     <PageShell
       title="Search for jobs"
@@ -17,16 +21,18 @@ export default function JobsPage() {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="ghost"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/my-jobs" />}
           >
             My Jobs
           </Button>
-          <Button size="sm" nativeButton={false} render={<Link href="/jobs/new" />}>
-            <Plus />
-            Post a Job
-          </Button>
+          {canPostJobs ? (
+            <Button size="sm" nativeButton={false} render={<Link href="/jobs/new" />}>
+              <Plus />
+              Post a Job
+            </Button>
+          ) : null}
         </div>
       }
     >

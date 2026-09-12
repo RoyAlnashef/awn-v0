@@ -1,7 +1,7 @@
 import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
-import { canAccessAdmin } from "@/lib/auth/require-admin"
+import { canAccessAdmin, canPostJobs } from "@/lib/auth/require-admin"
 import { profileIsOnline } from "@/lib/presence/is-online"
 import { initials } from "@/lib/users-data"
 
@@ -13,6 +13,7 @@ export type SessionUser = {
   avatarUrl?: string
   initials: string
   canAccessAdmin: boolean
+  canPostJobs: boolean
   isApproved: boolean
   appearOffline: boolean
   availableForWork: boolean
@@ -56,6 +57,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     avatarUrl: profile?.avatar_url ?? undefined,
     initials: initials(name),
     canAccessAdmin: canAccessAdmin(profile),
+    canPostJobs: canPostJobs(profile),
     isApproved: profile?.is_approved ?? false,
     appearOffline,
     availableForWork: profile?.availability === "available_now",

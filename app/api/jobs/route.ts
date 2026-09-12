@@ -1,4 +1,5 @@
 import { departmentByRole, type EngagementType, type JobKind } from "@/lib/jobs-data"
+import { canPostJobs } from "@/lib/auth/require-admin"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { parseDateOnly } from "@/lib/jobs/format"
 import { normalizeJobKind, urgentExpiresAt } from "@/lib/jobs/kind"
@@ -223,6 +224,16 @@ function todayDateOnly(): string {
 export async function POST(request: Request) {
   const { supabase, user, error } = await requireApiUser()
   if (!user) return jsonError(error, 401)
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  if (!canPostJobs(profile)) {
+    return jsonError("Only employers can post jobs", 403)
+  }
 
   let body: CreateJobBody
   try {

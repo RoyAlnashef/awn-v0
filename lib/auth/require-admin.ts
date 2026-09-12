@@ -34,6 +34,24 @@ export function canAccessAdmin(
   )
 }
 
+export function canPostJobs(
+  profile:
+    | {
+        role: DbUserRole
+        status: DbUserStatus
+      }
+    | null
+    | undefined,
+): boolean {
+  return (
+    !!profile &&
+    profile.status === "active" &&
+    (profile.role === "owner" ||
+      profile.role === "admin" ||
+      profile.role === "employer")
+  )
+}
+
 /**
  * Ensures the current session belongs to an active Owner or Admin.
  * Uses the cookie-based server client (RLS applies).

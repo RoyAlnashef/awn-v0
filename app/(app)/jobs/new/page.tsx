@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user"
 export default async function NewJobPage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect("/login")
+  if (!sessionUser.canPostJobs) redirect("/jobs")
 
   return (
     <JobFormPage

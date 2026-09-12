@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Plus } from "lucide-react"
 
 import { AnimatedIcon } from "@/components/icons/animated-icon"
 import { SendIcon } from "@/components/ui/send"
@@ -21,18 +20,17 @@ function JobRowSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center">
-      <AnimatedIcon
-        icon={SendIcon}
-        size={32}
-        className="text-muted-foreground/50"
-      />
-      <p className="text-sm text-muted-foreground">
-        You haven&apos;t applied to any jobs yet.
-      </p>
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
+      <AnimatedIcon icon={SendIcon} size={32} className="text-muted-foreground" />
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium">No applications yet</p>
+        <p className="text-sm text-muted-foreground">
+          Browse jobs and apply to roles you&apos;re interested in.
+        </p>
+      </div>
       <Button
+        variant="outline"
         size="sm"
-        className="mt-2"
         nativeButton={false}
         render={<Link href="/jobs" />}
       >

@@ -8,7 +8,13 @@ import { PageShell } from "@/components/page-shell"
 import { MyJobsNav } from "@/components/jobs/my-jobs-nav"
 import { Button } from "@/components/ui/button"
 
-export function MyJobsLayoutShell({ children }: { children: ReactNode }) {
+export function MyJobsLayoutShell({
+  children,
+  canPostJobs,
+}: {
+  children: ReactNode
+  canPostJobs: boolean
+}) {
   return (
     <PageShell
       title="My jobs"
@@ -17,25 +23,27 @@ export function MyJobsLayoutShell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="ghost"
+            variant="secondary"
             nativeButton={false}
             render={<Link href="/jobs" />}
           >
             Browse Jobs
           </Button>
-          <Button
-            size="sm"
-            nativeButton={false}
-            render={<Link href="/jobs/new" />}
-          >
-            <Plus />
-            Post a Job
-          </Button>
+          {canPostJobs ? (
+            <Button
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/jobs/new" />}
+            >
+              <Plus />
+              Post a Job
+            </Button>
+          ) : null}
         </div>
       }
     >
       <div className="flex flex-col gap-4">
-        <MyJobsNav />
+        <MyJobsNav canPostJobs={canPostJobs} />
         {children}
       </div>
     </PageShell>

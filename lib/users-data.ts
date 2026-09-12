@@ -1,7 +1,7 @@
 /** System-level access role for the admin users table (UI labels). */
-export type UserRole = "Owner" | "Admin" | "Manager" | "Member"
+export type UserRole = "Owner" | "Admin" | "Manager" | "Employer" | "Member"
 
-export const userRoles: UserRole[] = ["Owner", "Admin", "Manager", "Member"]
+export const userRoles: UserRole[] = ["Owner", "Admin", "Manager", "Employer", "Member"]
 
 /** Account lifecycle status (UI labels). */
 export type UserStatus =
@@ -20,7 +20,7 @@ export const userStatuses: UserStatus[] = [
 ]
 
 /** DB enum values for `public.user_role`. */
-export type DbUserRole = "owner" | "admin" | "manager" | "member"
+export type DbUserRole = "owner" | "admin" | "manager" | "employer" | "member"
 
 /** DB enum values for `public.user_status`. */
 export type DbUserStatus =
@@ -54,6 +54,7 @@ export const roleConfig: Record<
   Owner: { variant: "default" },
   Admin: { variant: "secondary" },
   Manager: { variant: "outline" },
+  Employer: { variant: "secondary" },
   Member: { variant: "outline" },
 }
 
@@ -76,6 +77,7 @@ const roleToDb: Record<UserRole, DbUserRole> = {
   Owner: "owner",
   Admin: "admin",
   Manager: "manager",
+  Employer: "employer",
   Member: "member",
 }
 
@@ -83,6 +85,7 @@ const roleFromDb: Record<DbUserRole, UserRole> = {
   owner: "Owner",
   admin: "Admin",
   manager: "Manager",
+  employer: "Employer",
   member: "Member",
 }
 

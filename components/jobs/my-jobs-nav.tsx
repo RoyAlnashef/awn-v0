@@ -2,21 +2,29 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Briefcase, Send } from "lucide-react"
+import { Bookmark, Briefcase, Send } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
-const NAV_ITEMS = [
-  { label: "My Jobs", href: "/my-jobs/created", icon: Briefcase },
+const EMPLOYER_NAV_ITEMS = [
+  { label: "Jobs Posted", href: "/my-jobs/created", icon: Briefcase },
+  { label: "Saved Jobs", href: "/my-jobs/saved", icon: Bookmark },
   { label: "My Applications", href: "/my-jobs/applications", icon: Send },
-] as const
+]
 
-export function MyJobsNav() {
+const MEMBER_NAV_ITEMS = [
+  { label: "Saved Jobs", href: "/my-jobs/saved", icon: Bookmark },
+  { label: "My Applications", href: "/my-jobs/applications", icon: Send },
+]
+
+export function MyJobsNav({ canPostJobs }: { canPostJobs: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const activeItem = NAV_ITEMS.find(
+  const navItems = canPostJobs ? EMPLOYER_NAV_ITEMS : MEMBER_NAV_ITEMS
+
+  const activeItem = navItems.find(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
   )
 
@@ -28,7 +36,7 @@ export function MyJobsNav() {
           onChange={(e) => router.push(e.target.value)}
           className="w-full"
         >
-          {NAV_ITEMS.map(({ label, href }) => (
+          {navItems.map(({ label, href }) => (
             <NativeSelectOption key={href} value={href}>
               {label}
             </NativeSelectOption>
@@ -37,7 +45,7 @@ export function MyJobsNav() {
       </div>
 
       <ul className="hidden flex-wrap items-center gap-2 lg:flex">
-        {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
+        {navItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/")
           return (
             <li key={href}>

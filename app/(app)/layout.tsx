@@ -45,6 +45,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <PresenceHeartbeat />
           <AppSidebar
             showAdminNav={sessionUser.canAccessAdmin}
+            canPostJobs={sessionUser.canPostJobs}
             user={{
               name: sessionUser.name,
               title: sessionUser.title,

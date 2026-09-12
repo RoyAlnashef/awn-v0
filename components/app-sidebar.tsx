@@ -186,10 +186,12 @@ function FlatNavItem({
 
 export function AppSidebar({
   showAdminNav,
+  canPostJobs,
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   showAdminNav: boolean
+  canPostJobs: boolean
   user: NavUserData
 }) {
   const pathname = usePathname()
@@ -202,6 +204,16 @@ export function AppSidebar({
       setOpenMobile(false)
     }
   }, [pathname, isMobile, setOpenMobile])
+
+  const effectiveMainNav = mainNav.map((item) => {
+    if (item.href === "/jobs" && !canPostJobs) {
+      return {
+        ...item,
+        items: item.items?.filter((sub) => sub.href !== "/my-jobs/created"),
+      }
+    }
+    return item
+  })
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -236,7 +248,7 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) =>
+              {effectiveMainNav.map((item) =>
                 item.items && item.items.length > 0 ? (
                   <CollapsibleNavItem
                     key={item.href}
