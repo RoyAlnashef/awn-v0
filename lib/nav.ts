@@ -66,7 +66,7 @@ export const mainNav: NavItem[] = [
     title: "Groups",
     href: "/groups",
     description:
-      "Discipline-specific community channels for touring crew.",
+      "Chat in the AWN communities.",
     icon: Users,
     liveBadge: "rooms",
   },
