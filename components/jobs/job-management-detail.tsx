@@ -107,17 +107,21 @@ function ApplicantTableSkeleton() {
     <>
       {Array.from({ length: 2 }).map((_, index) => (
         <TableRow key={index} className="hover:bg-transparent">
-          <TableCell>
+          <TableCell className="max-w-0 whitespace-normal">
             <Skeleton className="h-9 w-40" />
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:hidden">
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+            </div>
           </TableCell>
           <TableCell className="hidden md:table-cell">
             <Skeleton className="h-4 w-24" />
           </TableCell>
-          <TableCell>
+          <TableCell className="hidden md:table-cell">
             <Skeleton className="h-5 w-16 rounded-full" />
           </TableCell>
           <TableCell className="text-right">
-            <Skeleton className="ml-auto h-4 w-20" />
+            <Skeleton className="ml-auto h-8 w-16" />
           </TableCell>
         </TableRow>
       ))}
@@ -134,45 +138,60 @@ function ApplicantTableRow({
   onReview: (application: JobApplication) => void
   onOpenProfile: (application: JobApplication) => void
 }) {
+  const appliedAtLabel = format(
+    new Date(application.createdAt),
+    "MMM d, yyyy",
+  )
+  const statusBadge = (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${applicationStatusConfig[application.status].className}`}
+    >
+      {applicationStatusConfig[application.status].label}
+    </span>
+  )
+
   return (
     <TableRow>
-      <TableCell>
-        <button
-          type="button"
-          className="group flex min-w-0 items-center gap-3 rounded-md text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-          aria-label={`View ${application.applicant.name}'s profile`}
-          onClick={() => onOpenProfile(application)}
-        >
-          <Avatar className="size-8 shrink-0">
-            <AvatarImage src={application.applicant.avatar} alt="" />
-            <AvatarFallback className="text-xs">
-              {initials(application.applicant.name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium group-hover:underline">
-              {application.applicant.name}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {application.applicant.title}
-            </p>
+      <TableCell className="max-w-0 whitespace-normal">
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            className="group flex min-w-0 items-center gap-3 rounded-md text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            aria-label={`View ${application.applicant.name}'s profile`}
+            onClick={() => onOpenProfile(application)}
+          >
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage src={application.applicant.avatar} alt="" />
+              <AvatarFallback className="text-xs">
+                {initials(application.applicant.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium group-hover:underline">
+                {application.applicant.name}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {application.applicant.title}
+              </p>
+            </div>
+          </button>
+          <div className="flex flex-wrap items-center gap-1.5 md:hidden">
+            {statusBadge}
+            <span className="text-xs text-muted-foreground">
+              {appliedAtLabel}
+            </span>
           </div>
-        </button>
+        </div>
       </TableCell>
       <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
-        {format(new Date(application.createdAt), "MMM d, yyyy")}
+        {appliedAtLabel}
       </TableCell>
-      <TableCell>
-        <span
-          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${applicationStatusConfig[application.status].className}`}
-        >
-          {applicationStatusConfig[application.status].label}
-        </span>
-      </TableCell>
+      <TableCell className="hidden md:table-cell">{statusBadge}</TableCell>
       <TableCell className="text-right">
         <Button
           size="sm"
           variant="outline"
+          className="shrink-0"
           onClick={() => onReview(application)}
         >
           Review
@@ -272,6 +291,7 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
 
   return (
     <JobPageLayout
+      bordered={false}
       title={currentJob.role}
       description={currentJob.production || "Job management"}
       breadcrumb={
@@ -348,14 +368,14 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
                 : "Could not load applicants"}
             </p>
           ) : (
-            <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
+            <div className="rounded-xl border">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Applicant</TableHead>
                     <TableHead className="hidden md:table-cell">Applied</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-25" />
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="w-24 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
