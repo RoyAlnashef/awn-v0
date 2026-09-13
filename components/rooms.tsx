@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Users } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
@@ -15,12 +15,16 @@ import {
 } from "@/components/ui/sheet"
 import { RoomsInbox } from "@/components/rooms/rooms-inbox"
 import { useRooms } from "@/components/rooms/rooms-provider"
+import { isNavRouteActive } from "@/lib/nav"
 
 export function Rooms() {
   const router = useRouter()
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { sortedRooms, unreadCount, toggleJoin, toggleMute, markRoomRead, isLoading } =
     useRooms()
+
+  if (isNavRouteActive(pathname, "/groups")) return null
 
   function navigateToRoom(roomId: string) {
     setOpen(false)

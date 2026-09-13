@@ -18,6 +18,7 @@ import {
 import { MessagesInbox } from "@/components/messages/messages-inbox"
 import { useMessages } from "@/components/messages/messages-provider"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
+import { isNavRouteActive } from "@/lib/nav"
 
 export function Messages() {
   const router = useRouter()
@@ -26,6 +27,8 @@ export function Messages() {
   const { conversations, markConversationRead } = useMessages()
   const { unreadCount } = useUnreadCount()
   const { isLoading: isInboxLoading } = useInbox({ enabled: open })
+
+  if (isNavRouteActive(pathname, "/messages")) return null
 
   function navigateToConversation(conversationId: string) {
     setOpen(false)

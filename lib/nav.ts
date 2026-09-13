@@ -100,6 +100,15 @@ export const adminNav: NavItem[] = [
   },
 ]
 
+export function isNavRouteActive(pathname: string, href: string) {
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    pathname === `/popout${href}` ||
+    pathname.startsWith(`/popout${href}/`)
+  )
+}
+
 export function findNavItem(href: string) {
   for (const item of [...mainNav, ...adminNav]) {
     if (item.href === href) {
