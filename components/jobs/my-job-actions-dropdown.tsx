@@ -76,7 +76,7 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
       <DropdownMenuTrigger
         render={
           <Button
-            variant="secondary"
+            variant="outline"
             size="icon"
             className="shrink-0"
             aria-label={`Actions for ${job.role}`}

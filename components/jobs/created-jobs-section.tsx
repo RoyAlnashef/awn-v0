@@ -1,22 +1,75 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
+import useSWR from "swr"
 
 import { AnimatedIcon } from "@/components/icons/animated-icon"
 import { BriefcaseBusinessIcon } from "@/components/ui/briefcase-business"
-import useSWR from "swr"
-
-import { fetchMyJobs } from "@/lib/jobs/fetch"
-import { myJobsKey } from "@/lib/jobs/swr-keys"
-import { jobsListClassName } from "@/lib/jobs/view-mode"
-import { MyJobRow } from "@/components/jobs/my-job-row"
+import { CreatedJobsTable } from "@/components/jobs/created-jobs-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { fetchMyJobs } from "@/lib/jobs/fetch"
+import { myJobsKey } from "@/lib/jobs/swr-keys"
 
-function JobRowSkeleton() {
-  return <Skeleton className="h-28 w-full rounded-xl" />
+function TableSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-5 w-16" />
+      <div className="rounded-xl border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <Skeleton className="size-4" />
+              </TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="hidden md:table-cell">Schedule</TableHead>
+              <TableHead className="hidden sm:table-cell">Applicants</TableHead>
+              <TableHead className="hidden lg:table-cell">Views</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Skeleton className="size-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-16" />
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <Skeleton className="h-4 w-8" />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <Skeleton className="h-4 w-8" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="ml-auto size-8" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
 }
 
 function EmptyState() {
@@ -59,33 +112,12 @@ export function CreatedJobsSection() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-16" />
-        <div className={jobsListClassName}>
-          <JobRowSkeleton />
-          <JobRowSkeleton />
-          <JobRowSkeleton />
-        </div>
-      </div>
-    )
+    return <TableSkeleton />
   }
 
   if (jobs.length === 0) {
     return <EmptyState />
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        <span className="font-medium text-foreground">{jobs.length}</span>{" "}
-        {jobs.length === 1 ? "role" : "roles"}
-      </p>
-      <div className={jobsListClassName}>
-        {jobs.map((job) => (
-          <MyJobRow key={job.id} job={job} />
-        ))}
-      </div>
-    </div>
-  )
+  return <CreatedJobsTable jobs={jobs} />
 }

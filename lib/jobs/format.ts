@@ -96,6 +96,15 @@ export const jobStatusLabels: Record<JobStatus, string> = {
   deleted: "Deleted",
 }
 
+/** Lower values sort first when ascending (active jobs before closed). */
+export const jobStatusSortOrder: Record<JobStatus, number> = {
+  open: 0,
+  draft: 1,
+  filled: 2,
+  expired: 3,
+  deleted: 4,
+}
+
 export function employerSelectableStatuses(current: JobStatus): JobStatus[] {
   if (current === "expired" || current === "deleted") return ["open"]
   return ["open", "draft", "filled"]

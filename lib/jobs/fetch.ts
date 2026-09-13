@@ -176,6 +176,62 @@ export async function updateJob(
   return parseJson(response)
 }
 
+export async function deleteJob(jobId: string): Promise<void> {
+  const response = await fetch(`/api/jobs/${jobId}`, {
+    method: "DELETE",
+  })
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string }
+    throw new Error(data.error || "Request failed")
+  }
+}
+
+export type BulkJobActionResult = {
+  succeeded: number
+  skipped: number
+  failed: number
+}
+
+export async function bulkPauseJobs(
+  jobIds: string[],
+  jobsById: Map<string, Job>,
+): Promise<BulkJobActionResult> {
+  const eligible = jobIds.filter((id) => jobsById.get(id)?.status === "open")
+  const skipped = jobIds.length - eligible.length
+
+  if (eligible.length === 0) {
+    return { succeeded: 0, skipped, failed: 0 }
+  }
+
+  const results = await Promise.allSettled(
+    eligible.map((id) => updateJob(id, { status: "draft" })),
+  )
+
+  const failed = results.filter((result) => result.status === "rejected").length
+  return {
+    succeeded: eligible.length - failed,
+    skipped,
+    failed,
+  }
+}
+
+export async function bulkDeleteJobs(
+  jobIds: string[],
+): Promise<BulkJobActionResult> {
+  if (jobIds.length === 0) {
+    return { succeeded: 0, skipped: 0, failed: 0 }
+  }
+
+  const results = await Promise.allSettled(jobIds.map((id) => deleteJob(id)))
+
+  const failed = results.filter((result) => result.status === "rejected").length
+  return {
+    succeeded: jobIds.length - failed,
+    skipped: 0,
+    failed,
+  }
+}
+
 export async function applyToJob(
   jobId: string,
   payload: ApplyJobPayload,
