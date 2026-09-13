@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, MapPin, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import {
-  availabilityConfig,
   initials,
   type Availability,
   type Person,
@@ -15,7 +14,6 @@ import { getMemberById } from "@/lib/people/actions"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 function memberShareToPerson(memberShare: MemberSharePayload): Person {
@@ -42,29 +40,6 @@ function memberShareToPerson(memberShare: MemberSharePayload): Person {
     avatar: memberShare.avatar,
     followed: false,
   }
-}
-
-function AvailabilityDot({ availability }: { availability?: string }) {
-  if (!availability) return null
-  const config = availabilityConfig[availability as Availability]
-  if (!config) return null
-
-  return (
-    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-      <span className="relative flex size-2">
-        {config.ping ? (
-          <span
-            className={cn(
-              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
-              config.dot,
-            )}
-          />
-        ) : null}
-        <span className={cn("relative inline-flex size-2 rounded-full", config.dot)} />
-      </span>
-      {config.label}
-    </span>
-  )
 }
 
 export function PersonShareCard({
@@ -98,17 +73,13 @@ export function PersonShareCard({
     })
   }, [detailOpen, memberShare.id])
 
-  const hasStats =
-    memberShare.credits != null ||
-    memberShare.vouches != null ||
-    memberShare.yearsExperience != null
-
   const card = (
     <div
       className={cn(
-        "relative flex w-full max-w-70 flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center",
+        "relative flex w-fit max-w-sm items-center gap-2.5 rounded-xl border border-border bg-card p-3",
+        isPreview && onRemove && "pr-9",
         variant === "message" &&
-          "max-w-full cursor-pointer shadow-sm transition-colors hover:border-primary/40",
+          "cursor-pointer shadow-sm transition-colors hover:border-primary/40",
         className,
       )}
       onClick={variant === "message" ? () => setDetailOpen(true) : undefined}
@@ -141,87 +112,21 @@ export function PersonShareCard({
         </Button>
       ) : null}
 
-      {memberShare.department ? (
-        <Badge variant="outline" className="self-center">
-          {memberShare.department}
-        </Badge>
-      ) : null}
-
-      <Avatar
-        className={cn(
-          "border-2 border-border",
-          isPreview ? "size-16" : "size-20",
-        )}
-      >
+      <Avatar className="size-8 shrink-0">
         <AvatarImage src={memberShare.avatar || undefined} alt="" />
-        <AvatarFallback className={isPreview ? "text-base" : "text-lg"}>
+        <AvatarFallback className="text-xs">
           {initials(memberShare.name)}
         </AvatarFallback>
       </Avatar>
 
-      <div className="flex flex-col items-center gap-0.5">
-        <h3
-          className={cn(
-            "font-heading font-semibold tracking-tight text-balance",
-            isPreview ? "text-base" : "text-lg",
-          )}
-        >
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate font-medium text-foreground">
           {memberShare.name}
-        </h3>
-        <p className="text-sm text-foreground/90">{memberShare.role}</p>
+        </span>
+        <span className="truncate text-sm text-muted-foreground">
+          {memberShare.role}
+        </span>
       </div>
-
-      {memberShare.homeBase || memberShare.availability ? (
-        <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground">
-          {memberShare.homeBase ? (
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3.5 shrink-0" />
-              {memberShare.homeBase}
-            </span>
-          ) : null}
-          <AvailabilityDot availability={memberShare.availability} />
-        </div>
-      ) : null}
-
-      {person.skills.length > 0 ? (
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {person.skills.map((skill) => (
-            <Badge key={skill} variant="secondary" className="font-normal">
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      ) : null}
-
-      {hasStats ? (
-        <div className="flex w-full items-center justify-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
-          {memberShare.credits != null ? (
-            <span className="flex items-center gap-1.5">
-              <BadgeCheck className="size-4 text-primary" />
-              <span className="font-medium text-foreground">
-                {memberShare.credits}
-              </span>{" "}
-              credits
-            </span>
-          ) : null}
-          {memberShare.vouches != null ? (
-            <span>
-              <span className="font-medium text-foreground">
-                {memberShare.vouches}
-              </span>{" "}
-              vouches
-            </span>
-          ) : null}
-          {memberShare.yearsExperience != null ? (
-            <span>
-              <span className="font-medium text-foreground">
-                {memberShare.yearsExperience}
-              </span>{" "}
-              yrs
-            </span>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   )
 

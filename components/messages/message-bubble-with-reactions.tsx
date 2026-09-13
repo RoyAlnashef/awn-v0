@@ -346,7 +346,7 @@ export function MessageMemberShareWithReactions({
         reactions={attachmentReactions}
         onReact={onReactAttachment}
         {...messageActions}
-        className="w-full min-w-0 max-w-full"
+        className="min-w-0 max-w-full"
       >
         <PersonShareCard memberShare={memberShare} variant="message" />
       </MessageActionsShell>
