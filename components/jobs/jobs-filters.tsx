@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bookmark, Calendar as CalendarIcon, ChevronDown, Search, X } from "lucide-react"
+import { Calendar as CalendarIcon, ChevronDown, Search, X } from "lucide-react"
 
 import {
   engagementTypes,
@@ -17,11 +17,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { DatePicker } from "@/components/jobs/date-picker"
-import {
-  JobActionTooltip,
-  JobActionTooltips,
-} from "@/components/jobs/job-action-tooltip"
-
 export interface JobFilters {
   search: string
   department: string
@@ -229,32 +224,6 @@ export function JobsFilters({
             </div>
           </PopoverContent>
         </Popover>
-
-        <JobActionTooltips>
-          <JobActionTooltip label="Saved jobs">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-pressed={filters.saved}
-              aria-label="Saved jobs"
-              onClick={() => onChange({ saved: !filters.saved })}
-              className={cn(
-                filters.saved &&
-                  "border-primary/60 bg-primary/10 text-foreground",
-              )}
-            >
-              <Bookmark
-                className={cn(
-                  "size-3.5",
-                  filters.saved
-                    ? "fill-current text-primary"
-                    : "text-muted-foreground",
-                )}
-              />
-            </Button>
-          </JobActionTooltip>
-        </JobActionTooltips>
 
         {activeCount > 0 ? (
           <Button variant="ghost" size="sm" onClick={onClear}>
