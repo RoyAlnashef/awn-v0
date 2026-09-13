@@ -5,6 +5,7 @@ import { formatRelativeTime, isUuid } from "@/lib/messages/format"
 import {
   notificationDisplayKind,
   type AppNotification,
+  type NotificationData,
 } from "@/lib/notifications-data"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -39,6 +40,30 @@ type NotificationRow = {
   data: Record<string, unknown> | null
   read: boolean
   created_at: string
+  updated_at: string
+}
+
+function mapNotificationData(
+  data: Record<string, unknown> | null,
+): NotificationData | undefined {
+  if (!data) return undefined
+
+  const conversationId =
+    typeof data.conversationId === "string" ? data.conversationId : undefined
+  const latestMessageId =
+    typeof data.latestMessageId === "string" ? data.latestMessageId : undefined
+  const messageCount =
+    typeof data.messageCount === "number" ? data.messageCount : undefined
+
+  if (!conversationId && messageCount === undefined && !latestMessageId) {
+    return undefined
+  }
+
+  return {
+    ...(conversationId ? { conversationId } : {}),
+    ...(messageCount !== undefined ? { messageCount } : {}),
+    ...(latestMessageId ? { latestMessageId } : {}),
+  }
 }
 
 function actionError(error: unknown): ActionError {
@@ -53,13 +78,17 @@ async function requireUserId(): Promise<string> {
 }
 
 function mapNotificationRow(row: NotificationRow): AppNotification {
+  const sortTime = row.updated_at ?? row.created_at
+
   return {
     id: row.id,
+    dbKind: row.kind,
     kind: notificationDisplayKind(row.kind),
     title: row.title,
     body: row.body,
-    time: formatRelativeTime(row.created_at),
+    time: formatRelativeTime(sortTime),
     read: row.read,
+    data: mapNotificationData(row.data),
   }
 }
 
@@ -70,8 +99,9 @@ export async function listNotifications(): Promise<ListNotificationsResult> {
 
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, kind, title, body, data, read, created_at")
+      .select("id, kind, title, body, data, read, created_at, updated_at")
       .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(50)
 

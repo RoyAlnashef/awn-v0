@@ -763,6 +763,13 @@ export async function markConversationRead(
       .eq("profile_id", userId)
 
     if (error) return { ok: false, error: error.message }
+
+    const { error: dismissError } = await supabase.rpc("dismiss_dm_notification", {
+      p_conversation_id: conversationId,
+    })
+
+    if (dismissError) return { ok: false, error: dismissError.message }
+
     return { ok: true }
   } catch (error) {
     return actionError(error)

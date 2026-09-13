@@ -18,14 +18,23 @@ export type NotificationKind =
   | "invite"
   | "vouch"
 
+export interface NotificationData {
+  conversationId?: string
+  messageCount?: number
+  latestMessageId?: string
+}
+
 export interface AppNotification {
   id: string
+  /** Raw DB kind (e.g. dm_message, invite_accepted). */
+  dbKind: string
   kind: NotificationKind
   title: string
   body: string
   /** Relative time label (e.g. 12m, 2h, 3d). */
   time: string
   read: boolean
+  data?: NotificationData
 }
 
 export const notificationIcons: Record<NotificationKind, LucideIcon> = {
@@ -40,13 +49,27 @@ export const notificationIcons: Record<NotificationKind, LucideIcon> = {
 
 const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
 const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
+const DM_DB_KINDS = new Set(["dm_message", "message"])
 
 /** Maps DB kind strings to UI icon/display kind. */
 export function notificationDisplayKind(kind: string): NotificationKind {
   if (INVITE_DB_KINDS.has(kind)) return "invite"
   if (VOUCH_DB_KINDS.has(kind)) return "vouch"
+  if (DM_DB_KINDS.has(kind)) return "message"
   if (kind in notificationIcons) return kind as NotificationKind
   return "message"
+}
+
+/** Whether this notification is an aggregated direct message. */
+export function isDmNotification(notification: AppNotification): boolean {
+  return notification.dbKind === "dm_message"
+}
+
+/** Conversation id for navigating to a DM notification thread. */
+export function getDmConversationId(
+  notification: AppNotification,
+): string | undefined {
+  return notification.data?.conversationId
 }
 
 /** Whether a notification belongs in the Mentions tab. */

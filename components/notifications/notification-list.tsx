@@ -1,15 +1,22 @@
 "use client"
 
-import { notificationIcons, type AppNotification } from "@/lib/notifications-data"
+import {
+  getDmConversationId,
+  isDmNotification,
+  notificationIcons,
+  type AppNotification,
+} from "@/lib/notifications-data"
 import { cn } from "@/lib/utils"
 
 export function NotificationList({
   items,
   onToggleRead,
+  onItemClick,
   emptyMessage = "No notifications yet.",
 }: {
   items: AppNotification[]
   onToggleRead: (id: string) => void
+  onItemClick?: (item: AppNotification) => void
   emptyMessage?: string
 }) {
   if (items.length === 0) {
@@ -24,15 +31,28 @@ export function NotificationList({
     <ul className="flex flex-col">
       {items.map((n) => {
         const Icon = notificationIcons[n.kind]
+        const isDm = isDmNotification(n)
+        const conversationId = isDm ? getDmConversationId(n) : undefined
+
+        function handleClick() {
+          if (isDm && conversationId && onItemClick) {
+            onItemClick(n)
+            return
+          }
+          onToggleRead(n.id)
+        }
+
         return (
           <li key={n.id}>
             <button
               type="button"
-              onClick={() => onToggleRead(n.id)}
+              onClick={handleClick}
               aria-label={
-                n.read
-                  ? `${n.title}. Mark as unread.`
-                  : `${n.title}. Mark as read.`
+                isDm && conversationId
+                  ? `${n.title}. Open conversation.`
+                  : n.read
+                    ? `${n.title}. Mark as unread.`
+                    : `${n.title}. Mark as read.`
               }
               className={cn(
                 "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",

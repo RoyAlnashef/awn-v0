@@ -13,7 +13,8 @@ import { SquarePen } from "lucide-react"
 import { AnimatedIcon } from "@/components/icons/animated-icon"
 import { MessageSquareIcon } from "@/components/ui/message-square"
 
-import { parsePersonConversationId } from "@/lib/messages/format"
+import { isUuid, parsePersonConversationId } from "@/lib/messages/format"
+import { setViewingConversation } from "@/lib/messages/viewing-actions"
 import {
   type DirectConversation,
   type MessageableMember,
@@ -446,6 +447,18 @@ export function MessagesView({
     setActiveConversationId(activeConversation?.id ?? null)
     return () => setActiveConversationId(null)
   }, [activeConversation?.id, setActiveConversationId])
+
+  useEffect(() => {
+    const conversationId = activeConversation?.id
+    const persistedId =
+      conversationId && isUuid(conversationId) ? conversationId : null
+
+    void setViewingConversation(persistedId)
+
+    return () => {
+      void setViewingConversation(null)
+    }
+  }, [activeConversation?.id])
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">

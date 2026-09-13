@@ -7,13 +7,20 @@ import { Bell, Check } from "lucide-react"
 import { JobsNotificationsList } from "@/components/jobs/jobs-panel/jobs-notifications-list"
 import { UrgentJobsCarousel } from "@/components/jobs/jobs-panel/urgent-jobs-carousel"
 import { NotificationList } from "@/components/notifications/notification-list"
+import { useMessages } from "@/components/messages/messages-provider"
 import { jobPanelNotifications as initialJobPanelNotifications } from "@/lib/jobs-panel-data"
-import { isMentionNotification } from "@/lib/notifications-data"
+import {
+  getDmConversationId,
+  isDmNotification,
+  isMentionNotification,
+  type AppNotification,
+} from "@/lib/notifications-data"
 import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/notifications/actions"
 import { useNotifications } from "@/lib/notifications/hooks/use-notifications"
+import { useNotificationsRealtime } from "@/lib/notifications/hooks/use-notifications-realtime"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -30,10 +37,13 @@ type NotificationTab = "all" | "jobs" | "mentions"
 
 export function Notifications() {
   const router = useRouter()
+  const { currentUser } = useMessages()
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<NotificationTab>("all")
   const [jobItems, setJobItems] = useState(initialJobPanelNotifications)
   const { notifications, mutate, isLoading } = useNotifications({ enabled: open })
+
+  useNotificationsRealtime({ enabled: open, userId: currentUser.id })
 
   const apiUnreadCount = notifications.filter((n) => !n.read).length
   const jobUnreadCount = jobItems.filter((n) => !n.read).length
@@ -82,6 +92,36 @@ export function Notifications() {
     }
 
     void mutate()
+  }
+
+  async function handleDmNotificationClick(item: AppNotification) {
+    const conversationId = getDmConversationId(item)
+    if (!conversationId) return
+
+    const previous = notifications
+
+    await mutate(
+      previous.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
+      { revalidate: false },
+    )
+
+    const result = await markNotificationRead(item.id, true)
+    if (!result.ok) {
+      await mutate(previous, { revalidate: false })
+      return
+    }
+
+    setOpen(false)
+    router.push(`/messages?conversation=${encodeURIComponent(conversationId)}`)
+    void mutate()
+  }
+
+  function handleNotificationClick(item: AppNotification) {
+    if (isDmNotification(item) && getDmConversationId(item)) {
+      void handleDmNotificationClick(item)
+      return
+    }
+    void toggleRead(item.id)
   }
 
   function toggleJobRead(id: string) {
@@ -192,6 +232,7 @@ export function Notifications() {
                   <NotificationList
                     items={notifications}
                     onToggleRead={(id) => void toggleRead(id)}
+                    onItemClick={handleNotificationClick}
                   />
                 )}
               </ScrollArea>
@@ -217,6 +258,7 @@ export function Notifications() {
                   <NotificationList
                     items={mentions}
                     onToggleRead={(id) => void toggleRead(id)}
+                    onItemClick={handleNotificationClick}
                     emptyMessage="No mentions yet."
                   />
                 )}

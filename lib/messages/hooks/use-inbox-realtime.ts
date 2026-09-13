@@ -12,6 +12,7 @@ import {
 import { formatMessageTime } from "@/lib/messages/format"
 import { mapRealtimeReply } from "@/lib/messages/reply"
 import { inboxKey, threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
+import { notificationsKey } from "@/lib/notifications/swr-keys"
 import type { ThreadCache } from "@/lib/messages/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/client"
@@ -68,6 +69,7 @@ export function useInboxRealtime() {
 
           if (!isMine && isActive) {
             markConversationRead(row.conversation_id)
+            void mutateSwr(notificationsKey)
           }
 
           if (!isMine) {
