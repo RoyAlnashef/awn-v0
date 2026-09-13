@@ -20,7 +20,7 @@ export default async function GroupsPage({
   ])
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] min-w-0 flex-1 flex-col overflow-x-hidden px-4 py-8 md:px-6 lg:h-[calc(100svh-4rem)] lg:min-h-0">
+    <div className="mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col overflow-x-hidden px-4 py-8 md:px-6">
       <RoomsView
         title={item.title}
         description={item.description}

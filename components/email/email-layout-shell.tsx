@@ -47,12 +47,12 @@ function EmailLayoutShellContent({
         }
         fillViewport
       >
-        <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1">
-          <div className="lg:shrink-0">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <div className="shrink-0">
             <EmailNav />
           </div>
-          <div className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
-            <div className="flex flex-col lg:col-span-4 lg:min-h-0 lg:overflow-auto">
+          <div className="grid min-h-0 flex-1 grid-cols-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
+            <div className="flex min-h-0 flex-col overflow-auto lg:col-span-4">
               <div className="min-w-0 rounded-xl border border-border bg-background p-6">
                 {children}
               </div>

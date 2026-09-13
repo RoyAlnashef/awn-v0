@@ -16,7 +16,7 @@ export default async function PopoutGroupsPage({
   const params = await searchParams
 
   return (
-    <div className="flex flex-1 flex-col p-4 lg:h-[calc(100svh-4rem)] lg:min-h-0">
+    <div className="flex h-[calc(100svh-4rem)] flex-col p-4">
       <RoomsView
         title={item.title}
         description={item.description}
