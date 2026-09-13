@@ -23,7 +23,7 @@ export function PageShell({
       className={cn(
         "flex flex-col",
         fillViewport
-          ? "mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col gap-8 px-4 py-8 md:px-6 overflow-x-hidden"
+          ? "mx-auto flex w-full max-w-[1400px] min-w-0 flex-1 flex-col gap-8 px-4 py-8 md:px-6 overflow-x-hidden lg:h-[calc(100svh-4rem)] lg:min-h-0"
           : "mx-auto w-full max-w-[1400px] min-w-0 flex-1 gap-8 px-4 py-8 md:px-6",
       )}
     >
@@ -47,7 +47,7 @@ export function PageShell({
       </div>
       {children ? (
         fillViewport ? (
-          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          <div className="flex flex-col lg:min-h-0 lg:flex-1">{children}</div>
         ) : (
           children
         )

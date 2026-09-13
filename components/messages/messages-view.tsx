@@ -37,6 +37,7 @@ import { useMessages } from "@/components/messages/messages-provider"
 import { useInbox } from "@/lib/messages/hooks/use-inbox"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useIsLargeScreen, useIsMobile } from "@/hooks/use-mobile"
 import { PopOutButton } from "@/components/popout-button"
 
 export function MessagesView({
@@ -74,6 +75,8 @@ export function MessagesView({
   } = useMessages()
   const { isLoading: isInboxLoading } = useInbox({ enabled: true })
   const hydrated = useHydrated()
+  const isMobile = useIsMobile()
+  const isLargeScreen = useIsLargeScreen()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [active, setActive] = useState<DirectConversation | null>(null)
   const [newOpen, setNewOpen] = useState(false)
@@ -460,8 +463,17 @@ export function MessagesView({
     }
   }, [activeConversation?.id])
 
+  const mobileInboxView = !visibleActiveConversation
+  const useDocumentScrollInbox = mobileInboxView && !isLargeScreen
+
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-4",
+        mobileInboxView ? "flex-1" : "min-h-0 flex-1",
+        "lg:min-h-0 lg:flex-1",
+      )}
+    >
       <div
         className={cn(
           "flex items-start justify-between gap-4",
@@ -506,10 +518,19 @@ export function MessagesView({
         <p className="text-sm text-destructive">{startError}</p>
       ) : null}
 
-      <div className="flex min-h-0 min-w-0 flex-1 gap-4 overflow-hidden">
+      <div
+        className={cn(
+          "flex min-w-0 gap-4",
+          mobileInboxView
+            ? "flex-col"
+            : "min-h-0 flex-1 overflow-hidden",
+          "lg:min-h-0 lg:flex-1 lg:overflow-hidden",
+        )}
+      >
         <div
           className={cn(
-            "flex w-full min-h-0 shrink-0 flex-col md:w-80 lg:w-96",
+            "flex w-full flex-col md:w-80 lg:w-96",
+            mobileInboxView ? "shrink-0" : "min-h-0 shrink-0",
             visibleActiveConversation && "hidden md:flex",
           )}
         >
@@ -520,13 +541,24 @@ export function MessagesView({
             onPrefetchConversation={prefetchThread}
             onNewMessage={() => setNewOpen(true)}
             isLoading={isInboxLoading}
+            containedScroll={!useDocumentScrollInbox}
+            className={cn(
+              useDocumentScrollInbox &&
+                "rounded-xl border border-border bg-card lg:min-h-0 lg:flex-1",
+            )}
           />
         </div>
 
         <div
           className={cn(
-            "min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
-            visibleActiveConversation ? "flex" : "hidden md:flex",
+            "min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card",
+            visibleActiveConversation
+              ? cn(
+                  "flex min-h-0",
+                  isMobile &&
+                    "fixed inset-x-4 top-16 bottom-0 z-20 md:static md:inset-auto",
+                )
+              : "hidden md:flex lg:min-h-0",
           )}
         >
           {visibleActiveConversation ? (

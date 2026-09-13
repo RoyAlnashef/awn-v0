@@ -22,6 +22,7 @@ export function RoomsInbox({
   onToggleMute,
   onLeave,
   isLoading = false,
+  containedScroll = true,
   className,
 }: {
   activeId?: string
@@ -31,6 +32,8 @@ export function RoomsInbox({
   onToggleMute?: (roomId: string) => Promise<ToggleMuteResult>
   onLeave?: (roomId: string) => void | Promise<void>
   isLoading?: boolean
+  /** When false, list grows with the page instead of scrolling in a fixed pane. */
+  containedScroll?: boolean
   className?: string
 }) {
   const [query, setQuery] = useState("")
@@ -70,8 +73,107 @@ export function RoomsInbox({
     )
   }, [q, rooms])
 
+  const listContent =
+    isLoading ? (
+      <RoomsInboxSkeleton />
+    ) : filteredRooms.length > 0 ? (
+      <ul className="flex flex-col">
+        {filteredRooms.map((room) => {
+          const active = activeId === room.id
+          const isJoining = joiningRoomId === room.id
+          return (
+            <li key={room.id}>
+              <div
+                className={cn(
+                  "relative flex items-center gap-3 border-b px-4 py-3 last:border-b-0",
+                  room.unread && room.joined && "bg-success/6",
+                  active && "bg-accent",
+                )}
+              >
+                {room.unread && room.joined ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 left-0 w-0.5 bg-success"
+                  />
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={() => onSelectRoom?.(room)}
+                  aria-current={active ? "true" : undefined}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:opacity-90"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xl leading-none">
+                    {room.icon}
+                  </span>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <p
+                      className={cn(
+                        "min-w-0 truncate text-sm",
+                        room.unread && room.joined
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-foreground",
+                      )}
+                    >
+                      {room.name}
+                    </p>
+                    {room.unread && room.joined && (room.unreadCount ?? 0) > 0 ? (
+                      <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground">
+                        {room.unreadCount}
+                      </span>
+                    ) : null}
+                  </div>
+                </button>
+
+                {room.joined ? (
+                  <div className="flex shrink-0 items-center gap-1">
+                    {room.muted ? (
+                      <BellOff
+                        className="size-3.5 shrink-0 text-muted-foreground/50"
+                        aria-label="Muted"
+                      />
+                    ) : null}
+                    <RoomActionsDropdown
+                      room={room}
+                      onToggleMute={onToggleMute}
+                      onLeave={onLeave}
+                    />
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="shrink-0 min-w-14"
+                    disabled={isJoining}
+                    aria-busy={isJoining}
+                    onClick={(e) => void handleJoinClick(e, room.id)}
+                  >
+                    {isJoining ? (
+                      <Spinner className="size-3.5" />
+                    ) : (
+                      "Join"
+                    )}
+                  </Button>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    ) : (
+      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+        No groups match “{query}”.
+      </p>
+    )
+
   return (
-    <div className={cn("flex min-h-0 flex-1 flex-col gap-0", className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-0",
+        containedScroll && "min-h-0 flex-1",
+        className,
+      )}
+    >
       <div className="flex shrink-0 flex-col gap-3 border-b p-3">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -85,99 +187,11 @@ export function RoomsInbox({
         </div>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
-        {isLoading ? (
-          <RoomsInboxSkeleton />
-        ) : filteredRooms.length > 0 ? (
-          <ul className="flex flex-col">
-            {filteredRooms.map((room) => {
-              const active = activeId === room.id
-              const isJoining = joiningRoomId === room.id
-              return (
-                <li key={room.id}>
-                  <div
-                    className={cn(
-                      "relative flex items-center gap-3 border-b px-4 py-3 last:border-b-0",
-                      room.unread && room.joined && "bg-success/6",
-                      active && "bg-accent",
-                    )}
-                  >
-                    {room.unread && room.joined ? (
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-y-0 left-0 w-0.5 bg-success"
-                      />
-                    ) : null}
-
-                    <button
-                      type="button"
-                      onClick={() => onSelectRoom?.(room)}
-                      aria-current={active ? "true" : undefined}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:opacity-90"
-                    >
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xl leading-none">
-                        {room.icon}
-                      </span>
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <p
-                          className={cn(
-                            "min-w-0 truncate text-sm",
-                            room.unread && room.joined
-                              ? "font-semibold text-foreground"
-                              : "font-medium text-foreground",
-                          )}
-                        >
-                          {room.name}
-                        </p>
-                        {room.unread && room.joined && (room.unreadCount ?? 0) > 0 ? (
-                          <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground">
-                            {room.unreadCount}
-                          </span>
-                        ) : null}
-                      </div>
-                    </button>
-
-                    {room.joined ? (
-                      <div className="flex shrink-0 items-center gap-1">
-                        {room.muted ? (
-                          <BellOff
-                            className="size-3.5 shrink-0 text-muted-foreground/50"
-                            aria-label="Muted"
-                          />
-                        ) : null}
-                        <RoomActionsDropdown
-                          room={room}
-                          onToggleMute={onToggleMute}
-                          onLeave={onLeave}
-                        />
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="shrink-0 min-w-14"
-                        disabled={isJoining}
-                        aria-busy={isJoining}
-                        onClick={(e) => void handleJoinClick(e, room.id)}
-                      >
-                        {isJoining ? (
-                          <Spinner className="size-3.5" />
-                        ) : (
-                          "Join"
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No groups match “{query}”.
-          </p>
-        )}
-      </ScrollArea>
+      {containedScroll ? (
+        <ScrollArea className="min-h-0 flex-1">{listContent}</ScrollArea>
+      ) : (
+        listContent
+      )}
     </div>
   )
 }
