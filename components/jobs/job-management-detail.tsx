@@ -15,7 +15,7 @@ import {
   type JobApplication,
   type ReviewApplicationStatus,
 } from "@/lib/jobs/fetch"
-import { applicationStatusStyles } from "@/lib/jobs/format"
+import { applicationStatusConfig } from "@/lib/jobs/format"
 import { JobStatusSelect } from "@/components/jobs/job-status-select"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
@@ -164,9 +164,9 @@ function ApplicantTableRow({
       </TableCell>
       <TableCell>
         <span
-          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide capitalize ${applicationStatusStyles[application.status]}`}
+          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${applicationStatusConfig[application.status].className}`}
         >
-          {application.status}
+          {applicationStatusConfig[application.status].label}
         </span>
       </TableCell>
       <TableCell className="text-right">
@@ -237,7 +237,7 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
         )
         toast.success(
           status === "approved"
-            ? "Application approved"
+            ? "Application accepted"
             : status === "maybe"
               ? "Application marked as maybe"
               : "Application declined",

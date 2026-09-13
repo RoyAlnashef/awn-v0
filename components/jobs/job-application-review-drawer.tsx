@@ -212,7 +212,7 @@ export function JobApplicationReviewDrawer({
                 disabled={updating}
                 onClick={() => onStatusChange("approved")}
               >
-                Approve
+                Accept
               </Button>
               <Button
                 variant="outline"

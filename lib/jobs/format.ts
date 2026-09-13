@@ -123,7 +123,7 @@ export const applicationStatusConfig: Record<
   { label: string; className: string }
 > = {
   pending: { label: "Pending", className: applicationStatusStyles.pending },
-  approved: { label: "Approved", className: applicationStatusStyles.approved },
+  approved: { label: "Accepted", className: applicationStatusStyles.approved },
   maybe: { label: "Maybe", className: applicationStatusStyles.maybe },
   declined: { label: "Declined", className: applicationStatusStyles.declined },
   withdrawn: { label: "Withdrawn", className: applicationStatusStyles.withdrawn },
