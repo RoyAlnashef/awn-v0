@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -252,8 +251,8 @@ export function Notifications() {
             </TabsContent>
           </Tabs>
 
-          <div className="shrink-0 border-t p-3">
-            {activeTab === "jobs" ? (
+          {activeTab === "jobs" ? (
+            <div className="shrink-0 border-t p-3">
               <Button
                 variant="ghost"
                 size="sm"
@@ -262,16 +261,8 @@ export function Notifications() {
               >
                 View all jobs
               </Button>
-            ) : (
-              <SheetClose
-                render={
-                  <Button variant="ghost" size="sm" className="w-full text-sm" />
-                }
-              >
-                View all notifications
-              </SheetClose>
-            )}
-          </div>
+            </div>
+          ) : null}
         </SheetContent>
       ) : null}
     </Sheet>
