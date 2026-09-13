@@ -1,16 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Bell, Check } from "lucide-react"
 
-import { notificationIcons } from "@/lib/notifications-data"
+import { JobsNotificationsList } from "@/components/jobs/jobs-panel/jobs-notifications-list"
+import { UrgentJobsCarousel } from "@/components/jobs/jobs-panel/urgent-jobs-carousel"
+import { NotificationList } from "@/components/notifications/notification-list"
+import { jobPanelNotifications as initialJobPanelNotifications } from "@/lib/jobs-panel-data"
+import { isMentionNotification } from "@/lib/notifications-data"
 import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/notifications/actions"
 import { useNotifications } from "@/lib/notifications/hooks/use-notifications"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
   SheetClose,
@@ -19,24 +24,39 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+type NotificationTab = "all" | "jobs" | "mentions"
 
 export function Notifications() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const { notifications, mutate, isLoading } = useNotifications()
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const [activeTab, setActiveTab] = useState<NotificationTab>("all")
+  const [jobItems, setJobItems] = useState(initialJobPanelNotifications)
+  const { notifications, mutate, isLoading } = useNotifications({ enabled: open })
+
+  const apiUnreadCount = notifications.filter((n) => !n.read).length
+  const jobUnreadCount = jobItems.filter((n) => !n.read).length
+  const unreadCount = apiUnreadCount + jobUnreadCount
+
+  const mentions = notifications.filter((n) => isMentionNotification(n.kind))
+  const mentionsUnreadCount = mentions.filter((n) => !n.read).length
 
   async function markAllRead() {
     const previous = notifications
+    const previousJobItems = jobItems
 
     await mutate(
       previous.map((n) => ({ ...n, read: true })),
       { revalidate: false },
     )
 
+    setJobItems((prev) => prev.map((n) => ({ ...n, read: true })))
+
     const result = await markAllNotificationsRead()
     if (!result.ok) {
       await mutate(previous, { revalidate: false })
+      setJobItems(previousJobItems)
       return
     }
 
@@ -62,6 +82,17 @@ export function Notifications() {
     }
 
     void mutate()
+  }
+
+  function toggleJobRead(id: string) {
+    setJobItems((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n)),
+    )
+  }
+
+  function viewAllJobs() {
+    setOpen(false)
+    router.push("/jobs")
   }
 
   return (
@@ -91,14 +122,14 @@ export function Notifications() {
       {open ? (
         <SheetContent
           side="right"
-          className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
+          className="inset-y-3! right-3! flex h-auto! w-full flex-col gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
         >
           <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b p-4 pr-14">
             <div className="flex items-center gap-2">
               <SheetTitle>Notifications</SheetTitle>
               {unreadCount > 0 ? (
                 <span className="rounded-full bg-notification/15 px-1.5 py-0.5 text-xs font-medium text-notification">
-                  {unreadCount} new
+                  {unreadCount}
                 </span>
               ) : null}
             </div>
@@ -115,94 +146,103 @@ export function Notifications() {
             ) : null}
           </SheetHeader>
 
-          <ScrollArea className="min-h-0 flex-1">
-            {isLoading && notifications.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Loading notifications…
-              </p>
-            ) : notifications.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                No notifications yet.
-              </p>
-            ) : (
-              <ul className="flex flex-col">
-                {notifications.map((n) => {
-                  const Icon = notificationIcons[n.kind]
-                  return (
-                    <li key={n.id}>
-                      <button
-                        type="button"
-                        onClick={() => void toggleRead(n.id)}
-                        aria-label={
-                          n.read
-                            ? `${n.title}. Mark as unread.`
-                            : `${n.title}. Mark as read.`
-                        }
-                        className={cn(
-                          "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",
-                          !n.read && "bg-notification/6",
-                        )}
-                      >
-                        {!n.read ? (
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-y-0 left-0 w-0.5 bg-notification"
-                          />
-                        ) : null}
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as NotificationTab)}
+            className="flex min-h-0 flex-1 flex-col gap-0"
+          >
+            <div className="shrink-0 px-3 py-3">
+              <TabsList className="flex h-9 w-full items-center rounded-md bg-transparent border border-border px-0.75 py-1">
+                <TabsTrigger
+                  value="all"
+                  className="h-7 flex-1 text-xs sm:text-sm rounded-sm"
+                >
+                  All
+                </TabsTrigger>
+                <TabsTrigger
+                  value="jobs"
+                  className="h-7 flex-1 text-xs sm:text-sm rounded-sm" 
+                >
+                  Jobs
+                  {jobUnreadCount > 0 ? (
+                    <span className="text-muted-foreground">{jobUnreadCount}</span>
+                  ) : null}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="mentions"
+                  className="h-7 flex-1 text-xs sm:text-sm rounded-sm"
+                >
+                  Mentions
+                  {mentionsUnreadCount > 0 ? (
+                    <span className="text-muted-foreground">
+                      {mentionsUnreadCount}
+                    </span>
+                  ) : null}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-                        <span
-                          className={cn(
-                            "flex size-9 shrink-0 items-center justify-center rounded-full",
-                            n.read
-                              ? "bg-muted text-muted-foreground"
-                              : "bg-notification/15 text-notification",
-                          )}
-                        >
-                          <Icon className="size-4" />
-                        </span>
+            <TabsContent value="all" className="mt-0 min-h-0 flex-1">
+              <ScrollArea className="h-full min-h-0">
+                {isLoading && notifications.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Loading notifications…
+                  </p>
+                ) : (
+                  <NotificationList
+                    items={notifications}
+                    onToggleRead={(id) => void toggleRead(id)}
+                  />
+                )}
+              </ScrollArea>
+            </TabsContent>
 
-                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <p
-                              className={cn(
-                                "text-sm leading-snug text-pretty",
-                                n.read
-                                  ? "font-normal text-muted-foreground"
-                                  : "font-medium text-foreground",
-                              )}
-                            >
-                              {n.title}
-                            </p>
-                            {!n.read ? (
-                              <span
-                                aria-hidden="true"
-                                className="mt-1.5 size-2 shrink-0 rounded-full bg-notification"
-                              />
-                            ) : null}
-                          </div>
-                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground text-pretty">
-                            {n.body}
-                          </p>
-                          <span className="mt-0.5 text-[11px] text-muted-foreground/80">
-                            {n.time}
-                          </span>
-                        </div>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </ScrollArea>
+            <TabsContent value="jobs" className="mt-0 min-h-0 flex-1">
+              <ScrollArea className="h-full min-h-0">
+                <UrgentJobsCarousel enabled={open} />
+                <JobsNotificationsList
+                  items={jobItems}
+                  onToggleRead={toggleJobRead}
+                />
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="mentions" className="mt-0 min-h-0 flex-1">
+              <ScrollArea className="h-full min-h-0">
+                {isLoading && notifications.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Loading notifications…
+                  </p>
+                ) : (
+                  <NotificationList
+                    items={mentions}
+                    onToggleRead={(id) => void toggleRead(id)}
+                    emptyMessage="No mentions yet."
+                  />
+                )}
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
 
           <div className="shrink-0 border-t p-3">
-            <SheetClose
-              render={
-                <Button variant="ghost" size="sm" className="w-full text-sm" />
-              }
-            >
-              View all notifications
-            </SheetClose>
+            {activeTab === "jobs" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-sm"
+                onClick={viewAllJobs}
+              >
+                View all jobs
+              </Button>
+            ) : (
+              <SheetClose
+                render={
+                  <Button variant="ghost" size="sm" className="w-full text-sm" />
+                }
+              >
+                View all notifications
+              </SheetClose>
+            )}
           </div>
         </SheetContent>
       ) : null}

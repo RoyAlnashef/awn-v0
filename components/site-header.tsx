@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { NavUser, type NavUserData } from "@/components/nav-user"
 import { HelpNowHeaderButton } from "@/components/help-now/help-now-header-button"
 import { Messages } from "@/components/messages"
-import { JobsPanel } from "@/components/jobs-panel"
 import { Notifications } from "@/components/notifications"
 import { Rooms } from "@/components/rooms"
 
@@ -31,7 +30,6 @@ export function SiteHeader({ user }: { user: NavUserData }) {
         <HelpNowHeaderButton />
         <Rooms />
         <Messages />
-        <JobsPanel />
         <Notifications />
         <Separator
           orientation="vertical"

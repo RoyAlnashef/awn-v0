@@ -48,3 +48,13 @@ export function notificationDisplayKind(kind: string): NotificationKind {
   if (kind in notificationIcons) return kind as NotificationKind
   return "message"
 }
+
+/** Whether a notification belongs in the Mentions tab. */
+export function isMentionNotification(kind: NotificationKind): boolean {
+  return kind === "message"
+}
+
+/** Whether a notification is job-related in the API feed. */
+export function isJobApiNotification(kind: NotificationKind): boolean {
+  return kind === "job" || kind === "deadline"
+}
