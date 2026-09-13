@@ -55,7 +55,6 @@ type MessageActionsShellProps = {
   onDelete?: () => void
   deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
-  repliedLabel?: string
   className?: string
   bubbleClassName?: string
   children: React.ReactNode
@@ -72,7 +71,6 @@ function MessageActionsShell({
   onDelete,
   deleteLabel,
   replyTo,
-  repliedLabel,
   className,
   bubbleClassName,
   children,
@@ -169,7 +167,6 @@ export function MessageBubbleWithReactions({
   onDelete,
   deleteLabel,
   replyTo,
-  repliedLabel,
   className,
 }: {
   variant?: "default" | "muted"
@@ -182,7 +179,6 @@ export function MessageBubbleWithReactions({
   onDelete?: () => void
   deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
-  repliedLabel?: string
   className?: string
 }) {
   return (
@@ -195,13 +191,12 @@ export function MessageBubbleWithReactions({
       onDelete={onDelete}
       deleteLabel={deleteLabel}
       replyTo={replyTo}
-      repliedLabel={repliedLabel}
       className={cn("max-w-[80%] min-w-0", className)}
     >
       <Bubble variant={variant} align={align} className="w-full max-w-full">
         <BubbleContent>
           {replyTo ? (
-            <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
+            <MessageReplyQuote reply={replyTo} />
           ) : null}
           {children}
         </BubbleContent>
@@ -224,7 +219,6 @@ export function MessageJobShareWithReactions({
   onDelete,
   deleteLabel,
   replyTo,
-  repliedLabel,
   className,
 }: {
   jobShare: JobSharePayload
@@ -240,7 +234,6 @@ export function MessageJobShareWithReactions({
   onDelete?: () => void
   deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
-  repliedLabel?: string
   className?: string
 }) {
   const trimmed = text.trim()
@@ -258,7 +251,7 @@ export function MessageJobShareWithReactions({
       {replyTo ? (
         <Bubble variant={variant} align={align} className="w-full max-w-full">
           <BubbleContent>
-            <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
+            <MessageReplyQuote reply={replyTo} />
           </BubbleContent>
         </Bubble>
       ) : null}
@@ -303,7 +296,6 @@ export function MessageMemberShareWithReactions({
   onDelete,
   deleteLabel,
   replyTo,
-  repliedLabel,
   className,
 }: {
   memberShare: MemberSharePayload
@@ -319,7 +311,6 @@ export function MessageMemberShareWithReactions({
   onDelete?: () => void
   deleteLabel?: "Unsend" | "Delete"
   replyTo?: MessageReplyPayload
-  repliedLabel?: string
   className?: string
 }) {
   const trimmed = text.trim()
@@ -337,7 +328,7 @@ export function MessageMemberShareWithReactions({
       {replyTo ? (
         <Bubble variant={variant} align={align} className="w-full max-w-full">
           <BubbleContent>
-            <MessageReplyQuote reply={replyTo} repliedLabel={repliedLabel} />
+            <MessageReplyQuote reply={replyTo} />
           </BubbleContent>
         </Bubble>
       ) : null}

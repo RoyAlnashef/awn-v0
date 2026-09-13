@@ -5,11 +5,9 @@ import { cn } from "@/lib/utils"
 
 export function MessageReplyQuote({
   reply,
-  repliedLabel,
   className,
 }: {
   reply: MessageReplyPayload
-  repliedLabel?: string
   className?: string
 }) {
   const preview = reply.unavailable
@@ -18,11 +16,6 @@ export function MessageReplyQuote({
 
   return (
     <div className={cn("mb-1.5 min-w-0", className)}>
-      {repliedLabel ? (
-        <p className="mb-1 text-[11px] text-muted-foreground group-data-[variant=default]/bubble:text-primary-foreground/65">
-          {repliedLabel}
-        </p>
-      ) : null}
       <div
         className={cn(
           "rounded-md px-2 py-1.5",

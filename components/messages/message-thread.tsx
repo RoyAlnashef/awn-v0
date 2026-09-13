@@ -857,11 +857,6 @@ export function MessageThread({
                       message,
                       otherLastReadAt,
                     )
-                    const repliedLabel = message.replyTo
-                      ? mine
-                        ? "You replied"
-                        : `${conversation.name} replied`
-                      : undefined
                     const messageActions = {
                       onReply: () => handleReplyToMessage(message),
                       ...(canDeleteOwnMessage(message, isPersisted)
@@ -871,7 +866,6 @@ export function MessageThread({
                           }
                         : {}),
                       replyTo: message.replyTo,
-                      repliedLabel,
                     }
                     const shareMessageActions = {
                       ...messageActions,
@@ -1005,11 +999,6 @@ export function MessageThread({
                                 }
                               : {})}
                             replyTo={handoffMessage.replyTo}
-                            repliedLabel={
-                              handoffMessage.replyTo
-                                ? `${conversation.name} replied`
-                                : undefined
-                            }
                           />
                         ) : handoffMessage.jobShare ? (
                           <MessageJobShareWithReactions
@@ -1037,11 +1026,6 @@ export function MessageThread({
                                 }
                               : {})}
                             replyTo={handoffMessage.replyTo}
-                            repliedLabel={
-                              handoffMessage.replyTo
-                                ? `${conversation.name} replied`
-                                : undefined
-                            }
                           />
                         ) : (
                           <MessageBubbleWithReactions
@@ -1054,11 +1038,6 @@ export function MessageThread({
                             onReply={() => handleReplyToMessage(handoffMessage)}
                             onCopy={() => handleCopyMessage(handoffMessage)}
                             replyTo={handoffMessage.replyTo}
-                            repliedLabel={
-                              handoffMessage.replyTo
-                                ? `${conversation.name} replied`
-                                : undefined
-                            }
                           >
                             {handoffMessage.text}
                           </MessageBubbleWithReactions>

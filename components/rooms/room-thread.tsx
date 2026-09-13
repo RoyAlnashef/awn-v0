@@ -674,11 +674,6 @@ export function RoomThread({
                   !mine && message.author && !continuesPreviousGroup
                 const showAvatar = !continuesNextGroup
                 const showTimestamp = !continuesNextGroup
-                const repliedLabel = message.replyTo
-                  ? mine
-                    ? "You replied"
-                    : `${message.author ?? "Member"} replied`
-                  : undefined
                 const messageActions = {
                   onReply: () => handleReplyToMessage(message),
                   ...(canDeleteOwnMessage(message, usesServer)
@@ -688,7 +683,6 @@ export function RoomThread({
                       }
                     : {}),
                   replyTo: message.replyTo,
-                  repliedLabel,
                 }
                 const shareMessageActions = {
                   ...messageActions,
