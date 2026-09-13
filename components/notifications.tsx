@@ -8,7 +8,7 @@ import { JobsNotificationsList } from "@/components/jobs/jobs-panel/jobs-notific
 import { UrgentJobsCarousel } from "@/components/jobs/jobs-panel/urgent-jobs-carousel"
 import { NotificationList } from "@/components/notifications/notification-list"
 import { useMessages } from "@/components/messages/messages-provider"
-import { jobPanelNotifications as initialJobPanelNotifications } from "@/lib/jobs-panel-data"
+import { jobPanelNotifications } from "@/lib/jobs-panel-data"
 import {
   getDmConversationId,
   isDmNotification,
@@ -40,13 +40,12 @@ export function Notifications() {
   const { currentUser } = useMessages()
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<NotificationTab>("all")
-  const [jobItems, setJobItems] = useState(initialJobPanelNotifications)
   const { notifications, mutate, isLoading } = useNotifications({ enabled: open })
 
   useNotificationsRealtime({ enabled: open, userId: currentUser.id })
 
   const apiUnreadCount = notifications.filter((n) => !n.read).length
-  const jobUnreadCount = jobItems.filter((n) => !n.read).length
+  const jobUnreadCount = jobPanelNotifications.filter((n) => !n.read).length
   const unreadCount = apiUnreadCount + jobUnreadCount
 
   const mentions = notifications.filter((n) => isMentionNotification(n.kind))
@@ -54,19 +53,15 @@ export function Notifications() {
 
   async function markAllRead() {
     const previous = notifications
-    const previousJobItems = jobItems
 
     await mutate(
       previous.map((n) => ({ ...n, read: true })),
       { revalidate: false },
     )
 
-    setJobItems((prev) => prev.map((n) => ({ ...n, read: true })))
-
     const result = await markAllNotificationsRead()
     if (!result.ok) {
       await mutate(previous, { revalidate: false })
-      setJobItems(previousJobItems)
       return
     }
 
@@ -122,12 +117,6 @@ export function Notifications() {
       return
     }
     void toggleRead(item.id)
-  }
-
-  function toggleJobRead(id: string) {
-    setJobItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n)),
-    )
   }
 
   function viewAllJobs() {
@@ -241,10 +230,7 @@ export function Notifications() {
             <TabsContent value="jobs" className="mt-0 min-h-0 flex-1">
               <ScrollArea className="h-full min-h-0">
                 <UrgentJobsCarousel enabled={open} />
-                <JobsNotificationsList
-                  items={jobItems}
-                  onToggleRead={toggleJobRead}
-                />
+                <JobsNotificationsList items={jobPanelNotifications} />
               </ScrollArea>
             </TabsContent>
 

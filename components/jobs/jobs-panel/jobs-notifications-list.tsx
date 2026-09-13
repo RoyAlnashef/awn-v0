@@ -9,10 +9,20 @@ import { cn } from "@/lib/utils"
 export function JobsNotificationsList({
   items,
   onToggleRead,
+  emptyMessage = "No job notifications yet.",
 }: {
   items: JobPanelNotification[]
-  onToggleRead: (id: string) => void
+  onToggleRead?: (id: string) => void
+  emptyMessage?: string
 }) {
+  if (items.length === 0) {
+    return (
+      <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+        {emptyMessage}
+      </p>
+    )
+  }
+
   return (
     <div className="flex flex-col">
       <h3 className="px-4 pt-3 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -26,7 +36,7 @@ export function JobsNotificationsList({
             <li key={n.id}>
               <button
                 type="button"
-                onClick={() => onToggleRead(n.id)}
+                onClick={() => onToggleRead?.(n.id)}
                 aria-label={
                   n.read
                     ? `${n.title}. Mark as unread.`
