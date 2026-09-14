@@ -744,7 +744,7 @@ export function RoomThread({
                               <button
                                 type="button"
                                 className={cn(
-                                  "mb-1 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                                  "block w-fit max-w-full text-left text-xs leading-tight text-muted-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
                                   mine && "self-end text-right",
                                 )}
                                 onClick={(e) => {
@@ -777,7 +777,7 @@ export function RoomThread({
                               <button
                                 type="button"
                                 className={cn(
-                                  "mb-1 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+                                  "block w-fit max-w-full text-left text-xs font-semibold leading-tight text-muted-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
                                   mine && "self-end text-right",
                                 )}
                                 onClick={(e) => {
@@ -816,7 +816,7 @@ export function RoomThread({
                             {showAuthor ? (
                               <button
                                 type="button"
-                                className="mb-0.5 block w-fit max-w-full text-left text-xs font-semibold leading-tight text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                                className="mb-0.5 block w-fit max-w-full text-left text-xs leading-tight text-muted-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   openAuthorProfile(message)

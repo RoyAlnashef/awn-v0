@@ -43,7 +43,7 @@ export function JobShareCard({
         variant === "message" ? "max-w-full" : "max-w-sm",
         variant === "message" &&
           cn(
-            "cursor-pointer rounded-xl bg-card shadow-sm transition-colors",
+            "cursor-pointer rounded-xl bg-card !p-3 shadow-sm transition-colors",
             isUrgent
               ? urgentJobCardBorderStyles
               : "border-border hover:border-primary/40",
@@ -65,7 +65,7 @@ export function JobShareCard({
       role={variant === "message" ? "button" : undefined}
       tabIndex={variant === "message" ? 0 : undefined}
     >
-      <AttachmentContent className="flex flex-col gap-3 px-2.5 py-2">
+      <AttachmentContent className="flex flex-col gap-3">
         <div className="flex flex-col">
           <div className="flex flex-col gap-1 mb-2">
             <div className="flex items-start justify-between gap-3">
