@@ -43,7 +43,7 @@ export function JobShareCard({
         variant === "message" ? "max-w-full" : "max-w-sm",
         variant === "message" &&
           cn(
-            "cursor-pointer rounded-xl bg-card !p-3 shadow-sm transition-colors",
+            "cursor-pointer rounded-xl bg-card p-3 shadow-sm transition-colors",
             isUrgent
               ? urgentJobCardBorderStyles
               : "border-border hover:border-primary/40",
