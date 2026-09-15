@@ -9,7 +9,7 @@ const DEFAULT_FOOTER =
 
 export function AuthShell({
   title = "A Wright Network",
-  subtitle = "Touring crew, connected. Sign in to continue.",
+  subtitle = "Sign in to continue.",
   showAppIcon = false,
   children,
   footer = DEFAULT_FOOTER,
