@@ -9,7 +9,7 @@ import { JobDetailDrawer } from "@/components/jobs/job-detail-drawer"
 import { JobMetadataBadges } from "@/components/jobs/job-metadata-badges"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { Bookmark } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
@@ -34,6 +34,9 @@ function revalidateJobs() {
 export function JobCard({ job }: { job: Job }) {
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
+  useEffect(() => {
+    setApplied(job.applied)
+  }, [job.applied, job.id])
   const [applyOpen, setApplyOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -143,6 +146,10 @@ export function JobCard({ job }: { job: Job }) {
         jobId={job.id}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        onApplied={() => {
+          setApplied(true)
+          void revalidateJobs()
+        }}
       />
 
       <ApplyJobDialog

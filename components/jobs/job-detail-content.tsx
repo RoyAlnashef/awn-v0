@@ -66,6 +66,7 @@ export function JobDetailContent({
   preview = false,
   embedded = false,
   className,
+  onApplied,
 }: {
   job: Job
   applicantCount: number
@@ -73,6 +74,7 @@ export function JobDetailContent({
   preview?: boolean
   embedded?: boolean
   className?: string
+  onApplied?: () => void
 }) {
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
@@ -309,6 +311,7 @@ export function JobDetailContent({
               onOpenChange={setApplyOpen}
               onApplied={() => {
                 setApplied(true)
+                onApplied?.()
                 void revalidateJobs()
                 void mutate(jobDetailKey(job.id))
               }}

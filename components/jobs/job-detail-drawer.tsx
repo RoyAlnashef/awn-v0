@@ -39,10 +39,12 @@ export function JobDetailDrawer({
   jobId,
   open,
   onOpenChange,
+  onApplied,
 }: {
   jobId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onApplied?: () => void
 }) {
   const heroRef = useJobDetailHeroRef()
   const swrKey = open && jobId ? jobDetailKey(jobId) : null
@@ -98,6 +100,7 @@ export function JobDetailDrawer({
             applicantCount={data.applicantCount}
             heroRef={heroRef}
             className="min-h-0 flex-1"
+            onApplied={onApplied}
           />
         ) : null}
       </DrawerContent>
