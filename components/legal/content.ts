@@ -15,72 +15,154 @@ export const privacyPolicy: LegalDocument = {
   title: "Privacy Policy",
   subtitle:
     "How A Wright Network LLC collects, uses, and protects your information on AWN.",
-  lastUpdated: "September 2, 2026",
+  lastUpdated: "October 1, 2026",
   sections: [
     {
       id: "introduction",
       title: "Introduction",
       paragraphs: [
-        "A Wright Network LLC (\"AWN,\" \"we,\" \"us,\" or \"our\") operates a private, invitation-only network for touring professionals. This Privacy Policy explains what information we collect, how we use it, and the choices you have.",
-        "AWN is not a public directory. Membership is vetted by hand, and we treat member information with the same discretion the road expects.",
+        "A Wright Network LLC (\"AWN,\" \"we,\" \"us,\" or \"our\") respects your privacy.",
+        "This Privacy Policy explains how we collect, use, disclose, retain, and protect information when you use the A Wright Network website, applications, member network, messaging features, job postings, profiles, community spaces, and related services.",
+        "By using AWN, you acknowledge the practices described in this Privacy Policy.",
       ],
     },
     {
       id: "information-we-collect",
-      title: "Information we collect",
+      title: "1. Information We Collect",
       paragraphs: [
-        "Account information: name, email address, password (stored securely), and authentication credentials when you sign in.",
-        "Application data: information you submit when requesting access or applying with an invite code, including your reason for joining and professional background.",
-        "Profile information: bio, tour credits, work history, availability, photos, and other details you choose to add to your member profile.",
-        "Usage data: how you interact with AWN features such as messages, rooms, jobs, and Help Now — including timestamps, device type, and general activity logs used to keep the network secure and functional.",
+        "We may collect information you provide directly to us, including:",
+        "Name, email address, phone number, profile photograph, professional title, professional discipline, location, professional history, professional credits, skills, availability, employment information, references and recommendations, job application information, messages and communications, community posts and comments, information contained in job postings, and information you provide when contacting AWN.",
+        "We may also collect information automatically when you use the Services, including IP address, device information, browser type, operating system, pages viewed, actions taken, dates and times of access, and similar technical information.",
       ],
     },
     {
       id: "how-we-use-information",
-      title: "How we use your information",
+      title: "2. How We Use Information",
       paragraphs: [
-        "We use your information to review and approve membership applications, operate network features, facilitate communication between vetted members, and maintain the integrity of the community.",
-        "We may use aggregated or de-identified data to understand how AWN is used and to improve the service. We do not sell member data to recruiters, staffing agencies, or third-party marketing lists.",
-        "We may send transactional emails related to your account, application status, security alerts, or important service updates.",
+        "We may use information to create and maintain your account, review membership applications, verify members, operate the AWN network, display professional profiles, facilitate communication between members, facilitate job postings and applications, operate community features, respond to requests, provide customer support, maintain security, prevent fraud and abuse, moderate the network, improve the Services, communicate with you, comply with legal obligations, and protect the rights and safety of AWN and its members.",
       ],
     },
     {
-      id: "confidentiality",
-      title: "Confidentiality expectations",
+      id: "profile-information",
+      title: "3. Profile Information",
       paragraphs: [
-        "AWN is a private network. Member profiles, messages, and community discussions are not publicly indexed or searchable outside the platform.",
-        "Members are expected to respect the confidentiality of the network. Do not screenshot, export, or share member information outside AWN without consent. Community guidelines and Terms of Service apply.",
+        "Information you choose to include in your professional profile may be visible to other approved AWN members.",
+        "You should carefully consider what information you choose to make available through your profile.",
       ],
     },
     {
-      id: "data-sharing",
-      title: "Data sharing",
+      id: "messages",
+      title: "4. Messages",
       paragraphs: [
-        "We share information only as needed to operate AWN: with service providers who help us host, secure, and deliver the platform (under contractual obligations to protect your data), when required by law, or to protect the rights and safety of AWN and its members.",
-        "We do not share member contact information with employers, recruiters, or external parties for lead generation or marketing purposes.",
+        "Messages sent through AWN are intended to facilitate private communication between members.",
+        "AWN does not use private messages as public community content.",
+        "However, AWN may access or preserve messages when reasonably necessary for security, abuse prevention, legal compliance, investigation of violations, or protection of AWN and its members.",
       ],
     },
     {
-      id: "retention-and-security",
-      title: "Retention and security",
+      id: "community-content",
+      title: "5. Community Content",
       paragraphs: [
-        "We retain your information for as long as your account is active or as needed to provide the service, comply with legal obligations, resolve disputes, and enforce our policies.",
-        "We use industry-standard measures to protect your data, including encryption in transit and access controls. No system is completely secure; please use a strong password and report suspected unauthorized access promptly.",
+        "Content posted in open community areas may be visible to members who have access to those areas.",
+        "You should not post information that you intend to remain completely confidential.",
+      ],
+    },
+    {
+      id: "job-information",
+      title: "6. Job Information",
+      paragraphs: [
+        "Information submitted in connection with a job posting or application may be shared with the applicable employer, hiring party, or other users as necessary to facilitate the opportunity.",
+        "AWN does not control how another party uses information after receiving it.",
+      ],
+    },
+    {
+      id: "how-we-share-information",
+      title: "7. How We Share Information",
+      paragraphs: [
+        "We may share information with other members when necessary to provide the Services, with employers or hiring parties when necessary to facilitate job opportunities, with service providers that help operate AWN, with professional advisors, when required by law, when necessary to protect rights, safety, security, or property, and in connection with a merger, acquisition, financing, restructuring, sale of assets, or similar transaction.",
+        "We do not sell private member profiles or private messages as a standalone data product.",
+      ],
+    },
+    {
+      id: "service-providers",
+      title: "8. Service Providers",
+      paragraphs: [
+        "AWN may use third-party service providers for hosting, authentication, analytics, communications, payments, security, storage, customer support, and other operational functions.",
+        "Those providers may process information on AWN's behalf.",
+      ],
+    },
+    {
+      id: "cookies-and-technologies",
+      title: "9. Cookies and Technologies",
+      paragraphs: [
+        "AWN may use cookies, pixels, analytics tools, local storage, and similar technologies to operate and improve the Services.",
+        "You may be able to control certain technologies through your browser or device settings.",
+      ],
+    },
+    {
+      id: "data-retention",
+      title: "10. Data Retention",
+      paragraphs: [
+        "We retain information for as long as reasonably necessary to provide the Services, maintain legitimate business records, comply with legal obligations, resolve disputes, enforce agreements, prevent fraud, maintain security, and fulfill other legitimate purposes.",
+      ],
+    },
+    {
+      id: "security",
+      title: "11. Security",
+      paragraphs: [
+        "AWN uses reasonable administrative, technical, and organizational measures designed to protect information.",
+        "However, no system can be guaranteed to be completely secure.",
       ],
     },
     {
       id: "your-rights",
-      title: "Your rights",
+      title: "12. Your Rights",
       paragraphs: [
-        "Depending on your location, you may have rights to access, correct, delete, or export your personal information, or to object to certain processing. Contact us to make a request.",
-        "You may update much of your profile information directly in your account settings. You may also request account deletion by contacting us.",
+        "Depending on where you live and applicable law, you may have rights concerning your personal information, including rights to request access, correction, deletion, portability, or information about how your information is used or disclosed.",
+        "California residents may have additional rights under applicable California privacy laws.",
+        "To submit a privacy request, contact: privacy@awrightnetwork.com",
+        "AWN may need to verify your identity before completing certain requests.",
+      ],
+    },
+    {
+      id: "california-privacy-rights",
+      title: "13. California Privacy Rights",
+      paragraphs: [
+        "If California privacy law applies to you, you may have additional rights regarding personal information, including rights to know, access, correct, delete, and obtain information regarding certain disclosures or uses of personal information.",
+        "You will not be discriminated against for exercising privacy rights provided by applicable law.",
+      ],
+    },
+    {
+      id: "children",
+      title: "14. Children",
+      paragraphs: [
+        "AWN is intended for adults.",
+        "You must be at least 18 years old to use the Services.",
+        "AWN does not knowingly collect personal information from children under 18.",
+      ],
+    },
+    {
+      id: "international-users",
+      title: "15. International Users",
+      paragraphs: [
+        "If you access AWN from outside the United States, your information may be transferred to and processed in the United States or other locations where AWN or its service providers operate.",
+      ],
+    },
+    {
+      id: "changes",
+      title: "16. Changes to This Policy",
+      paragraphs: [
+        "We may update this Privacy Policy from time to time.",
+        "When material changes are made, we may provide notice through the Services or another reasonable method.",
       ],
     },
     {
       id: "contact",
-      title: "Contact",
+      title: "17. Contact",
       paragraphs: [
-        "Questions about this Privacy Policy or your data? Email us at info@awrightnetwork.com.",
+        "A Wright Network LLC",
+        "[LEGAL ADDRESS]",
+        "Privacy inquiries: privacy@awrightnetwork.com",
       ],
     },
   ],
