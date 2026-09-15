@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowDown,
   ArrowUp,
@@ -108,36 +108,49 @@ function MyJobTableRow({
   onToggle: () => void
   disabled?: boolean
 }) {
+  const router = useRouter()
   const applicantCount = job.applicationCount ?? 0
   const viewCount = job.viewCount ?? 0
   const hasDates =
     job.kind !== "urgent" && Boolean(job.startDate && job.endDate)
 
+  function navigateToJob() {
+    router.push(`/jobs/${job.id}`)
+  }
+
+  function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      navigateToJob()
+    }
+  }
+
   return (
     <TableRow
       data-state={selected ? "selected" : undefined}
+      tabIndex={0}
+      aria-label={`Manage ${job.role}`}
       className={cn(
+        "group cursor-pointer hover:bg-muted/50",
         job.kind === "urgent" && "border-l-2 border-l-amber-600/50",
       )}
+      onClick={navigateToJob}
+      onKeyDown={handleRowKeyDown}
     >
-      <TableCell>
+      <TableCell onClick={(event) => event.stopPropagation()}>
         <Checkbox
           checked={selected}
           onCheckedChange={onToggle}
           aria-label={`Select ${job.role}`}
           disabled={disabled}
-          onClick={(event) => event.stopPropagation()}
         />
       </TableCell>
       <TableCell>
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-col gap-0.5">
-            <Link
-              href={`/jobs/${job.id}`}
-              className="font-medium text-sm hover:underline"
-            >
+            <span className="font-medium text-sm group-hover:underline">
               {job.role}
-            </Link>
+            </span>
             {job.production ? (
               <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs text-pretty">
                 {job.production}
@@ -177,7 +190,10 @@ function MyJobTableRow({
           {viewCount}
         </div>
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell
+        className="text-right"
+        onClick={(event) => event.stopPropagation()}
+      >
         <MyJobActionsDropdown job={job} />
       </TableCell>
     </TableRow>
