@@ -18,7 +18,7 @@ export const landingContent = {
   hero: {
     title: "The private network for the people behind live entertainment.",
     primaryCta: "Request access",
-    tagline: "Not open to the public",
+    tagline: "By invitation only.",
   },
   footer: {
     copyright: "© 2026 A Wright Network LLC",
