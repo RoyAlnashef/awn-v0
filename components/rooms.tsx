@@ -39,7 +39,7 @@ export function Rooms() {
     const togglePromise = toggleJoin(id)
 
     if (joining) {
-      navigateToRoom(id)
+      return togglePromise.then(() => navigateToRoom(id))
     }
 
     return togglePromise

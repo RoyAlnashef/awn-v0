@@ -82,12 +82,15 @@ export function RoomsView({
     const togglePromise = toggleJoin(id)
 
     if (joining) {
-      setActive({ ...room, joined: true, unread: false })
-    } else {
-      setActive((prev) =>
-        prev?.id === id ? { ...room, joined: false } : prev,
-      )
+      return togglePromise.then(() => {
+        const updated = getRoom(id) ?? room
+        setActive({ ...updated, joined: true, unread: false })
+      })
     }
+
+    setActive((prev) =>
+      prev?.id === id ? { ...room, joined: false } : prev,
+    )
 
     return togglePromise
   }
@@ -114,7 +117,15 @@ export function RoomsView({
   }, [initialRoomId, rooms, markRoomRead])
 
   const activeRoom = active
-    ? (getRoom(active.id) ?? active)
+    ? (() => {
+        const serverRoom = getRoom(active.id)
+        if (!serverRoom) return active
+        return {
+          ...serverRoom,
+          joined: serverRoom.joined || active.joined,
+          unread: active.joined ? false : serverRoom.unread,
+        }
+      })()
     : null
 
   return (

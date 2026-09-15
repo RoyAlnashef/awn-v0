@@ -54,7 +54,7 @@ export function RoomsInbox({
     setJoiningRoomId(roomId)
     try {
       await onToggleJoin(roomId)
-    } catch {
+    } finally {
       setJoiningRoomId(null)
     }
   }
