@@ -20,6 +20,14 @@ export function FaqList({ items }: FaqListProps) {
           </AccordionTrigger>
           <AccordionContent className="text-muted-foreground">
             <p>{item.answer}</p>
+            {item.bullets?.length ? (
+              <ul className="mt-3 list-disc space-y-1.5 ps-5">
+                {item.bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+            ) : null}
+            {item.outro ? <p className="mt-3">{item.outro}</p> : null}
           </AccordionContent>
         </AccordionItem>
       ))}
