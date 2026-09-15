@@ -45,6 +45,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { findNavItem } from "@/lib/nav"
+import { truncateWords } from "@/lib/utils"
 
 function initials(name: string) {
   return name
@@ -345,7 +346,9 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{currentJob.role}</BreadcrumbPage>
+              <BreadcrumbPage title={currentJob.role}>
+                {truncateWords(currentJob.role)}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
