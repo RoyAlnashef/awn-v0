@@ -107,7 +107,7 @@ export function JobApplicationReviewDrawer({
   function handleStartConversation() {
     const trimmed = message.trim()
     if (!trimmed) {
-      setMessageError("Write a message to start the conversation.")
+      setMessageError("Sending a message confirms your interest in this member.")
       return
     }
     setMessageError(null)
@@ -287,7 +287,7 @@ export function JobApplicationReviewDrawer({
 
           {application.status === "pending" && footerMode === "compose" ? (
             <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-1 space-y-2">
                 <Label htmlFor="accept-message">
                   Start the conversation with {application.applicant.name}
                 </Label>
