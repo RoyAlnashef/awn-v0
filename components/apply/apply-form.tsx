@@ -195,6 +195,7 @@ export function ApplyForm(props: ApplyFormProps) {
 
   return (
     <AuthShell
+      showAppIcon
       subtitle={
         isRequestAccess
           ? "Apply for AWN membership. Every application is reviewed by hand."
