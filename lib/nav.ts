@@ -37,6 +37,21 @@ export const mainNav: NavItem[] = [
     live: true,
   },
   {
+    title: "Groups",
+    href: "/groups",
+    description:
+      "Chat in the AWN communities.",
+    icon: Users,
+    liveBadge: "rooms",
+  },
+  {
+    title: "People",
+    href: "/people",
+    description:
+      "Find and connect with trusted touring crew across every department.",
+    icon: Contact,
+  },
+  {
     title: "Jobs",
     href: "/jobs",
     description:
@@ -49,26 +64,11 @@ export const mainNav: NavItem[] = [
     ],
   },
   {
-    title: "People",
-    href: "/people",
-    description:
-      "Find and connect with trusted touring crew across every department.",
-    icon: Contact,
-  },
-  {
     title: "Messages",
     href: "/messages",
     description: "Direct messages and private 1:1 conversations.",
     icon: MessagesSquare,
     liveBadge: "messages",
-  },
-  {
-    title: "Groups",
-    href: "/groups",
-    description:
-      "Chat in the AWN communities.",
-    icon: Users,
-    liveBadge: "rooms",
   },
 ]
 
