@@ -18,7 +18,7 @@ export function MyJobsLayoutShell({
   return (
     <PageShell
       title="My jobs"
-      description="Manage the roles you've posted and track jobs you've applied to."
+      description="Save jobs, track your applications, and manage roles you've posted."
       actions={
         <div className="flex items-center gap-2">
           <Button
