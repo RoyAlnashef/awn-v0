@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { format } from "date-fns"
 import { ExternalLink } from "lucide-react"
 
@@ -23,6 +24,8 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Tooltip,
   TooltipContent,
@@ -30,20 +33,29 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+type FooterMode = "actions" | "compose" | "accepted"
+
 export function JobApplicationReviewDrawer({
   application,
   open,
   onOpenChange,
   onStatusChange,
+  onAcceptWithMessage,
   updating,
+  conversationId,
 }: {
   application: JobApplication | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onStatusChange: (status: ReviewApplicationStatus) => void
+  onAcceptWithMessage: (message: string) => void
   updating: boolean
+  conversationId?: string | null
 }) {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null)
+  const [footerMode, setFooterMode] = useState<FooterMode>("actions")
+  const [message, setMessage] = useState("")
+  const [messageError, setMessageError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open || !application?.resumeUrl) {
@@ -56,12 +68,51 @@ export function JobApplicationReviewDrawer({
     })
   }, [application, open])
 
+  useEffect(() => {
+    if (!open) {
+      setFooterMode("actions")
+      setMessage("")
+      setMessageError(null)
+      return
+    }
+
+    if (application?.status === "approved") {
+      setFooterMode("accepted")
+      return
+    }
+
+    setFooterMode("actions")
+    setMessage("")
+    setMessageError(null)
+  }, [open, application?.status, application?.id])
+
   if (!application) return null
 
   const status = applicationStatusConfig[application.status]
   const resumeLabel =
     application.applicant.resumeFileName?.trim() || "resume.pdf"
   const socialLinks = getSocialLinksFromFields(application.applicant.socialLinks)
+
+  function handleAcceptClick() {
+    setMessageError(null)
+    setFooterMode("compose")
+  }
+
+  function handleCancelCompose() {
+    setMessage("")
+    setMessageError(null)
+    setFooterMode("actions")
+  }
+
+  function handleStartConversation() {
+    const trimmed = message.trim()
+    if (!trimmed) {
+      setMessageError("Write a message to start the conversation.")
+      return
+    }
+    setMessageError(null)
+    onAcceptWithMessage(trimmed)
+  }
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
@@ -176,6 +227,7 @@ export function JobApplicationReviewDrawer({
                   <Button
                     variant="ghost"
                     size="sm"
+                    nativeButton={false}
                     render={
                       <a href={resumeUrl} target="_blank" rel="noreferrer" />
                     }
@@ -205,12 +257,12 @@ export function JobApplicationReviewDrawer({
           </div>
           </div>
 
-          {application.status === "pending" ? (
+          {application.status === "pending" && footerMode === "actions" ? (
             <div className="flex shrink-0 gap-2 border-t bg-popover p-4">
               <Button
                 className="flex-1"
                 disabled={updating}
-                onClick={() => onStatusChange("approved")}
+                onClick={handleAcceptClick}
               >
                 Accept
               </Button>
@@ -230,6 +282,70 @@ export function JobApplicationReviewDrawer({
               >
                 Decline
               </Button>
+            </div>
+          ) : null}
+
+          {application.status === "pending" && footerMode === "compose" ? (
+            <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out">
+              <div className="space-y-2">
+                <Label htmlFor="accept-message">
+                  Start the conversation with {application.applicant.name}
+                </Label>
+                <Textarea
+                  id="accept-message"
+                  value={message}
+                  onChange={(event) => {
+                    setMessage(event.target.value)
+                    if (messageError) setMessageError(null)
+                  }}
+                  placeholder="Let them know you're interested and what the next steps are…"
+                  rows={3}
+                  disabled={updating}
+                  aria-invalid={messageError ? true : undefined}
+                />
+                {messageError ? (
+                  <p className="text-sm text-destructive">{messageError}</p>
+                ) : null}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={updating}
+                  onClick={handleCancelCompose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={updating}
+                  onClick={handleStartConversation}
+                >
+                  Send message
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {application.status === "approved" && footerMode === "accepted" ? (
+            <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4">
+              <p className="text-sm text-muted-foreground">
+                Application accepted. Conversation started with{" "}
+                {application.applicant.name}.
+              </p>
+              {conversationId ? (
+                <Button
+                  className="w-full"
+                  nativeButton={false}
+                  render={
+                    <Link
+                      href={`/messages?conversation=${encodeURIComponent(conversationId)}`}
+                    />
+                  }
+                >
+                  View conversation
+                </Button>
+              ) : null}
             </div>
           ) : null}
         </div>

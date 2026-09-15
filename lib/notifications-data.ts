@@ -22,6 +22,8 @@ export interface NotificationData {
   conversationId?: string
   messageCount?: number
   latestMessageId?: string
+  jobId?: string
+  applicationId?: string
 }
 
 export interface AppNotification {
@@ -50,9 +52,11 @@ export const notificationIcons: Record<NotificationKind, LucideIcon> = {
 const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
 const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
 const DM_DB_KINDS = new Set(["dm_message", "message"])
+const JOB_DB_KINDS = new Set(["application_accepted"])
 
 /** Maps DB kind strings to UI icon/display kind. */
 export function notificationDisplayKind(kind: string): NotificationKind {
+  if (JOB_DB_KINDS.has(kind)) return "job"
   if (INVITE_DB_KINDS.has(kind)) return "invite"
   if (VOUCH_DB_KINDS.has(kind)) return "vouch"
   if (DM_DB_KINDS.has(kind)) return "message"
@@ -78,6 +82,13 @@ export function isMentionNotification(kind: NotificationKind): boolean {
 }
 
 /** Whether a notification is job-related in the API feed. */
-export function isJobApiNotification(kind: NotificationKind): boolean {
-  return kind === "job" || kind === "deadline"
+export function isJobApiNotification(dbKind: string): boolean {
+  return JOB_DB_KINDS.has(dbKind)
+}
+
+/** Conversation id for navigating from a job acceptance notification. */
+export function getJobNotificationConversationId(
+  notification: AppNotification,
+): string | undefined {
+  return notification.data?.conversationId
 }

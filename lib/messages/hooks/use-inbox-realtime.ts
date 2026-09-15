@@ -13,7 +13,7 @@ import { formatMessageTime } from "@/lib/messages/format"
 import { mapRealtimeReply } from "@/lib/messages/reply"
 import { inboxKey, threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
 import { notificationsKey } from "@/lib/notifications/swr-keys"
-import type { ThreadCache } from "@/lib/messages/thread-cache"
+import { fetchThreadPage, type ThreadCache } from "@/lib/messages/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
 import { createClient } from "@/lib/supabase/client"
 
@@ -76,8 +76,15 @@ export function useInboxRealtime() {
             void mutateSwr(unreadCountKey)
           }
 
-          // Own sends are handled by optimistic update + server action in the thread.
-          if (isMine) return
+          // Own sends in the open thread are handled by optimistic update in MessageThread.
+          if (isMine) {
+            if (!isActive) {
+              void mutateSwr(threadKey(row.conversation_id), () =>
+                fetchThreadPage(row.conversation_id),
+              )
+            }
+            return
+          }
 
           void mutateSwr(
             threadKey(row.conversation_id),

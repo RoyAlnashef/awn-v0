@@ -54,8 +54,17 @@ function mapNotificationData(
     typeof data.latestMessageId === "string" ? data.latestMessageId : undefined
   const messageCount =
     typeof data.messageCount === "number" ? data.messageCount : undefined
+  const jobId = typeof data.jobId === "string" ? data.jobId : undefined
+  const applicationId =
+    typeof data.applicationId === "string" ? data.applicationId : undefined
 
-  if (!conversationId && messageCount === undefined && !latestMessageId) {
+  if (
+    !conversationId &&
+    messageCount === undefined &&
+    !latestMessageId &&
+    !jobId &&
+    !applicationId
+  ) {
     return undefined
   }
 
@@ -63,6 +72,8 @@ function mapNotificationData(
     ...(conversationId ? { conversationId } : {}),
     ...(messageCount !== undefined ? { messageCount } : {}),
     ...(latestMessageId ? { latestMessageId } : {}),
+    ...(jobId ? { jobId } : {}),
+    ...(applicationId ? { applicationId } : {}),
   }
 }
 

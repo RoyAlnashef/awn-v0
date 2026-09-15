@@ -4,14 +4,14 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Bell, Check } from "lucide-react"
 
-import { JobsNotificationsList } from "@/components/jobs/jobs-panel/jobs-notifications-list"
 import { UrgentJobsCarousel } from "@/components/jobs/jobs-panel/urgent-jobs-carousel"
 import { NotificationList } from "@/components/notifications/notification-list"
 import { useMessages } from "@/components/messages/messages-provider"
-import { jobPanelNotifications } from "@/lib/jobs-panel-data"
 import {
   getDmConversationId,
+  getJobNotificationConversationId,
   isDmNotification,
+  isJobApiNotification,
   isMentionNotification,
   type AppNotification,
 } from "@/lib/notifications-data"
@@ -43,9 +43,12 @@ export function Notifications() {
 
   useNotificationsRealtime({ enabled: open, userId: currentUser.id })
 
+  const jobNotifications = notifications.filter((n) =>
+    isJobApiNotification(n.dbKind),
+  )
   const apiUnreadCount = notifications.filter((n) => !n.read).length
-  const jobUnreadCount = jobPanelNotifications.filter((n) => !n.read).length
-  const unreadCount = apiUnreadCount + jobUnreadCount
+  const jobUnreadCount = jobNotifications.filter((n) => !n.read).length
+  const unreadCount = apiUnreadCount
 
   const mentions = notifications.filter((n) => isMentionNotification(n.kind))
   const mentionsUnreadCount = mentions.filter((n) => !n.read).length
@@ -88,10 +91,10 @@ export function Notifications() {
     void mutate()
   }
 
-  async function handleDmNotificationClick(item: AppNotification) {
-    const conversationId = getDmConversationId(item)
-    if (!conversationId) return
-
+  async function handleConversationNotificationClick(
+    item: AppNotification,
+    conversationId: string,
+  ) {
     const previous = notifications
 
     await mutate(
@@ -111,10 +114,41 @@ export function Notifications() {
   }
 
   function handleNotificationClick(item: AppNotification) {
-    if (isDmNotification(item) && getDmConversationId(item)) {
-      void handleDmNotificationClick(item)
+    const dmConversationId = isDmNotification(item)
+      ? getDmConversationId(item)
+      : undefined
+    if (dmConversationId) {
+      void handleConversationNotificationClick(item, dmConversationId)
       return
     }
+
+    const jobConversationId = isJobApiNotification(item.dbKind)
+      ? getJobNotificationConversationId(item)
+      : undefined
+    if (jobConversationId) {
+      void handleConversationNotificationClick(item, jobConversationId)
+      return
+    }
+
+    if (isJobApiNotification(item.dbKind) && item.data?.jobId) {
+      void (async () => {
+        const previous = notifications
+        await mutate(
+          previous.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
+          { revalidate: false },
+        )
+        const result = await markNotificationRead(item.id, true)
+        if (!result.ok) {
+          await mutate(previous, { revalidate: false })
+          return
+        }
+        setOpen(false)
+        router.push("/my-jobs/applications")
+        void mutate()
+      })()
+      return
+    }
+
     void toggleRead(item.id)
   }
 
@@ -141,7 +175,7 @@ export function Notifications() {
       >
         <Bell className="size-5" />
         {unreadCount > 0 ? (
-          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-notification px-1 text-[10px] font-semibold text-notification-foreground ring-2 ring-background">
+          <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-notification text-[10px] font-semibold text-notification-foreground">
             {unreadCount}
           </span>
         ) : null}
@@ -229,7 +263,18 @@ export function Notifications() {
             <TabsContent value="jobs" className="mt-0 min-h-0 flex-1">
               <ScrollArea className="h-full min-h-0">
                 <UrgentJobsCarousel enabled={open} />
-                <JobsNotificationsList items={jobPanelNotifications} />
+                {isLoading && jobNotifications.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Loading notifications…
+                  </p>
+                ) : (
+                  <NotificationList
+                    items={jobNotifications}
+                    onToggleRead={(id) => void toggleRead(id)}
+                    onItemClick={handleNotificationClick}
+                    emptyMessage="No job notifications yet."
+                  />
+                )}
               </ScrollArea>
             </TabsContent>
 

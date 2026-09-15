@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import useSWR from "swr"
 
 import type { Job } from "@/lib/jobs-data"
+import { acceptJobApplicationWithMessage } from "@/lib/jobs/application-actions"
 import {
   fetchJobApplications,
   updateJobApplicationStatus,
@@ -18,6 +19,7 @@ import {
 import { applicationStatusConfig } from "@/lib/jobs/format"
 import { JobStatusSelect } from "@/components/jobs/job-status-select"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
+import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import type { Person } from "@/lib/people-data"
 import { JobApplicationReviewDrawer } from "@/components/jobs/job-application-review-drawer"
@@ -212,12 +214,16 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [profilePerson, setProfilePerson] = useState<Person | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [acceptConversationId, setAcceptConversationId] = useState<
+    string | null
+  >(null)
   const [isUpdating, startUpdateTransition] = useTransition()
 
   const applications = data?.applications ?? []
 
   function handleReviewApplication(application: JobApplication) {
     const isFirstMount = selectedApplication === null
+    setAcceptConversationId(null)
     setSelectedApplication(application)
     if (isFirstMount) {
       requestAnimationFrame(() => setDrawerOpen(true))
@@ -255,11 +261,9 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
           status,
         )
         toast.success(
-          status === "approved"
-            ? "Application accepted"
-            : status === "maybe"
-              ? "Application marked as maybe"
-              : "Application declined",
+          status === "maybe"
+            ? "Application marked as maybe"
+            : "Application declined",
         )
         setSelectedApplication((current) =>
           current ? { ...current, status } : null,
@@ -284,6 +288,43 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
             : "Could not update application",
         )
       }
+    })
+  }
+
+  function handleAcceptWithMessage(message: string) {
+    if (!selectedApplication) return
+
+    startUpdateTransition(async () => {
+      const result = await acceptJobApplicationWithMessage({
+        jobId: currentJob.id,
+        applicationId: selectedApplication.id,
+        message,
+      })
+
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success("Application accepted — conversation started")
+      prefetchThread(result.conversationId)
+      setAcceptConversationId(result.conversationId)
+      setSelectedApplication((current) =>
+        current ? { ...current, status: "approved" } : null,
+      )
+      void mutate(
+        (current) =>
+          current
+            ? {
+                applications: current.applications.map((application) =>
+                  application.id === selectedApplication.id
+                    ? { ...application, status: "approved" }
+                    : application,
+                ),
+              }
+            : current,
+        { revalidate: false },
+      )
     })
   }
 
@@ -413,7 +454,9 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
         open={drawerOpen}
         onOpenChange={handleDrawerOpenChange}
         onStatusChange={handleStatusChange}
+        onAcceptWithMessage={handleAcceptWithMessage}
         updating={isUpdating}
+        conversationId={acceptConversationId}
       />
 
       {profilePerson ? (

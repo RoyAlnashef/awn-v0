@@ -2,7 +2,9 @@
 
 import {
   getDmConversationId,
+  getJobNotificationConversationId,
   isDmNotification,
+  isJobApiNotification,
   notificationIcons,
   type AppNotification,
 } from "@/lib/notifications-data"
@@ -32,10 +34,18 @@ export function NotificationList({
       {items.map((n) => {
         const Icon = notificationIcons[n.kind]
         const isDm = isDmNotification(n)
-        const conversationId = isDm ? getDmConversationId(n) : undefined
+        const dmConversationId = isDm ? getDmConversationId(n) : undefined
+        const jobConversationId = isJobApiNotification(n.dbKind)
+          ? getJobNotificationConversationId(n)
+          : undefined
+        const navigatesOnClick = Boolean(
+          (isDm && dmConversationId) ||
+            (isJobApiNotification(n.dbKind) &&
+              (jobConversationId || n.data?.jobId)),
+        )
 
         function handleClick() {
-          if (isDm && conversationId && onItemClick) {
+          if (navigatesOnClick && onItemClick) {
             onItemClick(n)
             return
           }
@@ -48,8 +58,8 @@ export function NotificationList({
               type="button"
               onClick={handleClick}
               aria-label={
-                isDm && conversationId
-                  ? `${n.title}. Open conversation.`
+                navigatesOnClick
+                  ? `${n.title}. Open.`
                   : n.read
                     ? `${n.title}. Mark as unread.`
                     : `${n.title}. Mark as read.`
