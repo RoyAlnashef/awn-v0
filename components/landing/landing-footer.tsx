@@ -8,7 +8,7 @@ export function LandingFooter() {
 
   return (
     <footer className="relative z-10 flex flex-col items-center gap-4 border-t border-border/50 px-6 py-6 text-center text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:text-left">
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-start">
+      <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-start">
         <Link
           href="/"
           className="font-sans text-lg font-medium tracking-tight text-foreground"

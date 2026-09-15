@@ -10,6 +10,8 @@ const PUBLIC_PREFIXES = [
   "/request-access",
   "/privacy",
   "/terms",
+  "/community-guidelines",
+  "/job-posting-policy",
   "/faqs",
 ]
 const PUBLIC_PATHS = ["/login/forgot-password", "/login/reset-password"]

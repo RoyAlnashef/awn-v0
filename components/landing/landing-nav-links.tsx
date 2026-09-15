@@ -11,12 +11,17 @@ export function LandingNavLinks({ className }: LandingNavLinksProps) {
   const { navLinks } = landingContent
 
   return (
-    <nav className={cn("flex items-center gap-3 sm:gap-6", className)}>
+    <nav
+      className={cn(
+        "flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:w-auto sm:justify-start",
+        className,
+      )}
+    >
       {navLinks.map((link) => (
         <Link
           key={link.href}
           href={link.href}
-          className="text-xs font-medium tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
+          className="whitespace-nowrap text-xs font-medium tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
         >
           {link.label}
         </Link>

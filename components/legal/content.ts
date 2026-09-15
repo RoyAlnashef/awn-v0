@@ -459,3 +459,160 @@ export const termsOfService: LegalDocument = {
     },
   ],
 }
+
+export const communityGuidelines: LegalDocument = {
+  title: "Community Guidelines",
+  subtitle: "The network works because people trust it. Protect that.",
+  lastUpdated: "October 1, 2026",
+  sections: [
+    {
+      id: "be-a-real-person",
+      title: "Be a Real Person",
+      paragraphs: [
+        "Use your real identity and represent your experience honestly.",
+      ],
+    },
+    {
+      id: "no-contact-farming",
+      title: "No Contact Farming",
+      paragraphs: [
+        "Do not collect, scrape, export, sell, or harvest member information.",
+      ],
+    },
+    {
+      id: "no-screenshots",
+      title: "No Screenshots",
+      paragraphs: [
+        "Do not screenshot, record, copy, or redistribute private member conversations or information.",
+      ],
+    },
+    {
+      id: "no-spam",
+      title: "No Spam",
+      paragraphs: [
+        "Do not mass message members, flood the community, or use AWN for unsolicited promotion.",
+      ],
+    },
+    {
+      id: "no-harassment",
+      title: "No Harassment",
+      paragraphs: [
+        "Treat people with respect.",
+        "No threats, stalking, intimidation, discrimination, or abuse.",
+      ],
+    },
+    {
+      id: "no-fake-credits",
+      title: "No Fake Credits",
+      paragraphs: [
+        "Your reputation matters here. Keep your credits, experience, recommendations, and professional information accurate.",
+      ],
+    },
+    {
+      id: "keep-private-things-private",
+      title: "Keep Private Things Private",
+      paragraphs: [
+        "AWN is a private network. Respect information shared by other members.",
+      ],
+    },
+    {
+      id: "use-common-sense",
+      title: "Use Common Sense",
+      paragraphs: [
+        "Not every member, job, recommendation, or opportunity will be right for you. Do your own due diligence.",
+      ],
+    },
+    {
+      id: "help-the-community",
+      title: "Help the Community",
+      paragraphs: [
+        "AWN works when members contribute.",
+        "Share information. Answer questions. Make introductions. Help when you can.",
+      ],
+    },
+    {
+      id: "report-problems",
+      title: "Report Problems",
+      paragraphs: [
+        "If something feels wrong, report it to AWN.",
+        "We may remove content, restrict access, suspend accounts, or terminate membership when necessary to protect the community.",
+      ],
+    },
+    {
+      id: "the-standard",
+      title: "The Standard",
+      paragraphs: [
+        "Be useful.",
+        "Be respectful.",
+        "Be honest.",
+        "Protect the people in the room.",
+      ],
+    },
+  ],
+}
+
+export const jobPostingPolicy: LegalDocument = {
+  title: "Job Posting Policy",
+  subtitle: "Rules for posting jobs and opportunities on AWN.",
+  lastUpdated: "October 1, 2026",
+  sections: [
+    {
+      id: "introduction",
+      title: "Introduction",
+      paragraphs: [
+        "AWN exists to help the right people find the right opportunities.",
+        "If you post a job, you are responsible for making sure the opportunity is legitimate, accurate, and appropriate.",
+      ],
+    },
+    {
+      id: "job-posters-must",
+      title: "Job Posters Must",
+      paragraphs: [
+        "Provide accurate job information.",
+        "Clearly describe the role.",
+        "Provide accurate dates and location.",
+        "State compensation when appropriate and required.",
+        "Identify relevant travel requirements.",
+        "Provide accurate application instructions.",
+        "Represent employment or contractor status accurately.",
+        "Comply with applicable employment laws.",
+        "Respond professionally to applicants.",
+      ],
+    },
+    {
+      id: "do-not-post",
+      title: "Do Not Post",
+      paragraphs: [
+        "Fake jobs.",
+        "Misleading opportunities.",
+        "Discriminatory opportunities.",
+        "Spam.",
+        "Recruiting schemes.",
+        "Multi-level marketing opportunities.",
+        "Opportunities designed to collect personal information.",
+        "Jobs that violate applicable law.",
+      ],
+    },
+    {
+      id: "content-farming",
+      title: "Content Farming",
+      paragraphs: [
+        "Do not use AWN job postings to collect resumes, contact information, or member data for purposes unrelated to the posted opportunity.",
+        "AWN may remove a posting or restrict a poster's access if we believe a posting violates this policy.",
+      ],
+    },
+    {
+      id: "awn-does-not-guarantee",
+      title: "AWN Does Not Guarantee",
+      paragraphs: [
+        "That a job is legitimate.",
+        "That a job will remain available.",
+        "That an employer will hire anyone.",
+        "That an applicant is qualified.",
+        "That compensation will be paid.",
+        "That either party will perform its obligations.",
+        "AWN is a platform connecting people. The employment or business relationship is between the parties involved.",
+      ],
+    },
+  ],
+}

@@ -8,6 +8,8 @@ export const landingContent = {
   navLinks: [
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },
+    { label: "Community", href: "/community-guidelines" },
+    { label: "Job Posting", href: "/job-posting-policy" },
     { label: "FAQs", href: "/faqs" },
   ] satisfies LandingNavLink[],
   header: {
