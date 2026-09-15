@@ -24,7 +24,7 @@ export function AuthShell({
     <div className="relative flex min-h-svh flex-col items-center justify-center px-4 py-12">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_35%,transparent),transparent_55%),radial-gradient(ellipse_at_bottom,oklch(0.22_0.04_250_/_0.4),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_35%,transparent),transparent_55%),radial-gradient(ellipse_at_bottom,oklch(0.22_0.04_250/0.4),transparent_50%)]"
       />
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
