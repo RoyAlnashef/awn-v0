@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { format } from "date-fns"
 import { ExternalLink } from "lucide-react"
 
@@ -33,7 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-type FooterMode = "actions" | "compose" | "accepted"
+type FooterMode = "actions" | "compose"
 
 export function JobApplicationReviewDrawer({
   application,
@@ -42,7 +41,6 @@ export function JobApplicationReviewDrawer({
   onStatusChange,
   onAcceptWithMessage,
   updating,
-  conversationId,
 }: {
   application: JobApplication | null
   open: boolean
@@ -50,7 +48,6 @@ export function JobApplicationReviewDrawer({
   onStatusChange: (status: ReviewApplicationStatus) => void
   onAcceptWithMessage: (message: string) => void
   updating: boolean
-  conversationId?: string | null
 }) {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null)
   const [footerMode, setFooterMode] = useState<FooterMode>("actions")
@@ -73,11 +70,6 @@ export function JobApplicationReviewDrawer({
       setFooterMode("actions")
       setMessage("")
       setMessageError(null)
-      return
-    }
-
-    if (application?.status === "approved") {
-      setFooterMode("accepted")
       return
     }
 
@@ -324,28 +316,6 @@ export function JobApplicationReviewDrawer({
                   Send message
                 </Button>
               </div>
-            </div>
-          ) : null}
-
-          {application.status === "approved" && footerMode === "accepted" ? (
-            <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4">
-              <p className="text-sm text-muted-foreground">
-                Application accepted. Conversation started with{" "}
-                {application.applicant.name}.
-              </p>
-              {conversationId ? (
-                <Button
-                  className="w-full"
-                  nativeButton={false}
-                  render={
-                    <Link
-                      href={`/messages?conversation=${encodeURIComponent(conversationId)}`}
-                    />
-                  }
-                >
-                  View conversation
-                </Button>
-              ) : null}
             </div>
           ) : null}
         </div>

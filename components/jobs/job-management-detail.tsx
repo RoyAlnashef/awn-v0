@@ -215,16 +215,12 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [profilePerson, setProfilePerson] = useState<Person | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [acceptConversationId, setAcceptConversationId] = useState<
-    string | null
-  >(null)
   const [isUpdating, startUpdateTransition] = useTransition()
 
   const applications = data?.applications ?? []
 
   function handleReviewApplication(application: JobApplication) {
     const isFirstMount = selectedApplication === null
-    setAcceptConversationId(null)
     setSelectedApplication(application)
     if (isFirstMount) {
       requestAnimationFrame(() => setDrawerOpen(true))
@@ -309,7 +305,6 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
 
       toast.success("Application accepted — conversation started")
       prefetchThread(result.conversationId)
-      setAcceptConversationId(result.conversationId)
       setSelectedApplication((current) =>
         current ? { ...current, status: "approved" } : null,
       )
@@ -459,7 +454,6 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
         onStatusChange={handleStatusChange}
         onAcceptWithMessage={handleAcceptWithMessage}
         updating={isUpdating}
-        conversationId={acceptConversationId}
       />
 
       {profilePerson ? (
