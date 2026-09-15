@@ -2,7 +2,14 @@
 
 import { useRef, useState } from "react"
 import { mutate } from "swr"
-import { Bookmark, Flag, MessagesSquare, Users } from "lucide-react"
+import {
+  Bookmark,
+  Flag,
+  MessagesSquare,
+  Plus,
+  UserMinus,
+  Users,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
@@ -199,16 +206,26 @@ export function JobDetailContent({
                     {job.postedBy.role}
                   </span>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0"
-                  aria-pressed={followed}
-                  disabled={preview}
-                  onClick={() => setFollowed((prev) => !prev)}
+                <JobActionTooltip
+                  label={followed ? "Disconnect" : "Connect"}
+                  wrap
                 >
-                  {followed ? "Connected" : "Connect"}
-                </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="shrink-0"
+                    aria-label={followed ? "Disconnect" : "Connect"}
+                    aria-pressed={followed}
+                    disabled={preview}
+                    onClick={() => setFollowed((prev) => !prev)}
+                  >
+                    {followed ? (
+                      <UserMinus className="size-4" />
+                    ) : (
+                      <Plus className="size-4" />
+                    )}
+                  </Button>
+                </JobActionTooltip>
               </div>
             </section>
           </div>
