@@ -10,6 +10,15 @@ import {
   type Room,
   type ThreadMessage,
 } from "@/lib/messages-data"
+import {
+  detectMentionTrigger,
+  filterMentionMembers,
+  insertMention,
+  revertBrokenMentions,
+  shiftComposerMentions,
+  type ComposerMention,
+  type MentionMember,
+} from "@/lib/messages/mentions"
 import { personFromRoomMessage } from "@/lib/people/fallback-person"
 import { getMemberById } from "@/lib/people/actions"
 import { applyLocalReaction, patchMessageReactions } from "@/lib/messages/reactions"
@@ -17,7 +26,9 @@ import { isSameRoomMessageGroup } from "@/lib/messages/grouping"
 import { isUuid } from "@/lib/messages/format"
 import { roomsListKey, roomsUnreadCountKey, roomMembersPreviewKey } from "@/lib/rooms/swr-keys"
 import { useNewMessageIds } from "@/lib/messages/hooks/use-new-message-ids"
+import { useRoomMembersPreview } from "@/lib/rooms/hooks/use-room-members-preview"
 import { useRoomThread } from "@/lib/rooms/hooks/use-room-thread"
+import { setViewingRoom } from "@/lib/rooms/viewing-actions"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
 import {
   deleteRoomMessage,
@@ -44,7 +55,10 @@ import {
   MessageJobShareWithReactions,
   MessageMemberShareWithReactions,
 } from "@/components/messages/message-bubble-with-reactions"
+import { MentionComposer } from "@/components/messages/mention-composer"
+import { MentionPicker } from "@/components/messages/mention-picker"
 import { MessageReplyComposer } from "@/components/messages/message-reply-composer"
+import { MessageText } from "@/components/messages/message-text"
 import { MessageDeleteDialog } from "@/components/messages/message-delete-dialog"
 import {
   applyLocalMessageDelete,
@@ -82,7 +96,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupTextarea,
 } from "@/components/ui/input-group"
 
 function initials(name: string) {
@@ -168,6 +181,22 @@ export function RoomThread({
     undefined,
   )
   const openProfileIdRef = useRef<string | null>(null)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState("")
+  const [composerMentions, setComposerMentions] = useState<ComposerMention[]>(
+    [],
+  )
+  const composerCursorRef = useRef<number | null>(null)
+
+  const { members: roomMembers } = useRoomMembersPreview(
+    usesServer && room.joined ? room.id : null,
+  )
+
+  const filteredMentionMembers = useMemo(
+    () =>
+      filterMentionMembers(roomMembers, mentionQuery, currentUser.id),
+    [roomMembers, mentionQuery, currentUser.id],
+  )
 
   function openAuthorProfile(message: ThreadMessage) {
     const person = personFromRoomMessage(message)
@@ -209,6 +238,192 @@ export function RoomThread({
     }
   }
 
+  function openProfileById(profileId: string, fallbackName?: string) {
+    openProfileIdRef.current = profileId
+
+    const isFirstMount = profilePerson === null
+    setProfilePerson({
+      id: profileId,
+      name: fallbackName ?? "Member",
+      role: "AWN Member",
+      department: "",
+      homeBase: "",
+      city: "",
+      availability: "Between Tours",
+      availableFrom: "",
+      availableTo: "",
+      venueTiers: [],
+      workAuth: [],
+      yearsExperience: 0,
+      credits: 0,
+      vouches: 0,
+      topTours: [],
+      skills: [],
+      followed: false,
+    })
+    setProfileOnline(undefined)
+
+    if (isFirstMount) {
+      requestAnimationFrame(() => setProfileOpen(true))
+    } else {
+      setProfileOpen(true)
+    }
+
+    if (!isUuid(profileId)) return
+
+    void getMemberById(profileId).then((result) => {
+      if (result.ok && openProfileIdRef.current === profileId) {
+        setProfilePerson(result.person)
+      }
+    })
+
+    void getProfileOnline(profileId).then((result) => {
+      if (result.ok && openProfileIdRef.current === profileId) {
+        setProfileOnline(result.online)
+      }
+    })
+  }
+
+  function handleDraftChange(value: string, cursor: number) {
+    const previousDraft = draft
+    let nextMentions = composerMentions
+
+    if (previousDraft !== value) {
+      let start = 0
+      while (
+        start < previousDraft.length &&
+        start < value.length &&
+        previousDraft[start] === value[start]
+      ) {
+        start += 1
+      }
+
+      let endPrev = previousDraft.length
+      let endNext = value.length
+      while (
+        endPrev > start &&
+        endNext > start &&
+        previousDraft[endPrev - 1] === value[endNext - 1]
+      ) {
+        endPrev -= 1
+        endNext -= 1
+      }
+
+      nextMentions = shiftComposerMentions(
+        composerMentions,
+        start,
+        endPrev - start,
+        endNext - start,
+      )
+    }
+
+    const reverted = revertBrokenMentions(value, cursor, nextMentions)
+    composerCursorRef.current = reverted.cursor
+    setDraft(reverted.draft)
+    setComposerMentions(reverted.mentions)
+
+    const trigger =
+      reverted.trigger ?? detectMentionTrigger(reverted.draft, reverted.cursor)
+    if (trigger) {
+      setMentionQuery(trigger.query)
+      setMentionPickerOpen(true)
+      return
+    }
+
+    setMentionPickerOpen(false)
+    setMentionQuery("")
+  }
+
+  useEffect(() => {
+    if (!mentionPickerOpen) return
+
+    const textarea = composerRef.current
+    if (!textarea) return
+
+    requestAnimationFrame(() => {
+      textarea.focus()
+      const cursor = composerCursorRef.current ?? textarea.value.length
+      textarea.setSelectionRange(cursor, cursor)
+    })
+  }, [mentionPickerOpen, mentionQuery])
+
+  function handleMentionPickerOpenChange(open: boolean) {
+    if (open) {
+      setMentionPickerOpen(true)
+      return
+    }
+
+    const textarea = composerRef.current
+    const cursor = textarea?.selectionStart ?? draft.length
+    const trigger = detectMentionTrigger(draft, cursor)
+    if (trigger) return
+
+    setMentionPickerOpen(false)
+  }
+
+  function handleSelectMention(member: MentionMember) {
+    const textarea = composerRef.current
+    const cursor = textarea?.selectionStart ?? draft.length
+    const trigger = detectMentionTrigger(draft, cursor)
+    if (!trigger) return
+
+    const result = insertMention(draft, cursor, trigger, member)
+    setDraft(result.text)
+    setComposerMentions((current) => {
+      const next = current.filter((item) => item.profileId !== member.id)
+      next.push({
+        profileId: member.id,
+        name: member.name.trim(),
+        start: result.span.start,
+        length: result.span.length,
+      })
+      return next
+    })
+    setMentionPickerOpen(false)
+    setMentionQuery("")
+
+    requestAnimationFrame(() => {
+      if (!textarea) return
+      textarea.focus()
+      textarea.setSelectionRange(result.cursor, result.cursor)
+    })
+  }
+
+  function handleMentionClick(message: ThreadMessage, profileId: string) {
+    const mentionName = message.mentions?.find(
+      (mention) => mention.profileId === profileId,
+    )
+    openProfileById(
+      profileId,
+      mentionName
+        ? message.text.slice(
+            mentionName.start,
+            mentionName.start + mentionName.length,
+          )
+        : undefined,
+    )
+  }
+
+  function renderMessageBody(message: ThreadMessage) {
+    return (
+      <MessageText
+        text={message.text}
+        mentions={message.mentions}
+        mentionTone={message.from === "me" ? "onPrimary" : "onSurface"}
+        onMentionClick={(profileId) => handleMentionClick(message, profileId)}
+      />
+    )
+  }
+
+  const mentionMessageProps = (message: ThreadMessage) => ({
+    mentions: message.mentions,
+    mentionTone: (message.from === "me" ? "onPrimary" : "onSurface") as
+      | "onPrimary"
+      | "onSurface",
+    onMentionClick: (profileId: string) =>
+      handleMentionClick(message, profileId),
+  })
+
   function requestScrollToEnd() {
     setSentScrollToken((token) => token + 1)
   }
@@ -236,6 +451,14 @@ export function RoomThread({
     setActiveRoomId(room.id)
     return () => setActiveRoomId(null)
   }, [room.id, usesServer, setActiveRoomId])
+
+  useEffect(() => {
+    if (!usesServer || !room.joined) return
+    void setViewingRoom(room.id)
+    return () => {
+      void setViewingRoom(null)
+    }
+  }, [room.id, room.joined, usesServer])
 
   // Mark room as read when a joined thread is opened
   useEffect(() => {
@@ -408,6 +631,14 @@ export function RoomThread({
             }),
           )
         : undefined
+    const mentionSpans = composerMentions.map(({ profileId, start, length }) => ({
+      profileId,
+      start,
+      length,
+    }))
+    const mentionedProfileIds = [
+      ...new Set(composerMentions.map((mention) => mention.profileId)),
+    ]
     if ((!text && !jobId && !sharedProfileId) || sending) return
 
     if (usesServer) {
@@ -421,6 +652,7 @@ export function RoomThread({
         jobShare: pendingJobShare ?? undefined,
         memberShare: pendingMemberShare ?? undefined,
         replyTo: pendingReplyPayload ?? undefined,
+        mentions: mentionSpans.length > 0 ? mentionSpans : undefined,
       }
 
       void mutateThread(
@@ -436,6 +668,9 @@ export function RoomThread({
       setPendingJobShare(null)
       setPendingMemberShare(null)
       setPendingReply(null)
+      setComposerMentions([])
+      setMentionPickerOpen(false)
+      setMentionQuery("")
       setSending(true)
       requestScrollToEnd()
 
@@ -450,6 +685,9 @@ export function RoomThread({
                 replyToMessageId: replyTarget.id,
                 replySnapshot,
               }
+            : {}),
+          ...(mentionedProfileIds.length > 0
+            ? { mentionedProfileIds, mentionSpans }
             : {}),
         },
       )
@@ -515,6 +753,9 @@ export function RoomThread({
     setPendingJobShare(null)
     setPendingMemberShare(null)
     setPendingReply(null)
+    setComposerMentions([])
+    setMentionPickerOpen(false)
+    setMentionQuery("")
     requestScrollToEnd()
   }
 
@@ -758,6 +999,7 @@ export function RoomThread({
                             <MessageMemberShareWithReactions
                               memberShare={message.memberShare}
                               text={message.text}
+                              {...mentionMessageProps(message)}
                               variant={mine ? "default" : "muted"}
                               align={mine ? "end" : "start"}
                               reactions={message.reactions}
@@ -791,6 +1033,7 @@ export function RoomThread({
                             <MessageJobShareWithReactions
                               jobShare={message.jobShare}
                               text={message.text}
+                              {...mentionMessageProps(message)}
                               variant={mine ? "default" : "muted"}
                               align={mine ? "end" : "start"}
                               reactions={message.reactions}
@@ -825,7 +1068,7 @@ export function RoomThread({
                                 {message.author!}
                               </button>
                             ) : null}
-                            {message.text}
+                            {renderMessageBody(message)}
                           </MessageBubbleWithReactions>
                         )}
                         {showTimestamp ? (
@@ -875,19 +1118,61 @@ export function RoomThread({
               onDismiss={() => setPendingReply(null)}
             />
           ) : null}
+          <MentionPicker
+            open={mentionPickerOpen}
+            onOpenChange={handleMentionPickerOpenChange}
+            members={roomMembers}
+            query={mentionQuery}
+            currentUserId={currentUser.id}
+            anchor={composerRef.current}
+            onSelect={handleSelectMention}
+          />
           <InputGroup>
-            <InputGroupTextarea
-              ref={composerRef}
+            <MentionComposer
+              textareaRef={composerRef}
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              mentions={composerMentions}
+              onChange={handleDraftChange}
+              onClick={(e) => {
+                const target = e.currentTarget
+                handleDraftChange(
+                  target.value,
+                  target.selectionStart ?? target.value.length,
+                )
+              }}
+              onKeyUp={(e) => {
+                const target = e.currentTarget
+                handleDraftChange(
+                  target.value,
+                  target.selectionStart ?? target.value.length,
+                )
+              }}
               placeholder={`Message ${room.name}…`}
               rows={1}
               onKeyDown={(e) => {
+                if (mentionPickerOpen && e.key === "Escape") {
+                  e.preventDefault()
+                  setMentionPickerOpen(false)
+                  return
+                }
+                if (
+                  mentionPickerOpen &&
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing &&
+                  e.keyCode !== 229 &&
+                  filteredMentionMembers.length > 0
+                ) {
+                  e.preventDefault()
+                  handleSelectMention(filteredMentionMembers[0]!)
+                  return
+                }
                 if (
                   e.key === "Enter" &&
                   !e.shiftKey &&
                   !e.nativeEvent.isComposing &&
-                  e.keyCode !== 229
+                  e.keyCode !== 229 &&
+                  !mentionPickerOpen
                 ) {
                   e.preventDefault()
                   sendMessage()

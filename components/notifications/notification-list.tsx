@@ -3,8 +3,11 @@
 import {
   getDmConversationId,
   getJobNotificationConversationId,
+  getRoomNotificationRoomId,
   isDmNotification,
   isJobApiNotification,
+  isRoomMentionNotification,
+  isRoomReplyNotification,
   notificationIcons,
   type AppNotification,
 } from "@/lib/notifications-data"
@@ -12,12 +15,10 @@ import { cn } from "@/lib/utils"
 
 export function NotificationList({
   items,
-  onToggleRead,
   onItemClick,
   emptyMessage = "No notifications yet.",
 }: {
   items: AppNotification[]
-  onToggleRead: (id: string) => void
   onItemClick?: (item: AppNotification) => void
   emptyMessage?: string
 }) {
@@ -38,18 +39,19 @@ export function NotificationList({
         const jobConversationId = isJobApiNotification(n.dbKind)
           ? getJobNotificationConversationId(n)
           : undefined
+        const roomId =
+          isRoomMentionNotification(n) || isRoomReplyNotification(n)
+            ? getRoomNotificationRoomId(n)
+            : undefined
         const navigatesOnClick = Boolean(
           (isDm && dmConversationId) ||
+            roomId ||
             (isJobApiNotification(n.dbKind) &&
               (jobConversationId || n.data?.jobId)),
         )
 
         function handleClick() {
-          if (navigatesOnClick && !n.read && onItemClick) {
-            onItemClick(n)
-            return
-          }
-          onToggleRead(n.id)
+          onItemClick?.(n)
         }
 
         return (
@@ -58,11 +60,7 @@ export function NotificationList({
               type="button"
               onClick={handleClick}
               aria-label={
-                navigatesOnClick && !n.read
-                  ? `${n.title}. Open.`
-                  : n.read
-                    ? `${n.title}. Mark as unread.`
-                    : `${n.title}. Mark as read.`
+                navigatesOnClick ? `${n.title}. Open.` : `${n.title}.`
               }
               className={cn(
                 "relative flex w-full items-start gap-3 border-b px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-accent/60",

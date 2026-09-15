@@ -71,6 +71,13 @@ export type MessageReplyPayload = {
   unavailable?: boolean
 }
 
+/** A @mention span aligned to message body text (no @ prefix). */
+export type MessageMentionSpan = {
+  profileId: string
+  start: number
+  length: number
+}
+
 /** A single message within a conversation or room thread. */
 export interface ThreadMessage {
   id: string
@@ -99,6 +106,8 @@ export interface ThreadMessage {
   memberShare?: MemberSharePayload
   /** Quoted parent message when this message is a reply. */
   replyTo?: MessageReplyPayload
+  /** @mention spans for rendering name links in the body. */
+  mentions?: MessageMentionSpan[]
 }
 
 /** A joinable community room. */

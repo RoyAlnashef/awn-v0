@@ -41,6 +41,7 @@ type NotificationRow = {
   read: boolean
   created_at: string
   updated_at: string
+  room_id: string | null
 }
 
 function mapNotificationData(
@@ -57,13 +58,21 @@ function mapNotificationData(
   const jobId = typeof data.jobId === "string" ? data.jobId : undefined
   const applicationId =
     typeof data.applicationId === "string" ? data.applicationId : undefined
+  const roomId = typeof data.roomId === "string" ? data.roomId : undefined
+  const mentionCount =
+    typeof data.mentionCount === "number" ? data.mentionCount : undefined
+  const replyCount =
+    typeof data.replyCount === "number" ? data.replyCount : undefined
 
   if (
     !conversationId &&
     messageCount === undefined &&
     !latestMessageId &&
     !jobId &&
-    !applicationId
+    !applicationId &&
+    !roomId &&
+    mentionCount === undefined &&
+    replyCount === undefined
   ) {
     return undefined
   }
@@ -74,6 +83,9 @@ function mapNotificationData(
     ...(latestMessageId ? { latestMessageId } : {}),
     ...(jobId ? { jobId } : {}),
     ...(applicationId ? { applicationId } : {}),
+    ...(roomId ? { roomId } : {}),
+    ...(mentionCount !== undefined ? { mentionCount } : {}),
+    ...(replyCount !== undefined ? { replyCount } : {}),
   }
 }
 
@@ -90,6 +102,14 @@ async function requireUserId(): Promise<string> {
 
 function mapNotificationRow(row: NotificationRow): AppNotification {
   const sortTime = row.updated_at ?? row.created_at
+  const mappedData = mapNotificationData(row.data)
+  const roomId =
+    mappedData?.roomId ??
+    (typeof row.room_id === "string" ? row.room_id : undefined)
+  const data =
+    roomId && !mappedData?.roomId
+      ? { ...mappedData, roomId }
+      : mappedData
 
   return {
     id: row.id,
@@ -99,7 +119,7 @@ function mapNotificationRow(row: NotificationRow): AppNotification {
     body: row.body,
     time: formatRelativeTime(sortTime),
     read: row.read,
-    data: mapNotificationData(row.data),
+    data,
   }
 }
 
@@ -110,7 +130,9 @@ export async function listNotifications(): Promise<ListNotificationsResult> {
 
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, kind, title, body, data, read, created_at, updated_at")
+      .select(
+        "id, kind, title, body, data, read, created_at, updated_at, room_id",
+      )
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
       .order("created_at", { ascending: false })

@@ -20,6 +20,8 @@ import {
   MessageActionsPopover,
 } from "@/components/messages/message-reaction-picker"
 import { MessageReplyQuote } from "@/components/messages/message-reply-quote"
+import { MessageText } from "@/components/messages/message-text"
+import type { MessageMentionSpan } from "@/lib/messages-data"
 import {
   useCoarsePointer,
   useLongPress,
@@ -208,6 +210,9 @@ export function MessageBubbleWithReactions({
 export function MessageJobShareWithReactions({
   jobShare,
   text,
+  mentions,
+  mentionTone,
+  onMentionClick,
   variant,
   align,
   reactions,
@@ -223,6 +228,9 @@ export function MessageJobShareWithReactions({
 }: {
   jobShare: JobSharePayload
   text: string
+  mentions?: MessageMentionSpan[]
+  mentionTone?: "onPrimary" | "onSurface"
+  onMentionClick?: (profileId: string) => void
   variant?: "default" | "muted"
   align?: "start" | "end"
   reactions?: MessageReaction[]
@@ -239,6 +247,8 @@ export function MessageJobShareWithReactions({
   const trimmed = text.trim()
   const hasText = Boolean(trimmed)
   const messageActions = { onReply, onDelete, deleteLabel }
+  const resolvedMentionTone =
+    mentionTone ?? (variant === "default" ? "onPrimary" : "onSurface")
 
   return (
     <div
@@ -274,7 +284,14 @@ export function MessageJobShareWithReactions({
           className="min-w-0 max-w-full"
         >
           <Bubble variant={variant} align={align} className="w-full max-w-full">
-            <BubbleContent>{trimmed}</BubbleContent>
+            <BubbleContent>
+              <MessageText
+                text={trimmed}
+                mentions={mentions}
+                mentionTone={resolvedMentionTone}
+                onMentionClick={onMentionClick}
+              />
+            </BubbleContent>
           </Bubble>
         </MessageActionsShell>
       ) : null}
@@ -285,6 +302,9 @@ export function MessageJobShareWithReactions({
 export function MessageMemberShareWithReactions({
   memberShare,
   text,
+  mentions,
+  mentionTone,
+  onMentionClick,
   variant,
   align,
   reactions,
@@ -300,6 +320,9 @@ export function MessageMemberShareWithReactions({
 }: {
   memberShare: MemberSharePayload
   text: string
+  mentions?: MessageMentionSpan[]
+  mentionTone?: "onPrimary" | "onSurface"
+  onMentionClick?: (profileId: string) => void
   variant?: "default" | "muted"
   align?: "start" | "end"
   reactions?: MessageReaction[]
@@ -316,6 +339,8 @@ export function MessageMemberShareWithReactions({
   const trimmed = text.trim()
   const hasText = Boolean(trimmed)
   const messageActions = { onReply, onDelete, deleteLabel }
+  const resolvedMentionTone =
+    mentionTone ?? (variant === "default" ? "onPrimary" : "onSurface")
 
   return (
     <div
@@ -351,7 +376,14 @@ export function MessageMemberShareWithReactions({
           className="min-w-0 max-w-full"
         >
           <Bubble variant={variant} align={align} className="w-full max-w-full">
-            <BubbleContent>{trimmed}</BubbleContent>
+            <BubbleContent>
+              <MessageText
+                text={trimmed}
+                mentions={mentions}
+                mentionTone={resolvedMentionTone}
+                onMentionClick={onMentionClick}
+              />
+            </BubbleContent>
           </Bubble>
         </MessageActionsShell>
       ) : null}

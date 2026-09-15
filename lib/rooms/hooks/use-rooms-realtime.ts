@@ -8,6 +8,7 @@ import {
   applyMessageDelete,
   isLatestMessage,
 } from "@/lib/messages/delete"
+import { mapRpcMentionSpans } from "@/lib/messages/mentions"
 import { mapRealtimeReply } from "@/lib/messages/reply"
 import { roomThreadKey, roomsListKey, roomsUnreadCountKey } from "@/lib/rooms/swr-keys"
 import type { RoomThreadCache } from "@/lib/rooms/thread-cache"
@@ -49,6 +50,7 @@ export function useRoomsRealtime({
             member_share_snapshot?: Record<string, unknown> | null
             reply_to_message_id?: string | null
             reply_snapshot?: Record<string, unknown> | null
+            mention_spans?: unknown
           }
 
           const isMine = row.sender_id === currentUserId
@@ -78,6 +80,8 @@ export function useRoomsRealtime({
 
                 const replyTo = mapRealtimeReply(row)
 
+                const mentions = mapRpcMentionSpans(row.mention_spans)
+
                 const incoming: ThreadMessage = {
                   id: row.id,
                   from: "them",
@@ -88,6 +92,7 @@ export function useRoomsRealtime({
                   author: priorFromSender?.author,
                   authorAvatarUrl: priorFromSender?.authorAvatarUrl,
                   ...(replyTo ? { replyTo } : {}),
+                  ...(mentions ? { mentions } : {}),
                 }
 
                 return {

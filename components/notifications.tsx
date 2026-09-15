@@ -10,9 +10,12 @@ import { useMessages } from "@/components/messages/messages-provider"
 import {
   getDmConversationId,
   getJobNotificationConversationId,
+  getRoomNotificationRoomId,
   isDmNotification,
   isJobApiNotification,
-  isMentionNotification,
+  isMentionTabNotification,
+  isRoomMentionNotification,
+  isRoomReplyNotification,
   type AppNotification,
 } from "@/lib/notifications-data"
 import {
@@ -50,7 +53,7 @@ export function Notifications() {
   const jobUnreadCount = jobNotifications.filter((n) => !n.read).length
   const unreadCount = apiUnreadCount
 
-  const mentions = notifications.filter((n) => isMentionNotification(n.kind))
+  const mentions = notifications.filter(isMentionTabNotification)
   const mentionsUnreadCount = mentions.filter((n) => !n.read).length
 
   async function markAllRead() {
@@ -70,19 +73,17 @@ export function Notifications() {
     void mutate()
   }
 
-  async function toggleRead(id: string) {
-    const item = notifications.find((n) => n.id === id)
-    if (!item) return
+  async function markReadOnly(item: AppNotification) {
+    if (item.read) return
 
-    const nextRead = !item.read
     const previous = notifications
 
     await mutate(
-      previous.map((n) => (n.id === id ? { ...n, read: nextRead } : n)),
+      previous.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
       { revalidate: false },
     )
 
-    const result = await markNotificationRead(id, nextRead)
+    const result = await markNotificationRead(item.id, true)
     if (!result.ok) {
       await mutate(previous, { revalidate: false })
       return
@@ -113,7 +114,42 @@ export function Notifications() {
     void mutate()
   }
 
+  async function handleRoomNotificationClick(
+    item: AppNotification,
+    roomId: string,
+  ) {
+    const previous = notifications
+
+    await mutate(
+      previous.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
+      { revalidate: false },
+    )
+
+    const result = await markNotificationRead(item.id, true)
+    if (!result.ok) {
+      await mutate(previous, { revalidate: false })
+      return
+    }
+
+    setOpen(false)
+    const messageId = item.data?.latestMessageId
+    const url = messageId
+      ? `/rooms?room=${encodeURIComponent(roomId)}&message=${encodeURIComponent(messageId)}`
+      : `/rooms?room=${encodeURIComponent(roomId)}`
+    router.push(url)
+    void mutate()
+  }
+
   function handleNotificationClick(item: AppNotification) {
+    const roomId =
+      isRoomMentionNotification(item) || isRoomReplyNotification(item)
+        ? getRoomNotificationRoomId(item)
+        : undefined
+    if (roomId) {
+      void handleRoomNotificationClick(item, roomId)
+      return
+    }
+
     const dmConversationId = isDmNotification(item)
       ? getDmConversationId(item)
       : undefined
@@ -149,7 +185,7 @@ export function Notifications() {
       return
     }
 
-    void toggleRead(item.id)
+    void markReadOnly(item)
   }
 
   function viewAllJobs() {
@@ -253,7 +289,6 @@ export function Notifications() {
                 ) : (
                   <NotificationList
                     items={notifications}
-                    onToggleRead={(id) => void toggleRead(id)}
                     onItemClick={handleNotificationClick}
                   />
                 )}
@@ -270,7 +305,6 @@ export function Notifications() {
                 ) : (
                   <NotificationList
                     items={jobNotifications}
-                    onToggleRead={(id) => void toggleRead(id)}
                     onItemClick={handleNotificationClick}
                     emptyMessage="No job notifications yet."
                   />
@@ -287,7 +321,6 @@ export function Notifications() {
                 ) : (
                   <NotificationList
                     items={mentions}
-                    onToggleRead={(id) => void toggleRead(id)}
                     onItemClick={handleNotificationClick}
                     emptyMessage="No mentions yet."
                   />

@@ -15,12 +15,14 @@ import {
   type MemberShareRpcRow,
 } from "@/lib/messages/member-share"
 import { resolveMemberShareForInsert } from "@/lib/messages/actions"
+import { mapRpcMentionSpans } from "@/lib/messages/mentions"
 import {
   mapRpcReply,
   mapSnapshotToReply,
   type ReplyRpcRow,
   type ReplySnapshot,
 } from "@/lib/messages/reply"
+import type { MessageMentionSpan } from "@/lib/messages-data"
 import { formatMessageTime, formatRelativeTime, isUuid } from "@/lib/messages/format"
 import type {
   MessageReaction,
@@ -139,6 +141,7 @@ type ThreadRpcMessage = ReplyRpcRow &
   sender_avatar_url: string | null
   body: string
   created_at: string
+  mention_spans?: unknown
   reactions?: ThreadRpcReaction[]
   attachment_reactions?: ThreadRpcReaction[]
 }
@@ -192,6 +195,7 @@ function mapRoomThreadMessage(
     jobShare,
     memberShare,
     replyTo: mapRpcReply(row),
+    mentions: mapRpcMentionSpans(row.mention_spans),
   }
 }
 
@@ -504,6 +508,8 @@ export async function sendRoomMessage(
     sharedProfileId?: string
     replyToMessageId?: string
     replySnapshot?: ReplySnapshot
+    mentionedProfileIds?: string[]
+    mentionSpans?: MessageMentionSpan[]
   },
 ): Promise<SendRoomMessageResult> {
   try {
@@ -516,6 +522,8 @@ export async function sendRoomMessage(
     const sharedProfileId = options?.sharedProfileId
     const replyToMessageId = options?.replyToMessageId
     const replySnapshot = options?.replySnapshot
+    const mentionedProfileIds = options?.mentionedProfileIds ?? []
+    const mentionSpans = options?.mentionSpans ?? []
 
     if (!text && !jobId && !sharedProfileId) {
       return { ok: false, error: "Message cannot be empty." }
@@ -576,6 +584,25 @@ export async function sendRoomMessage(
       memberShareSnapshotForInsert = memberResult.memberShareSnapshot
     }
 
+    if (mentionedProfileIds.length > 0) {
+      const uniqueIds = [...new Set(mentionedProfileIds)]
+      const { data: memberRows, error: memberError } = await supabase
+        .from("room_memberships")
+        .select("profile_id")
+        .eq("room_id", roomId)
+        .in("profile_id", uniqueIds)
+
+      if (memberError) return { ok: false, error: memberError.message }
+
+      const validIds = new Set(
+        (memberRows ?? []).map((row) => row.profile_id as string),
+      )
+      const invalid = uniqueIds.filter((id) => !validIds.has(id))
+      if (invalid.length > 0) {
+        return { ok: false, error: "One or more mentioned members are not in this room." }
+      }
+    }
+
     const { data, error } = await supabase
       .from("room_messages")
       .insert({
@@ -591,9 +618,15 @@ export async function sendRoomMessage(
           : {}),
         ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
         ...(replySnapshot ? { reply_snapshot: replySnapshot } : {}),
+        ...(mentionedProfileIds.length > 0
+          ? {
+              mentioned_profile_ids: [...new Set(mentionedProfileIds)],
+              mention_spans: mentionSpans,
+            }
+          : {}),
       })
       .select(
-        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot, reply_to_message_id, reply_snapshot",
+        "id, sender_id, body, created_at, job_id, shared_profile_id, member_share_snapshot, reply_to_message_id, reply_snapshot, mention_spans",
       )
       .single()
 
@@ -614,6 +647,7 @@ export async function sendRoomMessage(
         jobShare,
         memberShare,
         replyTo,
+        mentions: mapRpcMentionSpans(data.mention_spans),
       },
     }
   } catch (error) {
@@ -635,6 +669,15 @@ export async function markRoomRead(roomId: string): Promise<MarkRoomReadResult> 
       .eq("profile_id", userId)
 
     if (error) return { ok: false, error: error.message }
+
+    const { error: dismissError } = await supabase.rpc(
+      "dismiss_room_notifications",
+      { p_room_id: roomId },
+    )
+
+    if (dismissError && dismissError.code !== "42883" && dismissError.code !== "PGRST202") {
+      return { ok: false, error: dismissError.message }
+    }
 
     return { ok: true }
   } catch (error) {

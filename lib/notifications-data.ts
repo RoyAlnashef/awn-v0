@@ -24,6 +24,9 @@ export interface NotificationData {
   latestMessageId?: string
   jobId?: string
   applicationId?: string
+  roomId?: string
+  mentionCount?: number
+  replyCount?: number
 }
 
 export interface AppNotification {
@@ -53,6 +56,9 @@ const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
 const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
 const DM_DB_KINDS = new Set(["dm_message", "message"])
 const JOB_DB_KINDS = new Set(["application_accepted"])
+const ROOM_MENTION_DB_KINDS = new Set(["room_mention"])
+const ROOM_REPLY_DB_KINDS = new Set(["room_reply"])
+const MENTION_TAB_DB_KINDS = new Set(["room_mention", "room_reply"])
 
 /** Maps DB kind strings to UI icon/display kind. */
 export function notificationDisplayKind(kind: string): NotificationKind {
@@ -76,9 +82,31 @@ export function getDmConversationId(
   return notification.data?.conversationId
 }
 
+/** Whether a notification is an aggregated group @mention. */
+export function isRoomMentionNotification(notification: AppNotification): boolean {
+  return ROOM_MENTION_DB_KINDS.has(notification.dbKind)
+}
+
+/** Whether a notification is an aggregated group reply. */
+export function isRoomReplyNotification(notification: AppNotification): boolean {
+  return ROOM_REPLY_DB_KINDS.has(notification.dbKind)
+}
+
 /** Whether a notification belongs in the Mentions tab. */
+export function isMentionTabNotification(notification: AppNotification): boolean {
+  return MENTION_TAB_DB_KINDS.has(notification.dbKind)
+}
+
+/** @deprecated Use isMentionTabNotification for tab filtering. */
 export function isMentionNotification(kind: NotificationKind): boolean {
   return kind === "message"
+}
+
+/** Room id for navigating to a group mention/reply notification. */
+export function getRoomNotificationRoomId(
+  notification: AppNotification,
+): string | undefined {
+  return notification.data?.roomId
 }
 
 /** Whether a notification is job-related in the API feed. */
