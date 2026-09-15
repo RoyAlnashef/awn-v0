@@ -76,9 +76,11 @@ export async function acceptJobApplicationWithMessage(
     if (!application) {
       return { ok: false, error: "Application not found." }
     }
-    if (application.status !== "pending") {
-      return { ok: false, error: "Application is no longer pending." }
+    if (application.status !== "pending" && application.status !== "maybe") {
+      return { ok: false, error: "Application is no longer reviewable." }
     }
+
+    const previousStatus = application.status
 
     const { error: updateError } = await supabase
       .from("job_applications")
@@ -95,7 +97,7 @@ export async function acceptJobApplicationWithMessage(
     if (!conversationResult.ok) {
       await supabase
         .from("job_applications")
-        .update({ status: "pending" })
+        .update({ status: previousStatus })
         .eq("id", applicationId)
       return conversationResult
     }
@@ -108,7 +110,7 @@ export async function acceptJobApplicationWithMessage(
     if (!sendResult.ok) {
       await supabase
         .from("job_applications")
-        .update({ status: "pending" })
+        .update({ status: previousStatus })
         .eq("id", applicationId)
       return sendResult
     }

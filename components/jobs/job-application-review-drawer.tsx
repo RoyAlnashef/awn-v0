@@ -81,6 +81,8 @@ export function JobApplicationReviewDrawer({
   if (!application) return null
 
   const status = applicationStatusConfig[application.status]
+  const showReviewFooter =
+    application.status === "pending" || application.status === "maybe"
   const resumeLabel =
     application.applicant.resumeFileName?.trim() || "resume.pdf"
   const socialLinks = getSocialLinksFromFields(application.applicant.socialLinks)
@@ -249,7 +251,7 @@ export function JobApplicationReviewDrawer({
           </div>
           </div>
 
-          {application.status === "pending" && footerMode === "actions" ? (
+          {showReviewFooter && footerMode === "actions" ? (
             <div className="flex shrink-0 gap-2 border-t bg-popover p-4">
               <Button
                 className="flex-1"
@@ -261,7 +263,7 @@ export function JobApplicationReviewDrawer({
               <Button
                 variant="outline"
                 className="flex-1"
-                disabled={updating}
+                disabled={updating || application.status === "maybe"}
                 onClick={() => onStatusChange("maybe")}
               >
                 Maybe
@@ -277,7 +279,7 @@ export function JobApplicationReviewDrawer({
             </div>
           ) : null}
 
-          {application.status === "pending" && footerMode === "compose" ? (
+          {showReviewFooter && footerMode === "compose" ? (
             <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out">
               <div className="flex flex-col gap-1 space-y-2">
                 <Label htmlFor="accept-message">
