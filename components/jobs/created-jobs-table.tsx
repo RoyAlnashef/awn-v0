@@ -228,6 +228,7 @@ export function CreatedJobsTable({ jobs }: { jobs: Job[] }) {
   const [statusSort, setStatusSort] = React.useState<StatusSortDirection | null>(
     null,
   )
+  const [showHiddenOnly, setShowHiddenOnly] = React.useState(false)
   const [page, setPage] = React.useState(1)
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [deleteOpen, setDeleteOpen] = React.useState(false)
@@ -238,10 +239,30 @@ export function CreatedJobsTable({ jobs }: { jobs: Job[] }) {
     [jobs],
   )
 
+  const hiddenCount = React.useMemo(
+    () => jobs.filter((job) => job.isHidden).length,
+    [jobs],
+  )
+
+  const filteredJobs = React.useMemo(
+    () =>
+      showHiddenOnly
+        ? jobs.filter((job) => job.isHidden)
+        : jobs.filter((job) => !job.isHidden),
+    [jobs, showHiddenOnly],
+  )
+
   const sortedJobs = React.useMemo(() => {
-    if (!statusSort) return jobs
-    return jobs.toSorted((a, b) => compareJobsByStatus(a, b, statusSort))
-  }, [jobs, statusSort])
+    if (!statusSort) return filteredJobs
+    return filteredJobs.toSorted((a, b) =>
+      compareJobsByStatus(a, b, statusSort),
+    )
+  }, [filteredJobs, statusSort])
+
+  function toggleShowHiddenOnly() {
+    setPage(1)
+    setShowHiddenOnly((current) => !current)
+  }
 
   const totalPages = Math.max(1, Math.ceil(sortedJobs.length / PAGE_SIZE))
   const paginatedJobs = sortedJobs.slice(
@@ -258,6 +279,13 @@ export function CreatedJobsTable({ jobs }: { jobs: Job[] }) {
       setPage(totalPages)
     }
   }, [page, totalPages])
+
+  React.useEffect(() => {
+    if (showHiddenOnly && hiddenCount === 0) {
+      setShowHiddenOnly(false)
+      setPage(1)
+    }
+  }, [showHiddenOnly, hiddenCount])
 
   const allPageSelected =
     paginatedJobs.length > 0 &&
@@ -354,7 +382,7 @@ export function CreatedJobsTable({ jobs }: { jobs: Job[] }) {
       <div
         className={cn(
           "flex min-h-5 flex-wrap items-center gap-2 text-sm text-muted-foreground",
-          selected.size > 0 && "justify-between",
+          (selected.size > 0 || hiddenCount > 0) && "justify-between",
         )}
         aria-live="polite"
       >
@@ -392,9 +420,22 @@ export function CreatedJobsTable({ jobs }: { jobs: Job[] }) {
             </div>
           </>
         ) : (
-          <span>
-            Showing {rangeStart}–{rangeEnd} of {sortedJobs.length}
-          </span>
+          <>
+            <span>
+              Showing {rangeStart}–{rangeEnd} of {sortedJobs.length}
+            </span>
+            {hiddenCount > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-auto px-0 text-muted-foreground hover:text-foreground"
+                onClick={toggleShowHiddenOnly}
+              >
+                {showHiddenOnly ? "Hide hidden" : "Show hidden"}
+              </Button>
+            ) : null}
+          </>
         )}
       </div>
 

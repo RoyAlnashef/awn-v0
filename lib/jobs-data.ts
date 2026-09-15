@@ -38,6 +38,7 @@ export interface JobPostingRow {
   filled_at: string | null
   view_count: number
   share_count: number
+  is_hidden: boolean
   created_at: string
   updated_at: string
 }
@@ -284,4 +285,6 @@ export interface Job {
   applicationCount?: number
   /** Populated on poster management views. */
   shareCount?: number
+  /** Populated on poster management views. */
+  isHidden?: boolean
 }

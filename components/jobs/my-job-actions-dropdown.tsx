@@ -3,7 +3,15 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Copy, FileText, MoreHorizontal, Pause, Pencil } from "lucide-react"
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  FileText,
+  MoreHorizontal,
+  Pause,
+  Pencil,
+} from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 
@@ -22,6 +30,7 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
   const router = useRouter()
   const [pausing, setPausing] = React.useState(false)
   const [duplicating, setDuplicating] = React.useState(false)
+  const [hiding, setHiding] = React.useState(false)
 
   async function handlePause() {
     if (job.status === "draft") {
@@ -38,6 +47,26 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
       toast.error(error instanceof Error ? error.message : "Could not pause job")
     } finally {
       setPausing(false)
+    }
+  }
+
+  async function handleHideToggle() {
+    const nextHidden = !job.isHidden
+    setHiding(true)
+    try {
+      await updateJob(job.id, { isHidden: nextHidden })
+      toast.success(
+        nextHidden
+          ? "Job hidden from posted jobs"
+          : "Job restored to posted jobs",
+      )
+      void mutate(myJobsKey)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not update job",
+      )
+    } finally {
+      setHiding(false)
     }
   }
 
@@ -69,7 +98,9 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
     }
   }
 
-  const pending = pausing || duplicating
+  const canHide =
+    !job.isHidden && (job.status === "draft" || job.status === "expired")
+  const pending = pausing || duplicating || hiding
 
   return (
     <DropdownMenu>
@@ -112,6 +143,15 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
           <Copy />
           Duplicate
         </DropdownMenuItem>
+        {canHide || job.isHidden ? (
+          <DropdownMenuItem
+            disabled={hiding}
+            onClick={() => void handleHideToggle()}
+          >
+            {job.isHidden ? <Eye /> : <EyeOff />}
+            {job.isHidden ? "Unhide" : "Hide"}
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -34,6 +34,7 @@ type JobRow = {
   expires_at: string | null
   filled_at: string | null
   view_count: number
+  is_hidden: boolean
   created_at: string
   updated_at: string
   poster: PosterJoin | PosterJoin[] | null
@@ -166,6 +167,7 @@ export async function GET(_request: Request, context: RouteContext) {
 type PatchJobBody = {
   kind?: JobKind
   status?: JobStatus
+  isHidden?: boolean
   role?: string
   production?: string
   location?: string
@@ -278,6 +280,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     patch.details = details
   }
+  if (body.isHidden !== undefined) {
+    if (body.isHidden) {
+      const status = (body.status ?? existing.status) as JobStatus
+      if (status !== "draft" && status !== "expired") {
+        return jsonError("Only paused or expired jobs can be hidden", 400)
+      }
+    }
+    patch.is_hidden = body.isHidden
+  }
 
   if (Object.keys(patch).length === 0) {
     return jsonError("No fields to update", 400)
@@ -306,6 +317,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       expires_at,
       filled_at,
       view_count,
+      is_hidden,
       created_at,
       updated_at,
       poster:profiles!job_postings_poster_id_fkey (
