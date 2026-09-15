@@ -347,6 +347,14 @@ export function RoomThread({
     })
   }, [mentionPickerOpen, mentionQuery])
 
+  useLayoutEffect(() => {
+    const textarea = composerRef.current
+    if (!textarea || composerCursorRef.current === null) return
+
+    const cursor = composerCursorRef.current
+    textarea.setSelectionRange(cursor, cursor)
+  }, [draft])
+
   function handleMentionPickerOpenChange(open: boolean) {
     if (open) {
       setMentionPickerOpen(true)
@@ -368,6 +376,7 @@ export function RoomThread({
     if (!trigger) return
 
     const result = insertMention(draft, cursor, trigger, member)
+    composerCursorRef.current = result.cursor
     setDraft(result.text)
     setComposerMentions((current) => {
       const next = current.filter((item) => item.profileId !== member.id)
@@ -383,9 +392,7 @@ export function RoomThread({
     setMentionQuery("")
 
     requestAnimationFrame(() => {
-      if (!textarea) return
-      textarea.focus()
-      textarea.setSelectionRange(result.cursor, result.cursor)
+      textarea?.focus()
     })
   }
 
@@ -1127,7 +1134,7 @@ export function RoomThread({
             anchor={composerRef.current}
             onSelect={handleSelectMention}
           />
-          <InputGroup>
+          <InputGroup className="h-auto items-end">
             <MentionComposer
               textareaRef={composerRef}
               value={draft}

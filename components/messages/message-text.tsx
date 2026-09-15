@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 const mentionToneClasses = {
   onPrimary: "font-semibold text-primary-foreground no-underline",
   onSurface: "font-semibold text-primary no-underline",
+  /** Composer mirror: color only so caret aligns with the textarea. */
+  composer: "text-primary no-underline",
 } as const
 
 export function MessageText({
