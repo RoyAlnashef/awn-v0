@@ -67,7 +67,7 @@ export function Rooms() {
           >
             <Users className="size-5" />
             {unreadCount > 0 ? (
-              <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground ring-2 ring-background">
+              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-success text-[10px] font-semibold text-success-foreground">
                 {unreadCount}
               </span>
             ) : null}

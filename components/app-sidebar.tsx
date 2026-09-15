@@ -107,7 +107,7 @@ function CollapsibleNavItem({
             item={item}
             messagesUnreadCount={messagesUnreadCount}
             roomsUnreadCount={roomsUnreadCount}
-            className="static h-auto min-w-0 px-0"
+            className="static"
           />
           <CollapsibleTrigger
             render={
