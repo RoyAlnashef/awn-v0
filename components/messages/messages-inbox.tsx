@@ -160,8 +160,10 @@ export function MessagesInbox({
                         {c.unread ? (
                           <span
                             aria-hidden="true"
-                            className="size-2 shrink-0 rounded-full bg-success"
-                          />
+                            className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-success text-[10px] font-semibold text-success-foreground tabular-nums"
+                          >
+                            1
+                          </span>
                         ) : null}
                       </div>
                     </div>

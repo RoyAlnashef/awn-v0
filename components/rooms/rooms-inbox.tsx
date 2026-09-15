@@ -130,7 +130,7 @@ export function RoomsInbox({
                           {room.name}
                         </p>
                         {room.unread && room.joined && (room.unreadCount ?? 0) > 0 ? (
-                          <span className="flex min-w-4 shrink-0 items-center justify-center rounded-full bg-success px-1 text-[10px] font-semibold text-success-foreground">
+                          <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-success text-[10px] font-semibold text-success-foreground tabular-nums">
                             {room.unreadCount}
                           </span>
                         ) : null}
