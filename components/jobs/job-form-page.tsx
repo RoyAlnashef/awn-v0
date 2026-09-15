@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { addDays } from "date-fns"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -308,6 +309,10 @@ export function JobFormPage({
       toast.error("Pick an end date")
       return false
     }
+    if (form.endDate <= form.startDate) {
+      toast.error("End date must be after start date")
+      return false
+    }
     return true
   }
 
@@ -557,7 +562,13 @@ export function JobFormPage({
                 <FieldLabel>Start Date</FieldLabel>
                 <DatePicker
                   value={form.startDate}
-                  onChange={(date) => update({ startDate: date })}
+                  onChange={(date) => {
+                    const patch: Partial<PostJobForm> = { startDate: date }
+                    if (date && form.endDate && form.endDate <= date) {
+                      patch.endDate = undefined
+                    }
+                    update(patch)
+                  }}
                   placeholder="Pick a start date"
                 />
               </div>
@@ -566,6 +577,11 @@ export function JobFormPage({
                 <DatePicker
                   value={form.endDate}
                   onChange={(date) => update({ endDate: date })}
+                  minDate={
+                    form.startDate ? addDays(form.startDate, 1) : undefined
+                  }
+                  defaultMonth={form.startDate}
+                  highlightDate={form.startDate}
                   placeholder="Pick an end date"
                 />
               </div>

@@ -39,12 +39,28 @@ function buildDisabledMatchers(
   return matchers
 }
 
+function resolveVisibleMonth({
+  value,
+  defaultMonth,
+  minDate,
+  maxDate,
+}: {
+  value?: Date
+  defaultMonth?: Date
+  minDate?: Date
+  maxDate?: Date
+}): Date {
+  return value ?? defaultMonth ?? minDate ?? maxDate ?? new Date()
+}
+
 export function DatePicker({
   value,
   onChange,
   placeholder = "Pick a date",
   minDate,
   maxDate,
+  defaultMonth,
+  highlightDate,
   className,
   clearable = true,
 }: {
@@ -53,10 +69,22 @@ export function DatePicker({
   placeholder?: string
   minDate?: Date
   maxDate?: Date
+  defaultMonth?: Date
+  /** Reference date to visually highlight in the calendar (e.g. a paired start date). */
+  highlightDate?: Date
   className?: string
   clearable?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
+  const [month, setMonth] = React.useState(() =>
+    resolveVisibleMonth({ value, defaultMonth, minDate, maxDate }),
+  )
+
+  React.useEffect(() => {
+    if (open) {
+      setMonth(resolveVisibleMonth({ value, defaultMonth, minDate, maxDate }))
+    }
+  }, [open, value, defaultMonth, minDate, maxDate])
 
   return (
     <div className={cn("relative", className)}>
@@ -82,12 +110,17 @@ export function DatePicker({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
+            month={month}
+            onMonthChange={setMonth}
             selected={value}
             onSelect={(date) => {
               onChange(date)
               setOpen(false)
             }}
             disabled={buildDisabledMatchers(minDate, maxDate)}
+            modifiers={
+              highlightDate ? { highlighted: highlightDate } : undefined
+            }
             autoFocus
           />
         </PopoverContent>
