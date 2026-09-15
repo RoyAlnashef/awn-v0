@@ -7,7 +7,7 @@ import { MarketingContentPage } from "@/components/landing/marketing-content-pag
 export const metadata: Metadata = {
   title: "Terms of Service — AWN",
   description:
-    "The rules for using AWN — a private, vetted network for touring professionals.",
+    "The terms governing your access to and use of AWN — a private professional network for live entertainment.",
 }
 
 export default function TermsPage() {
