@@ -45,7 +45,7 @@ export function NotificationList({
         )
 
         function handleClick() {
-          if (navigatesOnClick && onItemClick) {
+          if (navigatesOnClick && !n.read && onItemClick) {
             onItemClick(n)
             return
           }
@@ -58,7 +58,7 @@ export function NotificationList({
               type="button"
               onClick={handleClick}
               aria-label={
-                navigatesOnClick
+                navigatesOnClick && !n.read
                   ? `${n.title}. Open.`
                   : n.read
                     ? `${n.title}. Mark as unread.`

@@ -39,9 +39,9 @@ export function Notifications() {
   const { currentUser } = useMessages()
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<NotificationTab>("all")
-  const { notifications, mutate, isLoading } = useNotifications({ enabled: open })
+  const { notifications, mutate, isLoading } = useNotifications()
 
-  useNotificationsRealtime({ enabled: open, userId: currentUser.id })
+  useNotificationsRealtime({ userId: currentUser.id })
 
   const jobNotifications = notifications.filter((n) =>
     isJobApiNotification(n.dbKind),
