@@ -9,7 +9,7 @@ export function LandingHeader() {
     <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-8">
       <Link
         href="/"
-        className="font-sans text-lg font-medium tracking-tight text-primary"
+        className="font-sans text-lg font-medium tracking-tight text-foreground"
       >
         {brand}
       </Link>

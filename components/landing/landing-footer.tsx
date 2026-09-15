@@ -7,27 +7,22 @@ export function LandingFooter() {
   const { brand, footer } = landingContent
 
   return (
-    <footer className="relative z-10 border-t border-border/50 px-6 py-8 sm:px-8">
-      <div className="mx-auto flex max-w-3xl flex-col items-center gap-6">
-        <LandingNavLinks className="justify-center" />
-
-        <div className="flex w-full flex-col items-center gap-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-          <Link href="/" className="font-medium text-primary">
-            {brand}
-          </Link>
-
-          <p className="text-center text-pretty">
-            {footer.copyright} · {footer.legal}
-          </p>
-
-          <a
-            href={`mailto:${footer.email}`}
-            className="transition-colors hover:text-foreground"
-          >
-            {footer.email}
-          </a>
-        </div>
+    <footer className="relative z-10 flex flex-col items-center gap-4 border-t border-border/50 px-6 py-6 text-center text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:text-left">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-start">
+        <Link
+          href="/"
+          className="font-sans text-lg font-medium tracking-tight text-foreground"
+        >
+          {brand}
+        </Link>
+        <LandingNavLinks />
       </div>
+
+      <p className="text-pretty sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+        {footer.copyright}
+      </p>
+
+      <p className="text-pretty sm:ml-auto sm:text-right">{footer.legal}</p>
     </footer>
   )
 }
