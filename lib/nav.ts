@@ -23,7 +23,7 @@ export type NavItem = {
   icon: LucideIcon
   badge?: string
   /** When set, sidebar reads a live count from the matching provider. */
-  liveBadge?: "messages" | "rooms"
+  liveBadge?: "messages" | "rooms" | "logs"
   live?: boolean
   items?: NavSubItem[]
 }
@@ -104,6 +104,7 @@ export const adminNav: NavItem[] = [
     href: "/logs",
     description: "Review client and server errors to diagnose issues.",
     icon: ScrollText,
+    liveBadge: "logs",
   },
 ]
 

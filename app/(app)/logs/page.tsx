@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { LogsTable } from "@/components/logs/logs-table"
+import { MarkLogsSeen } from "@/components/logs/mark-logs-seen"
 import { PageShell } from "@/components/page-shell"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { listErrorLogs } from "@/lib/logs/actions"
@@ -18,6 +19,7 @@ export default async function LogsPage() {
 
   return (
     <PageShell title={item.title} description={item.description}>
+      <MarkLogsSeen />
       <LogsTable
         initialLogs={result.ok ? result.logs : []}
         loadError={result.ok ? null : result.error}

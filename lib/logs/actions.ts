@@ -8,7 +8,41 @@ export type ListErrorLogsResult =
   | { ok: true; logs: ErrorLog[] }
   | { ok: false; error: string; logs: [] }
 
+export type NewErrorLogsCountResult =
+  | { ok: true; count: number }
+  | { ok: false; error: string; count: 0 }
+
 const ERROR_LOG_LIMIT = 200
+
+export async function getNewErrorLogsCount(
+  since: string | null,
+): Promise<NewErrorLogsCountResult> {
+  try {
+    const { supabase } = await requireAdmin()
+
+    let query = supabase
+      .from("error_logs")
+      .select("*", { count: "exact", head: true })
+
+    if (since) {
+      query = query.gt("created_at", since)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      return { ok: false, error: error.message, count: 0 }
+    }
+
+    return { ok: true, count: count ?? 0 }
+  } catch (error) {
+    const message =
+      error instanceof AuthError
+        ? error.message
+        : "Failed to load new error log count."
+    return { ok: false, error: message, count: 0 }
+  }
+}
 
 export async function listErrorLogs(): Promise<ListErrorLogsResult> {
   try {
