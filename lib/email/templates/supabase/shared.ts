@@ -47,7 +47,7 @@ function buildBody({
 
   const buttonHtml =
     buttonLabel && buttonHref
-      ? emailButton(buttonHref, buttonLabel)
+      ? emailButton(buttonHref, buttonLabel, theme)
       : ""
 
   const footerHtml = footerNote

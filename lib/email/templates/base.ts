@@ -13,7 +13,20 @@ export type EmailThemeColors = {
   strong: string
   noteBg: string
   noteBorder: string
+  buttonBg: string
+  buttonText: string
+  buttonBorder: string
 }
+
+/** Hex values aligned with app/globals.css primary tokens (oklch white primary theme). */
+export const EMAIL_PRIMARY = {
+  bright: "#ffffff",
+  dark: "#fafafa",
+  foreground: "#18181b",
+} as const
+
+/** Matches app button `rounded-md` → `--radius-md` (0.625rem × 0.8 = 0.5rem). */
+export const EMAIL_BUTTON_RADIUS = "0.5rem"
 
 const EMAIL_THEMES: Record<EmailTheme, EmailThemeColors> = {
   dark: {
@@ -21,28 +34,34 @@ const EMAIL_THEMES: Record<EmailTheme, EmailThemeColors> = {
     cardBg: "#141416",
     cardBorder: "#27272a",
     brandLabel: "#a1a1aa",
-    bodyText: "#fafafa",
-    heading: "#fafafa",
+    bodyText: EMAIL_PRIMARY.dark,
+    heading: EMAIL_PRIMARY.dark,
     body: "#d4d4d8",
     muted: "#71717a",
-    link: "#a78bfa",
-    strong: "#fafafa",
+    link: EMAIL_PRIMARY.dark,
+    strong: EMAIL_PRIMARY.dark,
     noteBg: "#18181b",
     noteBorder: "#27272a",
+    buttonBg: EMAIL_PRIMARY.bright,
+    buttonText: EMAIL_PRIMARY.foreground,
+    buttonBorder: "transparent",
   },
   light: {
     pageBg: "#f4f4f5",
     cardBg: "#ffffff",
     cardBorder: "#e4e4e7",
     brandLabel: "#71717a",
-    bodyText: "#18181b",
-    heading: "#18181b",
+    bodyText: EMAIL_PRIMARY.foreground,
+    heading: EMAIL_PRIMARY.foreground,
     body: "#52525b",
     muted: "#71717a",
-    link: "#7c3aed",
-    strong: "#18181b",
+    link: EMAIL_PRIMARY.foreground,
+    strong: EMAIL_PRIMARY.foreground,
     noteBg: "#f4f4f5",
     noteBorder: "#e4e4e7",
+    buttonBg: EMAIL_PRIMARY.bright,
+    buttonText: EMAIL_PRIMARY.foreground,
+    buttonBorder: "#e4e4e7",
   },
 }
 
@@ -112,7 +131,7 @@ export function emailLayout({
           </tr>
         </table>
         <p style="margin:24px 0 0;font-size:12px;color:${colors.muted};text-align:center;">
-          Touring crew, connected.
+          People. Community. Opportunity.
         </p>
       </td>
     </tr>
@@ -121,9 +140,19 @@ export function emailLayout({
 </html>`
 }
 
-export function emailButton(href: string, label: string): string {
+export function emailButton(
+  href: string,
+  label: string,
+  theme: EmailTheme = "dark",
+): string {
+  const colors = emailThemeColors(theme)
+  const border =
+    colors.buttonBorder === "transparent"
+      ? ""
+      : `border:1px solid ${colors.buttonBorder};`
+
   return `<p style="margin:28px 0 0;">
-  <a href="${href}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:999px;">
+  <a href="${href}" style="display:inline-block;background:${colors.buttonBg};color:${colors.buttonText};${border}text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:${EMAIL_BUTTON_RADIUS};">
     ${label}
   </a>
 </p>`

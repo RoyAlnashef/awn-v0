@@ -275,7 +275,7 @@ function buildResendBody(
 
   const buttonHtml =
     content.buttonLabel && options.buttonHref
-      ? emailButton(options.buttonHref, content.buttonLabel)
+      ? emailButton(options.buttonHref, content.buttonLabel, theme)
       : ""
 
   const noteBlock = options.note?.trim()
