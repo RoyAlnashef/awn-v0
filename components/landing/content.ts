@@ -14,11 +14,6 @@ export const landingContent = {
   ] satisfies LandingNavLink[],
   header: {
     signIn: "Sign in",
-    shaderLinks: [
-      { label: "Orb 14", href: "/shaders/orb-14" },
-      { label: "Orb 01", href: "/shaders/orb-01" },
-      { label: "Glam", href: "/shaders/glam" },
-    ] satisfies LandingNavLink[],
   },
   hero: {
     title: "The private network for the people behind live entertainment.",

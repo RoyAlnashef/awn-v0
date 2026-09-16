@@ -15,15 +15,6 @@ export function LandingHeader() {
       </Link>
 
       <nav className="flex items-center gap-4 sm:gap-6">
-        {header.shaderLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-xs font-medium tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
-          >
-            {link.label}
-          </Link>
-        ))}
         <Link
           href="/login"
           className="text-xs font-medium tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
