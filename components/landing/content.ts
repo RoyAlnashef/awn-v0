@@ -15,8 +15,9 @@ export const landingContent = {
   header: {
     signIn: "Sign in",
     shaderLinks: [
-      { label: "Orb", href: "/" },
-      { label: "Glam", href: "/shader-2" },
+      { label: "Orb 14", href: "/shaders/orb-14" },
+      { label: "Orb 01", href: "/shaders/orb-01" },
+      { label: "Glam", href: "/shaders/glam" },
     ] satisfies LandingNavLink[],
   },
   hero: {

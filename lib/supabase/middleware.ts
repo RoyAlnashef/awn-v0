@@ -13,11 +13,11 @@ const PUBLIC_PREFIXES = [
   "/community-guidelines",
   "/job-posting-policy",
   "/faqs",
+  "/shaders",
 ]
 const PUBLIC_PATHS = [
   "/login/forgot-password",
   "/login/reset-password",
-  "/shader-2",
 ]
 
 const PENDING_GATE_EXEMPT_PREFIXES = [

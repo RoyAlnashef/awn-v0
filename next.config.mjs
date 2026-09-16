@@ -31,6 +31,11 @@ const nextConfig = {
       permanent: true,
     },
     { source: "/popout/rooms", destination: "/popout/groups", permanent: true },
+    {
+      source: "/shader-2",
+      destination: "/shaders/glam",
+      permanent: true,
+    },
   ],
 }
 
