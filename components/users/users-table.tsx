@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { MoreHorizontal, Search, ShieldCheck } from "lucide-react"
@@ -24,6 +24,10 @@ import {
 } from "@/lib/users/actions"
 import { cn } from "@/lib/utils"
 import { EditUserDialog } from "@/components/users/edit-user-dialog"
+import {
+  getPaginationSlice,
+  TablePaginationControls,
+} from "@/components/table-pagination"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -85,6 +89,7 @@ export function UsersTable({
   const [editUser, setEditUser] = useState<AdminUser | null>(null)
   const [bulkRole, setBulkRole] = useState<UserRole | "">("")
   const [confirm, setConfirm] = useState<ConfirmState>(null)
+  const [page, setPage] = useState(1)
 
   const q = query.trim().toLowerCase()
 
@@ -101,17 +106,30 @@ export function UsersTable({
     })
   }, [initialUsers, q, roleFilter, statusFilter])
 
-  const allVisibleSelected =
-    filtered.length > 0 && filtered.every((u) => selected.has(u.id))
-  const someVisibleSelected = filtered.some((u) => selected.has(u.id))
+  const { paginated, totalPages, rangeStart, rangeEnd, showPagination } =
+    getPaginationSlice(filtered, page)
+
+  useEffect(() => {
+    setPage(1)
+  }, [q, roleFilter, statusFilter])
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
+
+  const allPageSelected =
+    paginated.length > 0 && paginated.every((u) => selected.has(u.id))
+  const somePageSelected = paginated.some((u) => selected.has(u.id))
 
   function toggleAll() {
     setSelected((prev) => {
       const next = new Set(prev)
-      if (allVisibleSelected) {
-        filtered.forEach((u) => next.delete(u.id))
+      if (allPageSelected) {
+        paginated.forEach((u) => next.delete(u.id))
       } else {
-        filtered.forEach((u) => next.add(u.id))
+        paginated.forEach((u) => next.add(u.id))
       }
       return next
     })
@@ -319,7 +337,7 @@ export function UsersTable({
           </>
         ) : (
           <span>
-            {filtered.length} of {initialUsers.length} users
+            Showing {rangeStart}–{rangeEnd} of {filtered.length}
           </span>
         )}
       </div>
@@ -331,11 +349,11 @@ export function UsersTable({
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-10">
                 <Checkbox
-                  checked={allVisibleSelected}
-                  indeterminate={!allVisibleSelected && someVisibleSelected}
+                  checked={allPageSelected}
+                  indeterminate={!allPageSelected && somePageSelected}
                   onCheckedChange={toggleAll}
-                  aria-label="Select all users"
-                  disabled={filtered.length === 0}
+                  aria-label="Select all users on this page"
+                  disabled={paginated.length === 0 || isPending}
                 />
               </TableHead>
               <TableHead>User</TableHead>
@@ -349,7 +367,7 @@ export function UsersTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((user) => (
+            {paginated.map((user) => (
               <UserRowItem
                 key={user.id}
                 user={user}
@@ -390,6 +408,15 @@ export function UsersTable({
           </TableBody>
         </Table>
       </div>
+
+      {showPagination ? (
+        <TablePaginationControls
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          disabled={isPending}
+        />
+      ) : null}
 
       <EditUserDialog
         user={editUser}

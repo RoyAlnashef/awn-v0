@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -30,6 +30,10 @@ import {
 } from "@/components/ui/table"
 import { initials } from "@/lib/users-data"
 import { formatRelativeTime } from "@/lib/messages/format"
+import {
+  getPaginationSlice,
+  TablePaginationControls,
+} from "@/components/table-pagination"
 
 const defaultFilters: ApplicationFilters = {
   search: "",
@@ -52,6 +56,7 @@ export function ApplicationsTable({
   const [denyTarget, setDenyTarget] = useState<MembershipApplication | null>(
     null,
   )
+  const [page, setPage] = useState(1)
 
   const q = filters.search.trim().toLowerCase()
   const activeFilterCount = getApplicationFilterCount(filters)
@@ -79,6 +84,19 @@ export function ApplicationsTable({
       )
     })
   }, [initialApplications, filters.sources, filters.statuses, q])
+
+  const { paginated, totalPages, rangeStart, rangeEnd, showPagination } =
+    getPaginationSlice(filtered, page)
+
+  useEffect(() => {
+    setPage(1)
+  }, [q, filters.sources, filters.statuses])
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
 
   function handleOpenReview(application: MembershipApplication) {
     const isFirstMount = selected === null
@@ -131,22 +149,26 @@ export function ApplicationsTable({
           </p>
         </div>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Applicant</TableHead>
-                <TableHead className="max-w-xs whitespace-normal">
-                  Title
-                </TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-25" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((application) => {
+        <>
+          <p className="text-sm text-muted-foreground">
+            Showing {rangeStart}–{rangeEnd} of {filtered.length}
+          </p>
+          <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Applicant</TableHead>
+                  <TableHead className="max-w-xs whitespace-normal">
+                    Title
+                  </TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-25" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginated.map((application) => {
                 const status = applicationStatusConfig[application.status]
                 return (
                   <TableRow key={application.id}>
@@ -200,10 +222,19 @@ export function ApplicationsTable({
                     </TableCell>
                   </TableRow>
                 )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {showPagination ? (
+            <TablePaginationControls
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              disabled={isPending}
+            />
+          ) : null}
+        </>
       )}
 
       <ApplicationReviewPanel

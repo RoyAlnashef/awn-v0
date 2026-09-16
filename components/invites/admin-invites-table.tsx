@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Copy, Search } from "lucide-react"
 import { toast } from "sonner"
 
@@ -23,6 +23,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatRelativeTime } from "@/lib/messages/format"
+import {
+  getPaginationSlice,
+  TablePaginationControls,
+} from "@/components/table-pagination"
 
 const ALL = "all"
 
@@ -67,6 +71,7 @@ export function AdminInvitesTable({
   const [statusFilter, setStatusFilter] = useState<MemberInviteStatus | typeof ALL>(
     ALL,
   )
+  const [page, setPage] = useState(1)
 
   const q = query.trim().toLowerCase()
 
@@ -81,6 +86,19 @@ export function AdminInvitesTable({
       )
     })
   }, [initialInvites, q, statusFilter])
+
+  const { paginated, totalPages, rangeStart, rangeEnd, showPagination } =
+    getPaginationSlice(filtered, page)
+
+  useEffect(() => {
+    setPage(1)
+  }, [q, statusFilter])
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
 
   return (
     <div className="flex flex-col gap-4">
@@ -127,20 +145,24 @@ export function AdminInvitesTable({
           </p>
         </div>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Inviter</TableHead>
-                <TableHead>Invitee email</TableHead>
-                <TableHead>Sent</TableHead>
-                <TableHead>Invite status</TableHead>
-                <TableHead>Application</TableHead>
-                <TableHead>Apply link</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((invite) => {
+        <>
+          <p className="text-sm text-muted-foreground">
+            Showing {rangeStart}–{rangeEnd} of {filtered.length}
+          </p>
+          <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Inviter</TableHead>
+                  <TableHead>Invitee email</TableHead>
+                  <TableHead>Sent</TableHead>
+                  <TableHead>Invite status</TableHead>
+                  <TableHead>Application</TableHead>
+                  <TableHead>Apply link</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginated.map((invite) => {
                 const status = inviteStatusConfig[invite.status]
                 const applicationStatus = invite.applicationStatus
                   ? applicationStatusConfig[invite.applicationStatus]
@@ -185,10 +207,18 @@ export function AdminInvitesTable({
                     </TableCell>
                   </TableRow>
                 )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {showPagination ? (
+            <TablePaginationControls
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          ) : null}
+        </>
       )}
     </div>
   )

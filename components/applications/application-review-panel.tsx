@@ -165,6 +165,7 @@ export function ApplicationReviewPanel({
                   <Button
                     variant="ghost"
                     size="sm"
+                    nativeButton={false}
                     render={
                       <a
                         href={resumeUrl}
