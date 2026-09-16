@@ -1,13 +1,26 @@
 import type { Metadata } from "next";
-import { DM_Mono, DM_Sans } from "next/font/google";
+import { DM_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
+const satoshi = localFont({
+  src: [
+    {
+      path: "./fonts/Satoshi-Variable.woff2",
+      weight: "300 900",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Satoshi-VariableItalic.woff2",
+      weight: "300 900",
+      style: "italic",
+    },
+  ],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const dmMono = DM_Mono({
@@ -42,7 +55,7 @@ export default function RootLayout({
       className={cn(
         "bg-background",
         "font-sans",
-        dmSans.variable,
+        satoshi.variable,
         dmMono.variable,
       )}
     >
