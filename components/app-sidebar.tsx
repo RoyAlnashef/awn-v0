@@ -224,7 +224,7 @@ export function AppSidebar({
         >
           <div
             aria-hidden
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary group-data-[collapsible=icon]:size-8"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-neutral-950 group-data-[collapsible=icon]:size-8"
           >
             <img
               src="/awn-logo-mark.svg"
