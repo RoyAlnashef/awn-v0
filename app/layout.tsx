@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ErrorReporter } from "@/components/error-reporter";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider defaultTheme="dark">
           {children}
+          <ErrorReporter />
           <Toaster />
         </ThemeProvider>
       </body>

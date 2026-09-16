@@ -6,6 +6,7 @@ import {
   Users,
   UserCheck,
   Mail,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react"
 
@@ -97,6 +98,12 @@ export const adminNav: NavItem[] = [
     description:
       "Preview transactional templates and broadcast messages to members.",
     icon: Mail,
+  },
+  {
+    title: "Logs",
+    href: "/logs",
+    description: "Review client and server errors to diagnose issues.",
+    icon: ScrollText,
   },
 ]
 

@@ -16,6 +16,7 @@ import {
   submitApplication,
   submitRequestAccessApplication,
 } from "@/lib/applications/actions"
+import { reportClientError } from "@/lib/logs/report-client-error"
 import { createClient } from "@/lib/supabase/client"
 import {
   hasMinimumSocialLinks,
@@ -144,52 +145,71 @@ export function ApplyForm(props: ApplyFormProps) {
 
   function submitForm() {
     startTransition(async () => {
-      if (!resume) {
-        toast.error("Resume is required.")
-        return
+      const context = isRequestAccess ? "request_access" : "apply"
+
+      try {
+        if (!resume) {
+          toast.error("Resume is required.")
+          return
+        }
+
+        const formData = new FormData()
+        formData.set("password", password)
+        formData.set("fullName", fullName)
+        formData.set("title", title)
+        formData.set("resume", resume)
+
+        if (isRequestAccess) {
+          formData.set("email", signInEmail)
+        } else {
+          formData.set("token", props.token)
+        }
+
+        for (const id of SOCIAL_FIELD_IDS) {
+          const value = socials[id].trim()
+          if (value) formData.set(id, value)
+        }
+
+        const result = isRequestAccess
+          ? await submitRequestAccessApplication(formData)
+          : await submitApplication(formData)
+
+        if (!result.ok) {
+          void reportClientError({
+            message: result.error,
+            context,
+            metadata: { flow: "application_submit" },
+          })
+          toast.error(result.error)
+          return
+        }
+
+        const supabase = createClient()
+        const { error } = await supabase.auth.signInWithPassword({
+          email: signInEmail,
+          password,
+        })
+
+        if (error) {
+          toast.success("Application submitted. Sign in to check your status.")
+          router.push("/login?next=/pending")
+          return
+        }
+
+        toast.success("Application submitted")
+        router.push("/pending")
+        router.refresh()
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Application submission failed"
+        void reportClientError({
+          message,
+          stack: error instanceof Error ? error.stack : null,
+          context,
+          metadata: { flow: "application_submit" },
+        })
+        toast.error(message)
       }
-
-      const formData = new FormData()
-      formData.set("password", password)
-      formData.set("fullName", fullName)
-      formData.set("title", title)
-      formData.set("resume", resume)
-
-      if (isRequestAccess) {
-        formData.set("email", signInEmail)
-      } else {
-        formData.set("token", props.token)
-      }
-
-      for (const id of SOCIAL_FIELD_IDS) {
-        const value = socials[id].trim()
-        if (value) formData.set(id, value)
-      }
-
-      const result = isRequestAccess
-        ? await submitRequestAccessApplication(formData)
-        : await submitApplication(formData)
-
-      if (!result.ok) {
-        toast.error(result.error)
-        return
-      }
-
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
-        email: signInEmail,
-        password,
-      })
-
-      if (error) {
-        toast.success("Application submitted. Sign in to check your status.")
-        router.push("/login?next=/pending")
-        return
-      }
-
-      toast.success("Application submitted")
-      router.push("/pending")
-      router.refresh()
     })
   }
 

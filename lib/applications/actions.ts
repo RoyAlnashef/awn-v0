@@ -34,6 +34,7 @@ import {
   type SocialFieldId,
 } from "@/lib/social-links"
 import { isValidEmail } from "@/lib/validation/email"
+import { logError } from "@/lib/logs/log-error"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { unwrapOne } from "@/lib/supabase/unwrap-one"
@@ -103,6 +104,22 @@ function actionError(error: unknown): ActionError {
   }
   if (error instanceof Error) return { ok: false, error: error.message }
   return { ok: false, error: "Something went wrong." }
+}
+
+async function logApplicationError(
+  context: "request_access" | "apply",
+  error: unknown,
+  metadata?: Record<string, unknown>,
+): Promise<ActionError> {
+  const result = actionError(error)
+  await logError({
+    source: "server",
+    context,
+    message: result.error,
+    stack: error instanceof Error ? error.stack : null,
+    metadata,
+  })
+  return result
 }
 
 function normalizeSocialLinksInput(
@@ -452,7 +469,7 @@ export async function submitApplication(
 
     return { ok: true }
   } catch (error) {
-    return actionError(error)
+    return logApplicationError("apply", error)
   }
 }
 
@@ -480,9 +497,19 @@ export async function submitRequestAccessApplication(
       source: "request_access",
     })
 
-    return result.ok ? { ok: true } : result
+    if (!result.ok) {
+      await logError({
+        source: "server",
+        context: "request_access",
+        message: result.error,
+        metadata: { email },
+      })
+      return result
+    }
+
+    return { ok: true }
   } catch (error) {
-    return actionError(error)
+    return logApplicationError("request_access", error)
   }
 }
 
