@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
+import { LandingHeroOrb14 } from "@/components/landing/landing-hero-orb-14"
 import { LandingPage } from "@/components/landing/landing-page"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 
@@ -16,5 +17,5 @@ export default async function MarketingHomePage() {
     redirect("/now")
   }
 
-  return <LandingPage />
+  return <LandingPage shader={<LandingHeroOrb14 />} />
 }

@@ -8,7 +8,7 @@ export function LandingHero() {
   const { brand, hero } = landingContent
 
   return (
-    <section className="relative z-10 flex flex-col items-center px-6 py-16 text-center sm:px-8">
+    <section className="relative flex flex-col items-center px-6 py-16 text-center sm:px-8">
       <Image
         src="/apple-touch-icon.png"
         alt={brand}
@@ -18,7 +18,7 @@ export function LandingHero() {
         className="mb-8 size-18 rounded-[22%] shadow-lg sm:size-20"
       />
 
-      <h1 className="max-w-2xl font-heading text-h2 sm:text-h1 font-medium tracking-tight text-balance">
+      <h1 className="max-w-2xl font-heading text-h2 sm:text-h1 font-medium text-foreground tracking-tight text-balance">
         {hero.title}
       </h1>
 
@@ -32,7 +32,7 @@ export function LandingHero() {
           {hero.primaryCta}
         </Button>
 
-        <p className="text-body-sm text-muted-foreground">{hero.tagline}</p>
+        <p className="text-body-sm text-muted-foreground/80">{hero.tagline}</p>
       </div>
     </section>
   )
