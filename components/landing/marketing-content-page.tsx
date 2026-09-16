@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 
-import { LandingBackground } from "@/components/landing/landing-background"
 import { LandingFooter } from "@/components/landing/landing-footer"
 import { LandingHeader } from "@/components/landing/landing-header"
 
@@ -17,7 +16,6 @@ export function MarketingContentPage({
 }: MarketingContentPageProps) {
   return (
     <div className="relative min-h-svh">
-      <LandingBackground />
       <LandingHeader />
       <main className="relative z-10 px-6 py-16 sm:px-8 sm:py-24">
         <article className="mx-auto max-w-3xl">
