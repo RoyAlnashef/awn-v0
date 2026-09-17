@@ -7,35 +7,15 @@ import { Progress } from "@/components/ui/progress"
 
 export type ApplyFormStep = {
   title: string
-  description: string
 }
 
 export const APPLY_STEPS: ApplyFormStep[] = [
-  {
-    title: "Create your account",
-    description:
-      "Set a password for your AWN account. Your email is locked to this invite.",
-  },
-  {
-    title: "Professional info",
-    description:
-      "Share your name, current role, and resume so our team can review your application.",
-  },
-  {
-    title: "Social links",
-    description:
-      "Add at least two links so admins can verify your online presence.",
-  },
+  { title: "Create your account" },
+  { title: "Professional info" },
+  { title: "Social links" },
 ]
 
-export const REQUEST_ACCESS_STEPS: ApplyFormStep[] = [
-  {
-    title: "Create your account",
-    description: "Enter the email you want on your AWN account and set a password.",
-  },
-  APPLY_STEPS[1],
-  APPLY_STEPS[2],
-]
+export const REQUEST_ACCESS_STEPS = APPLY_STEPS
 
 export function ApplyFormSteps({
   currentStep,
@@ -71,14 +51,9 @@ export function ApplyFormSteps({
         <Progress value={percent} className="mt-3" />
       </div>
 
-      <div>
-        <h2 className="font-heading text-lg font-semibold tracking-tight">
-          {step.title}
-        </h2>
-        <p className="mt-2 text-sm text-pretty text-muted-foreground">
-          {step.description}
-        </p>
-      </div>
+      <h2 className="font-heading text-lg font-semibold tracking-tight">
+        {step.title}
+      </h2>
 
       {children}
 
