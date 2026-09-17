@@ -22,6 +22,8 @@ export function LandingHero() {
         {hero.title}
       </h1>
 
+      <p className="mt-4 text-body-sm text-muted-foreground">{hero.subtitle}</p>
+
       <div className="mt-10 flex flex-col items-center gap-8">
         <Button
           size="lg"
