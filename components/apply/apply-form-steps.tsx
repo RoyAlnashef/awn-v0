@@ -15,15 +15,39 @@ import {
 export type ApplyFormStep = {
   id: string
   title: string
+  description: string
 }
 
 export const APPLY_STEPS: ApplyFormStep[] = [
-  { id: "account", title: "Create your account" },
-  { id: "professional", title: "Professional info" },
-  { id: "social", title: "Social links" },
+  {
+    id: "account",
+    title: "Create your account",
+    description:
+      "Set a password for your AWN account. Your email is locked to this invite.",
+  },
+  {
+    id: "professional",
+    title: "Professional info",
+    description:
+      "Share your name, current role, and resume so our team can review your application.",
+  },
+  {
+    id: "social",
+    title: "Social links",
+    description:
+      "Add at least two links so admins can verify your online presence.",
+  },
 ]
 
-export const REQUEST_ACCESS_STEPS = APPLY_STEPS
+export const REQUEST_ACCESS_STEPS: ApplyFormStep[] = [
+  {
+    id: "account",
+    title: "Create your account",
+    description: "Enter the email you want on your AWN account and set a password.",
+  },
+  APPLY_STEPS[1],
+  APPLY_STEPS[2],
+]
 
 const APPLY_FORM_STEPPER_STEPS = APPLY_STEPS.map(({ id }) => ({ id }))
 
@@ -68,9 +92,14 @@ export function ApplyFormSteps({
         </StepperNav>
       </Stepper>
 
-      <h2 className="font-heading text-lg font-semibold tracking-tight">
-        {step.title}
-      </h2>
+      <div>
+        <h2 className="font-heading text-lg font-semibold tracking-tight">
+          {step.title}
+        </h2>
+        <p className="mt-2 text-sm text-pretty text-muted-foreground">
+          {step.description}
+        </p>
+      </div>
 
       {children}
 
