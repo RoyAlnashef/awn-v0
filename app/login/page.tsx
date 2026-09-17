@@ -25,7 +25,7 @@ export default async function LoginPage({
     : null
 
   return (
-    <AuthShell showAppIcon>
+    <AuthShell showAppIcon title="Sign In" subtitle="">
       <Suspense
         fallback={
           <div className="h-48 animate-pulse rounded-xl bg-muted/40" />

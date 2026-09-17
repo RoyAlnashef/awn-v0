@@ -4,8 +4,18 @@ import Link from "next/link"
 
 import { landingContent } from "@/components/landing/content"
 
-const DEFAULT_FOOTER =
-  "Invite-only. Need access? Ask a member for an invite."
+const DEFAULT_FOOTER = (
+  <>
+    Invite only. Need access?{" "}
+    <Link
+      href="/request-access"
+      className="underline-offset-4 hover:text-foreground hover:underline"
+    >
+      Apply for membership
+    </Link>
+    .
+  </>
+)
 
 export function AuthShell({
   title = "A Wright Network",
