@@ -28,6 +28,12 @@ import { isValidEmail } from "@/lib/validation/email"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -332,33 +338,43 @@ export function ApplyForm(props: ApplyFormProps) {
         ) : null}
 
         {currentStep === 2 ? (
-          <div className="flex flex-col gap-3">
-            {SOCIAL_FIELD_IDS.map((id) => {
-              const Icon = SOCIAL_FIELD_ICONS[id]
-              return (
-                <div key={id} className="grid gap-1.5">
-                  <Label htmlFor={`apply-${id}`} className="flex items-center gap-2">
-                    <Icon className="size-4" />
-                    {SOCIAL_LABELS[id]}
-                  </Label>
-                  <Input
-                    id={`apply-${id}`}
-                    value={socials[id]}
-                    onChange={(e) =>
-                      setSocials((current) => ({ ...current, [id]: e.target.value }))
-                    }
-                    placeholder={
-                      id === "linkedin"
-                        ? "linkedin.com/in/username"
-                        : id === "website"
-                          ? "yoursite.com"
-                          : "username or URL"
-                    }
-                  />
-                </div>
-              )
-            })}
-          </div>
+          <TooltipProvider>
+            <div className="flex flex-col gap-3">
+              {SOCIAL_FIELD_IDS.map((id) => {
+                const Icon = SOCIAL_FIELD_ICONS[id]
+                return (
+                  <div key={id} className="flex items-center gap-3">
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span className="flex size-9 shrink-0 items-center justify-center text-muted-foreground">
+                            <Icon className="size-4" aria-hidden="true" />
+                          </span>
+                        }
+                      />
+                      <TooltipContent>{SOCIAL_LABELS[id]}</TooltipContent>
+                    </Tooltip>
+                    <Input
+                      id={`apply-${id}`}
+                      aria-label={SOCIAL_LABELS[id]}
+                      className="min-w-0 flex-1"
+                      value={socials[id]}
+                      onChange={(e) =>
+                        setSocials((current) => ({ ...current, [id]: e.target.value }))
+                      }
+                      placeholder={
+                        id === "linkedin"
+                          ? "linkedin.com/in/username"
+                          : id === "website"
+                            ? "yoursite.com"
+                            : "username or URL"
+                      }
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </TooltipProvider>
         ) : null}
       </ApplyFormSteps>
     </AuthShell>
