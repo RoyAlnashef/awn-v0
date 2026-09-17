@@ -226,12 +226,17 @@ export function ApplyForm(props: ApplyFormProps) {
   return (
     <AuthShell
       showAppIcon
+      title={isRequestAccess ? "Request Access" : undefined}
       subtitle={
         isRequestAccess
-          ? "Apply for AWN membership. Every application is reviewed by hand."
+          ? ""
           : `${props.inviterName} invited you to apply for AWN membership.`
       }
-      footer="Membership is invite-only and reviewed manually by our team."
+      footer={
+        isRequestAccess
+          ? "Every application for AWN membership is reviewed by hand."
+          : "Membership is invite-only and reviewed manually by our team."
+      }
     >
       <ApplyFormSteps
         currentStep={currentStep}

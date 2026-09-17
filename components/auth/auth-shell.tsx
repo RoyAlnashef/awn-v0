@@ -45,7 +45,9 @@ export function AuthShell({
           >
             {title}
           </Link>
-          <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+          {subtitle ? (
+            <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+          ) : null}
         </div>
 
         <div className="rounded-2xl border bg-card/80 p-6 shadow-sm backdrop-blur-sm">
