@@ -16,7 +16,7 @@ export const landingContent = {
     signIn: "Sign in",
   },
   hero: {
-    title: "The private network for the people behind live entertainment.",
+    title: "The private network for the people behind entertainment.",
     primaryCta: "Request access",
     tagline: "Not open to the public",
   },

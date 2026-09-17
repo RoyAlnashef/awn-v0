@@ -18,7 +18,7 @@ export function LandingHero() {
         className="mb-8 size-18 rounded-[22%] shadow-lg sm:size-20"
       />
 
-      <h1 className="max-w-2xl font-heading text-h2 sm:text-h1 font-medium text-foreground tracking-tight text-balance">
+      <h1 className="max-w-2xl font-heading text-h1 font-medium text-foreground tracking-tight text-balance">
         {hero.title}
       </h1>
 
