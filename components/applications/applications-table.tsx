@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { ApplicationReviewPanel } from "@/components/applications/application-review-panel"
+import { ApplicationTitlesBadges } from "@/components/applications/application-titles-badges"
 import {
   ApplicationsFilters,
   getApplicationFilterCount,
@@ -159,7 +160,7 @@ export function ApplicationsTable({
                 <TableRow>
                   <TableHead>Applicant</TableHead>
                   <TableHead className="max-w-xs whitespace-normal">
-                    Title
+                    Titles
                   </TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Submitted</TableHead>
@@ -181,7 +182,7 @@ export function ApplicationsTable({
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs whitespace-normal wrap-break-word">
-                      {application.title}
+                      <ApplicationTitlesBadges title={application.title} />
                     </TableCell>
                     <TableCell>
                       {application.source === "request_access" ? (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ExternalLink } from "lucide-react"
 
+import { ApplicationTitlesBadges } from "@/components/applications/application-titles-badges"
 import { SOCIAL_FIELD_ICONS } from "@/components/icons/social-brand-icons"
 import {
   FLYOUT_DRAWER_CONTENT_CLASS,
@@ -95,7 +96,12 @@ export function ApplicationReviewPanel({
                   {application.fullName}
                 </h2>
                 <p className="text-sm text-muted-foreground">{application.email}</p>
-                <p className="mt-1 text-sm">{application.title}</p>
+                <div className="mt-2 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    Titles
+                  </p>
+                  <ApplicationTitlesBadges title={application.title} />
+                </div>
               </div>
               <Badge variant="outline" className={cn("border", status.className)}>
                 {status.label}

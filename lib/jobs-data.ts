@@ -238,6 +238,9 @@ export const roleGroups: RoleGroup[] = [
   },
 ]
 
+/** Flat list of all crew roles for comboboxes and search. */
+export const allRoles = roleGroups.flatMap((group) => group.roles)
+
 /** All touring departments for filters and profile forms. */
 export const departments = roleGroups.map((group) => group.department)
 

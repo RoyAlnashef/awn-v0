@@ -9,6 +9,7 @@ import {
   ApplyFormSteps,
   REQUEST_ACCESS_STEPS,
 } from "@/components/apply/apply-form-steps"
+import { RoleMultiSelectCombobox } from "@/components/apply/role-multi-select-combobox"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { PasswordField } from "@/components/auth/password-field"
 import { SOCIAL_FIELD_ICONS } from "@/components/icons/social-brand-icons"
@@ -59,7 +60,7 @@ export function ApplyForm(props: ApplyFormProps) {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
-  const [title, setTitle] = useState("")
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [resume, setResume] = useState<File | null>(null)
   const [socials, setSocials] = useState<Record<SocialFieldId, string>>({
     website: "",
@@ -103,8 +104,8 @@ export function ApplyForm(props: ApplyFormProps) {
       toast.error("Full name is required.")
       return false
     }
-    if (!title.trim()) {
-      toast.error("Title is required.")
+    if (selectedRoles.length === 0) {
+      toast.error("Select at least one role.")
       return false
     }
     if (!resume) {
@@ -156,7 +157,7 @@ export function ApplyForm(props: ApplyFormProps) {
         const formData = new FormData()
         formData.set("password", password)
         formData.set("fullName", fullName)
-        formData.set("title", title)
+        formData.set("title", selectedRoles.join(", "))
         formData.set("resume", resume)
 
         if (isRequestAccess) {
@@ -285,12 +286,17 @@ export function ApplyForm(props: ApplyFormProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="apply-title">Title / role</Label>
-              <Input
+              <div className="flex items-baseline justify-between gap-2">
+                <Label htmlFor="apply-title">Title / role</Label>
+                <p className="text-sm text-muted-foreground">
+                  {selectedRoles.length} of 5
+                </p>
+              </div>
+              <RoleMultiSelectCombobox
                 id="apply-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Monitor Engineer"
+                value={selectedRoles}
+                onValueChange={setSelectedRoles}
+                disabled={isPending}
               />
             </div>
 
