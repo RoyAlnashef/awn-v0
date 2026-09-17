@@ -32,7 +32,7 @@ export function LandingHero() {
           {hero.primaryCta}
         </Button>
 
-        <p className="text-body-sm text-muted">{hero.tagline}</p>
+        <p className="text-body-sm text-muted-foreground">{hero.tagline}</p>
       </div>
     </section>
   )
