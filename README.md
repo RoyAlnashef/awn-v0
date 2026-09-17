@@ -50,7 +50,7 @@ Create `.env.local` from [`.env.example`](.env.example) and set:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable (anon) key for browser + SSR clients |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key — server-only, never expose to the client |
 
-Clients live under `lib/supabase/`. Root `middleware.ts` refreshes auth sessions; it does not protect routes yet. Database schema and migrations are added separately as features are built.
+Clients live under `lib/supabase/`. Root `proxy.ts` refreshes auth sessions; it does not protect routes yet. Database schema and migrations are added separately as features are built.
 
 The Supabase CLI in this repo is linked to the **AWN-v0** project. After cloning, run `supabase link --project-ref dpjsyhdzsragnatcxbic` if needed.
 
