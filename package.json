@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@base-ui/react": "latest",
+    "@paper-design/shaders-react": "^0.0.80",
     "@react-three/fiber": "^9.7.0",
     "@shadcn/react": "^0.2.1",
     "@stepperize/react": "6.1.0",
