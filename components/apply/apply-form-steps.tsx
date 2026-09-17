@@ -76,7 +76,7 @@ export function ApplyFormSteps({
         steps={APPLY_FORM_STEPPER_STEPS}
         value={steps[currentStep].id}
         indicators={{
-          completed: <Check aria-hidden="true" />,
+          completed: <Check aria-hidden="true" className="scale-[0.8]" />,
         }}
         aria-label={`Application step ${currentStep + 1} of ${total}`}
       >
