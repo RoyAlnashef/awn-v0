@@ -17,7 +17,6 @@ export const landingContent = {
   },
   hero: {
     title: "The private network for the people behind live entertainment.",
-    subtitle: "By invitation only — every member is vetted by hand.",
     primaryCta: "Request access",
     tagline: "Not open to the public",
   },
