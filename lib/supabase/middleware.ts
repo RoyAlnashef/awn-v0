@@ -13,7 +13,6 @@ const PUBLIC_PREFIXES = [
   "/community-guidelines",
   "/job-posting-policy",
   "/faqs",
-  "/shaders",
 ]
 const PUBLIC_PATHS = [
   "/login/forgot-password",
