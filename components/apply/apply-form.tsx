@@ -27,6 +27,7 @@ import {
 import { isValidEmail } from "@/lib/validation/email"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -61,6 +62,7 @@ export function ApplyForm(props: ApplyFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [bio, setBio] = useState("")
   const [resume, setResume] = useState<File | null>(null)
   const [socials, setSocials] = useState<Record<SocialFieldId, string>>({
     website: "",
@@ -158,6 +160,7 @@ export function ApplyForm(props: ApplyFormProps) {
         formData.set("password", password)
         formData.set("fullName", fullName)
         formData.set("title", selectedRoles.join(", "))
+        formData.set("bio", bio.trim())
         formData.set("resume", resume)
 
         if (isRequestAccess) {
@@ -296,6 +299,21 @@ export function ApplyForm(props: ApplyFormProps) {
                 id="apply-title"
                 value={selectedRoles}
                 onValueChange={setSelectedRoles}
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <Label htmlFor="apply-bio">Bio</Label>
+                <p className="text-sm text-muted-foreground">Optional</p>
+              </div>
+              <Textarea
+                id="apply-bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={4}
+                placeholder="Tell the network about yourself…"
                 disabled={isPending}
               />
             </div>

@@ -81,6 +81,7 @@ type ApplicationRow = {
   full_name: string
   email: string
   title: string
+  bio: string | null
   resume_url: string | null
   social_links: SocialLinksInput
   status: MembershipApplicationStatus
@@ -155,6 +156,7 @@ function mapApplicationRow(row: ApplicationRow): MembershipApplication {
     fullName: row.full_name,
     email: row.email,
     title: row.title,
+    bio: row.bio,
     resumeUrl: row.resume_url,
     socialLinks: row.social_links ?? {},
     status: row.status,
@@ -206,6 +208,7 @@ type ParsedApplicationFields = {
   password: string
   fullName: string
   title: string
+  bio: string | null
   resume: File
   socialLinks: Record<SocialFieldId, string | null>
 }
@@ -214,6 +217,7 @@ function parseApplicationFields(formData: FormData): ParsedApplicationFields | A
   const password = String(formData.get("password") ?? "")
   const fullName = String(formData.get("fullName") ?? "").trim()
   const title = String(formData.get("title") ?? "").trim()
+  const bio = String(formData.get("bio") ?? "").trim() || null
   const resumeRaw = formData.get("resume")
   const resume =
     resumeRaw instanceof File && resumeRaw.size > 0 ? resumeRaw : null
@@ -241,7 +245,7 @@ function parseApplicationFields(formData: FormData): ParsedApplicationFields | A
     }
   }
 
-  return { password, fullName, title, resume, socialLinks }
+  return { password, fullName, title, bio, resume, socialLinks }
 }
 
 async function ensureEmailAvailableForApplication(
@@ -283,6 +287,7 @@ async function createMembershipApplication(input: {
   password: string
   fullName: string
   title: string
+  bio: string | null
   resume: File
   socialLinks: Record<SocialFieldId, string | null>
   inviteId: string | null
@@ -364,6 +369,7 @@ async function createMembershipApplication(input: {
     email,
     full_name: input.fullName,
     title: input.title,
+    bio: input.bio,
     status: "pending",
     role: "member",
     is_approved: false,
@@ -428,6 +434,7 @@ export async function submitApplication(
       password: parsed.password,
       fullName: parsed.fullName,
       title: parsed.title,
+      bio: parsed.bio,
       resume: parsed.resume,
       socialLinks: parsed.socialLinks,
       inviteId: invite.id,
@@ -491,6 +498,7 @@ export async function submitRequestAccessApplication(
       password: parsed.password,
       fullName: parsed.fullName,
       title: parsed.title,
+      bio: parsed.bio,
       resume: parsed.resume,
       socialLinks: parsed.socialLinks,
       inviteId: null,
@@ -603,6 +611,26 @@ export async function listApplications(): Promise<ListApplicationsResult> {
       return { ok: false, error: error.message }
     }
 
+    const inviteeUserIds = (data ?? [])
+      .map((row) => row.invitee_user_id)
+      .filter((id): id is string => Boolean(id))
+
+    const bioByUserId = new Map<string, string | null>()
+    if (inviteeUserIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, bio")
+        .in("id", inviteeUserIds)
+
+      if (profilesError) {
+        return { ok: false, error: profilesError.message }
+      }
+
+      for (const profile of profiles ?? []) {
+        bioByUserId.set(profile.id, profile.bio?.trim() || null)
+      }
+    }
+
     return {
       ok: true,
       applications: (data ?? []).map((row) => {
@@ -610,15 +638,17 @@ export async function listApplications(): Promise<ListApplicationsResult> {
         const invite = unwrapOne(
           record.invite as ApplicationRow["invite"] | ApplicationRow["invite"][],
         )
+        const inviteeUserId = (record.invitee_user_id as string | null) ?? null
 
         return mapApplicationRow({
           id: String(record.id),
           invite_id: (record.invite_id as string | null) ?? null,
           source: (record.source as MembershipApplicationSource) ?? "invite",
-          invitee_user_id: (record.invitee_user_id as string | null) ?? null,
+          invitee_user_id: inviteeUserId,
           full_name: String(record.full_name),
           email: String(record.email),
           title: String(record.title),
+          bio: inviteeUserId ? (bioByUserId.get(inviteeUserId) ?? null) : null,
           resume_url: (record.resume_url as string | null) ?? null,
           social_links: (record.social_links as SocialLinksInput) ?? {},
           status: record.status as MembershipApplicationStatus,

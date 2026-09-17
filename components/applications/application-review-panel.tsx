@@ -102,6 +102,11 @@ export function ApplicationReviewPanel({
                   </p>
                   <ApplicationTitlesBadges title={application.title} />
                 </div>
+                {application.bio ? (
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/90 text-pretty">
+                    {application.bio}
+                  </p>
+                ) : null}
               </div>
               <Badge variant="outline" className={cn("border", status.className)}>
                 {status.label}

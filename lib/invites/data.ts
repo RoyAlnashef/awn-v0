@@ -65,6 +65,7 @@ export type MembershipApplication = {
   fullName: string
   email: string
   title: string
+  bio: string | null
   resumeUrl: string | null
   socialLinks: SocialLinksInput
   status: MembershipApplicationStatus
