@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useEmailPreview } from "@/components/email/email-preview-provider"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { emailPreviewPageBg } from "@/lib/email/templates/base"
+import { emailPreviewPageBg, emailThemeColors } from "@/lib/email/templates/base"
 import { cn } from "@/lib/utils"
 
 export function PreviewPanelHeader() {
@@ -67,11 +67,15 @@ export function PreviewPanelHeader() {
 export function EmailPreviewPanel() {
   const { html, emptyMessage, previewTheme } = useEmailPreview()
   const pageBg = emailPreviewPageBg(previewTheme)
+  const cardBorder = emailThemeColors(previewTheme).cardBorder
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <PreviewPanelHeader />
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-popover">
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-popover"
+        style={{ borderColor: cardBorder }}
+      >
         {html ? (
           <iframe
             title="Email preview"

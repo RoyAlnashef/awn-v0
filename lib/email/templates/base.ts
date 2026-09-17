@@ -1,3 +1,8 @@
+import {
+  EMAIL_BRAND_LOGO_URL,
+  EMAIL_MARKETING_SITE_URL,
+} from "@/lib/email/constants"
+
 export type EmailTheme = "dark" | "light"
 
 export type EmailThemeColors = {
@@ -95,16 +100,25 @@ export function emailTextStyle(
   }
 }
 
+const EMAIL_BRAND_LOGO_SIZE = 56
+
+export function emailBrandLogo(src: string = EMAIL_BRAND_LOGO_URL): string {
+  return `<img src="${src}" alt="A Wright Network" width="${EMAIL_BRAND_LOGO_SIZE}" height="${EMAIL_BRAND_LOGO_SIZE}" style="display:block;border-radius:22%;" />`
+}
+
 export function emailLayout({
   preview,
   body,
   theme = "dark",
+  logoSrc,
 }: {
   preview: string
   body: string
   theme?: EmailTheme
+  logoSrc?: string
 }): string {
   const colors = emailThemeColors(theme)
+  const brandLogo = emailBrandLogo(logoSrc)
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -120,8 +134,8 @@ export function emailLayout({
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:${colors.cardBg};border:1px solid ${colors.cardBorder};border-radius:16px;overflow:hidden;">
           <tr>
-            <td style="padding:32px 28px 8px;">
-              <p style="margin:0;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:${colors.brandLabel};">A Wright Network</p>
+            <td align="left" style="padding:32px 28px 8px;">
+              ${brandLogo}
             </td>
           </tr>
           <tr>
@@ -130,7 +144,10 @@ export function emailLayout({
             </td>
           </tr>
         </table>
-        <p style="margin:24px 0 0;font-size:12px;color:${colors.muted};text-align:center;">
+        <p style="margin:24px 0 0;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;text-align:center;">
+          <a href="${EMAIL_MARKETING_SITE_URL}" style="color:${colors.brandLabel};text-decoration:none;">A Wright Network</a>
+        </p>
+        <p style="margin:8px 0 0;font-size:12px;color:${colors.muted};text-align:center;">
           People. Community. Opportunity.
         </p>
       </td>

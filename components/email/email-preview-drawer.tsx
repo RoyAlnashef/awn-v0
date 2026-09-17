@@ -7,7 +7,7 @@ import {
 import { useEmailPreview } from "@/components/email/email-preview-provider"
 import { PreviewPanelHeader } from "@/components/email/email-preview-panel"
 import { Drawer, DrawerContent } from "@/components/ui/drawer"
-import { emailPreviewPageBg } from "@/lib/email/templates/base"
+import { emailPreviewPageBg, emailThemeColors } from "@/lib/email/templates/base"
 
 export function EmailPreviewDrawer({
   open,
@@ -18,6 +18,7 @@ export function EmailPreviewDrawer({
 }) {
   const { html, emptyMessage, previewTheme } = useEmailPreview()
   const pageBg = emailPreviewPageBg(previewTheme)
+  const cardBorder = emailThemeColors(previewTheme).cardBorder
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
@@ -30,8 +31,8 @@ export function EmailPreviewDrawer({
               title="Email preview"
               srcDoc={html}
               sandbox=""
-              className="min-h-0 flex-1 rounded-xl border border-border"
-            style={{ backgroundColor: pageBg }}
+              className="min-h-0 flex-1 rounded-xl border"
+              style={{ backgroundColor: pageBg, borderColor: cardBorder }}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed p-8 text-center">
