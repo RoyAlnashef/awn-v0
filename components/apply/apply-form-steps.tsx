@@ -1,21 +1,31 @@
 "use client"
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import {
+  Stepper,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTrigger,
+} from "@/components/ui/stepper"
 
 export type ApplyFormStep = {
+  id: string
   title: string
 }
 
 export const APPLY_STEPS: ApplyFormStep[] = [
-  { title: "Create your account" },
-  { title: "Professional info" },
-  { title: "Social links" },
+  { id: "account", title: "Create your account" },
+  { id: "professional", title: "Professional info" },
+  { id: "social", title: "Social links" },
 ]
 
 export const REQUEST_ACCESS_STEPS = APPLY_STEPS
+
+const APPLY_FORM_STEPPER_STEPS = APPLY_STEPS.map(({ id }) => ({ id }))
 
 export function ApplyFormSteps({
   currentStep,
@@ -34,22 +44,29 @@ export function ApplyFormSteps({
 }) {
   const total = steps.length
   const step = steps[currentStep]
-  const percent = ((currentStep + 1) / total) * 100
   const isLastStep = currentStep === total - 1
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">
-            Step {currentStep + 1} of {total}
-          </span>
-          <span className="text-muted-foreground tabular-nums">
-            {Math.round(percent)}%
-          </span>
-        </div>
-        <Progress value={percent} className="mt-3" />
-      </div>
+      <Stepper
+        steps={APPLY_FORM_STEPPER_STEPS}
+        value={steps[currentStep].id}
+        indicators={{
+          completed: <Check aria-hidden="true" />,
+        }}
+        aria-label={`Application step ${currentStep + 1} of ${total}`}
+      >
+        <StepperNav>
+          {steps.map((stepItem) => (
+            <StepperItem key={stepItem.id} stepId={stepItem.id} disabled>
+              <StepperTrigger tabIndex={-1} aria-disabled="true">
+                <StepperIndicator variant="outline" className="rounded-full" />
+              </StepperTrigger>
+              <StepperSeparator />
+            </StepperItem>
+          ))}
+        </StepperNav>
+      </Stepper>
 
       <h2 className="font-heading text-lg font-semibold tracking-tight">
         {step.title}
