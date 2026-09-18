@@ -60,6 +60,7 @@ function actionError(error: unknown): ProfileActionResult {
 function revalidateProfilePaths() {
   revalidatePath("/account/profile")
   revalidatePath("/account/social")
+  revalidatePath("/account/resume")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
 }
@@ -443,12 +444,65 @@ export async function uploadProfileResume(
       }
     }
 
+    revalidateProfilePaths()
     return { ok: true, resumePath: path, signedUrl: signed.signedUrl, fileName }
   } catch (error) {
     if (error instanceof Error) {
       return { ok: false, error: error.message }
     }
     return { ok: false, error: "Something went wrong." }
+  }
+}
+
+export async function removeProfileResume(): Promise<ProfileActionResult> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { ok: false, error: "Unauthorized" }
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("resume_url")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      return { ok: false, error: profileError.message }
+    }
+
+    const resumePath = profile?.resume_url?.trim() || null
+    const admin = createAdminClient()
+
+    if (resumePath) {
+      const { error: deleteError } = await admin.storage
+        .from(RESUME_BUCKET)
+        .remove([resumePath])
+
+      if (deleteError) {
+        return { ok: false, error: deleteError.message }
+      }
+    }
+
+    const { data, error: updateError } = await admin
+      .from("profiles")
+      .update({ resume_url: null, resume_filename: null })
+      .eq("id", user.id)
+      .select(MEMBER_PROFILE_SELECT)
+      .single()
+
+    if (updateError) {
+      return { ok: false, error: updateError.message }
+    }
+
+    revalidateProfilePaths()
+    return { ok: true, person: toPersonFromProfile(data as unknown as MemberProfileRow) }
+  } catch (error) {
+    return actionError(error)
   }
 }
 
