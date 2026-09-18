@@ -278,7 +278,7 @@ export function PersonProfileCard({
 
   return (
     <TooltipProvider delay={400}>
-      <div className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-popover text-popover-foreground", className)}>
+      <div className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-card text-card-foreground", className)}>
         {/* Hero */}
         <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
           {person.banner ? (
@@ -491,7 +491,7 @@ export function PersonProfileCard({
                   {resolvedTourCredits.map((credit, index) => (
                     <li
                       key={credit.id ?? `${credit.title}-${index}`}
-                      className="relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5"
+                      className="relative overflow-hidden rounded-xl border border-border bg-popover p-4 pl-5"
                     >
                       <span
                         aria-hidden="true"
@@ -547,7 +547,7 @@ export function PersonProfileCard({
 
         {/* Footer actions */}
         {!isPublic ? (
-        <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-popover p-4">
+        <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-card p-4">
           <div className="flex items-center gap-2">
             <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
               <Button

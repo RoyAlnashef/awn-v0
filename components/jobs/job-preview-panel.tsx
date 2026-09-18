@@ -15,7 +15,7 @@ export function JobPreviewPanel({ job }: { job: Job }) {
       <p className="mb-4 shrink-0 text-center text-xs font-semibold tracking-widest text-muted-foreground/40 uppercase">
         Preview Only
       </p>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-popover">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <JobDetailContent
           job={job}
           applicantCount={applicantCount}

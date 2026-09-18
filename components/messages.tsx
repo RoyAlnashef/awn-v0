@@ -73,7 +73,7 @@ export function Messages() {
       {open ? (
         <SheetContent
           side="right"
-          className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border p-0 sm:max-w-md"
+          className="inset-y-3! right-3! h-auto! w-full gap-0 overflow-hidden rounded-2xl border bg-card p-0 text-card-foreground sm:max-w-md"
         >
           <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b p-4 pr-14">
             <div className="flex items-center gap-2">

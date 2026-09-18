@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DrawerClose } from "@/components/ui/drawer"
 
 export const FLYOUT_DRAWER_CONTENT_CLASS = cn(
-  "[--drawer-inset:--spacing(3)] gap-0 overflow-hidden rounded-2xl p-0",
+  "[--drawer-inset:--spacing(3)] gap-0 overflow-hidden rounded-2xl bg-card p-0 text-card-foreground",
   "data-[swipe-axis=x]:w-[calc(100%-2*var(--drawer-inset))] data-[swipe-axis=x]:sm:max-w-md",
 )
 

@@ -12,7 +12,7 @@ export function AccountProfilePreview() {
       <p className="mb-4 shrink-0 text-xs font-semibold tracking-widest text-center text-muted-foreground/40 uppercase">
         Preview Only
       </p>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-popover">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <PersonProfileCard
           person={draft}
           tourCredits={toProfileTourCredits(tourCredits)}

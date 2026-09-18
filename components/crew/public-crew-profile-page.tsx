@@ -44,7 +44,7 @@ export function PublicCrewProfilePage({
       <div className="crew-screen-only flex min-h-svh flex-col">
         <LandingHeader />
         <main className="flex flex-1 flex-col px-6 py-10 sm:px-8">
-          <div className="mx-auto w-full max-w-xl overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+          <div className="mx-auto w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card shadow-lg">
             <PersonProfileCard
               mode="public"
               person={person}

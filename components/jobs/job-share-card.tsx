@@ -41,9 +41,10 @@ export function JobShareCard({
     <Attachment
       className={cn(
         variant === "message" ? "max-w-full" : "max-w-sm",
+        "rounded-xl bg-popover",
         variant === "message" &&
           cn(
-            "cursor-pointer rounded-xl bg-card shadow-sm transition-colors has-data-[slot=attachment-content]:px-3 has-data-[slot=attachment-content]:py-4",
+            "cursor-pointer shadow-sm transition-colors has-data-[slot=attachment-content]:px-3 has-data-[slot=attachment-content]:py-4",
             isUrgent
               ? urgentJobCardBorderStyles
               : "border-border hover:border-primary/40",
