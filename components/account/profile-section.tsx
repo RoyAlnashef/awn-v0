@@ -1,8 +1,11 @@
 "use client"
 
 import { useTransition } from "react"
+import Link from "next/link"
+import { Copy, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
+import { getCrewProfilePath } from "@/lib/account/handle"
 import { updateMemberProfile } from "@/lib/account/profile-actions"
 import { departments } from "@/lib/jobs-data"
 import {
@@ -97,8 +100,60 @@ export function ProfileSection() {
     })
   }
 
+  const publicProfilePath = draft.handle
+    ? getCrewProfilePath(draft.handle)
+    : null
+
+  function handleCopyPublicUrl() {
+    if (!publicProfilePath) return
+    const url = `${window.location.origin}${publicProfilePath}`
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Public profile link copied"),
+      () => toast.error("Could not copy link"),
+    )
+  }
+
   return (
     <div className="flex flex-col gap-8">
+      {publicProfilePath ? (
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Public profile"
+            description="Share your public AWN profile with anyone — no login required."
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              readOnly
+              value={publicProfilePath}
+              className="font-mono text-sm"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleCopyPublicUrl}
+            >
+              <Copy />
+              <span className="sr-only">Copy public profile link</span>
+            </Button>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={
+                <Link
+                  href={publicProfilePath}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+            >
+              <ExternalLink />
+              View
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
       {/* Photos */}
       <section className="flex flex-col gap-3">
         <SectionHeading

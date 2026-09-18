@@ -6,6 +6,8 @@ import { safeRedirectPath } from "@/lib/auth/safe-redirect"
 const PUBLIC_PREFIXES = [
   "/login",
   "/auth/callback",
+  "/crew",
+  "/api/crew",
   "/apply",
   "/request-access",
   "/privacy",

@@ -1,0 +1,47 @@
+@media print {
+  @page {
+    margin: 0.5in;
+    size: letter;
+  }
+
+  body {
+    background: white !important;
+    color: #1a1a1a !important;
+  }
+
+  .crew-screen-only {
+    display: none !important;
+  }
+
+  .crew-print-only {
+    display: block !important;
+  }
+}
+
+@media screen {
+  .crew-print-only {
+    display: none;
+  }
+}
+
+.crew-resume-sheet {
+  background: white;
+  color: #1a1a1a;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.crew-resume-sheet .crew-resume-name {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.crew-resume-accent {
+  color: #c45c26;
+}
+
+.crew-resume-section-title {
+  color: #c45c26;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

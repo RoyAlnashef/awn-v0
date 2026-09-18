@@ -9,6 +9,7 @@ import {
   toProfileUpdateFromPerson,
   type MemberProfileRow,
 } from "@/lib/account/profile-data"
+import { ensureProfileHandle } from "@/lib/account/handle"
 import { listMemberTourCredits } from "@/lib/account/tour-credits-actions"
 import type { AccountTourCredit } from "@/lib/account-profile"
 import { AuthError } from "@/lib/auth/require-admin"
@@ -57,12 +58,16 @@ function actionError(error: unknown): ProfileActionResult {
   return { ok: false, error: "Something went wrong." }
 }
 
-function revalidateProfilePaths() {
+function revalidateProfilePaths(handle?: string | null) {
   revalidatePath("/account/profile")
   revalidatePath("/account/social")
   revalidatePath("/account/resume")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
+  revalidatePath("/crew", "layout")
+  if (handle?.trim()) {
+    revalidatePath(`/crew/${handle.trim()}`)
+  }
 }
 
 function bannerPublicUrl(userId: string, ext: string): string {
@@ -201,6 +206,21 @@ export async function updateMemberProfile(
     const admin = createAdminClient()
     const update = toProfileUpdateFromPerson(person)
 
+    const { data: currentProfile } = await admin
+      .from("profiles")
+      .select("handle, email")
+      .eq("id", person.id)
+      .maybeSingle()
+
+    if (!currentProfile?.handle?.trim()) {
+      await ensureProfileHandle(
+        admin,
+        person.id,
+        person.name,
+        currentProfile?.email ?? "",
+      )
+    }
+
     const { data, error } = await admin
       .from("profiles")
       .update(update)
@@ -212,7 +232,8 @@ export async function updateMemberProfile(
       return { ok: false, error: error.message }
     }
 
-    revalidateProfilePaths()
+    const savedRow = data as unknown as MemberProfileRow
+    revalidateProfilePaths(savedRow.handle)
 
     const [creditCountResult, vouchCountResult] = await Promise.all([
       admin

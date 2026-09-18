@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   useRef,
   useState,
@@ -37,6 +38,7 @@ import {
 } from "@/lib/account/tour-credits-actions"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
+import { getCrewProfilePath } from "@/lib/account/handle"
 import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -168,15 +170,18 @@ export function PersonProfileCard({
   className,
   heroRef: heroRefProp,
   onMessage,
+  onPrintResume,
   reserveTopRightForClose = false,
 }: {
   person: Person
   tourCredits?: TourCredit[]
-  mode: "interactive" | "preview"
+  mode: "interactive" | "preview" | "public"
   online?: boolean
   className?: string
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
+  /** Called when public visitor requests print resume (no uploaded PDF). */
+  onPrintResume?: () => void
   /** Leave room for a drawer close button at the hero's top-right. */
   reserveTopRightForClose?: boolean
 }) {
@@ -185,6 +190,10 @@ export function PersonProfileCard({
   const availability = availabilityConfig[person.availability]
   const isOnline = online ?? false
   const isPreview = mode === "preview"
+  const isPublic = mode === "public"
+  const isReadOnlyVouch = isPreview || isPublic
+  const showResumeButton =
+    isPublic || (isPreview ? Boolean(person.hasResume) : Boolean(person.handle))
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef
   const [followed, setFollowed] = useState(person.followed)
@@ -205,6 +214,29 @@ export function PersonProfileCard({
   }
 
   function handleResumeDownload() {
+    if (isPublic) {
+      if (!person.handle) return
+
+      if (person.hasResume) {
+        window.location.assign(`/api/crew/${encodeURIComponent(person.handle)}/resume`)
+        return
+      }
+
+      onPrintResume?.()
+      return
+    }
+
+    if (!person.hasResume) {
+      if (person.handle) {
+        window.open(
+          `${getCrewProfilePath(person.handle)}?print=resume`,
+          "_blank",
+          "noopener,noreferrer",
+        )
+      }
+      return
+    }
+
     startResumeTransition(async () => {
       const result = await getMemberResumeSignedUrl(person.id)
       if (!result.ok) {
@@ -221,6 +253,26 @@ export function PersonProfileCard({
       document.body.removeChild(link)
     })
   }
+
+  const profileHref = person.handle ? getCrewProfilePath(person.handle) : null
+  const profileButton = profileHref ? (
+    <Button
+      variant="ghost"
+      size="sm"
+      nativeButton={false}
+      render={
+        <Link href={profileHref} target="_blank" rel="noopener noreferrer" />
+      }
+    >
+      <ExternalLink />
+      Profile
+    </Button>
+  ) : (
+    <Button variant="ghost" size="sm" disabled>
+      <ExternalLink />
+      Profile
+    </Button>
+  )
 
   const socialLinks = getPersonSocialLinks(person)
 
@@ -281,27 +333,35 @@ export function PersonProfileCard({
                 <AvatarFallback className="text-lg">
                   {initials(person.name)}
                 </AvatarFallback>
-                <AvatarBadge online={isOnline} className="size-3.5" />
+                {!isPublic ? (
+                  <AvatarBadge online={isOnline} className="size-3.5" />
+                ) : null}
               </Avatar>
 
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 pt-6">
-                <PreviewTooltip preview={isPreview} label="View full profile" wrap>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={isPreview}
-                    aria-disabled={isPreview}
+                {!isPublic ? (
+                  isPreview ? (
+                    profileButton
+                  ) : (
+                    <PreviewTooltip preview={false} label="View full profile" wrap>
+                      {profileButton}
+                    </PreviewTooltip>
+                  )
+                ) : null}
+                {showResumeButton ? (
+                  <PreviewTooltip
+                    preview={isPreview}
+                    label={person.hasResume ? "Download resume" : "Save as PDF"}
+                    wrap
                   >
-                    <ExternalLink />
-                    Profile
-                  </Button>
-                </PreviewTooltip>
-                {person.hasResume ? (
-                  <PreviewTooltip preview={isPreview} label="Download resume" wrap>
                     <Button
                       variant="secondary"
                       size="sm"
-                      disabled={isPreview || isResumePending}
+                      disabled={
+                        isPreview ||
+                        isResumePending ||
+                        (!isPublic && !person.handle)
+                      }
                       aria-disabled={isPreview}
                       onClick={handleResumeDownload}
                     >
@@ -447,7 +507,7 @@ export function PersonProfileCard({
                             {credit.role && credit.years ? <span>·</span> : null}
                             {credit.years ? <span>{credit.years}</span> : null}
                           </div>
-                          {isPreview ? (
+                          {isReadOnlyVouch ? (
                             <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
                               <ThumbsUp className="size-3" />
                               {credit.vouchCount ?? 0}{" "}
@@ -486,6 +546,7 @@ export function PersonProfileCard({
         </ScrollArea>
 
         {/* Footer actions */}
+        {!isPublic ? (
         <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-popover p-4">
           <div className="flex items-center gap-2">
             <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
@@ -553,8 +614,9 @@ export function PersonProfileCard({
             </Button>
           </PreviewTooltip>
         </div>
+        ) : null}
 
-        {!isPreview ? (
+        {!isPreview && !isPublic ? (
           <>
             <ShareToMessagesDrawer
               open={shareOpen}

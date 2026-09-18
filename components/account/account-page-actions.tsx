@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Contact, ExternalLink } from "lucide-react"
 
+import { getCrewProfilePath } from "@/lib/account/handle"
 import { toProfileTourCredits } from "@/lib/account-profile"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,23 +19,41 @@ import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 export function AccountPageActions() {
   const { draft, tourCredits, online } = useAccountProfile()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const profileHref = draft.handle ? getCrewProfilePath(draft.handle) : null
 
   return (
     <TooltipProvider delay={400}>
       <div className="flex flex-wrap items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger
+        {profileHref ? (
+          <Button
+            variant="outline"
+            nativeButton={false}
             render={
-              <span className="inline-flex">
-                <Button variant="outline" disabled>
-                  <ExternalLink />
-                  My Profile
-                </Button>
-              </span>
+              <Link
+                href={profileHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
             }
-          />
-          <TooltipContent>Public profile page coming soon</TooltipContent>
-        </Tooltip>
+          >
+            <ExternalLink />
+            My Profile
+          </Button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="inline-flex">
+                  <Button variant="outline" disabled>
+                    <ExternalLink />
+                    My Profile
+                  </Button>
+                </span>
+              }
+            />
+            <TooltipContent>Profile URL unavailable</TooltipContent>
+          </Tooltip>
+        )}
 
         <Button
           variant="outline"

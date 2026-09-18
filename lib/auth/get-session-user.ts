@@ -12,6 +12,7 @@ export type SessionUser = {
   title: string
   avatarUrl?: string
   initials: string
+  handle?: string
   canAccessAdmin: boolean
   canPostJobs: boolean
   isApproved: boolean
@@ -35,7 +36,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, title, avatar_url, role, status, is_approved, appear_offline, last_active_at, availability",
+      "full_name, email, title, avatar_url, handle, role, status, is_approved, appear_offline, last_active_at, availability",
     )
     .eq("id", user.id)
     .maybeSingle()
@@ -56,6 +57,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     title: profile?.title?.trim() || "",
     avatarUrl: profile?.avatar_url ?? undefined,
     initials: initials(name),
+    handle: profile?.handle?.trim() || undefined,
     canAccessAdmin: canAccessAdmin(profile),
     canPostJobs: canPostJobs(profile),
     isApproved: profile?.is_approved ?? false,

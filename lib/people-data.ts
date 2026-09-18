@@ -121,6 +121,8 @@ export interface Person {
   linkedin?: string
   youtube?: string
   hasResume?: boolean
+  /** Public profile URL slug — /crew/[handle] */
+  handle?: string
 }
 
 export interface TourCredit {
