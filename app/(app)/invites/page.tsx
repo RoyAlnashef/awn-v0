@@ -1,8 +1,10 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { AdminInvitesTable } from "@/components/invites/admin-invites-table"
 import { InvitePopoverTrigger } from "@/components/invites/invite-popover"
 import { PageShell } from "@/components/page-shell"
+import { Button } from "@/components/ui/button"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { listAllInvites } from "@/lib/invites/actions"
 import { findNavItem } from "@/lib/nav"
@@ -21,7 +23,27 @@ export default async function InvitesPage() {
     <PageShell
       title={item.title}
       description={item.description}
-      actions={<InvitePopoverTrigger />}
+      actions={
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/users" />}
+          >
+            Users
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/applications" />}
+          >
+            Applications
+          </Button>
+          <InvitePopoverTrigger />
+        </>
+      }
     >
       <AdminInvitesTable
         initialInvites={result.ok ? result.invites : []}
