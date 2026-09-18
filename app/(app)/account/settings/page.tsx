@@ -1,5 +1,5 @@
-import { AccountSettingsSection } from "@/components/account/account-settings-section"
+import { redirect } from "next/navigation"
 
-export default function AccountSettingsPage() {
-  return <AccountSettingsSection />
+export default function AccountSettingsRedirectPage() {
+  redirect("/settings/account")
 }
