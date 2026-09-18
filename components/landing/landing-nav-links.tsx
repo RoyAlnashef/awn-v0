@@ -13,7 +13,7 @@ export function LandingNavLinks({ className }: LandingNavLinksProps) {
   return (
     <nav
       className={cn(
-        "flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:w-auto sm:justify-start",
+        "flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2",
         className,
       )}
     >
