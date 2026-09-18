@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { landingContent } from "@/components/landing/content"
+import { MeshGradientBackground } from "@/components/landing/mesh-gradient-background"
 
 const DEFAULT_FOOTER = (
   <>
@@ -31,8 +32,9 @@ export function AuthShell({
   footer?: ReactNode
 }) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="relative isolate flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 py-12">
+      <MeshGradientBackground />
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           {showAppIcon ? (
             <Link
