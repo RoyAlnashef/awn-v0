@@ -129,6 +129,8 @@ export interface TourCredit {
   /** DB id — present when loaded from the server; absent in preview/mock data. */
   id?: string
   title: string
+  /** Artist or act name when distinct from the tour/show title. */
+  artist?: string
   venueTier: VenueTier
   role: string
   years: string

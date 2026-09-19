@@ -1,7 +1,8 @@
 import { getCrewProfilePath } from "@/lib/account/handle"
+import { buildProfileDetailsRows } from "@/lib/crew/profile-details-rows"
+import type { ProfileDetailsRow } from "@/lib/crew/profile-details-rows"
 import { getPersonProfile } from "@/lib/people-data"
-import type { Person, TourCredit, WorkAuth } from "@/lib/people-data"
-import { getPersonSocialLinks } from "@/lib/social-links"
+import type { Person, TourCredit } from "@/lib/people-data"
 
 export type PublicCrewProfile = {
   person: Person
@@ -12,15 +13,11 @@ export type PublicCrewProfile = {
 export type CrewResumeData = {
   handle: string
   profileUrl: string
+  displayProfileUrl: string
   person: Person
   tourCredits: TourCredit[]
   bio: string
-  competencies: string[]
-  socialLinks: ReturnType<typeof getPersonSocialLinks>
-  workAuth: WorkAuth[]
-  yearsExperience: number
-  venueTiers: Person["venueTiers"]
-  department: string
+  detailsRows: ProfileDetailsRow[]
 }
 
 export function buildCrewResumeData(
@@ -30,17 +27,15 @@ export function buildCrewResumeData(
   const { person, tourCredits, handle } = profile
   const personProfile = getPersonProfile(person, tourCredits)
 
+  const profileUrl = `${siteOrigin}${getCrewProfilePath(handle)}`
+
   return {
     handle,
-    profileUrl: `${siteOrigin}${getCrewProfilePath(handle)}`,
+    profileUrl,
+    displayProfileUrl: profileUrl.replace(/^https?:\/\//, ""),
     person,
     tourCredits,
     bio: personProfile.bio,
-    competencies: person.skills.length > 0 ? person.skills : [person.department],
-    socialLinks: getPersonSocialLinks(person),
-    workAuth: person.workAuth,
-    yearsExperience: person.yearsExperience,
-    venueTiers: person.venueTiers,
-    department: person.department,
+    detailsRows: buildProfileDetailsRows(person),
   }
 }

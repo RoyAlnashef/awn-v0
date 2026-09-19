@@ -212,6 +212,7 @@ export function toTourCreditsFromRows(
     return {
       id: row.id,
       title: row.title,
+      artist: row.artist?.trim() || undefined,
       venueTier: row.venue_tier ? venueTierToUi[row.venue_tier] : "Arena",
       role: row.role,
       years: row.years?.trim() || "—",

@@ -1,177 +1,171 @@
 import type { CrewResumeData } from "@/lib/crew/build-resume-data"
+import { formatResumeCredit } from "@/lib/crew/format-resume-credit"
 import { availabilityConfig, initials } from "@/lib/people-data"
 
+import { CrewResumeQr } from "./crew-resume-qr"
 import "./crew-print.css"
 
+function ResumeSkills({ data }: { data: CrewResumeData }) {
+  const skills =
+    data.person.skills.length > 0
+      ? data.person.skills
+      : data.person.department
+        ? [data.person.department]
+        : []
+
+  if (skills.length === 0) return null
+
+  return (
+    <section>
+      <h2 className="crew-resume-section-title mb-3">Skills</h2>
+      <div className="flex flex-wrap gap-1.5">
+        {skills.map((skill) => (
+          <span key={skill} className="crew-resume-skill-pill">
+            {skill}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
-  const { person, tourCredits, bio, competencies, socialLinks, workAuth } = data
+  const { person, tourCredits, bio } = data
   const availability = availabilityConfig[person.availability]
   const location = person.homeBase || person.city
-  const subtitle = [person.role, location].filter(Boolean).join(" · ")
+  const subtitle = [person.role, location].filter(Boolean).join(" • ")
 
   return (
     <div className="crew-print-only crew-resume-sheet">
-      <div className="mx-auto max-w-204 px-8 py-8">
-        <header className="mb-6 flex items-start justify-between gap-6 border-b border-neutral-200 pb-5">
-          <div className="flex items-start gap-4">
-            {person.avatar ? (
-              <img
-                src={person.avatar}
-                alt=""
-                className="size-16 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-lg font-semibold text-neutral-600">
-                {initials(person.name)}
+      <div className="mx-auto max-w-204">
+        <header className="crew-resume-header px-8 py-5">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex items-start gap-4">
+              {person.avatar ? (
+                <img
+                  src={person.avatar}
+                  alt=""
+                  className="size-16 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-white text-lg font-semibold text-neutral-600">
+                  {initials(person.name)}
+                </div>
+              )}
+              <div>
+                <h1 className="crew-resume-name text-2xl font-semibold tracking-tight">
+                  {person.name}
+                </h1>
+                {subtitle ? (
+                  <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
+                ) : null}
+                <p className="mt-2 inline-flex items-center gap-1.5">
+                  <span className="crew-resume-availability-dot" />
+                  <span className="crew-resume-availability-label">
+                    {availability.label}
+                  </span>
+                </p>
               </div>
-            )}
-            <div>
-              <h1 className="crew-resume-name text-2xl font-semibold tracking-tight">
-                {person.name}
-              </h1>
-              {subtitle ? (
-                <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
-              ) : null}
-              <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                {availability.label}
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-bold tracking-tight">awn.</p>
+              <p className="mt-0.5 text-[10px] font-semibold tracking-[0.2em] text-neutral-500 uppercase">
+                A Wright Network
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <img
-              src="/awn-logo-mark.svg"
-              alt="AWN"
-              className="ml-auto size-8 opacity-90"
-            />
-            <p className="mt-1 text-[10px] font-semibold tracking-[0.2em] text-neutral-500 uppercase">
-              A Wright Network
-            </p>
-          </div>
         </header>
 
-        <div className="grid grid-cols-[1fr_2fr] gap-8">
-          <aside className="space-y-5">
-            {(person.skills.length > 0 || person.department) && (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">Skills</h2>
-                <ul className="space-y-1 text-sm text-neutral-700">
-                  {person.department ? <li>{person.department}</li> : null}
-                  {person.skills.map((skill) => (
-                    <li key={skill}>{skill}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
+        <div className="px-8 py-6">
+          {bio ? (
+            <p className="mb-6 text-sm leading-relaxed text-neutral-800 whitespace-pre-line">
+              {bio}
+            </p>
+          ) : null}
 
-            {socialLinks.length > 0 && (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">Links</h2>
-                <ul className="space-y-1 text-sm">
-                  {socialLinks.map((link) => (
-                    <li key={link.id}>
-                      <span className="text-neutral-800">{link.label}: </span>
-                      <span className="text-neutral-600">{link.display}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+          <div className="grid grid-cols-[1.6fr_1fr] gap-8">
+            <section>
+              {tourCredits.length > 0 ? (
+                <>
+                  <h2 className="crew-resume-section-title mb-3">
+                    Tour Credits
+                  </h2>
+                  <ul>
+                    {tourCredits.map((credit, index) => {
+                      const display = formatResumeCredit(credit)
 
-            {workAuth.length > 0 && (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">
-                  Touring Passport
-                </h2>
-                <ul className="space-y-1 text-sm text-neutral-700">
-                  {workAuth.map((auth) => (
-                    <li key={auth}>{auth}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {(person.yearsExperience > 0 || person.venueTiers.length > 0) && (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">Experience</h2>
-                <ul className="space-y-1 text-sm text-neutral-700">
-                  {person.yearsExperience > 0 ? (
-                    <li>{person.yearsExperience}+ years touring</li>
-                  ) : null}
-                  {person.venueTiers.map((tier) => (
-                    <li key={tier}>{tier}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </aside>
-
-          <main className="space-y-5">
-            {bio ? (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">
-                  Professional Summary
-                </h2>
-                <p className="text-sm leading-relaxed text-neutral-800 whitespace-pre-line">
-                  {bio}
-                </p>
-              </section>
-            ) : null}
-
-            {competencies.length > 0 && (
-              <section>
-                <h2 className="crew-resume-section-title mb-2">
-                  Core Competencies
-                </h2>
-                <ul className="list-disc space-y-1 pl-4 text-sm text-neutral-800">
-                  {competencies.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {tourCredits.length > 0 && (
-              <section>
-                <h2 className="crew-resume-section-title mb-3">Tour Credits</h2>
-                <ul className="space-y-2">
-                  {tourCredits.map((credit, index) => (
-                    <li
-                      key={credit.id ?? `${credit.title}-${index}`}
-                      className="flex items-baseline justify-between gap-4 border-b border-neutral-100 pb-2 text-sm last:border-0"
-                    >
-                      <div>
-                        <span className="crew-resume-name font-semibold text-neutral-900">
-                          {credit.title}
-                        </span>
-                        {credit.role ? (
-                          <span className="ml-2 text-neutral-600">
-                            {credit.role}
-                          </span>
-                        ) : null}
-                      </div>
-                      {credit.years && credit.years !== "—" ? (
-                        <span
-                          className={
-                            index === 0
-                              ? "crew-resume-accent shrink-0 font-medium"
-                              : "shrink-0 text-neutral-500"
-                          }
+                      return (
+                        <li
+                          key={credit.id ?? `${credit.title}-${index}`}
+                          className="border-b border-neutral-200 py-3 first:pt-0 last:border-0"
                         >
-                          {credit.years}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </main>
-        </div>
+                          <div className="flex items-baseline justify-between gap-4">
+                            <span className="crew-resume-name text-sm font-semibold text-neutral-900">
+                              {display.primary}
+                            </span>
+                            {credit.years && credit.years !== "—" ? (
+                              <span className="shrink-0 text-sm text-neutral-700">
+                                {credit.years}
+                              </span>
+                            ) : null}
+                          </div>
+                          {display.subtitle ? (
+                            <p className="mt-0.5 text-sm text-neutral-700">
+                              {display.subtitle}
+                            </p>
+                          ) : null}
+                          {display.metadata.length > 0 ? (
+                            <p className="mt-1 text-xs text-neutral-500">
+                              {display.metadata.join(" • ")}
+                            </p>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              ) : null}
+            </section>
 
-        <footer className="mt-8 flex items-end justify-between border-t border-neutral-200 pt-4 text-[10px] text-neutral-500">
-          <span>{data.profileUrl}</span>
-          <span>A Wright Network — By Invitation Only</span>
-        </footer>
+            <aside className="space-y-5">
+              {data.detailsRows.length > 0 ? (
+                <section>
+                  <h2 className="crew-resume-section-title mb-3">Details</h2>
+                  <dl className="space-y-2.5">
+                    {data.detailsRows.map((row) => (
+                      <div key={row.label} className="crew-resume-details-row">
+                        <dt className="crew-resume-details-label">
+                          {row.label}
+                        </dt>
+                        <dd className="crew-resume-details-value">
+                          {row.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              ) : null}
+
+              <ResumeSkills data={data} />
+
+              <div className="flex items-center gap-3 pt-1">
+                <div className="shrink-0">
+                  <CrewResumeQr url={data.profileUrl} />
+                </div>
+                <p className="text-[10px] leading-snug text-neutral-500">
+                  Scan for live profile
+                </p>
+              </div>
+            </aside>
+          </div>
+
+          <footer className="mt-8 flex items-end justify-between border-t border-neutral-200 pt-4 text-[10px] text-neutral-500">
+            <span>{data.displayProfileUrl}</span>
+            <span className="font-semibold tracking-[0.08em] uppercase">
+              AWN. · BY INVITATION ONLY
+            </span>
+          </footer>
+        </div>
       </div>
     </div>
   )
