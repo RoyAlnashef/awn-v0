@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { AuthError } from "@/lib/auth/require-admin"
 import { requireProfileEditor } from "@/lib/auth/require-profile-editor"
+import { revalidateCrewProfilePaths } from "@/lib/crew/revalidate"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export type AvatarActionResult =
@@ -66,12 +67,26 @@ async function deleteUserAvatarObjects(
   }
 }
 
-function revalidateAvatarPaths() {
+function revalidateAvatarPaths(handle?: string | null) {
   revalidatePath("/users")
   revalidatePath("/settings")
   revalidatePath("/account/profile")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
+  revalidateCrewProfilePaths(handle)
+}
+
+async function getProfileHandle(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+): Promise<string | null> {
+  const { data } = await admin
+    .from("profiles")
+    .select("handle")
+    .eq("id", userId)
+    .maybeSingle()
+
+  return data?.handle?.trim() || null
 }
 
 export async function uploadUserAvatar(
@@ -130,7 +145,8 @@ export async function uploadUserAvatar(
       return { ok: false, error: profileError.message }
     }
 
-    revalidateAvatarPaths()
+    const handle = await getProfileHandle(admin, userId)
+    revalidateAvatarPaths(handle)
     return { ok: true, avatarUrl }
   } catch (error) {
     return actionError(error)
@@ -155,7 +171,8 @@ export async function removeUserAvatar(
       return { ok: false, error: profileError.message }
     }
 
-    revalidateAvatarPaths()
+    const handle = await getProfileHandle(admin, userId)
+    revalidateAvatarPaths(handle)
     return { ok: true }
   } catch (error) {
     return actionError(error)

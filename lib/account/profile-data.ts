@@ -66,6 +66,7 @@ export interface MemberProfileRow {
   resume_url: string | null
   handle: string | null
   created_at: string
+  updated_at: string
 }
 
 export interface TourCreditRow {
@@ -334,6 +335,7 @@ export const MEMBER_PROFILE_SELECT = [
   "resume_url",
   "handle",
   "created_at",
+  "updated_at",
 ].join(", ")
 
 export const TOUR_CREDIT_SELECT =
