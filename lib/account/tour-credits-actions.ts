@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import {
   TOUR_CREDIT_SELECT,
+  sortTourCreditRowsByStartDateDesc,
   tourCreditRowToAccountCredit,
   venueTierToDbValue,
   type TourCreditRow,
@@ -75,16 +76,14 @@ export async function listMemberTourCredits(
       .from("tour_credits")
       .select(TOUR_CREDIT_SELECT)
       .eq("profile_id", profileId)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true })
 
     if (error) {
       return { ok: false, error: error.message }
     }
 
-    const credits = ((data ?? []) as unknown as TourCreditRow[]).map(
-      tourCreditRowToAccountCredit,
-    )
+    const credits = sortTourCreditRowsByStartDateDesc(
+      (data ?? []) as unknown as TourCreditRow[],
+    ).map(tourCreditRowToAccountCredit)
 
     return { ok: true, credits }
   } catch (error) {

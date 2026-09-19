@@ -1,6 +1,7 @@
 import {
   MEMBER_PROFILE_SELECT,
   TOUR_CREDIT_SELECT,
+  sortTourCreditRowsByStartDateDesc,
   toPersonFromProfile,
   toTourCreditsFromRows,
   type MemberProfileRow,
@@ -43,15 +44,15 @@ async function fetchPublicProfileByHandle(
     .from("tour_credits")
     .select(TOUR_CREDIT_SELECT)
     .eq("profile_id", row.id)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true })
 
   if (creditsError) {
     return null
   }
 
   const tourCredits = toTourCreditsFromRows(
-    (creditRows ?? []) as unknown as TourCreditRow[],
+    sortTourCreditRowsByStartDateDesc(
+      (creditRows ?? []) as unknown as TourCreditRow[],
+    ),
   )
 
   const [creditCountResult, vouchCountResult] = await Promise.all([

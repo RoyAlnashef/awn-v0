@@ -338,6 +338,37 @@ export const MEMBER_PROFILE_SELECT = [
 export const TOUR_CREDIT_SELECT =
   "id, profile_id, title, artist, role, venue_tier, years, sort_order, created_at, engagement_type, started_at, ended_at, is_current, notes, credit_vouches(count)"
 
+function tourCreditStartTimestamp(row: TourCreditRow): number | null {
+  if (row.started_at) {
+    const timestamp = new Date(row.started_at).getTime()
+    if (!Number.isNaN(timestamp)) return timestamp
+  }
+
+  const yearMatch = row.years?.trim().match(/^(\d{4})/)
+  if (yearMatch) {
+    return new Date(`${yearMatch[1]}-01-01`).getTime()
+  }
+
+  return null
+}
+
+export function sortTourCreditRowsByStartDateDesc(
+  rows: TourCreditRow[],
+): TourCreditRow[] {
+  return rows.toSorted((a, b) => {
+    const aStart = tourCreditStartTimestamp(a)
+    const bStart = tourCreditStartTimestamp(b)
+
+    if (aStart !== null && bStart !== null && bStart !== aStart) {
+      return bStart - aStart
+    }
+    if (aStart !== null && bStart === null) return -1
+    if (aStart === null && bStart !== null) return 1
+
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+}
+
 export function tourCreditRowToAccountCredit(row: TourCreditRow) {
   const vouchCount = row.credit_vouches?.[0]?.count ?? 0
   return {
