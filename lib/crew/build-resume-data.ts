@@ -8,6 +8,7 @@ export type PublicCrewProfile = {
   person: Person
   tourCredits: TourCredit[]
   handle: string
+  updatedAt: string
 }
 
 export type CrewResumeData = {

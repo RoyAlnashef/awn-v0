@@ -2,8 +2,11 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { PublicCrewProfilePage } from "@/components/crew/public-crew-profile-page"
+import { buildCrewProfileMetadata } from "@/lib/crew/metadata"
 import { getPublicCrewProfile } from "@/lib/crew/public-profile"
 import { getPublicSiteOrigin } from "@/lib/site-origin"
+
+export const dynamic = "force-dynamic"
 
 type PageProps = {
   params: Promise<{ handle: string }>
@@ -18,21 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Profile not found | AWN" }
   }
 
-  const { person } = profile
-  const description =
-    person.bio?.slice(0, 160) ||
-    `${person.name}${person.role ? ` — ${person.role}` : ""} on AWN.`
-
-  return {
-    title: `${person.name} | AWN`,
-    description,
-    openGraph: {
-      title: `${person.name} | AWN`,
-      description,
-      type: "profile",
-      ...(person.avatar ? { images: [{ url: person.avatar }] } : {}),
-    },
-  }
+  return buildCrewProfileMetadata(profile)
 }
 
 export default async function PublicCrewProfileRoute({

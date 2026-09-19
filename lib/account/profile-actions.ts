@@ -1,5 +1,6 @@
 "use server"
 
+import { after } from "next/server"
 import { revalidatePath } from "next/cache"
 
 import {
@@ -15,6 +16,8 @@ import type { AccountTourCredit } from "@/lib/account-profile"
 import { AuthError } from "@/lib/auth/require-admin"
 import { requireProfileEditor } from "@/lib/auth/require-profile-editor"
 import type { Person } from "@/lib/people-data"
+import { revalidateCrewProfilePaths } from "@/lib/crew/revalidate"
+import { scrapeCrewProfileLinkPreview } from "@/lib/crew/scrape-link-preview"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -58,16 +61,16 @@ function actionError(error: unknown): ProfileActionResult {
   return { ok: false, error: "Something went wrong." }
 }
 
-function revalidateProfilePaths(handle?: string | null) {
+function revalidateProfilePaths(
+  handle?: string | null,
+  previousHandle?: string | null,
+) {
   revalidatePath("/account/profile")
   revalidatePath("/account/social")
   revalidatePath("/account/resume")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
-  revalidatePath("/crew", "layout")
-  if (handle?.trim()) {
-    revalidatePath(`/crew/${handle.trim()}`)
-  }
+  revalidateCrewProfilePaths(handle, previousHandle)
 }
 
 function bannerPublicUrl(userId: string, ext: string): string {
@@ -212,6 +215,8 @@ export async function updateMemberProfile(
       .eq("id", person.id)
       .maybeSingle()
 
+    const previousHandle = currentProfile?.handle?.trim() || null
+
     if (!currentProfile?.handle?.trim()) {
       await ensureProfileHandle(
         admin,
@@ -233,7 +238,12 @@ export async function updateMemberProfile(
     }
 
     const savedRow = data as unknown as MemberProfileRow
-    revalidateProfilePaths(savedRow.handle)
+    const savedHandle = savedRow.handle?.trim() || null
+    revalidateProfilePaths(savedHandle, previousHandle)
+
+    if (savedHandle) {
+      after(() => scrapeCrewProfileLinkPreview(savedHandle))
+    }
 
     const [creditCountResult, vouchCountResult] = await Promise.all([
       admin

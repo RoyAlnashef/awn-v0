@@ -68,6 +68,7 @@ async function fetchPublicProfileByHandle(
 
   return {
     handle: resolvedHandle,
+    updatedAt: row.updated_at,
     person: toPersonFromProfile(row, {
       tourCreditCount: creditCountResult.count ?? tourCredits.length,
       vouchCount: vouchCountResult.count ?? 0,

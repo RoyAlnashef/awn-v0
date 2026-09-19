@@ -87,7 +87,9 @@ export function AccountProfileProvider({
       if (result.person) {
         commitSaved(result.person)
       }
-      toast.success("Profile saved")
+      toast.success(
+        "Profile saved. Link previews in messaging apps may take a few minutes to update.",
+      )
     })
   }, [draft, commitSaved])
 
