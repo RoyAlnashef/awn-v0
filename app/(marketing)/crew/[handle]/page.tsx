@@ -3,16 +3,11 @@ import { notFound } from "next/navigation"
 
 import { PublicCrewProfilePage } from "@/components/crew/public-crew-profile-page"
 import { getPublicCrewProfile } from "@/lib/crew/public-profile"
+import { getPublicSiteOrigin } from "@/lib/site-origin"
 
 type PageProps = {
   params: Promise<{ handle: string }>
   searchParams: Promise<{ print?: string }>
-}
-
-function siteOrigin(): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.trim()
-  if (base) return base.replace(/\/$/, "")
-  return "https://awn.network"
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -56,7 +51,7 @@ export default async function PublicCrewProfileRoute({
   return (
     <PublicCrewProfilePage
       profile={profile}
-      siteOrigin={siteOrigin()}
+      siteOrigin={getPublicSiteOrigin()}
       autoPrint={autoPrint}
     />
   )

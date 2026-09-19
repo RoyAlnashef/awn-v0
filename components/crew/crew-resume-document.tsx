@@ -38,8 +38,8 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
   return (
     <div className="crew-print-only crew-resume-sheet">
       <div className="mx-auto max-w-204">
-        <header className="crew-resume-header px-8 py-5">
-          <div className="flex items-start justify-between gap-6">
+        <header className="crew-resume-header px-8 pt-5">
+          <div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-5">
             <div className="flex items-start gap-4">
               {person.avatar ? (
                 <img
@@ -67,9 +67,13 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xl font-bold tracking-tight">awn.</p>
-              <p className="mt-0.5 text-[10px] font-semibold tracking-[0.2em] text-neutral-500 uppercase">
+            <div className="flex flex-col items-end">
+              <img
+                src="/apple-touch-icon.png"
+                alt="AWN"
+                className="size-8 rounded-[22%]"
+              />
+              <p className="mt-1 text-[10px] font-semibold tracking-[0.2em] text-neutral-500 uppercase">
                 A Wright Network
               </p>
             </div>
@@ -161,8 +165,8 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
 
           <footer className="mt-8 flex items-end justify-between border-t border-neutral-200 pt-4 text-[10px] text-neutral-500">
             <span>{data.displayProfileUrl}</span>
-            <span className="font-semibold tracking-[0.08em] uppercase">
-              AWN. · BY INVITATION ONLY
+            <span className="font-semibold tracking-[0.08em]">
+              AWN • People. Community. Opportunity.
             </span>
           </footer>
         </div>
