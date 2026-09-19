@@ -40,6 +40,7 @@ import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { getCrewProfilePath } from "@/lib/account/handle"
 import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
+import { CrewProfileBio } from "@/components/crew/crew-profile-bio"
 import { formatShortDate } from "@/lib/crew/format-profile-date"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -468,11 +469,7 @@ export function PersonProfileCard({
             </div>
 
             {/* Bio */}
-            {profile.bio ? (
-              <p className="text-sm leading-relaxed text-foreground/90 text-pretty">
-                {profile.bio}
-              </p>
-            ) : null}
+            {profile.bio ? <CrewProfileBio bio={profile.bio} /> : null}
 
             {/* Tour credits */}
             {resolvedTourCredits.length > 0 ? (
