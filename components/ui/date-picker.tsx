@@ -63,6 +63,7 @@ export function DatePicker({
   highlightDate,
   className,
   clearable = true,
+  disabled = false,
 }: {
   value?: Date
   onChange: (date?: Date) => void
@@ -74,6 +75,7 @@ export function DatePicker({
   highlightDate?: Date
   className?: string
   clearable?: boolean
+  disabled?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
   const [month, setMonth] = React.useState(() =>
@@ -88,16 +90,22 @@ export function DatePicker({
 
   return (
     <div className={cn("relative", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={disabled ? false : open}
+        onOpenChange={(next) => {
+          if (!disabled) setOpen(next)
+        }}
+      >
         <PopoverTrigger
           render={
             <Button
               type="button"
               variant="outline"
+              disabled={disabled}
               data-empty={!value}
               className={cn(
                 "w-full justify-start gap-2 font-normal data-[empty=true]:text-muted-foreground",
-                clearable && value && "pr-8",
+                clearable && value && !disabled && "pr-8",
               )}
             >
               <CalendarIcon />
@@ -125,7 +133,7 @@ export function DatePicker({
           />
         </PopoverContent>
       </Popover>
-      {clearable && value ? (
+      {clearable && value && !disabled ? (
         <button
           type="button"
           onClick={() => onChange(undefined)}
