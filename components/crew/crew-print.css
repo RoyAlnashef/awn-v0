@@ -1,0 +1,97 @@
+@media print {
+  @page {
+    margin: 0.5in;
+    size: letter;
+  }
+
+  body {
+    background: white !important;
+    color: #1a1a1a !important;
+  }
+
+  .crew-screen-only {
+    display: none !important;
+  }
+
+  .crew-print-only {
+    display: block !important;
+  }
+}
+
+@media screen {
+  .crew-print-only {
+    display: none;
+  }
+}
+
+.crew-resume-sheet {
+  background: white;
+  color: #1a1a1a;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.crew-resume-sheet .crew-resume-name {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.crew-resume-header {
+  background: #f3f4f6;
+}
+
+.crew-resume-section-title {
+  color: #9ca3af;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-decoration: underline;
+  text-decoration-color: #d1d5db;
+  text-underline-offset: 0.2em;
+  text-transform: uppercase;
+}
+
+.crew-resume-details-row {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.crew-resume-details-label {
+  color: #9ca3af;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.crew-resume-details-value {
+  color: #1a1a1a;
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.crew-resume-skill-pill {
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  color: #374151;
+  display: inline-block;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  padding: 0.125rem 0.625rem;
+}
+
+.crew-resume-availability-dot {
+  background: #0d9488;
+  border-radius: 9999px;
+  display: inline-block;
+  height: 0.375rem;
+  width: 0.375rem;
+}
+
+.crew-resume-availability-label {
+  color: #0d9488;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

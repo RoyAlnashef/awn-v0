@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { addDays } from "date-fns"
 import { toast } from "sonner"
 import { Pencil, Plus, ThumbsUp, X } from "lucide-react"
 
@@ -19,6 +20,11 @@ import { roleGroups } from "@/lib/jobs-data"
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DatePicker,
+  parseDateOnly,
+  toDateOnly,
+} from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogContent,
@@ -75,6 +81,22 @@ function creditToFormState(credit: AccountTourCredit): CreditFormState {
   }
 }
 
+function validateDates(form: CreditFormState): boolean {
+  if (!form.startedAt) {
+    toast.error("Pick a start date")
+    return false
+  }
+  if (!form.isCurrent && !form.endedAt) {
+    toast.error("Pick an end date")
+    return false
+  }
+  if (!form.isCurrent && form.endedAt && form.endedAt <= form.startedAt) {
+    toast.error("End date must be after start date")
+    return false
+  }
+  return true
+}
+
 // ---------------------------------------------------------------------------
 // Form Dialog
 // ---------------------------------------------------------------------------
@@ -110,6 +132,8 @@ function CreditFormDialog({
   }
 
   const selectedType = form.engagementType as EngagementType | ""
+  const startedDate = parseDateOnly(form.startedAt)
+  const endedDate = parseDateOnly(form.endedAt)
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -194,24 +218,41 @@ function CreditFormDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="credit-started" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Started
+                Started <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="credit-started"
-                type="date"
-                value={form.startedAt}
-                onChange={(e) => update({ startedAt: e.target.value })}
+              <DatePicker
+                value={startedDate}
+                onChange={(date) => {
+                  const patch: Partial<CreditFormState> = {
+                    startedAt: date ? toDateOnly(date) : "",
+                  }
+                  if (
+                    date &&
+                    form.endedAt &&
+                    form.endedAt <= toDateOnly(date)
+                  ) {
+                    patch.endedAt = ""
+                  }
+                  update(patch)
+                }}
+                placeholder="Pick a start date"
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="credit-ended" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Ended
+                Ended {!form.isCurrent ? <span className="text-destructive">*</span> : null}
               </Label>
-              <Input
-                id="credit-ended"
-                type="date"
-                value={form.endedAt}
-                onChange={(e) => update({ endedAt: e.target.value })}
+              <DatePicker
+                value={endedDate}
+                onChange={(date) =>
+                  update({ endedAt: date ? toDateOnly(date) : "" })
+                }
+                minDate={
+                  startedDate ? addDays(startedDate, 1) : undefined
+                }
+                defaultMonth={startedDate}
+                highlightDate={startedDate}
+                placeholder="Pick an end date"
                 disabled={form.isCurrent}
               />
             </div>
@@ -252,12 +293,17 @@ function CreditFormDialog({
             Cancel
           </Button>
           <Button
-            onClick={() => onSubmit(form)}
+            onClick={() => {
+              if (!validateDates(form)) return
+              onSubmit(form)
+            }}
             disabled={
               isPending ||
               !form.title.trim() ||
               !form.role ||
-              !form.engagementType
+              !form.engagementType ||
+              !form.startedAt ||
+              (!form.isCurrent && !form.endedAt)
             }
           >
             {mode === "add" ? "Add to timeline" : "Save changes"}

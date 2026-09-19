@@ -113,7 +113,7 @@ export function JobDetailContent({
       <div
         className={cn(
           "flex min-h-0 flex-1 flex-col overflow-hidden",
-          embedded && "h-full bg-popover",
+          embedded && "h-full bg-card text-card-foreground",
           className,
         )}
       >
@@ -193,7 +193,7 @@ export function JobDetailContent({
 
             <section className="flex flex-col gap-3">
               <SectionLabel>Posted by</SectionLabel>
-              <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-2.5 rounded-xl border border-border bg-popover p-3">
                 <Avatar className="size-8">
                   <AvatarImage src={job.postedBy.avatar} alt="" />
                   <AvatarFallback className="text-xs">

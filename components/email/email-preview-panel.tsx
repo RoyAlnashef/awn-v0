@@ -73,7 +73,7 @@ export function EmailPreviewPanel() {
     <div className="flex min-h-0 flex-1 flex-col">
       <PreviewPanelHeader />
       <div
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-popover"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card"
         style={{ borderColor: cardBorder }}
       >
         {html ? (

@@ -1,4 +1,7 @@
+import Link from "next/link"
+
 import { PageShell } from "@/components/page-shell"
+import { Button } from "@/components/ui/button"
 import { InviteUserDialog } from "@/components/users/invite-user-dialog"
 import { UsersTable } from "@/components/users/users-table"
 import { adminNav } from "@/lib/nav"
@@ -13,7 +16,27 @@ export default async function UsersPage() {
     <PageShell
       title={item.title}
       description={item.description}
-      actions={<InviteUserDialog disabled={!result.ok} />}
+      actions={
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/invites" />}
+          >
+            Invites
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href="/applications" />}
+          >
+            Applications
+          </Button>
+          <InviteUserDialog disabled={!result.ok} />
+        </>
+      }
     >
       <UsersTable
         initialUsers={result.users}

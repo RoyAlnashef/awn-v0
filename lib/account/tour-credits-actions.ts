@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import {
   TOUR_CREDIT_SELECT,
+  sortTourCreditRowsByStartDateDesc,
   tourCreditRowToAccountCredit,
   venueTierToDbValue,
   type TourCreditRow,
@@ -45,6 +46,27 @@ function revalidateTourCreditPaths() {
   revalidatePath("/account", "layout")
 }
 
+function validateTourCreditDates(input: {
+  startedAt?: string | null
+  endedAt?: string | null
+  isCurrent?: boolean
+}): { ok: true } | { ok: false; error: string } {
+  const isCurrent = input.isCurrent ?? false
+  const startedAt = input.startedAt?.trim() || null
+  const endedAt = input.endedAt?.trim() || null
+
+  if (!startedAt) {
+    return { ok: false, error: "Start date is required." }
+  }
+  if (!isCurrent && !endedAt) {
+    return { ok: false, error: "End date is required." }
+  }
+  if (!isCurrent && endedAt && endedAt <= startedAt) {
+    return { ok: false, error: "End date must be after start date." }
+  }
+  return { ok: true }
+}
+
 export async function listMemberTourCredits(
   profileId: string,
 ): Promise<TourCreditsActionResult> {
@@ -54,16 +76,14 @@ export async function listMemberTourCredits(
       .from("tour_credits")
       .select(TOUR_CREDIT_SELECT)
       .eq("profile_id", profileId)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true })
 
     if (error) {
       return { ok: false, error: error.message }
     }
 
-    const credits = ((data ?? []) as unknown as TourCreditRow[]).map(
-      tourCreditRowToAccountCredit,
-    )
+    const credits = sortTourCreditRowsByStartDateDesc(
+      (data ?? []) as unknown as TourCreditRow[],
+    ).map(tourCreditRowToAccountCredit)
 
     return { ok: true, credits }
   } catch (error) {
@@ -88,6 +108,12 @@ export async function createTourCredit(
 ): Promise<TourCreditsActionResult> {
   try {
     await requireProfileEditor(profileId)
+
+    const dateValidation = validateTourCreditDates(input)
+    if (!dateValidation.ok) {
+      return dateValidation
+    }
+
     const supabase = await createClient()
 
     const { count, error: countError } = await supabase
@@ -174,6 +200,22 @@ export async function updateTourCredit(
 ): Promise<TourCreditsActionResult> {
   try {
     await requireProfileEditor(profileId)
+
+    if (
+      input.startedAt !== undefined ||
+      input.endedAt !== undefined ||
+      input.isCurrent !== undefined
+    ) {
+      const dateValidation = validateTourCreditDates({
+        startedAt: input.startedAt,
+        endedAt: input.endedAt,
+        isCurrent: input.isCurrent,
+      })
+      if (!dateValidation.ok) {
+        return dateValidation
+      }
+    }
+
     const supabase = await createClient()
 
     const patch: Record<string, unknown> = {}

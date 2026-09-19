@@ -23,11 +23,20 @@ export type EmailThemeColors = {
   buttonBorder: string
 }
 
-/** Hex values aligned with app/globals.css primary tokens (oklch white primary theme). */
+/** Hex values aligned with app/globals.css tokens. */
 export const EMAIL_PRIMARY = {
   bright: "#ffffff",
   dark: "#fafafa",
   foreground: "#18181b",
+} as const
+
+/** Dark theme surfaces — keep in sync with `.dark` in app/globals.css. */
+export const EMAIL_DARK_SURFACES = {
+  pageBg: "#09090B",
+  cardBg: "#0F0F12",
+  popoverBg: "#18181B",
+  cardBorder: "#1D1D20",
+  popoverBorder: "#262629",
 } as const
 
 /** Matches app button `rounded-md` → `--radius-md` (0.625rem × 0.8 = 0.5rem). */
@@ -35,18 +44,18 @@ export const EMAIL_BUTTON_RADIUS = "0.5rem"
 
 const EMAIL_THEMES: Record<EmailTheme, EmailThemeColors> = {
   dark: {
-    pageBg: "#0a0a0b",
-    cardBg: "#141416",
-    cardBorder: "#27272a",
-    brandLabel: "#a1a1aa",
+    pageBg: EMAIL_DARK_SURFACES.pageBg,
+    cardBg: EMAIL_DARK_SURFACES.cardBg,
+    cardBorder: EMAIL_DARK_SURFACES.cardBorder,
+    brandLabel: "#9F9FA9",
     bodyText: EMAIL_PRIMARY.dark,
     heading: EMAIL_PRIMARY.dark,
-    body: "#d4d4d8",
-    muted: "#71717a",
+    body: "#D4D4D8",
+    muted: "#9F9FA9",
     link: EMAIL_PRIMARY.dark,
     strong: EMAIL_PRIMARY.dark,
-    noteBg: "#18181b",
-    noteBorder: "#27272a",
+    noteBg: EMAIL_DARK_SURFACES.popoverBg,
+    noteBorder: EMAIL_DARK_SURFACES.popoverBorder,
     buttonBg: EMAIL_PRIMARY.bright,
     buttonText: EMAIL_PRIMARY.foreground,
     buttonBorder: "transparent",

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   MEMBER_PROFILE_SELECT,
   TOUR_CREDIT_SELECT,
+  sortTourCreditRowsByStartDateDesc,
   type ConnectionStatus,
   type MemberProfileRow,
   type PersonDirectoryExtras,
@@ -190,8 +191,6 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
       .from("tour_credits")
       .select(TOUR_CREDIT_SELECT)
       .eq("profile_id", profileId)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true })
 
     const extrasPromise = fetchDirectoryExtras(supabase, userId, [profileId])
 
@@ -210,7 +209,9 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
     }
 
     const row = profileResult.data as unknown as MemberProfileRow
-    const creditRows = (creditsResult.data ?? []) as unknown as TourCreditRow[]
+    const creditRows = sortTourCreditRowsByStartDateDesc(
+      (creditsResult.data ?? []) as unknown as TourCreditRow[],
+    )
 
     // Fetch which credits the current user has already vouched for
     const creditIds = creditRows.map((c) => c.id)

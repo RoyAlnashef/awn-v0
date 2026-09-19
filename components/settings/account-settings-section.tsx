@@ -5,58 +5,21 @@ import { ChevronRight, KeyRound, Mail, ShieldCheck, Smartphone, Trash2 } from "l
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import { SettingsRow } from "@/components/settings/settings-row"
+import { SettingsSection } from "@/components/settings/settings-section"
 
-function SettingsRow({
-  icon: Icon,
-  label,
-  description,
-  value,
-  action,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  description?: string
-  value?: string
-  action?: React.ReactNode
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-          <Icon className="size-4 text-muted-foreground" />
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium">{label}</span>
-          {description && (
-            <span className="text-xs text-muted-foreground">{description}</span>
-          )}
-          {value && (
-            <span className="text-xs text-foreground/70">{value}</span>
-          )}
-        </div>
-      </div>
-      <div className="shrink-0">{action}</div>
-    </div>
-  )
-}
-
-export function AccountSettingsSection() {
+export function AccountSettingsSection({ email }: { email?: string }) {
   return (
     <div className="flex flex-col gap-8">
-      {/* Account */}
-      <section className="flex flex-col gap-1">
-        <div className="flex flex-col gap-0.5 pb-2">
-          <h3 className="font-heading text-base font-semibold">Account</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage your login credentials and contact details.
-          </p>
-        </div>
-
+      <SettingsSection
+        title="Account"
+        description="Manage your login credentials and contact details."
+      >
         <SettingsRow
           icon={Mail}
           label="Email address"
           description="Used for login and notifications."
-          value="jordan@reyestouring.com"
+          value={email ?? "—"}
           action={
             <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
               Change
@@ -76,24 +39,19 @@ export function AccountSettingsSection() {
             </Button>
           }
         />
-      </section>
+      </SettingsSection>
 
       <Separator />
 
-      {/* Security */}
-      <section className="flex flex-col gap-1">
-        <div className="flex flex-col gap-0.5 pb-2">
-          <h3 className="font-heading text-base font-semibold">Security</h3>
-          <p className="text-sm text-muted-foreground">
-            Protect your account with additional verification.
-          </p>
-        </div>
-
+      <SettingsSection
+        title="Security"
+        description="Protect your account with additional verification."
+      >
         <SettingsRow
           icon={Smartphone}
           label="Two-factor authentication"
           description="Add an extra layer of security to your login."
-          action={<Switch defaultChecked={false} aria-label="Enable 2FA" />}
+          action={<Switch defaultChecked={false} aria-label="Enable two-factor authentication" />}
         />
         <Separator />
         <SettingsRow
@@ -107,21 +65,15 @@ export function AccountSettingsSection() {
             </Button>
           }
         />
-      </section>
+      </SettingsSection>
 
       <Separator />
 
-      {/* Danger zone */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h3 className="font-heading text-base font-semibold text-destructive">
-            Danger Zone
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Irreversible account actions. Proceed with caution.
-          </p>
-        </div>
-
+      <SettingsSection
+        title="Danger Zone"
+        description="Irreversible account actions. Proceed with caution."
+        titleClassName="text-destructive"
+      >
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-0.5">
@@ -140,7 +92,7 @@ export function AccountSettingsSection() {
             </Button>
           </div>
         </div>
-      </section>
+      </SettingsSection>
     </div>
   )
 }

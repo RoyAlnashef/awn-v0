@@ -76,7 +76,7 @@ export function PersonShareCard({
   const card = (
     <div
       className={cn(
-        "relative flex w-fit max-w-sm items-center gap-2.5 rounded-xl border border-border bg-card p-3",
+        "relative flex w-fit max-w-sm items-center gap-2.5 rounded-xl border border-border bg-popover p-3",
         isPreview && onRemove && "pr-9",
         variant === "message" &&
           "cursor-pointer shadow-sm transition-colors hover:border-primary/40",

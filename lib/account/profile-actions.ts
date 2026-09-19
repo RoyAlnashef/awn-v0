@@ -9,6 +9,7 @@ import {
   toProfileUpdateFromPerson,
   type MemberProfileRow,
 } from "@/lib/account/profile-data"
+import { ensureProfileHandle } from "@/lib/account/handle"
 import { listMemberTourCredits } from "@/lib/account/tour-credits-actions"
 import type { AccountTourCredit } from "@/lib/account-profile"
 import { AuthError } from "@/lib/auth/require-admin"
@@ -57,11 +58,16 @@ function actionError(error: unknown): ProfileActionResult {
   return { ok: false, error: "Something went wrong." }
 }
 
-function revalidateProfilePaths() {
+function revalidateProfilePaths(handle?: string | null) {
   revalidatePath("/account/profile")
   revalidatePath("/account/social")
+  revalidatePath("/account/resume")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
+  revalidatePath("/crew", "layout")
+  if (handle?.trim()) {
+    revalidatePath(`/crew/${handle.trim()}`)
+  }
 }
 
 function bannerPublicUrl(userId: string, ext: string): string {
@@ -200,6 +206,21 @@ export async function updateMemberProfile(
     const admin = createAdminClient()
     const update = toProfileUpdateFromPerson(person)
 
+    const { data: currentProfile } = await admin
+      .from("profiles")
+      .select("handle, email")
+      .eq("id", person.id)
+      .maybeSingle()
+
+    if (!currentProfile?.handle?.trim()) {
+      await ensureProfileHandle(
+        admin,
+        person.id,
+        person.name,
+        currentProfile?.email ?? "",
+      )
+    }
+
     const { data, error } = await admin
       .from("profiles")
       .update(update)
@@ -211,7 +232,8 @@ export async function updateMemberProfile(
       return { ok: false, error: error.message }
     }
 
-    revalidateProfilePaths()
+    const savedRow = data as unknown as MemberProfileRow
+    revalidateProfilePaths(savedRow.handle)
 
     const [creditCountResult, vouchCountResult] = await Promise.all([
       admin
@@ -443,12 +465,65 @@ export async function uploadProfileResume(
       }
     }
 
+    revalidateProfilePaths()
     return { ok: true, resumePath: path, signedUrl: signed.signedUrl, fileName }
   } catch (error) {
     if (error instanceof Error) {
       return { ok: false, error: error.message }
     }
     return { ok: false, error: "Something went wrong." }
+  }
+}
+
+export async function removeProfileResume(): Promise<ProfileActionResult> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { ok: false, error: "Unauthorized" }
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("resume_url")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      return { ok: false, error: profileError.message }
+    }
+
+    const resumePath = profile?.resume_url?.trim() || null
+    const admin = createAdminClient()
+
+    if (resumePath) {
+      const { error: deleteError } = await admin.storage
+        .from(RESUME_BUCKET)
+        .remove([resumePath])
+
+      if (deleteError) {
+        return { ok: false, error: deleteError.message }
+      }
+    }
+
+    const { data, error: updateError } = await admin
+      .from("profiles")
+      .update({ resume_url: null, resume_filename: null })
+      .eq("id", user.id)
+      .select(MEMBER_PROFILE_SELECT)
+      .single()
+
+    if (updateError) {
+      return { ok: false, error: updateError.message }
+    }
+
+    revalidateProfilePaths()
+    return { ok: true, person: toPersonFromProfile(data as unknown as MemberProfileRow) }
+  } catch (error) {
+    return actionError(error)
   }
 }
 

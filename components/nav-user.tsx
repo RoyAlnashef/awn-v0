@@ -2,8 +2,17 @@
 
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
-import { Briefcase, ChevronsUpDown, LifeBuoy, LogOut, User } from "lucide-react"
+import {
+  Briefcase,
+  ChevronsUpDown,
+  ExternalLink,
+  LifeBuoy,
+  LogOut,
+  Settings,
+  User,
+} from "lucide-react"
 
+import { getCrewProfilePath } from "@/lib/account/handle"
 import { signOut } from "@/lib/auth/sign-out"
 import { setAvailableForWork } from "@/lib/account/profile-actions"
 import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
@@ -30,6 +39,7 @@ export type NavUserData = {
   email: string
   avatarUrl?: string
   initials: string
+  handle?: string
   appearOffline: boolean
   availableForWork: boolean
   online: boolean
@@ -38,6 +48,7 @@ export type NavUserData = {
 const links = [
   { label: "My Account", href: "/account", icon: User },
   { label: "My Jobs", href: "/my-jobs", icon: Briefcase },
+  { label: "Settings", href: "/settings", icon: Settings },
   { label: "Support", href: "/intel", icon: LifeBuoy },
 ]
 
@@ -121,19 +132,36 @@ function NavUserMenuContent({
 
       <div className="border-t p-1">
         {links.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm outline-none transition-colors",
-              "hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
-              iconWithTextDimClass,
-            )}
-          >
-            <link.icon className="size-4" />
-            {link.label}
-          </Link>
+          <div key={link.label}>
+            <Link
+              href={link.href}
+              onClick={onNavigate}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm outline-none transition-colors",
+                "hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                iconWithTextDimClass,
+              )}
+            >
+              <link.icon className="size-4" />
+              {link.label}
+            </Link>
+            {link.label === "My Account" && user.handle ? (
+              <Link
+                href={getCrewProfilePath(user.handle)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm outline-none transition-colors",
+                  "hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                  iconWithTextDimClass,
+                )}
+              >
+                <ExternalLink className="size-4" />
+                My Profile
+              </Link>
+            ) : null}
+          </div>
         ))}
       </div>
 

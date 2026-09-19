@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   useRef,
   useState,
@@ -37,7 +38,10 @@ import {
 } from "@/lib/account/tour-credits-actions"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
+import { getCrewProfilePath } from "@/lib/account/handle"
 import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
+import { CrewProfileBio } from "@/components/crew/crew-profile-bio"
+import { formatShortDate } from "@/lib/crew/format-profile-date"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -52,16 +56,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-/** Formats an ISO date-only string like "2026-08-01" → "Aug 1". */
-function formatShortDate(iso: string) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  })
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -168,15 +162,18 @@ export function PersonProfileCard({
   className,
   heroRef: heroRefProp,
   onMessage,
+  onPrintResume,
   reserveTopRightForClose = false,
 }: {
   person: Person
   tourCredits?: TourCredit[]
-  mode: "interactive" | "preview"
+  mode: "interactive" | "preview" | "public"
   online?: boolean
   className?: string
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
+  /** Called when public visitor requests print resume (no uploaded PDF). */
+  onPrintResume?: () => void
   /** Leave room for a drawer close button at the hero's top-right. */
   reserveTopRightForClose?: boolean
 }) {
@@ -185,6 +182,10 @@ export function PersonProfileCard({
   const availability = availabilityConfig[person.availability]
   const isOnline = online ?? false
   const isPreview = mode === "preview"
+  const isPublic = mode === "public"
+  const isReadOnlyVouch = isPreview || isPublic
+  const showResumeButton =
+    isPublic || (isPreview ? Boolean(person.hasResume) : Boolean(person.handle))
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef
   const [followed, setFollowed] = useState(person.followed)
@@ -205,6 +206,29 @@ export function PersonProfileCard({
   }
 
   function handleResumeDownload() {
+    if (isPublic) {
+      if (!person.handle) return
+
+      if (person.hasResume) {
+        window.location.assign(`/api/crew/${encodeURIComponent(person.handle)}/resume`)
+        return
+      }
+
+      onPrintResume?.()
+      return
+    }
+
+    if (!person.hasResume) {
+      if (person.handle) {
+        window.open(
+          `${getCrewProfilePath(person.handle)}?print=resume`,
+          "_blank",
+          "noopener,noreferrer",
+        )
+      }
+      return
+    }
+
     startResumeTransition(async () => {
       const result = await getMemberResumeSignedUrl(person.id)
       if (!result.ok) {
@@ -222,11 +246,31 @@ export function PersonProfileCard({
     })
   }
 
+  const profileHref = person.handle ? getCrewProfilePath(person.handle) : null
+  const profileButton = profileHref ? (
+    <Button
+      variant="ghost"
+      size="sm"
+      nativeButton={false}
+      render={
+        <Link href={profileHref} target="_blank" rel="noopener noreferrer" />
+      }
+    >
+      <ExternalLink />
+      Profile
+    </Button>
+  ) : (
+    <Button variant="ghost" size="sm" disabled>
+      <ExternalLink />
+      Profile
+    </Button>
+  )
+
   const socialLinks = getPersonSocialLinks(person)
 
   return (
     <TooltipProvider delay={400}>
-      <div className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-popover text-popover-foreground", className)}>
+      <div className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-card text-card-foreground", className)}>
         {/* Hero */}
         <div ref={heroRef} tabIndex={-1} className="relative shrink-0 outline-none">
           {person.banner ? (
@@ -281,27 +325,35 @@ export function PersonProfileCard({
                 <AvatarFallback className="text-lg">
                   {initials(person.name)}
                 </AvatarFallback>
-                <AvatarBadge online={isOnline} className="size-3.5" />
+                {!isPublic ? (
+                  <AvatarBadge online={isOnline} className="size-3.5" />
+                ) : null}
               </Avatar>
 
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 pt-6">
-                <PreviewTooltip preview={isPreview} label="View full profile" wrap>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={isPreview}
-                    aria-disabled={isPreview}
+                {!isPublic ? (
+                  isPreview ? (
+                    profileButton
+                  ) : (
+                    <PreviewTooltip preview={false} label="View full profile" wrap>
+                      {profileButton}
+                    </PreviewTooltip>
+                  )
+                ) : null}
+                {showResumeButton ? (
+                  <PreviewTooltip
+                    preview={isPreview}
+                    label={person.hasResume ? "Download resume" : "Save as PDF"}
+                    wrap
                   >
-                    <ExternalLink />
-                    Profile
-                  </Button>
-                </PreviewTooltip>
-                {person.hasResume ? (
-                  <PreviewTooltip preview={isPreview} label="Download resume" wrap>
                     <Button
                       variant="secondary"
                       size="sm"
-                      disabled={isPreview || isResumePending}
+                      disabled={
+                        isPreview ||
+                        isResumePending ||
+                        (!isPublic && !person.handle)
+                      }
                       aria-disabled={isPreview}
                       onClick={handleResumeDownload}
                     >
@@ -417,11 +469,7 @@ export function PersonProfileCard({
             </div>
 
             {/* Bio */}
-            {profile.bio ? (
-              <p className="text-sm leading-relaxed text-foreground/90 text-pretty">
-                {profile.bio}
-              </p>
-            ) : null}
+            {profile.bio ? <CrewProfileBio bio={profile.bio} /> : null}
 
             {/* Tour credits */}
             {resolvedTourCredits.length > 0 ? (
@@ -431,7 +479,7 @@ export function PersonProfileCard({
                   {resolvedTourCredits.map((credit, index) => (
                     <li
                       key={credit.id ?? `${credit.title}-${index}`}
-                      className="relative overflow-hidden rounded-xl border border-border bg-card p-4 pl-5"
+                      className="relative overflow-hidden rounded-xl border border-border bg-popover p-4 pl-5"
                     >
                       <span
                         aria-hidden="true"
@@ -447,7 +495,7 @@ export function PersonProfileCard({
                             {credit.role && credit.years ? <span>·</span> : null}
                             {credit.years ? <span>{credit.years}</span> : null}
                           </div>
-                          {isPreview ? (
+                          {isReadOnlyVouch ? (
                             <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
                               <ThumbsUp className="size-3" />
                               {credit.vouchCount ?? 0}{" "}
@@ -486,7 +534,8 @@ export function PersonProfileCard({
         </ScrollArea>
 
         {/* Footer actions */}
-        <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-popover p-4">
+        {!isPublic ? (
+        <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-card p-4">
           <div className="flex items-center gap-2">
             <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
               <Button
@@ -553,8 +602,9 @@ export function PersonProfileCard({
             </Button>
           </PreviewTooltip>
         </div>
+        ) : null}
 
-        {!isPreview ? (
+        {!isPreview && !isPublic ? (
           <>
             <ShareToMessagesDrawer
               open={shareOpen}
