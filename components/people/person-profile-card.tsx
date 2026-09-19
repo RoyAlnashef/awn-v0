@@ -40,6 +40,7 @@ import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { getCrewProfilePath } from "@/lib/account/handle"
 import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
+import { formatShortDate } from "@/lib/crew/format-profile-date"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -54,16 +55,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-/** Formats an ISO date-only string like "2026-08-01" → "Aug 1". */
-function formatShortDate(iso: string) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  })
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
