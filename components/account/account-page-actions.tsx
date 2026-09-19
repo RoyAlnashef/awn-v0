@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Contact, ExternalLink } from "lucide-react"
 
 import { getCrewProfilePath } from "@/lib/account/handle"
@@ -16,14 +17,48 @@ import {
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 
+const PROFILE_TAB_PATH = "/account/profile"
+
 export function AccountPageActions() {
-  const { draft, tourCredits, online } = useAccountProfile()
+  const pathname = usePathname()
+  const {
+    draft,
+    tourCredits,
+    online,
+    hasDraftChanges,
+    isSaving,
+    resetDraft,
+    saveDraft,
+  } = useAccountProfile()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const profileHref = draft.handle ? getCrewProfilePath(draft.handle) : null
+  const isProfileTab = pathname === PROFILE_TAB_PATH
 
   return (
     <TooltipProvider delay={400}>
       <div className="flex flex-wrap items-center gap-2">
+        {isProfileTab && hasDraftChanges ? (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              type="button"
+              onClick={resetDraft}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              type="button"
+              onClick={saveDraft}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </>
+        ) : null}
+
         {profileHref ? (
           <Button
             variant="outline"

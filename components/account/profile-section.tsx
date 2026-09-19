@@ -1,12 +1,10 @@
 "use client"
 
-import { useTransition } from "react"
 import Link from "next/link"
 import { Copy, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
 import { getCrewProfilePath } from "@/lib/account/handle"
-import { updateMemberProfile } from "@/lib/account/profile-actions"
 import { departments } from "@/lib/jobs-data"
 import {
   availabilityConfig,
@@ -66,9 +64,8 @@ function toggleItem<T extends string>(items: T[], item: T): T[] {
 }
 
 export function ProfileSection() {
-  const { userId, draft, updateDraft, resetDraft, commitSaved, commitSavedPatch } =
+  const { userId, draft, updateDraft, commitSavedPatch, isSaving } =
     useAccountProfile()
-  const [isPending, startTransition] = useTransition()
 
   function handleHomeBaseChange(value: string) {
     updateDraft({
@@ -83,21 +80,6 @@ export function ProfileSection() {
     bannerPositionY?: number
   }) {
     commitSavedPatch(patch)
-  }
-
-  function handleSave() {
-    startTransition(async () => {
-      const result = await updateMemberProfile(draft)
-      if (!result.ok) {
-        toast.error(result.error)
-        return
-      }
-
-      if (result.person) {
-        commitSaved(result.person)
-      }
-      toast.success("Profile saved")
-    })
   }
 
   const publicProfilePath = draft.handle
@@ -165,7 +147,7 @@ export function ProfileSection() {
             userId={userId}
             banner={draft.banner}
             bannerPositionY={draft.bannerPositionY}
-            disabled={isPending}
+            disabled={isSaving}
             onChange={(url, positionY) =>
               updateDraft({ banner: url, bannerPositionY: positionY })
             }
@@ -180,7 +162,7 @@ export function ProfileSection() {
               userId={userId}
               avatar={draft.avatar}
               name={draft.name}
-              disabled={isPending}
+              disabled={isSaving}
               onChange={(url) => updateDraft({ avatar: url })}
               onPersisted={(avatar) => handlePhotoPersisted({ avatar })}
             />
@@ -412,7 +394,7 @@ export function ProfileSection() {
             ))}
             <SkillAddPopover
               existingSkills={draft.skills}
-              disabled={isPending}
+              disabled={isSaving}
               onAdd={(skill) =>
                 updateDraft({ skills: [...draft.skills, skill] })
               }
@@ -420,21 +402,6 @@ export function ProfileSection() {
           </div>
         </FieldRow>
       </section>
-
-      {/* Save */}
-      <div className="flex justify-end gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={resetDraft}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
-        <Button type="button" onClick={handleSave} disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
-        </Button>
-      </div>
     </div>
   )
 }
