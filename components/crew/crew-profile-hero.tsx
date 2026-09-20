@@ -63,7 +63,14 @@ export function CrewProfileHero({
 
   return (
     <section className="relative w-full">
-      <div className="relative aspect-21/9 w-full max-h-[480px] min-h-48 sm:min-h-56 lg:min-h-64">
+      <div
+        className={cn(
+          "relative w-full",
+          person.banner
+            ? "aspect-21/9 max-h-[480px] min-h-48 sm:min-h-56 lg:min-h-64"
+            : "min-h-48 sm:min-h-56",
+        )}
+      >
         {person.banner ? (
           <img
             src={person.banner}

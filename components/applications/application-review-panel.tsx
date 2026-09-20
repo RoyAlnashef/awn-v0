@@ -103,7 +103,7 @@ export function ApplicationReviewPanel({
                   <ApplicationTitlesBadges title={application.title} />
                 </div>
                 {application.bio ? (
-                  <p className="mt-3 text-sm leading-relaxed text-foreground/90 text-pretty">
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/90 text-pretty whitespace-pre-line">
                     {application.bio}
                   </p>
                 ) : null}
