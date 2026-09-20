@@ -27,7 +27,7 @@ export function CrewProfileBio({ bio }: { bio: string }) {
       <p
         ref={textRef}
         className={cn(
-          "text-sm leading-relaxed text-foreground/90 text-pretty sm:text-base",
+          "text-sm leading-relaxed text-foreground/90 text-pretty whitespace-pre-line sm:text-base",
           !expanded && "line-clamp-4",
         )}
       >
