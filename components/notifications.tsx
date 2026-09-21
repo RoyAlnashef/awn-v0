@@ -14,6 +14,7 @@ import {
   isDmNotification,
   isJobApiNotification,
   isMentionTabNotification,
+  isRoomJoinRequestNotification,
   isRoomMentionNotification,
   isRoomReplyNotification,
   type AppNotification,
@@ -140,7 +141,36 @@ export function Notifications() {
     void mutate()
   }
 
+  async function handleRoomJoinRequestClick(item: AppNotification, roomId: string) {
+    const previous = notifications
+
+    await mutate(
+      previous.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
+      { revalidate: false },
+    )
+
+    const result = await markNotificationRead(item.id, true)
+    if (!result.ok) {
+      await mutate(previous, { revalidate: false })
+      return
+    }
+
+    setOpen(false)
+    router.push(
+      `/groups/settings?room=${encodeURIComponent(roomId)}&members=1`,
+    )
+    void mutate()
+  }
+
   function handleNotificationClick(item: AppNotification) {
+    if (isRoomJoinRequestNotification(item)) {
+      const roomId = getRoomNotificationRoomId(item)
+      if (roomId) {
+        void handleRoomJoinRequestClick(item, roomId)
+        return
+      }
+    }
+
     const roomId =
       isRoomMentionNotification(item) || isRoomReplyNotification(item)
         ? getRoomNotificationRoomId(item)

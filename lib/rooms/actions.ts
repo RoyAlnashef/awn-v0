@@ -29,6 +29,8 @@ import type {
   MessageReactionTarget,
   ThreadMessage,
 } from "@/lib/messages-data"
+import { createNotification } from "@/lib/notifications/actions"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 // ---------------------------------------------------------------------------
@@ -56,12 +58,17 @@ export type RoomRecord = {
   unreadCount: number
   /** Whether the current user has muted this room. */
   muted: boolean
+  isPrivate: boolean
+  privateNote: string
+  requiresJoinApproval: boolean
+  joinRequestPending: boolean
 }
 
 type ActionError = { ok: false; error: string }
 
 export type ListRoomsResult = { ok: true; rooms: RoomRecord[] } | ActionError
-export type JoinRoomResult = { ok: true } | ActionError
+export type JoinRoomResult = { ok: true; requested?: boolean } | ActionError
+export type CancelJoinRequestResult = { ok: true } | ActionError
 export type LeaveRoomResult = { ok: true } | ActionError
 export type MuteRoomResult = { ok: true } | ActionError
 export type UnmuteRoomResult = { ok: true } | ActionError
@@ -105,11 +112,46 @@ export type AdminRoomRecord = {
   description: string
   icon: string
   isDefault: boolean
+  isPrivate: boolean
+  privateNote: string
   isArchived: boolean
   sortOrder: number
   memberCount: number
+  pendingRequestCount: number
   createdAt: string
 }
+
+export type RoomAdminMember = {
+  id: string
+  name: string
+  avatarUrl?: string
+  joinedAt: string
+}
+
+export type RoomAdminPendingMember = {
+  id: string
+  name: string
+  avatarUrl?: string
+  requestedAt: string
+}
+
+export type RoomAdminBlockedMember = {
+  id: string
+  name: string
+  avatarUrl?: string
+  blockedAt: string
+}
+
+export type AdminRoomMembersResult =
+  | {
+      ok: true
+      members: RoomAdminMember[]
+      pending: RoomAdminPendingMember[]
+      blocked: RoomAdminBlockedMember[]
+    }
+  | ActionError
+
+export type AdminMemberActionResult = { ok: true } | ActionError
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -130,6 +172,10 @@ type RoomRpcRow = {
   last_message_sender_id: string | null
   unread_count: number
   muted: boolean
+  is_private?: boolean
+  private_note?: string
+  requires_join_approval?: boolean
+  join_request_pending?: boolean
 }
 
 type ThreadRpcMessage = ReplyRpcRow &
@@ -276,6 +322,65 @@ function rpcRowToRoomRecord(row: RoomRpcRow, userId: string): RoomRecord {
     unread,
     unreadCount: row.unread_count,
     muted,
+    isPrivate: row.is_private ?? false,
+    privateNote: row.private_note ?? "",
+    requiresJoinApproval: row.requires_join_approval ?? false,
+    joinRequestPending: row.join_request_pending ?? false,
+  }
+}
+
+async function userHasRemovalRecord(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  roomId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("room_member_removals")
+    .select("profile_id")
+    .eq("room_id", roomId)
+    .eq("profile_id", userId)
+    .maybeSingle()
+
+  return Boolean(data)
+}
+
+async function userIsBlockedFromRoom(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  roomId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("room_member_blocks")
+    .select("profile_id")
+    .eq("room_id", roomId)
+    .eq("profile_id", userId)
+    .maybeSingle()
+
+  return Boolean(data)
+}
+
+async function notifyAdminsOfJoinRequest(
+  roomId: string,
+  roomName: string,
+  requesterId: string,
+  requesterName: string,
+) {
+  const admin = createAdminClient()
+  const { data: admins } = await admin
+    .from("profiles")
+    .select("id")
+    .in("role", ["owner", "admin"])
+    .eq("status", "active")
+
+  for (const adminProfile of admins ?? []) {
+    if (adminProfile.id === requesterId) continue
+    await createNotification({
+      userId: adminProfile.id,
+      kind: "room_join_request",
+      title: `Join request for ${roomName}`,
+      body: `${requesterName} requested to join ${roomName}.`,
+      data: { roomId, profileId: requesterId },
+    })
   }
 }
 
@@ -309,6 +414,94 @@ export async function listRooms(): Promise<ListRoomsResult> {
   }
 }
 
+export async function requestJoinRoom(roomId: string): Promise<JoinRoomResult> {
+  try {
+    if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: room, error: roomError } = await supabase
+      .from("community_rooms")
+      .select("id, name, is_private, is_archived")
+      .eq("id", roomId)
+      .maybeSingle()
+
+    if (roomError) return { ok: false, error: roomError.message }
+    if (!room || room.is_archived) {
+      return { ok: false, error: "Group not found." }
+    }
+
+    if (await userIsBlockedFromRoom(supabase, roomId, userId)) {
+      return { ok: false, error: "You cannot join this group." }
+    }
+
+    const removedByAdmin = await userHasRemovalRecord(supabase, roomId, userId)
+    if (!room.is_private && !removedByAdmin) {
+      return { ok: false, error: "This group does not require a join request." }
+    }
+
+    const { data: existingMember } = await supabase
+      .from("room_memberships")
+      .select("profile_id")
+      .eq("room_id", roomId)
+      .eq("profile_id", userId)
+      .maybeSingle()
+
+    if (existingMember) return { ok: true }
+
+    const { error } = await supabase.from("room_join_requests").insert({
+      room_id: roomId,
+      profile_id: userId,
+    })
+
+    if (error) {
+      if (error.code === "23505") return { ok: true, requested: true }
+      return { ok: false, error: error.message }
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle()
+
+    await notifyAdminsOfJoinRequest(
+      roomId,
+      room.name,
+      userId,
+      profile?.full_name?.trim() || "A member",
+    )
+
+    return { ok: true, requested: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function cancelJoinRequest(
+  roomId: string,
+): Promise<CancelJoinRequestResult> {
+  try {
+    if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from("room_join_requests")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
 export async function joinRoom(roomId: string): Promise<JoinRoomResult> {
   try {
     if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
@@ -316,13 +509,30 @@ export async function joinRoom(roomId: string): Promise<JoinRoomResult> {
     const userId = await requireUserId()
     const supabase = await createClient()
 
+    const { data: room, error: roomError } = await supabase
+      .from("community_rooms")
+      .select("is_private")
+      .eq("id", roomId)
+      .maybeSingle()
+
+    if (roomError) return { ok: false, error: roomError.message }
+    if (!room) return { ok: false, error: "Group not found." }
+
+    if (await userIsBlockedFromRoom(supabase, roomId, userId)) {
+      return { ok: false, error: "You cannot join this group." }
+    }
+
+    const removedByAdmin = await userHasRemovalRecord(supabase, roomId, userId)
+    if (room.is_private || removedByAdmin) {
+      return requestJoinRoom(roomId)
+    }
+
     const { error } = await supabase.from("room_memberships").insert({
       room_id: roomId,
       profile_id: userId,
     })
 
     if (error) {
-      // Already a member — treat as success
       if (error.code === "23505") return { ok: true }
       return { ok: false, error: error.message }
     }
@@ -910,7 +1120,51 @@ type CreateRoomInput = {
   description: string
   icon: string
   isDefault: boolean
+  isPrivate?: boolean
+  privateNote?: string
   sortOrder?: number
+}
+
+type AdminRoomRow = {
+  id: string
+  name: string
+  slug: string
+  description: string
+  icon: string
+  is_default: boolean
+  is_private: boolean
+  private_note: string
+  is_archived: boolean
+  sort_order: number
+  created_at: string
+}
+
+async function buildAdminRoomRecord(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  room: AdminRoomRow,
+): Promise<AdminRoomRecord> {
+  const [{ data: countsData }, { data: pendingData }] = await Promise.all([
+    supabase.rpc("get_room_member_counts"),
+    supabase.rpc("get_room_join_request_counts"),
+  ])
+  const counts = (countsData ?? {}) as Record<string, number>
+  const pendingCounts = (pendingData ?? {}) as Record<string, number>
+
+  return {
+    id: room.id,
+    name: room.name,
+    slug: room.slug,
+    description: room.description,
+    icon: room.icon,
+    isDefault: room.is_default,
+    isPrivate: room.is_private,
+    privateNote: room.private_note,
+    isArchived: room.is_archived,
+    sortOrder: room.sort_order,
+    memberCount: counts[room.id] ?? 0,
+    pendingRequestCount: pendingCounts[room.id] ?? 0,
+    createdAt: room.created_at,
+  }
 }
 
 type UpdateRoomInput = Partial<Omit<CreateRoomInput, "slug">> & {
@@ -924,27 +1178,16 @@ export async function adminListRooms(): Promise<AdminRoomsResult> {
 
     const { data: rooms, error } = await supabase
       .from("community_rooms")
-      .select("id, name, slug, description, icon, is_default, is_archived, sort_order, created_at")
+      .select(
+        "id, name, slug, description, icon, is_default, is_private, private_note, is_archived, sort_order, created_at",
+      )
       .order("sort_order", { ascending: true })
 
     if (error) return { ok: false, error: error.message }
 
-    // Get member counts via RPC
-    const { data: countsData } = await supabase.rpc("get_room_member_counts")
-    const counts = (countsData ?? {}) as Record<string, number>
-
-    const result: AdminRoomRecord[] = (rooms ?? []).map((r) => ({
-      id: r.id,
-      name: r.name,
-      slug: r.slug,
-      description: r.description,
-      icon: r.icon,
-      isDefault: r.is_default,
-      isArchived: r.is_archived,
-      sortOrder: r.sort_order,
-      memberCount: counts[r.id] ?? 0,
-      createdAt: r.created_at,
-    }))
+    const result: AdminRoomRecord[] = await Promise.all(
+      (rooms ?? []).map((r) => buildAdminRoomRecord(supabase, r as AdminRoomRow)),
+    )
 
     return { ok: true, rooms: result }
   } catch (error) {
@@ -971,6 +1214,10 @@ export async function adminCreateRoom(
     const icon = input.icon.trim() || DEFAULT_ROOM_EMOJI
     if (!icon) return { ok: false, error: "Room emoji is required." }
 
+    const isPrivate = input.isPrivate ?? false
+    const isDefault = isPrivate ? false : input.isDefault
+    const privateNote = isPrivate ? (input.privateNote ?? "").trim() : ""
+
     const { data, error } = await supabase
       .from("community_rooms")
       .insert({
@@ -978,10 +1225,14 @@ export async function adminCreateRoom(
         slug,
         description,
         icon,
-        is_default: input.isDefault,
+        is_default: isDefault,
+        is_private: isPrivate,
+        private_note: privateNote,
         sort_order: input.sortOrder ?? 99,
       })
-      .select("id, name, slug, description, icon, is_default, is_archived, sort_order, created_at")
+      .select(
+        "id, name, slug, description, icon, is_default, is_private, private_note, is_archived, sort_order, created_at",
+      )
       .single()
 
     if (error) {
@@ -993,18 +1244,7 @@ export async function adminCreateRoom(
 
     return {
       ok: true,
-      room: {
-        id: data.id,
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        icon: data.icon,
-        isDefault: data.is_default,
-        isArchived: data.is_archived,
-        sortOrder: data.sort_order,
-        memberCount: 0,
-        createdAt: data.created_at,
-      },
+      room: await buildAdminRoomRecord(supabase, data as AdminRoomRow),
     }
   } catch (error) {
     return actionError(error)
@@ -1035,7 +1275,18 @@ export async function adminUpdateRoom(
       if (!icon) return { ok: false, error: "Room emoji is required." }
       patch.icon = icon
     }
-    if (input.isDefault !== undefined) patch.is_default = input.isDefault
+    if (input.isPrivate !== undefined) {
+      patch.is_private = input.isPrivate
+      if (input.isPrivate) {
+        patch.is_default = false
+      }
+    }
+    if (input.privateNote !== undefined) {
+      patch.private_note = input.privateNote.trim()
+    }
+    if (input.isDefault !== undefined && input.isPrivate !== true) {
+      patch.is_default = input.isDefault
+    }
     if (input.isArchived !== undefined) patch.is_archived = input.isArchived
     if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder
 
@@ -1043,7 +1294,9 @@ export async function adminUpdateRoom(
       .from("community_rooms")
       .update(patch)
       .eq("id", roomId)
-      .select("id, name, slug, description, icon, is_default, is_archived, sort_order, created_at")
+      .select(
+        "id, name, slug, description, icon, is_default, is_private, private_note, is_archived, sort_order, created_at",
+      )
       .single()
 
     if (error) {
@@ -1053,25 +1306,284 @@ export async function adminUpdateRoom(
       return { ok: false, error: error.message }
     }
 
-    // Get member count
-    const { data: countsData } = await supabase.rpc("get_room_member_counts")
-    const counts = (countsData ?? {}) as Record<string, number>
+    return {
+      ok: true,
+      room: await buildAdminRoomRecord(supabase, data as AdminRoomRow),
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminListRoomMembers(
+  roomId: string,
+): Promise<AdminRoomMembersResult> {
+  try {
+    if (!isUuid(roomId)) return { ok: false, error: "Invalid room id." }
+
+    const { supabase } = await requireAdmin()
+
+    const { data, error } = await supabase.rpc("get_room_admin_member_summary", {
+      p_room_id: roomId,
+    })
+
+    if (error) return { ok: false, error: error.message }
+
+    const payload = (data ?? { members: [], pending: [], blocked: [] }) as {
+      members: {
+        id: string
+        name: string
+        avatar_url: string | null
+        joined_at: string
+      }[]
+      pending: {
+        id: string
+        name: string
+        avatar_url: string | null
+        requested_at: string
+      }[]
+      blocked: {
+        id: string
+        name: string
+        avatar_url: string | null
+        blocked_at: string
+      }[]
+    }
 
     return {
       ok: true,
-      room: {
-        id: data.id,
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        icon: data.icon,
-        isDefault: data.is_default,
-        isArchived: data.is_archived,
-        sortOrder: data.sort_order,
-        memberCount: counts[data.id] ?? 0,
-        createdAt: data.created_at,
-      },
+      members: (payload.members ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        avatarUrl: m.avatar_url ?? undefined,
+        joinedAt: m.joined_at,
+      })),
+      pending: (payload.pending ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        avatarUrl: m.avatar_url ?? undefined,
+        requestedAt: m.requested_at,
+      })),
+      blocked: (payload.blocked ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        avatarUrl: m.avatar_url ?? undefined,
+        blockedAt: m.blocked_at,
+      })),
     }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminApproveJoinRequest(
+  roomId: string,
+  profileId: string,
+): Promise<AdminMemberActionResult> {
+  try {
+    if (!isUuid(roomId) || !isUuid(profileId)) {
+      return { ok: false, error: "Invalid id." }
+    }
+
+    const { supabase } = await requireAdmin()
+
+    const { data: request, error: requestError } = await supabase
+      .from("room_join_requests")
+      .select("room_id, profile_id")
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+      .maybeSingle()
+
+    if (requestError) return { ok: false, error: requestError.message }
+    if (!request) return { ok: false, error: "Join request not found." }
+
+    const { error: insertError } = await supabase.from("room_memberships").insert({
+      room_id: roomId,
+      profile_id: profileId,
+    })
+
+    if (insertError && insertError.code !== "23505") {
+      return { ok: false, error: insertError.message }
+    }
+
+    const { error: deleteError } = await supabase
+      .from("room_join_requests")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (deleteError) return { ok: false, error: deleteError.message }
+
+    const { error: removalError } = await supabase
+      .from("room_member_removals")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (removalError) return { ok: false, error: removalError.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminDenyJoinRequest(
+  roomId: string,
+  profileId: string,
+): Promise<AdminMemberActionResult> {
+  try {
+    if (!isUuid(roomId) || !isUuid(profileId)) {
+      return { ok: false, error: "Invalid id." }
+    }
+
+    const { supabase } = await requireAdmin()
+
+    const { error } = await supabase
+      .from("room_join_requests")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (error) return { ok: false, error: error.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminBlockMember(
+  roomId: string,
+  profileId: string,
+): Promise<AdminMemberActionResult> {
+  try {
+    if (!isUuid(roomId) || !isUuid(profileId)) {
+      return { ok: false, error: "Invalid id." }
+    }
+
+    const { supabase, userId } = await requireAdmin()
+
+    if (profileId === userId) {
+      return { ok: false, error: "You cannot block yourself." }
+    }
+
+    const { data: targetProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, status")
+      .eq("id", profileId)
+      .maybeSingle()
+
+    if (profileError) return { ok: false, error: profileError.message }
+    if (!targetProfile) return { ok: false, error: "Member not found." }
+    if (
+      targetProfile.status === "active" &&
+      (targetProfile.role === "owner" || targetProfile.role === "admin")
+    ) {
+      return { ok: false, error: "Admins cannot be blocked from a group." }
+    }
+
+    const { error: membershipError } = await supabase
+      .from("room_memberships")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (membershipError) return { ok: false, error: membershipError.message }
+
+    const { error: requestError } = await supabase
+      .from("room_join_requests")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (requestError) return { ok: false, error: requestError.message }
+
+    const { error: removalError } = await supabase
+      .from("room_member_removals")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (removalError) return { ok: false, error: removalError.message }
+
+    const { error: blockError } = await supabase.from("room_member_blocks").upsert(
+      {
+        room_id: roomId,
+        profile_id: profileId,
+        blocked_by: userId,
+        blocked_at: new Date().toISOString(),
+      },
+      { onConflict: "room_id,profile_id" },
+    )
+
+    if (blockError) return { ok: false, error: blockError.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminUnblockMember(
+  roomId: string,
+  profileId: string,
+): Promise<AdminMemberActionResult> {
+  try {
+    if (!isUuid(roomId) || !isUuid(profileId)) {
+      return { ok: false, error: "Invalid id." }
+    }
+
+    const { supabase } = await requireAdmin()
+
+    const { error } = await supabase
+      .from("room_member_blocks")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (error) return { ok: false, error: error.message }
+
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function adminRemoveMember(
+  roomId: string,
+  profileId: string,
+): Promise<AdminMemberActionResult> {
+  try {
+    if (!isUuid(roomId) || !isUuid(profileId)) {
+      return { ok: false, error: "Invalid id." }
+    }
+
+    const { supabase, userId } = await requireAdmin()
+
+    const { error } = await supabase
+      .from("room_memberships")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("profile_id", profileId)
+
+    if (error) return { ok: false, error: error.message }
+
+    const { error: removalError } = await supabase
+      .from("room_member_removals")
+      .upsert(
+        {
+          room_id: roomId,
+          profile_id: profileId,
+          removed_by: userId,
+          removed_at: new Date().toISOString(),
+        },
+        { onConflict: "room_id,profile_id" },
+      )
+
+    if (removalError) return { ok: false, error: removalError.message }
+
+    return { ok: true }
   } catch (error) {
     return actionError(error)
   }

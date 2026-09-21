@@ -38,6 +38,7 @@ import {
 } from "@/lib/rooms/actions"
 import { useRooms } from "@/components/rooms/rooms-provider"
 import { RoomMembersAvatarGroup } from "@/components/rooms/room-members-avatar-group"
+import { RoomPrivateGate } from "@/components/rooms/room-private-gate"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { PersonShareCard } from "@/components/people/person-share-card"
 import { JobShareCard } from "@/components/jobs/job-share-card"
@@ -150,6 +151,8 @@ export function RoomThread({
   const { currentUser, setActiveRoomId } = useRooms()
 
   const usesServer = isUuid(room.id)
+  const showJoinGate = Boolean(room.requiresJoinApproval && !room.joined)
+  const canLoadThread = usesServer && !showJoinGate
 
   const {
     messages: serverMessages,
@@ -157,7 +160,7 @@ export function RoomThread({
     isLoading,
     loadOlder,
     mutate: mutateThread,
-  } = useRoomThread(usesServer ? room.id : null)
+  } = useRoomThread(canLoadThread ? room.id : null)
 
   const [localMessages, setLocalMessages] = useState<ThreadMessage[]>([])
   const [draft, setDraft] = useState("")
@@ -870,18 +873,30 @@ export function RoomThread({
             {room.description}
           </p>
         </div>
-        {usesServer ? <RoomMembersAvatarGroup roomId={room.id} /> : null}
-        {pendingAction === "join" ? (
+        {usesServer && !showJoinGate ? (
+          <RoomMembersAvatarGroup roomId={room.id} />
+        ) : null}
+        {!showJoinGate && pendingAction === "join" ? (
           <Button size="sm" className="shrink-0" disabled>
             Joining…
           </Button>
-        ) : !room.joined ? (
+        ) : !showJoinGate && !room.joined ? (
           <Button size="sm" className="shrink-0" onClick={handleJoin}>
             Join
           </Button>
         ) : null}
       </header>
 
+      {showJoinGate ? (
+        <RoomPrivateGate
+          room={room}
+          pending={pendingAction === "join"}
+          onRequestJoin={handleJoin}
+          onCancelRequest={handleJoin}
+        />
+      ) : null}
+
+      {!showJoinGate ? (
       <MessageAutoScrollProvider defaultScrollPosition="end">
         <RoomThreadScrollEffects
           roomId={room.id}
@@ -1091,8 +1106,9 @@ export function RoomThread({
           <MessageThreadScrollButton messages={messages} />
         </MessageScroller>
       </MessageAutoScrollProvider>
+      ) : null}
 
-      {room.joined ? (
+      {!showJoinGate && room.joined ? (
         <div className="shrink-0 border-t p-3">
           {loadingMemberShare ? (
             <p className="mb-2 text-xs text-muted-foreground">
@@ -1199,7 +1215,7 @@ export function RoomThread({
             </InputGroupAddon>
           </InputGroup>
         </div>
-      ) : (
+      ) : !showJoinGate ? (
         <div
           className={cn(
             "shrink-0 border-t bg-muted/30 p-4",
@@ -1209,11 +1225,11 @@ export function RoomThread({
           <p className="flex-1 text-sm text-muted-foreground">
             Join this group to participate in the conversation.
           </p>
-          <Button className="shrink-0" onClick={onJoin}>
+          <Button className="shrink-0" onClick={handleJoin}>
             Join {room.name}
           </Button>
         </div>
-      )}
+      ) : null}
 
       {profilePerson ? (
         <PersonProfileDrawer

@@ -45,6 +45,8 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
   const [description, setDescription] = useState("")
   const [icon, setIcon] = useState(DEFAULT_ROOM_EMOJI)
   const [isDefault, setIsDefault] = useState(false)
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [privateNote, setPrivateNote] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -68,6 +70,8 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
       setDescription("")
       setIcon(DEFAULT_ROOM_EMOJI)
       setIsDefault(false)
+      setIsPrivate(false)
+      setPrivateNote("")
       setError(null)
     }
     setOpen(next)
@@ -83,7 +87,9 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
         slug,
         description,
         icon,
-        isDefault,
+        isDefault: isPrivate ? false : isDefault,
+        isPrivate,
+        privateNote,
       })
 
       if (!result.ok) {
@@ -167,6 +173,39 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col gap-0.5">
+                <Label htmlFor="room-private">Private group</Label>
+                <p className="text-xs text-muted-foreground">
+                  Members must request access and be approved by an admin.
+                </p>
+              </div>
+              <Switch
+                id="room-private"
+                checked={isPrivate}
+                onCheckedChange={(checked) => {
+                  setIsPrivate(checked)
+                  if (checked) setIsDefault(false)
+                }}
+              />
+            </div>
+
+            {isPrivate ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="room-private-note">Note for prospective members</Label>
+                <Textarea
+                  id="room-private-note"
+                  value={privateNote}
+                  onChange={(e) => setPrivateNote(e.target.value)}
+                  placeholder="Explain who this group is for and any requirements."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Shown to members before they are approved.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-0.5">
                 <Label htmlFor="room-default">Auto-join for new members</Label>
                 <p className="text-xs text-muted-foreground">
                   Members are automatically added when their account is approved.
@@ -175,6 +214,7 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
               <Switch
                 id="room-default"
                 checked={isDefault}
+                disabled={isPrivate}
                 onCheckedChange={setIsDefault}
               />
             </div>

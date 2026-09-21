@@ -78,21 +78,39 @@ export function RoomsView({
     const room = getRoom(id)
     if (!room) return Promise.resolve()
 
-    const joining = !room.joined
+    const cancelingRequest =
+      room.requiresJoinApproval && room.joinRequestPending
+    const joining = !room.joined && !cancelingRequest
     const togglePromise = toggleJoin(id)
 
-    if (joining) {
-      return togglePromise.then(() => {
-        const updated = getRoom(id) ?? room
+    return togglePromise.then(() => {
+      const updated = getRoom(id) ?? room
+
+      if (joining && !updated.requiresJoinApproval) {
         setActive({ ...updated, joined: true, unread: false })
-      })
-    }
+        return
+      }
 
-    setActive((prev) =>
-      prev?.id === id ? { ...room, joined: false } : prev,
-    )
+      if (joining && updated.requiresJoinApproval) {
+        setActive({
+          ...updated,
+          joinRequestPending: true,
+        })
+        return
+      }
 
-    return togglePromise
+      if (cancelingRequest) {
+        setActive({
+          ...updated,
+          joinRequestPending: false,
+        })
+        return
+      }
+
+      setActive((prev) =>
+        prev?.id === id ? { ...updated, joined: false } : prev,
+      )
+    })
   }
 
   function selectRoom(room: Room) {
