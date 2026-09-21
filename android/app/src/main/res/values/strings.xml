@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AWN</string>
+    <string name="title_activity_main">AWN</string>
+    <string name="package_name">com.awrightworld.awn</string>
+    <string name="custom_url_scheme">com.awrightworld.awn</string>
+</resources>
