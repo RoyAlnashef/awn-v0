@@ -49,6 +49,21 @@ export function GroupsSettingsTable({
     router.refresh()
   }
 
+  function handleMembersOpenChange(open: boolean) {
+    setMembersOpen(open)
+    if (!open) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete("members")
+      params.delete("room")
+      const query = params.toString()
+      router.replace(
+        query ? `/groups/settings?${query}` : "/groups/settings",
+        { scroll: false },
+      )
+      setMembersRoom(null)
+    }
+  }
+
   return (
     <>
       <RoomsTable
@@ -65,7 +80,7 @@ export function GroupsSettingsTable({
       <GroupMembersDrawer
         room={membersRoom}
         open={membersOpen}
-        onOpenChange={setMembersOpen}
+        onOpenChange={handleMembersOpenChange}
         onUpdated={handleMembersUpdated}
       />
     </>
