@@ -1,6 +1,9 @@
 "use server"
 
+import { after } from "next/server"
+
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { dispatchPushForNotification } from "@/lib/push/dispatch"
 import { formatRelativeTime, isUuid } from "@/lib/messages/format"
 import {
   notificationDisplayKind,
@@ -242,6 +245,23 @@ export async function createNotification(
     if (error) {
       return { ok: false, error: error.message }
     }
+
+    after(async () => {
+      try {
+        await dispatchPushForNotification({
+          id: data.id,
+          user_id: input.userId,
+          kind,
+          title,
+          body,
+          data: (input.data ?? null) as Record<string, unknown> | null,
+          room_id:
+            typeof input.data?.roomId === "string" ? input.data.roomId : null,
+        })
+      } catch {
+        // Push delivery is best-effort; in-app notification already exists.
+      }
+    })
 
     return { ok: true, id: data.id }
   } catch (error) {

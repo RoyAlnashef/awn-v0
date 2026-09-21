@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import { CapacitorNativeRoot } from "@/components/capacitor-native-root";
 import { ErrorReporter } from "@/components/error-reporter";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -61,6 +62,7 @@ export default function RootLayout({
       )}
     >
       <body className="antialiased">
+        <CapacitorNativeRoot />
         <ThemeProvider defaultTheme="dark">
           {children}
           <ErrorReporter />

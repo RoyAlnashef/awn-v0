@@ -16,11 +16,10 @@ import {
 } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SettingsSection } from "@/components/settings/settings-section"
 import { SettingsToggleRow } from "@/components/settings/settings-toggle-row"
-import { ComingSoonBadge } from "@/components/settings/coming-soon-badge"
+import { PushSettingsButton } from "@/components/push/push-settings-button"
 import { SettingsRow } from "@/components/settings/settings-row"
 
 export function NotificationsSettingsSection() {
@@ -170,12 +169,7 @@ export function NotificationsSettingsSection() {
           icon={Smartphone}
           label="Push notifications"
           description="Receive alerts on this device even when AWN is closed."
-          badge={<ComingSoonBadge />}
-          action={
-            <Button variant="outline" size="sm" disabled>
-              Enable push
-            </Button>
-          }
+          action={<PushSettingsButton />}
         />
       </SettingsSection>
     </div>

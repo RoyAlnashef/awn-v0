@@ -9,10 +9,21 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "lint": "eslint",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android",
+    "cap:sync": "npx cap sync"
   },
   "dependencies": {
     "@base-ui/react": "latest",
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/haptics": "^7.0.5",
+    "@capacitor/ios": "^7.6.9",
+    "@capacitor/push-notifications": "^7.0.7",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
     "@paper-design/shaders-react": "^0.0.80",
     "@react-three/fiber": "^9.7.0",
     "@shadcn/react": "^0.2.1",
@@ -20,12 +31,14 @@
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
     "@vercel/analytics": "1.3.1",
+    "apns2": "^12.2.0",
     "class-variance-authority": "latest",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
     "emoji-picker-react": "^4.19.1",
+    "firebase-admin": "^14.4.0",
     "input-otp": "1.4.1",
     "lucide-react": "latest",
     "motion": "^13.2.0",
@@ -45,18 +58,18 @@
     "tailwind-merge": "^3.3.1",
     "three": "^0.186.0",
     "tw-animate-css": "latest",
-    "typegpu": "^0.12.5",
     "vaul": "^1.1.2",
-    "vgpu": "^0.5.0"
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.9",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.186.0",
-    "@webgpu/types": "^0.1.72",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.6",
     "postcss": "^8",
@@ -64,7 +77,6 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
     "tw-animate-css": "^1.3.4",
-    "typescript": "^5.9.3",
-    "unplugin-typegpu": "^0.12.3"
+    "typescript": "^5.9.3"
   }
 }

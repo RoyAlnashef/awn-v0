@@ -23,7 +23,7 @@ export function PageShell({
       className={cn(
         "flex flex-col",
         fillViewport
-          ? "mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col gap-8 px-4 py-8 md:px-6 overflow-x-hidden"
+          ? "mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col gap-8 overflow-hidden px-4 py-8 md:px-6"
           : "mx-auto w-full max-w-[1400px] min-w-0 flex-1 gap-8 px-4 py-8 md:px-6",
       )}
     >

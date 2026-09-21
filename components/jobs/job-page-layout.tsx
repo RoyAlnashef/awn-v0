@@ -50,7 +50,7 @@ export function JobPageLayout({
       fillViewport
     >
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
-        <div className="flex min-h-0 flex-col gap-4 overflow-auto lg:col-span-7">
+        <div className="flex min-h-0 flex-col gap-4 overflow-auto overscroll-contain lg:col-span-7">
           {bordered ? (
             <div className="min-w-0 rounded-xl border border-border bg-background p-6">
               {children}

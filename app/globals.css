@@ -193,6 +193,10 @@ body {
 }
 }
 
+html.capacitor-native {
+  overscroll-behavior-y: none;
+}
+
 @keyframes typing-dot {
   0%,
   60%,
