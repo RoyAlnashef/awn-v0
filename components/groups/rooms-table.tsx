@@ -30,10 +30,14 @@ export function RoomsTable({
   initialRooms,
   loadError,
   showCreateButton = true,
+  onOpenMembers,
+  onRoomsChange,
 }: {
   initialRooms: AdminRoomRecord[]
   loadError: string | null
   showCreateButton?: boolean
+  onOpenMembers?: (room: AdminRoomRecord) => void
+  onRoomsChange?: (rooms: AdminRoomRecord[]) => void
 }) {
   const [rooms, setRooms] = useState<AdminRoomRecord[]>(initialRooms)
   const [editRoom, setEditRoom] = useState<AdminRoomRecord | null>(null)
@@ -45,12 +49,17 @@ export function RoomsTable({
     setRooms(initialRooms)
   }, [initialRooms])
 
+  function updateRooms(next: AdminRoomRecord[]) {
+    setRooms(next)
+    onRoomsChange?.(next)
+  }
+
   function handleCreated(room: AdminRoomRecord) {
-    setRooms((prev) => [...prev, room].sort((a, b) => a.sortOrder - b.sortOrder))
+    updateRooms([...rooms, room].sort((a, b) => a.sortOrder - b.sortOrder))
   }
 
   function handleUpdated(room: AdminRoomRecord) {
-    setRooms((prev) => prev.map((r) => (r.id === room.id ? room : r)))
+    updateRooms(rooms.map((r) => (r.id === room.id ? room : r)))
   }
 
   function handleArchive(room: AdminRoomRecord, archived: boolean) {
@@ -58,8 +67,8 @@ export function RoomsTable({
     startTransition(async () => {
       const result = await adminArchiveRoom(room.id, archived)
       if (result.ok) {
-        setRooms((prev) =>
-          prev.map((r) =>
+        updateRooms(
+          rooms.map((r) =>
             r.id === room.id ? { ...r, isArchived: archived } : r,
           ),
         )
@@ -151,6 +160,11 @@ export function RoomsTable({
                                   auto-join
                                 </Badge>
                               ) : null}
+                              {room.isPrivate ? (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                  private
+                                </Badge>
+                              ) : null}
                             </div>
                             <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs">
                               {room.description || room.slug}
@@ -159,10 +173,20 @@ export function RoomsTable({
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <button
+                          type="button"
+                          onClick={() => onOpenMembers?.(room)}
+                          className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          aria-label={`View members of ${room.name}`}
+                        >
                           <Users className="size-3.5" />
                           {room.memberCount.toLocaleString()}
-                        </div>
+                          {room.pendingRequestCount > 0 ? (
+                            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                              +{room.pendingRequestCount}
+                            </Badge>
+                          ) : null}
+                        </button>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                         {formatRelativeTime(room.createdAt)}

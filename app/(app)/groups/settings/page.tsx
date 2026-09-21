@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { Suspense } from "react"
 
 import { PageShell } from "@/components/page-shell"
 import { CreateRoomDialog } from "@/components/groups/create-room-dialog"
-import { RoomsTable } from "@/components/groups/rooms-table"
+import { GroupsSettingsTable } from "@/components/groups/groups-settings-table"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -47,11 +48,12 @@ export default async function GroupsSettingsPage() {
       }
       actions={<CreateRoomDialog disabled={!result.ok} />}
     >
-      <RoomsTable
-        initialRooms={result.ok ? result.rooms : []}
-        loadError={result.ok ? null : result.error}
-        showCreateButton={false}
-      />
+      <Suspense fallback={null}>
+        <GroupsSettingsTable
+          initialRooms={result.ok ? result.rooms : []}
+          loadError={result.ok ? null : result.error}
+        />
+      </Suspense>
     </PageShell>
   )
 }

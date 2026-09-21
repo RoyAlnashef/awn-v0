@@ -25,6 +25,7 @@ export interface NotificationData {
   jobId?: string
   applicationId?: string
   roomId?: string
+  profileId?: string
   mentionCount?: number
   replyCount?: number
 }
@@ -58,6 +59,7 @@ const DM_DB_KINDS = new Set(["dm_message", "message"])
 const JOB_DB_KINDS = new Set(["application_accepted"])
 const ROOM_MENTION_DB_KINDS = new Set(["room_mention"])
 const ROOM_REPLY_DB_KINDS = new Set(["room_reply"])
+const ROOM_JOIN_REQUEST_DB_KINDS = new Set(["room_join_request"])
 const MENTION_TAB_DB_KINDS = new Set(["room_mention", "room_reply"])
 
 /** Maps DB kind strings to UI icon/display kind. */
@@ -107,6 +109,13 @@ export function getRoomNotificationRoomId(
   notification: AppNotification,
 ): string | undefined {
   return notification.data?.roomId
+}
+
+/** Whether a notification is a private group join request for admins. */
+export function isRoomJoinRequestNotification(
+  notification: AppNotification,
+): boolean {
+  return ROOM_JOIN_REQUEST_DB_KINDS.has(notification.dbKind)
 }
 
 /** Whether a notification is job-related in the API feed. */

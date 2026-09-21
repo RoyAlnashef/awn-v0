@@ -11,6 +11,7 @@ import {
 import { mutate as mutateSwr } from "swr"
 
 import {
+  cancelJoinRequest,
   joinRoom,
   leaveRoom,
   markRoomRead as markRoomReadAction,
@@ -76,6 +77,10 @@ export function RoomsProvider({
         unreadCount: r.unreadCount,
         isDefault: r.isDefault,
         muted: r.muted,
+        isPrivate: r.isPrivate,
+        privateNote: r.privateNote,
+        requiresJoinApproval: r.requiresJoinApproval,
+        joinRequestPending: r.joinRequestPending,
       }))
     }
     return []
@@ -111,31 +116,36 @@ export function RoomsProvider({
     const room = serverRooms.find((r) => r.id === id)
     if (!room) return Promise.resolve()
 
-    const joining = !room.joined
+    const cancelingRequest =
+      room.requiresJoinApproval && room.joinRequestPending
+    const joining = !room.joined && !cancelingRequest
+    const leaving = room.joined
 
-    // Optimistically update join order
-    setJoinOrder((order) => {
-      if (joining) {
+    if (joining) {
+      setJoinOrder((order) => {
         const without = order.filter((roomId) => roomId !== id)
-        // Find the GENERAL room ID from server rooms
-        const generalId = serverRooms.find((r) => r.isDefault)?.id ?? GENERAL_ROOM_ID
+        const generalId =
+          serverRooms.find((r) => r.isDefault)?.id ?? GENERAL_ROOM_ID
         const general = without.filter((roomId) => roomId === generalId)
         const rest = without.filter((roomId) => roomId !== generalId)
         return [...general, id, ...rest]
-      }
-      return order.filter((roomId) => roomId !== id)
-    })
-
-    // Fire server action (UUIDs only)
-    if (isUuid(id)) {
-      const action = joining ? joinRoom(id) : leaveRoom(id)
-      return action.then(() => {
-        void mutateSwr(roomsListKey)
-        void mutateSwr(roomsUnreadCountKey)
       })
+    } else if (leaving) {
+      setJoinOrder((order) => order.filter((roomId) => roomId !== id))
     }
 
-    return Promise.resolve()
+    if (!isUuid(id)) return Promise.resolve()
+
+    const action = cancelingRequest
+      ? cancelJoinRequest(id)
+      : leaving
+        ? leaveRoom(id)
+        : joinRoom(id)
+
+    return action.then(() => {
+      void mutateSwr(roomsListKey)
+      void mutateSwr(roomsUnreadCountKey)
+    })
   }, [serverRooms])
 
   const toggleMute = useCallback((id: string): Promise<{ ok: true } | { ok: false; error: string }> => {

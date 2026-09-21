@@ -59,6 +59,7 @@ function mapNotificationData(
   const applicationId =
     typeof data.applicationId === "string" ? data.applicationId : undefined
   const roomId = typeof data.roomId === "string" ? data.roomId : undefined
+  const profileId = typeof data.profileId === "string" ? data.profileId : undefined
   const mentionCount =
     typeof data.mentionCount === "number" ? data.mentionCount : undefined
   const replyCount =
@@ -71,6 +72,7 @@ function mapNotificationData(
     !jobId &&
     !applicationId &&
     !roomId &&
+    !profileId &&
     mentionCount === undefined &&
     replyCount === undefined
   ) {
@@ -84,6 +86,7 @@ function mapNotificationData(
     ...(jobId ? { jobId } : {}),
     ...(applicationId ? { applicationId } : {}),
     ...(roomId ? { roomId } : {}),
+    ...(profileId ? { profileId } : {}),
     ...(mentionCount !== undefined ? { mentionCount } : {}),
     ...(replyCount !== undefined ? { replyCount } : {}),
   }

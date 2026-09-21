@@ -130,6 +130,14 @@ export interface Room {
   isDefault?: boolean
   /** Whether the current user has muted notifications for this room. */
   muted?: boolean
+  /** When true, members must request admin approval to join. */
+  isPrivate?: boolean
+  /** Admin note shown in the hidden state for non-members of private groups. */
+  privateNote?: string
+  /** When true, the current user must request admin approval before joining. */
+  requiresJoinApproval?: boolean
+  /** Whether the current user has a pending join request for this private group. */
+  joinRequestPending?: boolean
 }
 
 export const directConversations: DirectConversation[] = [
