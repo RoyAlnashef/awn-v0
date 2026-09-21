@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "always",
     backgroundColor: "#0C0B09",
-    scrollEnabled: false,
+    scrollEnabled: true,
   },
   android: {
     backgroundColor: "#0C0B09",

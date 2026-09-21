@@ -13,24 +13,39 @@
 - [x] `GoogleService-Info.plist` added to Xcode project (`project.pbxproj` → Copy Bundle Resources)
 - [x] `npx cap sync` — `CapacitorPushNotifications` pod present
 
+
+
 ## Prerequisites (user)
 
 - [x] `android/app/google-services.json` in place (gitignored)
 - [x] `ios/App/App/GoogleService-Info.plist` on disk and in Xcode target
-- [ ] Run migration in Supabase SQL Editor (`20260921124500_push_subscriptions.sql`)
-- [ ] Xcode: Push Notifications capability + Background Modes → Remote notifications (Signing & Capabilities)
-- [ ] Env vars in Vercel/local `.env`:
+- [x] Run migration in Supabase SQL Editor (`20260921124500_push_subscriptions.sql`)
+- [x] Xcode: Push Notifications capability + Background Modes → Remote notifications (Signing & Capabilities)
+- [x] Env vars in Vercel/local `.env`:
   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
   - `FIREBASE_SERVICE_ACCOUNT_JSON`
   - `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY`, `APNS_BUNDLE_ID`
   - `INTERNAL_API_SECRET`
-- [ ] Supabase webhook: `notifications` INSERT → `POST https://awrightnetwork.com/api/push/dispatch` with header `x-internal-secret: <INTERNAL_API_SECRET>`
-- [ ] Deploy push routes to production (remote URL mode loads live site)
+- [x] Supabase webhook: `notifications` INSERT → `POST https://awrightnetwork.com/api/push/dispatch` with header `x-internal-secret: <INTERNAL_API_SECRET>`
+- [x] Deploy push routes to production (remote URL mode loads live site)
+
+
 
 ## Build checks
 
 - [ ] Android Gradle build succeeds with `google-services.json`
-- [ ] iOS Xcode build succeeds with Push capability enabled
+- [x] iOS Xcode build succeeds with Push capability enabled
+
+
+
+## iOS scroll checks
+
+Requires web overscroll changes deployed to production **and** `scrollEnabled: true` synced via `npm run cap:sync` + Xcode rebuild.
+
+- [ ] Jobs / People: page scrolls vertically
+- [ ] Messages / Groups: thread scrolls; inbox scrolls; page header stays fixed; no whole-page scroll while inside thread
+- [ ] Account / Job edit (fill-viewport): inner column scrolls without moving header
+- [ ] Auth / login: scrolls if content exceeds viewport
 
 ## Device checks
 

@@ -52,7 +52,7 @@ function EmailLayoutShellContent({
             <EmailNav />
           </div>
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:gap-8 xl:gap-12 lg:grid-cols-12">
-            <div className="flex min-h-0 flex-col overflow-auto lg:col-span-4">
+            <div className="flex min-h-0 flex-col overflow-auto overscroll-contain lg:col-span-4">
               <div className="min-w-0 rounded-xl border border-border bg-background p-6">
                 {children}
               </div>
