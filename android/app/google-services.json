@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994077676718",
+    "project_id": "awrightnetwork",
+    "storage_bucket": "awrightnetwork.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994077676718:android:208a3d81756075591f893f",
+        "android_client_info": {
+          "package_name": "com.awrightworld.awn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoAu3plhVpWxbEFc7XZJDZtyg91VbWdpg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
