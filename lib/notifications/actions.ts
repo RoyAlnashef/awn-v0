@@ -200,6 +200,7 @@ export async function markAllNotificationsRead(): Promise<MarkAllNotificationsRe
       .update({ read: true })
       .eq("user_id", userId)
       .eq("read", false)
+      .neq("kind", "dm_message")
 
     if (error) {
       return { ok: false, error: error.message }
