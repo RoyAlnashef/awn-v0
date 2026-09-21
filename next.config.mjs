@@ -1,5 +1,3 @@
-import typegpuPlugin from "unplugin-typegpu/webpack"
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -14,14 +12,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-  },
-  webpack: (config) => {
-    config.plugins.push(
-      typegpuPlugin({
-        include: [/components\/orbs\/.*\.[jt]sx?$/],
-      })
-    )
-    return config
   },
   redirects: async () => [
     { source: "/rooms", destination: "/groups", permanent: true },

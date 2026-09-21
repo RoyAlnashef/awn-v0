@@ -63,20 +63,16 @@ AWN v0 is a **Next.js 16 App Router** application with the following characteris
 | Framework | Next.js 16 (App Router) | Requires static export OR remote URL mode for Capacitor |
 | Styling | Tailwind CSS 4 | Works perfectly in WebView |
 | Animations | Framer Motion (CSS/JS) | Works perfectly in WebView |
-| 3D/Visual FX | Three.js via `@react-three/fiber` | WebGL — works in iOS/Android WebView |
-| GPU Compute | TypeGPU (`typegpu`) for orbs | ⚠️ WebGPU — see note below |
+| Background FX | `@paper-design/shaders-react` MeshGradient | WebGL/canvas — works in iOS/Android WebView |
 | Backend | Supabase (Realtime + Auth + Storage) | Works fine in WebView |
 | Maps | Mapbox GL | Works in WebView |
 | Push Notifications | Web Push / VAPID planned | ⚠️ Does NOT work in iOS WKWebView |
 | Image optimization | `images.unoptimized: true` in config | Good — no Next/Image server dependency |
 | Auth | Supabase SSR + cookies | Remote URL mode handles this cleanly |
 
-### ⚠️ Two Technical Flags for Mobile
+### ⚠️ Technical Flag for Mobile
 
-**Flag 1 — TypeGPU / WebGPU (Orbs)**  
-The orb visual effects in `components/orbs/` use TypeGPU which requires the WebGPU API. As of 2026, iOS WKWebView (used by Capacitor) has WebGPU support from iOS 16.4+, but it's behind a capability flag and behavior in WebView can differ from Safari browser. The orbs are decorative background elements — if they fail silently on older iPhones, this is tolerable, but it needs to be tested on device. A graceful fallback (CSS or canvas fallback) is recommended.
-
-**Flag 2 — Push Notifications**  
+**Push Notifications**  
 The current tech stack doc plans **VAPID (Web Push API)** for browser push notifications. Web Push does not work inside a Capacitor WKWebView on iOS. If AWN has Capacitor native apps, push notifications must be implemented using `@capacitor/push-notifications` (which uses Apple Push Notification Service + Firebase Cloud Messaging) — not the browser Web Push API. Android WebView does support Web Push in some configurations, but native FCM via the Capacitor plugin is more reliable. This is a **required change** if Capacitor is chosen.
 
 ### What's Already in Good Shape
@@ -105,7 +101,6 @@ The current tech stack doc plans **VAPID (Web Push API)** for browser push notif
 - WebView can feel slightly less "native" (scroll physics, transitions)
 - No automatic OTA update for plugin-level or native code changes
 - iOS push requires switching from VAPID to `@capacitor/push-notifications`
-- WebGPU orbs need on-device testing
 
 **Best for:** Speed to App Store, single codebase, small team maintenance burden
 
@@ -132,7 +127,7 @@ The current tech stack doc plans **VAPID (Web Push API)** for browser push notif
 
 **Why it doesn't fit AWN right now:**
 - **Would require rewriting the UI.** React Native uses `<View>`, `<Text>`, `<FlatList>` etc. — not `<div>`, `<p>`, Tailwind CSS classes, or shadcn components. The entire component library in `components/` would need to be ported.
-- `@react-three/fiber`, Three.js, TypeGPU, and `@paper-design/shaders-react` have no React Native equivalents. The orb visuals would need to be rebuilt or dropped.
+- `@react-three/fiber`, Three.js, and `@paper-design/shaders-react` have no React Native equivalents. Shader backgrounds would need to be rebuilt or dropped.
 - Best suited for a from-scratch mobile build, not wrapping an existing web app.
 
 **Migration effort:** Extremely high (months). Essentially building a second app.
@@ -189,12 +184,7 @@ The old developer made the right call, and the architecture hasn't changed: AWN 
 4. Implement a JavaScript bridge in the web app that calls Capacitor push APIs when running in native context (use `Capacitor.isNativePlatform()` guard)
 5. Keep VAPID/Web Push for the browser PWA experience — these can coexist
 
-**Phase 3 — Validate WebGPU Orbs (1 day)**
-1. Build and run on a physical iOS device (not just simulator)
-2. Test orb components — if WebGPU is unavailable, implement a CSS/canvas fallback
-3. Test on Android as well (Chrome WebView has better WebGPU coverage)
-
-**Phase 4 — Store Submission Setup (2–5 days)**
+**Phase 3 — Store Submission Setup (2–5 days)**
 1. Enroll in Apple Developer Program ($99/yr) if not already active
 2. Enroll in Google Play Console ($25 one-time) if not already active
 3. Set up code signing in Xcode (provisioning profiles, certificates)
