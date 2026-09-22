@@ -77,6 +77,11 @@ export function isDmNotification(notification: AppNotification): boolean {
   return notification.dbKind === "dm_message"
 }
 
+/** Whether this notification should appear in the notifications panel. */
+export function isPanelNotification(notification: AppNotification): boolean {
+  return !isDmNotification(notification)
+}
+
 /** Conversation id for navigating to a DM notification thread. */
 export function getDmConversationId(
   notification: AppNotification,

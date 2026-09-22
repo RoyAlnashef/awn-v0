@@ -8,12 +8,11 @@ import { UrgentJobsCarousel } from "@/components/jobs/jobs-panel/urgent-jobs-car
 import { NotificationList } from "@/components/notifications/notification-list"
 import { useMessages } from "@/components/messages/messages-provider"
 import {
-  getDmConversationId,
   getJobNotificationConversationId,
   getRoomNotificationRoomId,
-  isDmNotification,
   isJobApiNotification,
   isMentionTabNotification,
+  isPanelNotification,
   isRoomJoinRequestNotification,
   isRoomMentionNotification,
   isRoomReplyNotification,
@@ -47,21 +46,23 @@ export function Notifications() {
 
   useNotificationsRealtime({ userId: currentUser.id })
 
-  const jobNotifications = notifications.filter((n) =>
+  const panelNotifications = notifications.filter(isPanelNotification)
+  const jobNotifications = panelNotifications.filter((n) =>
     isJobApiNotification(n.dbKind),
   )
-  const apiUnreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = panelNotifications.filter((n) => !n.read).length
   const jobUnreadCount = jobNotifications.filter((n) => !n.read).length
-  const unreadCount = apiUnreadCount
 
-  const mentions = notifications.filter(isMentionTabNotification)
+  const mentions = panelNotifications.filter(isMentionTabNotification)
   const mentionsUnreadCount = mentions.filter((n) => !n.read).length
 
   async function markAllRead() {
     const previous = notifications
 
     await mutate(
-      previous.map((n) => ({ ...n, read: true })),
+      previous.map((n) =>
+        isPanelNotification(n) ? { ...n, read: true } : n,
+      ),
       { revalidate: false },
     )
 
@@ -177,14 +178,6 @@ export function Notifications() {
         : undefined
     if (roomId) {
       void handleRoomNotificationClick(item, roomId)
-      return
-    }
-
-    const dmConversationId = isDmNotification(item)
-      ? getDmConversationId(item)
-      : undefined
-    if (dmConversationId) {
-      void handleConversationNotificationClick(item, dmConversationId)
       return
     }
 
@@ -312,13 +305,13 @@ export function Notifications() {
 
             <TabsContent value="all" className="mt-0 min-h-0 flex-1">
               <ScrollArea className="h-full min-h-0">
-                {isLoading && notifications.length === 0 ? (
+                {isLoading && panelNotifications.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">
                     Loading notifications…
                   </p>
                 ) : (
                   <NotificationList
-                    items={notifications}
+                    items={panelNotifications}
                     onItemClick={handleNotificationClick}
                   />
                 )}
@@ -344,7 +337,7 @@ export function Notifications() {
 
             <TabsContent value="mentions" className="mt-0 min-h-0 flex-1">
               <ScrollArea className="h-full min-h-0">
-                {isLoading && notifications.length === 0 ? (
+                {isLoading && mentions.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">
                     Loading notifications…
                   </p>
