@@ -20,7 +20,7 @@ export default async function PendingPage() {
 
   if (!result.ok) {
     return (
-      <AuthShell subtitle="Application status unavailable">
+      <AuthShell showAppIcon subtitle="Application status unavailable">
         <p className="text-sm text-muted-foreground">{result.error}</p>
       </AuthShell>
     )

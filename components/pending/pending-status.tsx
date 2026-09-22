@@ -33,7 +33,7 @@ export function PendingStatus({
   }
 
   return (
-    <AuthShell subtitle="Your membership application status">
+    <AuthShell showAppIcon subtitle="Your membership application status">
       <div className="grid gap-5">
         <div className="flex items-center justify-between gap-3">
           <div>
