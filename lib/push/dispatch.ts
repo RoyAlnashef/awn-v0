@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 
 import { buildNotificationUrl } from "./build-notification-url"
+import { logDispatchIssue } from "./log-dispatch-issue"
 import { sendApnsPush } from "./send-apns"
 import { sendFcmPush } from "./send-fcm"
 import { sendWebPush } from "./send-web"
@@ -58,7 +59,13 @@ export async function dispatchPushForNotification(
 
   const subscriptions = await loadSubscriptions(notification.user_id)
   if (subscriptions.length === 0) {
-    return { sent: 0, total: 0, reason: "no_subscriptions" }
+    const result: DispatchResult = {
+      sent: 0,
+      total: 0,
+      reason: "no_subscriptions",
+    }
+    await logDispatchIssue(notification, result)
+    return result
   }
 
   const payload = buildPayload(notification)
@@ -75,7 +82,7 @@ export async function dispatchPushForNotification(
       (row.subscription as { type?: string }).type === "native",
   )
 
-  const [webResult, fcmSent, apnsSent] = await Promise.all([
+  const [webResult, fcmResult, apnsResult] = await Promise.all([
     sendWebPush(webRows, payload),
     sendFcmPush(nativeRows, payload),
     sendApnsPush(nativeRows, payload),
@@ -83,12 +90,23 @@ export async function dispatchPushForNotification(
 
   await pruneExpiredEndpoints(webResult.expiredEndpoints)
 
-  const sent = webResult.sent + fcmSent + apnsSent
+  const failures = [
+    ...webResult.failures,
+    ...fcmResult.failures,
+    ...apnsResult.failures,
+  ]
+  const sent = webResult.sent + fcmResult.sent + apnsResult.sent
 
-  return {
+  const result: DispatchResult = {
     sent,
     total: subscriptions.length,
+    ...(failures.length > 0 ? { failures } : {}),
+    ...(sent === 0 && failures.length === 0 ? { reason: "send_failed" } : {}),
   }
+
+  await logDispatchIssue(notification, result)
+
+  return result
 }
 
 export async function dispatchPushByNotificationId(

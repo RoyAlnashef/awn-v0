@@ -32,11 +32,18 @@ export type PushPayload = {
   tag: string
 }
 
+export type PushDispatchFailure = {
+  channel: "web" | "fcm" | "apns"
+  endpointPrefix: string
+  message: string
+}
+
 export type DispatchResult = {
   sent: number
   total: number
   skipped?: boolean
   reason?: string
+  failures?: PushDispatchFailure[]
 }
 
 export type NotificationDispatchInput = {
