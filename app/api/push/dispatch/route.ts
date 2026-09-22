@@ -4,6 +4,7 @@ import {
   dispatchPushByNotificationId,
   dispatchPushForNotification,
 } from "@/lib/push/dispatch"
+import { isPushWorthyKind } from "@/lib/push/push-worthy-kinds"
 import type { NotificationDispatchInput } from "@/lib/push/types"
 
 type DispatchBody = {
@@ -13,6 +14,7 @@ type DispatchBody = {
     kind?: string
     title?: string
     body?: string
+    read?: boolean
     data?: Record<string, unknown> | null
     room_id?: string | null
   }
@@ -27,6 +29,27 @@ function isAuthorized(request: Request): boolean {
       process.env.INTERNAL_API_SECRET &&
       secret === process.env.INTERNAL_API_SECRET,
   )
+}
+
+function shouldSkipWebhookDispatch(body: DispatchBody): string | null {
+  if (body.type === "DELETE") {
+    return "webhook_delete_event"
+  }
+
+  const record = body.record
+  if (!record?.kind) {
+    return null
+  }
+
+  if (record.read === true) {
+    return "notification_already_read"
+  }
+
+  if (!isPushWorthyKind(record.kind)) {
+    return "kind_not_push_worthy"
+  }
+
+  return null
 }
 
 export async function POST(request: Request) {
@@ -45,6 +68,17 @@ export async function POST(request: Request) {
     if (body.notificationId) {
       const result = await dispatchPushByNotificationId(body.notificationId)
       return NextResponse.json({ ok: true, ...result })
+    }
+
+    const skipReason = shouldSkipWebhookDispatch(body)
+    if (skipReason) {
+      return NextResponse.json({
+        ok: true,
+        sent: 0,
+        total: 0,
+        skipped: true,
+        reason: skipReason,
+      })
     }
 
     if (body.record?.id && body.record.user_id && body.record.kind) {

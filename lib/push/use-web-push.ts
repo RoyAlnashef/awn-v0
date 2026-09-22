@@ -1,6 +1,8 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+
+import { createClient } from "@/lib/supabase/client"
 
 import { isNativePlatform } from "./is-native-platform"
 
@@ -23,12 +25,66 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray
 }
 
+async function buildSubscribeHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  }
+
+  const supabase = createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`
+  }
+
+  return headers
+}
+
+async function readApiError(response: Response, fallback: string) {
+  try {
+    const data = (await response.json()) as { error?: string }
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error
+    }
+  } catch {
+    // Ignore JSON parse failures.
+  }
+
+  return fallback
+}
+
 export function useWebPush() {
   const [state, setState] = useState<WebPushState>({
     enabled: false,
     loading: false,
     error: null,
   })
+
+  useEffect(() => {
+    if (isNativePlatform()) return
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
+
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration("/sw.js")
+        const subscription = await registration?.pushManager.getSubscription()
+
+        if (!cancelled && subscription) {
+          setState((current) => ({ ...current, enabled: true, error: null }))
+        }
+      } catch {
+        // Ignore restore failures; user can re-enable manually.
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const enableWebPush = useCallback(async () => {
     if (isNativePlatform()) {
@@ -80,15 +136,18 @@ export function useWebPush() {
       })
 
       const json = subscription.toJSON()
+      const headers = await buildSubscribeHeaders()
       const response = await fetch("/api/push/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({ subscription: json }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to save push subscription")
+        throw new Error(
+          await readApiError(response, "Failed to save push subscription"),
+        )
       }
 
       setState({ enabled: true, loading: false, error: null })
@@ -119,9 +178,10 @@ export function useWebPush() {
 
       if (subscription) {
         const endpoint = subscription.endpoint
+        const headers = await buildSubscribeHeaders()
         await fetch("/api/push/unsubscribe", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           credentials: "include",
           body: JSON.stringify({ endpoint }),
         })
