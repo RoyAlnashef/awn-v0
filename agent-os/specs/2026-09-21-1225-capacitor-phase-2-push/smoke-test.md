@@ -4,6 +4,7 @@
 
 - [x] `push_subscriptions` migration written — `supabase/migrations/20260921124500_push_subscriptions.sql`
 - [x] `push_subscriptions` **repair** migration — `supabase/migrations/20260921180000_push_subscriptions_repair.sql` (adds missing `subscription` jsonb column)
+- [x] `push_subscriptions` **legacy column drop** — `supabase/migrations/20260921190000_push_subscriptions_drop_legacy_columns.sql` (fixes `p256dh` NOT NULL on Enable push)
 - [x] Server dispatch layer — `lib/push/` (VAPID, FCM, APNs + failure logging)
 - [x] API routes — `/api/push/{register-token,subscribe,unsubscribe,dispatch}`
 - [x] Dispatch route skips read/deleted webhook events; supports aggregated UPDATE pushes
@@ -21,6 +22,7 @@
 - [x] `android/app/google-services.json` in place (gitignored)
 - [x] `ios/App/App/GoogleService-Info.plist` on disk and in Xcode target
 - [ ] Run **repair** migration in Supabase SQL Editor (`20260921180000_push_subscriptions_repair.sql`) — required if Enable push returns 500 missing `subscription` column
+- [ ] Run **legacy column drop** in Supabase SQL Editor (`20260921190000_push_subscriptions_drop_legacy_columns.sql`) — required if Enable push returns 500 `null value in column "p256dh"`
 - [x] Run base migration in Supabase SQL Editor (`20260921124500_push_subscriptions.sql`) if table did not exist
 - [x] Xcode: Push Notifications capability + Background Modes → Remote notifications (Signing & Capabilities)
 - [x] Env vars in Vercel/local `.env`:
@@ -52,7 +54,7 @@ Requires web overscroll changes deployed to production **and** `scrollEnabled: t
 
 ### Web push registration
 
-1. Run repair migration in Supabase if not done
+1. Run repair + legacy column drop migrations in Supabase if not done
 2. Chrome → Settings → Notifications → **Enable push** → grant permission
 3. Network: `POST /api/push/subscribe` returns **200** `{ "ok": true }`
 4. SQL: row in `push_subscriptions` with `subscription->>'type' = 'web'`

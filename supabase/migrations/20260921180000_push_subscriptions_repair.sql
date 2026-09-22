@@ -116,4 +116,45 @@ notify pgrst, 'reload schema';
 comment on column public.push_subscriptions.subscription is
   'Web Push subscription object or native token payload ({ type, token, platform }).';
 
+-- ---------------------------------------------------------------------------
+-- Drop legacy NOT NULL columns (see 20260921190000 for standalone rerun)
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'push_subscriptions'
+      and column_name = 'p256dh'
+  ) then
+    alter table public.push_subscriptions alter column p256dh drop not null;
+  end if;
+
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'push_subscriptions'
+      and column_name = 'auth'
+  ) then
+    alter table public.push_subscriptions alter column auth drop not null;
+  end if;
+
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'push_subscriptions'
+      and column_name = 'platform'
+  ) then
+    alter table public.push_subscriptions alter column platform drop not null;
+  end if;
+end
+$$;
+
+alter table public.push_subscriptions drop column if exists p256dh;
+alter table public.push_subscriptions drop column if exists auth;
+alter table public.push_subscriptions drop column if exists platform;
+alter table public.push_subscriptions drop column if exists token;
+alter table public.push_subscriptions drop column if exists user_agent;
+alter table public.push_subscriptions drop column if exists device_id;
+
+notify pgrst, 'reload schema';
+
 -- =============================================================================
