@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-type FooterMode = "actions" | "compose"
+type FooterMode = "actions" | "compose" | "decline"
+
+const footerSheetClassName =
+  "flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out"
 
 export function JobApplicationReviewFooter({
   application,
@@ -39,9 +42,17 @@ export function JobApplicationReviewFooter({
     setFooterMode("compose")
   }
 
+  function handleDeclineClick() {
+    setFooterMode("decline")
+  }
+
   function handleCancelCompose() {
     setMessage("")
     setMessageError(null)
+    setFooterMode("actions")
+  }
+
+  function handleCancelDecline() {
     setFooterMode("actions")
   }
 
@@ -55,11 +66,15 @@ export function JobApplicationReviewFooter({
     onAcceptWithMessage(trimmed)
   }
 
+  function handleConfirmDecline() {
+    onStatusChange("declined")
+  }
+
   if (!showReviewFooter) return null
 
   if (footerMode === "compose") {
     return (
-      <div className="flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out">
+      <div className={footerSheetClassName}>
         <div className="flex flex-col gap-1 space-y-2">
           <Label htmlFor={messageFieldId}>
             Start the conversation with {application.applicant.name}
@@ -101,6 +116,38 @@ export function JobApplicationReviewFooter({
     )
   }
 
+  if (footerMode === "decline") {
+    return (
+      <div className={footerSheetClassName}>
+        <div className="flex flex-col gap-1 space-y-2">
+          <Label>Decline application?</Label>
+          <p className="text-sm text-muted-foreground">
+            This will mark {application.applicant.name}&apos;s application as
+            declined for this job.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            disabled={updating}
+            onClick={handleCancelDecline}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            disabled={updating}
+            onClick={handleConfirmDecline}
+          >
+            Decline
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex shrink-0 gap-2 border-t bg-popover p-4">
       <Button
@@ -122,7 +169,7 @@ export function JobApplicationReviewFooter({
         variant="outline"
         className="flex-1"
         disabled={updating}
-        onClick={() => onStatusChange("declined")}
+        onClick={handleDeclineClick}
       >
         Decline
       </Button>
