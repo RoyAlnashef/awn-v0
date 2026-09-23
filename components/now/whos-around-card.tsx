@@ -26,11 +26,11 @@ export function WhosAroundCard({ className }: { className?: string }) {
   return (
     <Card
       className={cn(
-        "relative min-h-[320px] overflow-hidden p-0 ring-0 lg:min-h-[560px]",
+        "relative min-h-80 overflow-hidden p-0 ring-0 lg:min-h-140",
         className,
       )}
     >
-      <div className="relative min-h-[320px] lg:min-h-[560px]">
+      <div className="relative min-h-80 lg:min-h-140">
         <NowMap />
 
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
