@@ -5,13 +5,24 @@ import {
   formatNowGreeting,
 } from "@/lib/now/greeting"
 import { mainNav } from "@/lib/nav"
+import { getOnboardingSignals } from "@/lib/onboarding/progress"
 
 const now = mainNav.find((item) => item.href === "/now")!
 
 export default async function NowPage() {
-  const sessionUser = await getSessionUser()
+  const [sessionUser, onboarding] = await Promise.all([
+    getSessionUser(),
+    getOnboardingSignals(),
+  ])
   const firstName = firstNameFromFullName(sessionUser?.name ?? "Member")
   const greeting = formatNowGreeting(firstName)
 
-  return <NowView greeting={greeting} description={now.description} />
+  return (
+    <NowView
+      greeting={greeting}
+      description={now.description}
+      onboardingStatus={onboarding.status}
+      onboardingDismissed={onboarding.dismissed}
+    />
+  )
 }

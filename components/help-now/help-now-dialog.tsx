@@ -32,9 +32,11 @@ function revalidateJobs() {
 export function HelpNowDialog({
   open,
   onOpenChange,
+  onPosted,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onPosted?: () => void
 }) {
   const [values, setValues] = React.useState(emptyHelpNowForm)
   const [submitting, setSubmitting] = React.useState(false)
@@ -56,6 +58,7 @@ export function HelpNowDialog({
       await createJob(helpNowFormToCreatePayload(values))
       toast.success("Urgent request posted — live for 48 hours")
       revalidateJobs()
+      onPosted?.()
       onOpenChange(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not post request")

@@ -70,6 +70,7 @@ function revalidateProfilePaths(
   revalidatePath("/account/resume")
   revalidatePath("/account", "layout")
   revalidatePath("/", "layout")
+  revalidatePath("/now")
   revalidateCrewProfilePaths(handle, previousHandle)
 }
 
@@ -236,6 +237,12 @@ export async function updateMemberProfile(
     if (error) {
       return { ok: false, error: error.message }
     }
+
+    await admin
+      .from("profiles")
+      .update({ profile_saved_at: new Date().toISOString() })
+      .eq("id", person.id)
+      .is("profile_saved_at", null)
 
     const savedRow = data as unknown as MemberProfileRow
     const savedHandle = savedRow.handle?.trim() || null
