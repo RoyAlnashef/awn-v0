@@ -2,31 +2,49 @@
 
 ## Phase 1: MVP
 
-Core network feature set carried forward from the previous AWN app (rebuild in progress with scalable architecture and a shadcn/ui-based design system):
+Core network rebuild on Next.js 16 + Supabase. Most of the social graph is live; active work focuses on finishing the Now page and onboarding flows.
 
-- **Invite-only onboarding** — invite codes, manual admin approval, multi-step profile setup
-- **Now** — live availability status, Help Now urgent crew requests (48h), On The Road check-in map
-- **Jobs** — post and browse job listings, apply with profile, employer shortlist
-- **People** — searchable vetted member directory with role, city, availability, work auth, tour tier
-- **Messages** — direct messages and discipline-specific community rooms with realtime updates
-- **Intel** — community Q&A, venue/vendor atlas, partner deals, The List industry contacts
-- **Profile** — rich touring profile with credits, work history, peer endorsements, invite codes
-- **Peer-verified credits** — credit endorsement system; verified badge at 2+ peer vouches (badge/priority only — approval grants full product access)
-- **Web push notifications** — DMs, Help Now, job matches, morning brief, profile views, vouches
-- **Admin panel** — approve applications, manage members, broadcast emails, analytics
-- **Employer billing** — Stripe subscription checkout (paywall activation may follow launch)
-- **PWA + Capacitor shells** — installable web app; iOS and Android native shells for store launch
+### Shipped
+
+- **Invite-only onboarding** — invite-token signup, public request-access, pending gate, admin approve/deny with email
+- **Jobs** — post, browse, filter, apply, save, my-jobs tabs, applicant review, accept-with-DM
+- **Help Now** — urgent 48h crew callouts as job postings
+- **People** — searchable member directory with department, city, availability, work auth, and venue tier filters; connect/disconnect
+- **Groups** — community chat rooms with join/leave, private gates, mentions, replies, reactions, and admin settings
+- **Messages** — DMs with realtime, reactions, replies, unsend, job/member sharing; popout windows
+- **Profile & account** — profile edit, tour credits CRUD, resume upload, social links, avatar/banner
+- **Peer-verified tour credits** — credit vouching from People profiles; push on vouch
+- **Member invites** — invite codes with quota, send/rescind, member invite popover
+- **Public crew profiles** — public `/crew/[handle]` pages
+- **Push notifications** — Web Push + FCM + APNs dispatch; in-app notification center (DMs, mentions, application updates, vouches)
+- **Admin panel** — users, applications, invites, email templates/broadcasts, error logs
+- **Capacitor native shells** — iOS/Android remote URL wrappers
+
+### In progress
+
+- **Now page backend** — wire check-in map, getting-started checklist, and group selection to Supabase
+- **Live availability on Now** — full status picker on Now page (toggle exists in nav today)
+- **Post-approval onboarding** — first-login flow gating and dismiss persistence
+- **Push notification preferences** — persist toggles; wire coming-soon alert types
+- **Accept application with DM** — auto-DM on membership approval
 
 ## Phase 2: Post-Launch
 
-- **App Store submissions** — iOS App Store + Google Play simultaneous launch
-- **Employer paywall activation** — pricing TBD; Stripe wiring in place from MVP
-- **SEO crew profiles** — public `/crew/[handle]` profile pages indexed for organic discovery
-- **Availability habits & nudges** — automated reminders to keep availability signal fresh; weekly digest
-- **Expanded Road Intel** — deeper venue database, vendor ratings, lifestyle perks by market
-- **Tours & work history** — structured tour records linked to verified credits and shared-credits graph
-- **Pagination & performance** — cursor-based pagination; privacy and query hardening
-- **Weekly / employer digests** — automated email cadences for member engagement and employer retention
-- **Growth mechanics** — referral incentives, onboarding email sequences, availability streaks
-- **Expanded messaging** — message search, thread replies, media attachments
-- **The List expansion** — community-contributed industry contacts with vetting workflow
+- **Intel (Road Intel / Atlas)** — community Q&A, venue/vendor atlas, partner deals
+- **The List** — curated industry contacts with community contribution and vetting
+- **Employer billing & paywall** — Stripe checkout, employer role UX, pricing TBD
+- **Installable PWA** — web manifest and install prompt
+- **Profile endorsements & network** — profile-level vouches; real following/network graph
+- **Work history & tours** — structured tour records linked to verified credits
+- **Admin analytics** — usage and engagement dashboard
+- **Notification digests & alerts** — saved job alerts, Help Now push, morning brief, weekly/employer digests
+- **App Store submissions** — iOS App Store + Google Play
+- **Availability habits & nudges** — reminders to keep availability fresh
+- **Pagination & performance** — cursor-based pagination; query hardening
+- **Growth mechanics** — referrals, onboarding sequences, availability streaks
+- **Expanded messaging** — message search, media attachments
+- **Employer shortlist & hiring tools** — save crew for roles
+- **People trust features** — watch availability, suggested connections, report member
+- **Feedback triage admin** — review member feedback submissions
+- **Global search** — cross-crew, jobs, and venues search
+- **Expanded Road Intel** — deeper venue DB, vendor ratings, lifestyle perks by market
