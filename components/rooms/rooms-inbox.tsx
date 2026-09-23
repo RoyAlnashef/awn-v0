@@ -154,11 +154,7 @@ export function RoomsInbox({
                     ) : (
                       <Button
                         size="sm"
-                        variant={
-                          room.requiresJoinApproval && room.joinRequestPending
-                            ? "outline"
-                            : "default"
-                        }
+                        variant="outline"
                         className="shrink-0 min-w-14"
                         disabled={isJoining}
                         aria-busy={isJoining}

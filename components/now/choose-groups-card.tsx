@@ -40,7 +40,7 @@ function GroupRow({
       <Button
         type="button"
         size="sm"
-        variant={joined ? "secondary" : "default"}
+        variant={joined ? "secondary" : "outline"}
         className="shrink-0 px-4"
         onClick={onToggle}
       >
@@ -65,7 +65,7 @@ function GroupChip({
     <Button
       type="button"
       size="sm"
-      variant={joined ? "secondary" : "default"}
+      variant={joined ? "secondary" : "outline"}
       className="gap-1.5 px-3"
       onClick={onToggle}
     >
