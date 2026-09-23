@@ -77,12 +77,17 @@ export function GettingStartedCard({
                 <AccordionContent className="pl-7">
                   <p className="text-muted-foreground">{item.description}</p>
                   {item.id === "profile" ? (
-                    <Button render={<Link href="/account" />} className="mt-4 rounded-full">
+                    <Button
+                      nativeButton={false}
+                      render={<Link href="/account" />}
+                      className="mt-4 rounded-full"
+                    >
                       Complete profile
                     </Button>
                   ) : null}
                   {item.id === "invite" ? (
                     <Button
+                      nativeButton={false}
                       render={<Link href="/invites" />}
                       variant="outline"
                       className="mt-4 rounded-full"
