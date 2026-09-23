@@ -22,7 +22,7 @@ function MapFallback() {
         <span className="relative inline-flex size-3 rounded-full bg-chart-2 ring-4 ring-chart-2/20" />
       </div>
       <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase">
-        Map tiles — Mapbox dark
+        Map tiles — AWN dark
       </p>
     </div>
   )
@@ -46,7 +46,7 @@ export function NowMap({ className }: { className?: string }) {
           latitude: homeBase.latitude,
           zoom: 11.5,
         }}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
+        mapStyle="mapbox://styles/awnroy/cmudf5a6z00ai01smeysi7h70"
         attributionControl={false}
         reuseMaps
         onLoad={() => setReady(true)}
