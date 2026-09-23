@@ -1,9 +1,3 @@
-export type FeaturedGroup = {
-  id: string
-  emoji: string
-  name: string
-}
-
 export type NearbyCrewMember = {
   id: string
   name: string
@@ -24,17 +18,6 @@ export type ChecklistItem = {
 }
 
 export type MapFilter = "everyone" | "my-crews" | "open-for-work"
-
-export const featuredGroups: FeaturedGroup[] = [
-  { id: "musicians", emoji: "🎵", name: "Musicians" },
-  { id: "audio", emoji: "🔊", name: "Audio" },
-  { id: "backline", emoji: "🎸", name: "Backline & Stage" },
-  { id: "lighting", emoji: "💡", name: "Lighting & Video" },
-]
-
-export const totalGroupCount = 15
-
-export const groupsJoinTarget = 3
 
 export const homeBase = {
   city: "Denver",

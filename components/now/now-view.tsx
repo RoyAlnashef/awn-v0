@@ -22,7 +22,7 @@ export function NowView({
   return (
     <>
       <PageShell title={greeting} description={description}>
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
+        <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
           <GettingStartedCard
             onOpenHelpNow={openHelpNow}
             className="order-1 lg:col-start-1 lg:row-start-1"
