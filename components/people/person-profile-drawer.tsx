@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import { useRouter } from "next/navigation"
 
@@ -24,12 +24,14 @@ export function PersonProfileDrawer({
   online,
   open,
   onOpenChange,
+  footer,
 }: {
   person: Person
   tourCredits?: TourCredit[]
   online?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
+  footer?: ReactNode
 }) {
   const router = useRouter()
   const heroRef = useRef<HTMLDivElement>(null)
@@ -81,6 +83,7 @@ export function PersonProfileDrawer({
           online={online}
           heroRef={heroRef}
           onMessage={handleMessage}
+          footer={footer}
           reserveTopRightForClose
           className="min-h-0 flex-1"
         />

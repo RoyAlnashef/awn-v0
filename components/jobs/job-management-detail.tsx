@@ -1,6 +1,6 @@
 "use client"
 
-import type { ComponentType } from "react"
+import type { ComponentType, KeyboardEvent } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { Eye, Pencil, Share2, Users } from "lucide-react"
@@ -22,7 +22,7 @@ import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
 import { jobApplicationsKey } from "@/lib/jobs/swr-keys"
 import type { Person } from "@/lib/people-data"
-import { JobApplicationReviewDrawer } from "@/components/jobs/job-application-review-drawer"
+import { JobApplicationReviewFooter } from "@/components/jobs/job-application-review-footer"
 import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -45,7 +45,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { findNavItem } from "@/lib/nav"
-import { truncateWords } from "@/lib/utils"
+import { cn, truncateWords } from "@/lib/utils"
 
 function initials(name: string) {
   return name
@@ -123,9 +123,6 @@ function ApplicantTableSkeleton() {
           <TableCell className="hidden md:table-cell">
             <Skeleton className="h-5 w-16 rounded-full" />
           </TableCell>
-          <TableCell className="text-right">
-            <Skeleton className="ml-auto h-8 w-16" />
-          </TableCell>
         </TableRow>
       ))}
     </>
@@ -134,12 +131,10 @@ function ApplicantTableSkeleton() {
 
 function ApplicantTableRow({
   application,
-  onReview,
-  onOpenProfile,
+  onSelect,
 }: {
   application: JobApplication
-  onReview: (application: JobApplication) => void
-  onOpenProfile: (application: JobApplication) => void
+  onSelect: (application: JobApplication) => void
 }) {
   const appliedAtLabel = format(
     new Date(application.createdAt),
@@ -153,16 +148,25 @@ function ApplicantTableRow({
     </span>
   )
 
+  function handleKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      onSelect(application)
+    }
+  }
+
   return (
-    <TableRow>
+    <TableRow
+      tabIndex={0}
+      role="button"
+      aria-label={`Review application from ${application.applicant.name}`}
+      className={cn("cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50")}
+      onClick={() => onSelect(application)}
+      onKeyDown={handleKeyDown}
+    >
       <TableCell className="max-w-0 whitespace-normal">
         <div className="flex flex-col gap-1.5">
-          <button
-            type="button"
-            className="group flex min-w-0 items-center gap-3 rounded-md text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-            aria-label={`View ${application.applicant.name}'s profile`}
-            onClick={() => onOpenProfile(application)}
-          >
+          <div className="group flex min-w-0 items-center gap-3">
             <Avatar className="size-8 shrink-0">
               <AvatarImage src={application.applicant.avatar} alt="" />
               <AvatarFallback className="text-xs">
@@ -177,7 +181,7 @@ function ApplicantTableRow({
                 {application.applicant.title}
               </p>
             </div>
-          </button>
+          </div>
           <div className="flex flex-wrap items-center gap-1.5 md:hidden">
             {statusBadge}
             <span className="text-xs text-muted-foreground">
@@ -190,16 +194,6 @@ function ApplicantTableRow({
         {appliedAtLabel}
       </TableCell>
       <TableCell className="hidden md:table-cell">{statusBadge}</TableCell>
-      <TableCell className="text-right">
-        <Button
-          size="sm"
-          variant="outline"
-          className="shrink-0"
-          onClick={() => onReview(application)}
-        >
-          Review
-        </Button>
-      </TableCell>
     </TableRow>
   )
 }
@@ -213,13 +207,11 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [profilePerson, setProfilePerson] = useState<Person | null>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
   const [isUpdating, startUpdateTransition] = useTransition()
 
   const applications = data?.applications ?? []
 
-  function handleReviewApplication(application: JobApplication) {
+  function handleSelectApplication(application: JobApplication) {
     const isFirstMount = selectedApplication === null
     setSelectedApplication(application)
     if (isFirstMount) {
@@ -231,20 +223,6 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
 
   function handleDrawerOpenChange(open: boolean) {
     setDrawerOpen(open)
-  }
-
-  function handleOpenProfile(application: JobApplication) {
-    const isFirstMount = profilePerson === null
-    setProfilePerson(personFromApplication(application))
-    if (isFirstMount) {
-      requestAnimationFrame(() => setProfileOpen(true))
-    } else {
-      setProfileOpen(true)
-    }
-  }
-
-  function handleProfileOpenChange(open: boolean) {
-    setProfileOpen(open)
   }
 
   function handleStatusChange(status: ReviewApplicationStatus) {
@@ -414,7 +392,6 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
                     <TableHead>Applicant</TableHead>
                     <TableHead className="hidden md:table-cell">Applied</TableHead>
                     <TableHead className="hidden md:table-cell">Status</TableHead>
-                    <TableHead className="w-24 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -423,7 +400,7 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
                   ) : applications.length === 0 ? (
                     <TableRow className="hover:bg-transparent">
                       <TableCell
-                        colSpan={4}
+                        colSpan={3}
                         className="h-24 text-center text-sm text-muted-foreground"
                       >
                         No applications yet. Share your listing to reach crew on
@@ -435,8 +412,7 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
                       <ApplicantTableRow
                         key={application.id}
                         application={application}
-                        onReview={handleReviewApplication}
-                        onOpenProfile={handleOpenProfile}
+                        onSelect={handleSelectApplication}
                       />
                     ))
                   )}
@@ -447,20 +423,19 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
         </div>
       </div>
 
-      <JobApplicationReviewDrawer
-        application={selectedApplication}
-        open={drawerOpen}
-        onOpenChange={handleDrawerOpenChange}
-        onStatusChange={handleStatusChange}
-        onAcceptWithMessage={handleAcceptWithMessage}
-        updating={isUpdating}
-      />
-
-      {profilePerson ? (
+      {selectedApplication ? (
         <PersonProfileDrawer
-          person={profilePerson}
-          open={profileOpen}
-          onOpenChange={handleProfileOpenChange}
+          person={personFromApplication(selectedApplication)}
+          open={drawerOpen}
+          onOpenChange={handleDrawerOpenChange}
+          footer={
+            <JobApplicationReviewFooter
+              application={selectedApplication}
+              updating={isUpdating}
+              onStatusChange={handleStatusChange}
+              onAcceptWithMessage={handleAcceptWithMessage}
+            />
+          }
         />
       ) : null}
     </JobPageLayout>

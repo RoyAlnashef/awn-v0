@@ -6,6 +6,7 @@ import {
   useState,
   useTransition,
   type ReactElement,
+  type ReactNode,
   type RefObject,
 } from "react"
 import { toast } from "sonner"
@@ -163,6 +164,7 @@ export function PersonProfileCard({
   heroRef: heroRefProp,
   onMessage,
   onPrintResume,
+  footer,
   reserveTopRightForClose = false,
 }: {
   person: Person
@@ -174,6 +176,8 @@ export function PersonProfileCard({
   onMessage?: () => void
   /** Called when public visitor requests print resume (no uploaded PDF). */
   onPrintResume?: () => void
+  /** Replaces the default interactive footer when provided. */
+  footer?: ReactNode
   /** Leave room for a drawer close button at the hero's top-right. */
   reserveTopRightForClose?: boolean
 }) {
@@ -534,7 +538,8 @@ export function PersonProfileCard({
         </ScrollArea>
 
         {/* Footer actions */}
-        {!isPublic ? (
+        {!isPublic && footer ? footer : null}
+        {!isPublic && !footer ? (
         <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-card p-4">
           <div className="flex items-center gap-2">
             <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
