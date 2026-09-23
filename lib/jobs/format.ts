@@ -60,6 +60,8 @@ export const urgentBookmarkSavedStyles =
 export const urgentApplyButtonStyles =
   "bg-amber-800 text-white hover:bg-amber-800/90 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-700/90"
 
+export const urgentDotStyles = "bg-amber-600 dark:bg-amber-500"
+
 export function canApplyToJob(job: {
   status: JobStatus
   applied?: boolean

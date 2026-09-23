@@ -41,7 +41,7 @@ function GroupRow({
         type="button"
         size="sm"
         variant={joined ? "secondary" : "default"}
-        className="shrink-0 rounded-full px-4"
+        className="shrink-0 px-4"
         onClick={onToggle}
       >
         {joined ? "Joined" : "Join"}
@@ -62,19 +62,16 @@ function GroupChip({
   onToggle: () => void
 }) {
   return (
-    <button
+    <Button
       type="button"
+      size="sm"
+      variant={joined ? "secondary" : "default"}
+      className="gap-1.5 px-3"
       onClick={onToggle}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-        joined
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-background/40 text-foreground hover:bg-muted/50",
-      )}
     >
       <span aria-hidden>{emoji}</span>
       <span>{name}</span>
-    </button>
+    </Button>
   )
 }
 

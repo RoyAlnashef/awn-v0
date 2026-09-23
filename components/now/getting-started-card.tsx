@@ -16,12 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressLabel,
-  ProgressTrack,
-} from "@/components/ui/progress"
+import { Progress, ProgressLabel } from "@/components/ui/progress"
 import { checklistItems } from "@/lib/now/now-data"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +25,7 @@ function StepStatusIcon({ highlighted }: { highlighted?: boolean }) {
     <span
       className={cn(
         "mt-0.5 size-4 shrink-0 rounded-full border border-dashed",
-        highlighted ? "border-amber-600/70 dark:border-amber-500/70" : "border-muted-foreground/50",
+        highlighted ? "border-primary/70" : "border-muted-foreground/50",
       )}
       aria-hidden
     />
@@ -49,67 +44,67 @@ export function GettingStartedCard({
 
   return (
     <Card className={cn("min-w-0", className)}>
-        <CardHeader>
-          <CardTitle>Getting started</CardTitle>
-          <CardDescription>
-            A few things left before you&apos;re fully set up.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Progress value={progressValue}>
-            <ProgressLabel>Step {currentStep} of {checklistItems.length}</ProgressLabel>
-            <ProgressTrack className="h-1.5">
-              <ProgressIndicator className="bg-amber-600 dark:bg-amber-500" />
-            </ProgressTrack>
-          </Progress>
+      <CardHeader>
+        <CardTitle>Getting started</CardTitle>
+        <CardDescription>
+          A few things left before you&apos;re fully set up.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <Progress value={progressValue}>
+          <ProgressLabel>
+            Step {currentStep} of {checklistItems.length}
+          </ProgressLabel>
+        </Progress>
 
-          <Accordion defaultValue={["profile"]} className="rounded-xl">
-            {checklistItems.map((item) => (
-              <AccordionItem
-                key={item.id}
-                value={item.id}
-                className={cn(item.highlighted && "border-amber-600/30 dark:border-amber-500/30")}
-              >
-                <AccordionTrigger className="items-start gap-3 py-3">
-                  <StepStatusIcon highlighted={item.highlighted} />
-                  <span className="font-medium">{item.title}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pl-7">
-                  <p className="text-muted-foreground">{item.description}</p>
-                  {item.id === "profile" ? (
-                    <Button
-                      nativeButton={false}
-                      render={<Link href="/account" />}
-                      className="mt-4 rounded-full"
-                    >
-                      Complete profile
-                    </Button>
-                  ) : null}
-                  {item.id === "invite" ? (
-                    <Button
-                      nativeButton={false}
-                      render={<Link href="/invites" />}
-                      variant="outline"
-                      className="mt-4 rounded-full"
-                    >
-                      Invite someone
-                    </Button>
-                  ) : null}
-                  {item.id === "help-now" ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-full"
-                      onClick={() => onOpenHelpNow?.()}
-                    >
-                      Post Help Now
-                    </Button>
-                  ) : null}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
+        <Accordion defaultValue={["profile"]}>
+          {checklistItems.map((item) => (
+            <AccordionItem
+              key={item.id}
+              value={item.id}
+              className={cn(item.highlighted && "border-primary/30")}
+            >
+              <AccordionTrigger className="items-start gap-3 py-3">
+                <StepStatusIcon highlighted={item.highlighted} />
+                <span className="font-medium">{item.title}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pl-7">
+                <p className="text-muted-foreground">{item.description}</p>
+                {item.id === "profile" ? (
+                  <Button
+                    nativeButton={false}
+                    render={<Link href="/account" />}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    Complete profile
+                  </Button>
+                ) : null}
+                {item.id === "invite" ? (
+                  <Button
+                    nativeButton={false}
+                    render={<Link href="/invites" />}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    Invite someone
+                  </Button>
+                ) : null}
+                {item.id === "help-now" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => onOpenHelpNow?.()}
+                  >
+                    Post Help Now
+                  </Button>
+                ) : null}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </CardContent>
+    </Card>
   )
 }

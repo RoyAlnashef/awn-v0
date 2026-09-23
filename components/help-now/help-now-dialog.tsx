@@ -11,7 +11,7 @@ import {
   helpNowFormToCreatePayload,
   validateHelpNowForm,
 } from "@/lib/jobs/help-now"
-import { urgentApplyButtonStyles } from "@/lib/jobs/format"
+import { urgentApplyButtonStyles, urgentDotStyles } from "@/lib/jobs/format"
 import { jobsListKey, urgentJobsKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -70,7 +70,7 @@ export function HelpNowDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading text-xl">
             <span
-              className="size-2 shrink-0 rounded-full bg-amber-600 dark:bg-amber-500"
+              className={cn("size-2 shrink-0 rounded-full", urgentDotStyles)}
               aria-hidden
             />
             Help Now
@@ -102,7 +102,7 @@ export function HelpNowDialog({
             <Button
               type="submit"
               disabled={submitting}
-              className={cn(urgentApplyButtonStyles)}
+              className={urgentApplyButtonStyles}
             >
               {submitting ? "Posting..." : "Post urgent role →"}
             </Button>

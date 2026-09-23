@@ -37,10 +37,10 @@ export function WhosAroundCard({ className }: { className?: string }) {
           <div className="pointer-events-auto flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Input
               placeholder="Search city, venue or crew…"
-              className="max-w-md border-border/80 bg-background/90 backdrop-blur-sm"
+              className="max-w-md border-border bg-background/90 backdrop-blur-sm"
               aria-label="Search city, venue or crew"
             />
-            <Button className="hidden shrink-0 rounded-full sm:inline-flex">
+            <Button className="hidden shrink-0 sm:inline-flex">
               Check in here
             </Button>
           </div>
@@ -77,10 +77,7 @@ export function WhosAroundCard({ className }: { className?: string }) {
                   type="button"
                   size="sm"
                   variant={filter === item.id ? "default" : "outline"}
-                  className={cn(
-                    "rounded-full backdrop-blur-sm",
-                    filter !== item.id && "border-border/80 bg-background/80",
-                  )}
+                  className="backdrop-blur-sm"
                   onClick={() => setFilter(item.id)}
                   aria-pressed={filter === item.id}
                 >
@@ -93,7 +90,7 @@ export function WhosAroundCard({ className }: { className?: string }) {
       </div>
 
       <div className="border-t border-border p-3 lg:hidden">
-        <Button className="w-full rounded-full">Check in here</Button>
+        <Button className="w-full">Check in here</Button>
       </div>
     </Card>
   )
