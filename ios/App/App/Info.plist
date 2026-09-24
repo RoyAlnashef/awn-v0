@@ -49,5 +49,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>AWN uses your location to show who is checked in nearby and to place your check-in on the map.</string>
 </dict>
 </plist>

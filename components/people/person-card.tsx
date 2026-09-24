@@ -32,12 +32,30 @@ function AvailabilityBadge({ availability }: { availability: Person["availabilit
   )
 }
 
-export function PersonCard({ person }: { person: Person }) {
+export function PersonCard({
+  person,
+  className,
+  onProfileOpenChange,
+}: {
+  person: Person
+  className?: string
+  onProfileOpenChange?: (open: boolean) => void
+}) {
   const [open, setOpen] = useState(false)
   const availability = availabilityConfig[person.availability]
 
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen)
+    onProfileOpenChange?.(nextOpen)
+  }
+
   return (
-    <article className="relative flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-primary/40">
+    <article
+      className={cn(
+        "relative flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-primary/40",
+        className,
+      )}
+    >
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -65,7 +83,11 @@ export function PersonCard({ person }: { person: Person }) {
         <AvailabilityBadge availability={person.availability} />
       </div>
 
-      <PersonProfileDrawer person={person} open={open} onOpenChange={setOpen} />
+      <PersonProfileDrawer
+        person={person}
+        open={open}
+        onOpenChange={handleOpenChange}
+      />
     </article>
   )
 }

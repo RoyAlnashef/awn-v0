@@ -7,6 +7,7 @@ import { GettingStartedCard } from "@/components/now/getting-started-card"
 import { WhosAroundCard } from "@/components/now/whos-around-card"
 import { HelpNowDialog } from "@/components/help-now/help-now-dialog"
 import { PageShell } from "@/components/page-shell"
+import type { CheckInMapData } from "@/lib/now/check-in"
 import type { OnboardingStatus } from "@/lib/onboarding/progress"
 
 export function NowView({
@@ -14,11 +15,13 @@ export function NowView({
   description,
   onboardingStatus,
   onboardingDismissed,
+  checkInMapData,
 }: {
   greeting: string
   description: string
   onboardingStatus: OnboardingStatus
   onboardingDismissed: boolean
+  checkInMapData: CheckInMapData
 }) {
   const [helpNowOpen, setHelpNowOpen] = React.useState(false)
   const [helpNowPosted, setHelpNowPosted] = React.useState(false)
@@ -43,7 +46,10 @@ export function NowView({
 
           <ChooseGroupsCard className="order-2 lg:col-start-2 lg:row-start-1" />
 
-          <WhosAroundCard className="order-3 lg:col-start-3 lg:row-start-1" />
+          <WhosAroundCard
+            className="order-3 lg:col-start-3 lg:row-start-1"
+            initialMapData={checkInMapData}
+          />
         </div>
       </PageShell>
 

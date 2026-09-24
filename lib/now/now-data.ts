@@ -1,13 +1,3 @@
-export type NearbyCrewMember = {
-  id: string
-  name: string
-  role: string
-  initials: string
-  avatarClassName: string
-  longitude: number
-  latitude: number
-}
-
 export type ChecklistItemId =
   | "profile"
   | "join-group"
@@ -23,45 +13,6 @@ export type ChecklistItem = {
   description: string
   highlighted?: boolean
 }
-
-export type MapFilter = "everyone" | "my-crews" | "open-for-work"
-
-export const homeBase = {
-  city: "Denver",
-  checkedInCount: 6,
-  longitude: -104.9903,
-  latitude: 39.7392,
-}
-
-export const nearbyCrew: NearbyCrewMember[] = [
-  {
-    id: "kira",
-    name: "Kira Salas",
-    role: "FOH",
-    initials: "KS",
-    avatarClassName: "bg-violet-500/90 text-white",
-    longitude: -104.985,
-    latitude: 39.742,
-  },
-  {
-    id: "deon",
-    name: "Deon Marsh",
-    role: "Tour mgr",
-    initials: "DM",
-    avatarClassName: "bg-success text-success-foreground",
-    longitude: -104.995,
-    latitude: 39.736,
-  },
-  {
-    id: "ari",
-    name: "Ari Pell",
-    role: "Lighting",
-    initials: "AP",
-    avatarClassName: "bg-notification text-notification-foreground",
-    longitude: -104.988,
-    latitude: 39.731,
-  },
-]
 
 export const checklistItems: ChecklistItem[] = [
   {
@@ -107,10 +58,4 @@ export const checklistItems: ChecklistItem[] = [
     description:
       "Browse the board and send your first application to a posted role.",
   },
-]
-
-export const mapFilters: { id: MapFilter; label: string }[] = [
-  { id: "everyone", label: "Everyone" },
-  { id: "my-crews", label: "My crews" },
-  { id: "open-for-work", label: "Open for work" },
 ]
