@@ -84,6 +84,7 @@ export function NowMap({
   onSelectMember,
   flyTo,
   className,
+  resizeWhen,
 }: {
   members: CheckedInMember[]
   origin: MapOrigin
@@ -92,6 +93,7 @@ export function NowMap({
   onSelectMember: (memberId: string | null) => void
   flyTo?: Coordinates | null
   className?: string
+  resizeWhen?: boolean | number
 }) {
   const [ready, setReady] = React.useState(false)
   const mapRef = React.useRef<MapRef>(null)
@@ -104,6 +106,14 @@ export function NowMap({
       duration: 1200,
     })
   }, [flyTo])
+
+  React.useEffect(() => {
+    if (resizeWhen === undefined || resizeWhen === false) return
+    const frame = requestAnimationFrame(() => {
+      mapRef.current?.getMap()?.resize()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [resizeWhen])
 
   if (!mapboxToken) {
     return <MapFallback />
