@@ -27,6 +27,15 @@ export type CheckInRow = {
   longitude: number
   city: string | null
   checked_in_at: string
+  note: string | null
+}
+
+export type OwnCheckIn = {
+  latitude: number
+  longitude: number
+  city: string | null
+  checkedInAt: string
+  note: string | null
 }
 
 export type CheckedInMember = {
@@ -35,6 +44,7 @@ export type CheckedInMember = {
   longitude: number
   city: string | null
   checkedInAt: string
+  note: string | null
   isSelf: boolean
 }
 
@@ -43,7 +53,7 @@ export type CheckInMapData = {
   members: CheckedInMember[]
   cityLabel: string
   checkedInCount: number
-  ownCheckIn: Pick<CheckInRow, "latitude" | "longitude" | "city"> | null
+  ownCheckIn: OwnCheckIn | null
 }
 
 type CheckInWithProfile = CheckInRow & {
@@ -130,7 +140,7 @@ async function fetchFreshCheckInsInBox(
   const { data, error } = await supabase
     .from("check_ins")
     .select(
-      `profile_id, latitude, longitude, city, checked_in_at, profiles!inner (${MEMBER_PROFILE_SELECT})`,
+      `profile_id, latitude, longitude, city, checked_in_at, note, profiles!inner (${MEMBER_PROFILE_SELECT})`,
     )
     .gt("checked_in_at", cutoff)
     .gte("latitude", box.minLat)
@@ -165,6 +175,7 @@ function toCheckedInMembers(
       longitude: row.longitude,
       city: row.city,
       checkedInAt: row.checked_in_at,
+      note: row.note,
       isSelf: row.profile_id === userId,
     })
   }
@@ -196,7 +207,10 @@ async function resolveOriginFromHomeBase(
 
 async function resolveMapOrigin(
   homeBase: string | null | undefined,
-  ownCheckIn: Pick<CheckInRow, "latitude" | "longitude" | "city"> | null,
+  ownCheckIn: Pick<
+    CheckInRow,
+    "latitude" | "longitude" | "city" | "checked_in_at" | "note"
+  > | null,
 ): Promise<MapOrigin> {
   if (ownCheckIn) {
     const origin: MapOrigin = {
@@ -266,7 +280,7 @@ export const getCheckInMapData = cache(async (): Promise<CheckInMapData> => {
       .maybeSingle(),
     supabase
       .from("check_ins")
-      .select("latitude, longitude, city, checked_in_at")
+      .select("latitude, longitude, city, checked_in_at, note")
       .eq("profile_id", user.id)
       .gt("checked_in_at", cutoff)
       .maybeSingle(),
@@ -275,7 +289,7 @@ export const getCheckInMapData = cache(async (): Promise<CheckInMapData> => {
   const homeBase = (profileResult.data as MemberProfileRow | null)?.home_base
   const ownCheckIn = ownCheckInResult.data as Pick<
     CheckInRow,
-    "latitude" | "longitude" | "city" | "checked_in_at"
+    "latitude" | "longitude" | "city" | "checked_in_at" | "note"
   > | null
 
   const origin = await resolveMapOrigin(homeBase, ownCheckIn)
@@ -294,15 +308,91 @@ export const getCheckInMapData = cache(async (): Promise<CheckInMapData> => {
           latitude: ownCheckIn.latitude,
           longitude: ownCheckIn.longitude,
           city: ownCheckIn.city ?? origin.city ?? null,
+          checkedInAt: ownCheckIn.checked_in_at,
+          note: ownCheckIn.note,
         }
       : null,
   }
 })
 
+/** Nearby members for a map view center without changing the user's saved check-in. */
+export async function refreshCheckInMapDataForViewCenter(
+  latitude: number,
+  longitude: number,
+  city?: string | null,
+): Promise<CheckInMapData> {
+  const user = await getSessionUser()
+  if (!user) {
+    return {
+      origin: { ...FALLBACK_MAP_CENTER, source: "none" },
+      members: [],
+      cityLabel: city ?? "Nearby",
+      checkedInCount: 0,
+      ownCheckIn: null,
+    }
+  }
+
+  const supabase = await createClient()
+  const cutoff = freshCheckInCutoffIso()
+
+  const [profileResult, ownCheckInResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(MEMBER_PROFILE_SELECT)
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("check_ins")
+      .select("latitude, longitude, city, checked_in_at, note")
+      .eq("profile_id", user.id)
+      .gt("checked_in_at", cutoff)
+      .maybeSingle(),
+  ])
+
+  const homeBase = (profileResult.data as MemberProfileRow | null)?.home_base
+  const ownCheckInRow = ownCheckInResult.data as Pick<
+    CheckInRow,
+    "latitude" | "longitude" | "city" | "checked_in_at" | "note"
+  > | null
+
+  const origin = await resolveMapOrigin(homeBase, ownCheckInRow)
+
+  const viewOrigin: MapOrigin = {
+    latitude,
+    longitude,
+    city: city?.trim() || undefined,
+    source: "check_in",
+  }
+
+  const members = await getNearbyCheckInsFromOrigin(viewOrigin, user.id)
+  const cityLabel =
+    city?.trim() ||
+    cityLabelFromMembers(viewOrigin, members) ||
+    cityLabelFromMembers(origin, members)
+
+  return {
+    origin,
+    members,
+    cityLabel,
+    checkedInCount: members.length,
+    ownCheckIn: ownCheckInRow
+      ? {
+          latitude: ownCheckInRow.latitude,
+          longitude: ownCheckInRow.longitude,
+          city: ownCheckInRow.city ?? origin.city ?? null,
+          checkedInAt: ownCheckInRow.checked_in_at,
+          note: ownCheckInRow.note,
+        }
+      : null,
+  }
+}
+
 export async function buildCheckInMapDataFromCoords(
   latitude: number,
   longitude: number,
   city?: string | null,
+  note?: string | null,
+  checkedInAt?: string,
 ): Promise<CheckInMapData> {
   const user = await getSessionUser()
   if (!user) {
@@ -311,7 +401,13 @@ export async function buildCheckInMapDataFromCoords(
       members: [],
       cityLabel: city ?? "Nearby",
       checkedInCount: 0,
-      ownCheckIn: { latitude, longitude, city: city ?? null },
+      ownCheckIn: {
+        latitude,
+        longitude,
+        city: city ?? null,
+        checkedInAt: checkedInAt ?? new Date().toISOString(),
+        note: note ?? null,
+      },
     }
   }
 
@@ -332,6 +428,9 @@ export async function buildCheckInMapDataFromCoords(
     .maybeSingle()
 
   const typedProfile = profileRow as MemberProfileRow | null
+  const selfCheckedInAt = checkedInAt ?? new Date().toISOString()
+  const selfNote = note ?? null
+
   if (typedProfile && !members.some((member) => member.isSelf)) {
     const selfExtras = await fetchDirectoryExtrasForProfiles(supabase, user.id, [
       user.id,
@@ -346,7 +445,8 @@ export async function buildCheckInMapDataFromCoords(
         latitude,
         longitude,
         city: city ?? null,
-        checkedInAt: new Date().toISOString(),
+        checkedInAt: selfCheckedInAt,
+        note: selfNote,
         isSelf: true,
       },
     ]
@@ -365,6 +465,12 @@ export async function buildCheckInMapDataFromCoords(
     members,
     cityLabel,
     checkedInCount: members.length,
-    ownCheckIn: { latitude, longitude, city: resolvedCity ?? null },
+    ownCheckIn: {
+      latitude,
+      longitude,
+      city: resolvedCity ?? null,
+      checkedInAt: selfCheckedInAt,
+      note: selfNote,
+    },
   }
 }

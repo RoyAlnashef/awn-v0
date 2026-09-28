@@ -27,13 +27,14 @@ export function CheckInMemberPopover({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger render={trigger} />
       <PopoverContent
-        className="w-52 border-border p-0 shadow-lg"
+        className="w-56 border-border p-0 shadow-lg"
         align="center"
         side={side}
         sideOffset={8}
       >
         <PersonCard
           person={member.person}
+          checkInNote={member.note}
           className="border-0 shadow-none hover:border-0"
           onProfileOpenChange={(profileOpen) => {
             if (profileOpen) onOpenChange(false)

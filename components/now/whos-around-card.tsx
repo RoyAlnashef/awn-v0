@@ -2,11 +2,16 @@
 
 import * as React from "react"
 import dynamic from "next/dynamic"
-import { Maximize2 } from "lucide-react"
 
-import { PersonProfileDrawer } from "@/components/people/person-profile-drawer"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import {
+  CheckInListDrawer,
+  CheckInSurface,
+  type CheckInViewMode,
+} from "@/components/now/check-in-surface"
+import type {
+  CheckInBundleSelection,
+  FlyToTarget,
+} from "@/components/now/now-map"
 import { Card } from "@/components/ui/card"
 import {
   Dialog,
@@ -14,11 +19,15 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { checkInAtLocation } from "@/lib/now/actions"
+import {
+  checkInAtLocation,
+  checkInBySearch,
+  clearCheckIn,
+  refreshNearbyCheckIns,
+  reloadCheckInMapData,
+} from "@/lib/now/actions"
 import type { CheckInMapData, CheckedInMember } from "@/lib/now/check-in"
 import type { Coordinates } from "@/lib/now/geo"
-import { initials } from "@/lib/people-data"
 import type { Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 
@@ -26,6 +35,22 @@ const NowMap = dynamic(
   () => import("@/components/now/now-map").then((mod) => mod.NowMap),
   { ssr: false },
 )
+
+type PendingLocation = {
+  latitude: number
+  longitude: number
+  city: string | null
+} | null
+
+export type CheckInDialogIntent =
+  | { type: "check-in-popover" }
+  | { type: "edit-popover" }
+  | {
+      type: "bundle"
+      members: CheckedInMember[]
+      cityLabel: string
+      center: Coordinates
+    }
 
 function requestCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
@@ -57,145 +82,68 @@ function geolocationErrorMessage(error: GeolocationPositionError | Error): strin
   return error.message || "Could not get location."
 }
 
-type OnTheRoadSurfaceProps = {
-  variant: "inline" | "expanded"
-  mapData: CheckInMapData
-  selectedMemberId: string | null
-  onSelectMember: (memberId: string | null) => void
-  flyTo: Coordinates | null
-  mapResizeWhen?: boolean | number
-  checkInLabel: string
-  checkInPending: boolean
-  checkInError: string | null
-  onCheckIn: () => void
-  onListMemberClick: (member: CheckedInMember) => void
-  onExpand?: () => void
+async function geocodePlaceClient(
+  query: string,
+): Promise<(Coordinates & { city?: string }) | null> {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim()
+  const trimmed = query.trim()
+  if (!token || !trimmed) return null
+
+  const url = new URL(
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(trimmed)}.json`,
+  )
+  url.searchParams.set("access_token", token)
+  url.searchParams.set("limit", "1")
+  url.searchParams.set("types", "place,locality,neighborhood,region")
+
+  const response = await fetch(url)
+  if (!response.ok) return null
+
+  const data = (await response.json()) as {
+    features?: { center?: [number, number]; text?: string; place_name?: string }[]
+  }
+  const feature = data.features?.[0]
+  const center = feature?.center
+  if (!center) return null
+
+  const city =
+    feature.text?.trim() ||
+    feature.place_name?.split(",")[0]?.trim() ||
+    undefined
+
+  return {
+    longitude: center[0],
+    latitude: center[1],
+    city,
+  }
 }
 
-function OnTheRoadSurface({
-  variant,
-  mapData,
-  selectedMemberId,
-  onSelectMember,
-  flyTo,
-  mapResizeWhen,
-  checkInLabel,
-  checkInPending,
-  checkInError,
-  onCheckIn,
-  onListMemberClick,
-  onExpand,
-}: OnTheRoadSurfaceProps) {
-  const isInline = variant === "inline"
+async function reverseGeocodeClient(
+  coords: Coordinates,
+): Promise<string | null> {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim()
+  if (!token) return null
+
+  const url = new URL(
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.longitude},${coords.latitude}.json`,
+  )
+  url.searchParams.set("access_token", token)
+  url.searchParams.set("limit", "1")
+  url.searchParams.set("types", "place,locality,neighborhood")
+
+  const response = await fetch(url)
+  if (!response.ok) return null
+
+  const data = (await response.json()) as {
+    features?: { text?: string; place_name?: string }[]
+  }
+  const feature = data.features?.[0]
+  if (!feature) return null
 
   return (
-    <div
-      className={cn(
-        "relative flex min-h-0 flex-1 flex-col",
-        isInline ? "min-h-80 lg:min-h-140" : "min-h-0 flex-1",
-      )}
-    >
-      <div
-        className={cn(
-          "relative min-h-0 flex-1",
-          isInline && "min-h-80 lg:min-h-140",
-        )}
-      >
-        <NowMap
-          members={mapData.members}
-          origin={mapData.origin}
-          ownCheckIn={mapData.ownCheckIn}
-          selectedMemberId={selectedMemberId}
-          onSelectMember={onSelectMember}
-          flyTo={flyTo}
-          resizeWhen={mapResizeWhen}
-        />
-
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
-          <div className="pointer-events-auto flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <Input
-              placeholder="Search city, venue or crew…"
-              className="max-w-md border-border bg-background/90 backdrop-blur-sm"
-              aria-label="Search city, venue or crew"
-              disabled
-            />
-            <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-              <Button
-                className={cn(isInline && "hidden sm:inline-flex")}
-                onClick={() => void onCheckIn()}
-                disabled={checkInPending}
-                variant={checkInError ? "destructive" : "default"}
-              >
-                {checkInLabel}
-              </Button>
-              {isInline && onExpand ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  className="border-border bg-background/90 backdrop-blur-sm"
-                  aria-label="Expand On the Road"
-                  onClick={onExpand}
-                >
-                  <Maximize2 />
-                </Button>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="pointer-events-auto">
-            <div className="max-w-xs rounded-xl border border-border/80 bg-background/90 p-3 backdrop-blur-sm">
-              <p className="font-heading text-base font-medium">
-                {mapData.cityLabel}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {mapData.checkedInCount} checked in nearby
-              </p>
-              {mapData.members.length > 0 ? (
-                <ul className="mt-3 max-h-40 space-y-2 overflow-y-auto">
-                  {mapData.members.map((member) => (
-                    <li key={member.person.id}>
-                      <button
-                        type="button"
-                        className="flex w-full items-center gap-2 rounded-md text-left text-sm transition-colors hover:bg-muted/60"
-                        onClick={() => onListMemberClick(member)}
-                      >
-                        <Avatar size="sm">
-                          <AvatarImage
-                            src={member.person.avatar || undefined}
-                            alt=""
-                          />
-                          <AvatarFallback className="text-xs font-medium">
-                            {initials(member.person.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>
-                          <span className="font-medium">
-                            {member.person.name}
-                          </span>
-                          {member.person.role ? (
-                            <span className="text-muted-foreground">
-                              {" "}
-                              · {member.person.role}
-                            </span>
-                          ) : null}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {mapData.origin.source === "none"
-                    ? "Add a home base on your profile to see who is nearby."
-                    : "No one checked in nearby yet."}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    feature.text?.trim() ||
+    feature.place_name?.split(",")[0]?.trim() ||
+    null
   )
 }
 
@@ -207,66 +155,393 @@ export function WhosAroundCard({
   initialMapData: CheckInMapData
 }) {
   const [mapData, setMapData] = React.useState(initialMapData)
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [editLocationQuery, setEditLocationQuery] = React.useState("")
+  const [pendingLocation, setPendingLocation] =
+    React.useState<PendingLocation>(null)
+  const [draftNote, setDraftNote] = React.useState("")
+  const [checkInPopoverOpen, setCheckInPopoverOpen] = React.useState(false)
+  const [editPopoverOpen, setEditPopoverOpen] = React.useState(false)
+  const [bundlePopoverOpen, setBundlePopoverOpen] = React.useState(false)
+  const [bundleMembers, setBundleMembers] = React.useState<CheckedInMember[]>(
+    [],
+  )
+  const [bundleCityLabel, setBundleCityLabel] = React.useState("Nearby")
+  const [viewMode, setViewMode] = React.useState<CheckInViewMode>("map")
   const [selectedMemberId, setSelectedMemberId] = React.useState<string | null>(
     null,
   )
   const [listDrawerPerson, setListDrawerPerson] = React.useState<Person | null>(
     null,
   )
-  const [checkInPending, setCheckInPending] = React.useState(false)
-  const [checkInError, setCheckInError] = React.useState<string | null>(null)
-  const [flyTo, setFlyTo] = React.useState<Coordinates | null>(null)
-  const [expandedOpen, setExpandedOpen] = React.useState(false)
+  const [locatePending, setLocatePending] = React.useState(false)
+  const [submitPending, setSubmitPending] = React.useState(false)
+  const [submitError, setSubmitError] = React.useState<string | null>(null)
+  const [flyTo, setFlyTo] = React.useState<FlyToTarget | null>(null)
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [dialogIntent, setDialogIntent] =
+    React.useState<CheckInDialogIntent | null>(null)
+  const nearbyPreviewGeneration = React.useRef(0)
 
-  async function handleCheckIn() {
-    setCheckInPending(true)
-    setCheckInError(null)
+  async function refreshNearbyForView(
+    latitude: number,
+    longitude: number,
+    city?: string | null,
+  ) {
+    const generation = ++nearbyPreviewGeneration.current
+    const result = await refreshNearbyCheckIns({
+      latitude,
+      longitude,
+      city,
+    })
+    if (generation !== nearbyPreviewGeneration.current) return
+    if (result.ok) {
+      setMapData(result.mapData)
+    }
+  }
+
+  React.useEffect(() => {
+    const id = window.setInterval(() => {
+      setMapData((current) => ({ ...current }))
+    }, 60_000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  React.useEffect(() => {
+    if (!dialogOpen || !dialogIntent) return
+
+    if (dialogIntent.type === "check-in-popover") {
+      setCheckInPopoverOpen(true)
+    } else if (dialogIntent.type === "edit-popover") {
+      setEditPopoverOpen(true)
+    } else if (dialogIntent.type === "bundle") {
+      setBundleMembers(dialogIntent.members)
+      setBundleCityLabel(dialogIntent.cityLabel)
+      setBundlePopoverOpen(true)
+      setFlyTo({
+        ...dialogIntent.center,
+        zoom: 14,
+      })
+    }
+
+    setDialogIntent(null)
+  }, [dialogOpen, dialogIntent])
+
+  function clearSearchState() {
+    setSearchQuery("")
+    setPendingLocation(null)
+    setSubmitError(null)
+    setFlyTo(null)
+    nearbyPreviewGeneration.current += 1
+    void reloadCheckInMapData().then((result) => {
+      if (result.ok) setMapData(result.mapData)
+    })
+  }
+
+  React.useEffect(() => {
+    if (mapData.ownCheckIn) return
+
+    const query = searchQuery.trim()
+    if (!query) return
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const geocoded = await geocodePlaceClient(query)
+        if (!geocoded) return
+
+        setPendingLocation({
+          latitude: geocoded.latitude,
+          longitude: geocoded.longitude,
+          city: geocoded.city ?? null,
+        })
+        setFlyTo({
+          latitude: geocoded.latitude,
+          longitude: geocoded.longitude,
+          zoom: 11.5,
+        })
+        await refreshNearbyForView(
+          geocoded.latitude,
+          geocoded.longitude,
+          geocoded.city ?? null,
+        )
+      })()
+    }, 500)
+
+    return () => window.clearTimeout(timer)
+  }, [searchQuery, mapData.ownCheckIn])
+
+  async function handleLocate() {
+    setLocatePending(true)
+    setSubmitError(null)
 
     try {
       const position = await requestCurrentPosition()
       const latitude = position.coords.latitude
       const longitude = position.coords.longitude
+      const city = await reverseGeocodeClient({ latitude, longitude })
 
-      const result = await checkInAtLocation({ latitude, longitude })
-      if (!result.ok) {
-        setCheckInError(result.error)
-        return
-      }
-
-      setMapData(result.mapData)
-      setFlyTo({ latitude, longitude })
-      setSelectedMemberId(null)
+      setPendingLocation({ latitude, longitude, city })
+      setSearchQuery(city ?? "Current location")
+      setFlyTo({ latitude, longitude, zoom: 11.5 })
+      await refreshNearbyForView(latitude, longitude, city)
     } catch (error) {
-      setCheckInError(
+      setSubmitError(
         geolocationErrorMessage(
           error instanceof Error ? error : new Error("Could not get location."),
         ),
       )
     } finally {
-      setCheckInPending(false)
+      setLocatePending(false)
+    }
+  }
+
+  async function previewMapForPendingCheckIn() {
+    if (pendingLocation) {
+      setFlyTo({
+        latitude: pendingLocation.latitude,
+        longitude: pendingLocation.longitude,
+        zoom: 11.5,
+      })
+      await refreshNearbyForView(
+        pendingLocation.latitude,
+        pendingLocation.longitude,
+        pendingLocation.city,
+      )
+      return
+    }
+
+    const query = searchQuery.trim()
+    if (!query) return
+
+    const geocoded = await geocodePlaceClient(query)
+    if (!geocoded) return
+
+    setPendingLocation({
+      latitude: geocoded.latitude,
+      longitude: geocoded.longitude,
+      city: geocoded.city ?? null,
+    })
+    setFlyTo({
+      latitude: geocoded.latitude,
+      longitude: geocoded.longitude,
+      zoom: 11.5,
+    })
+    await refreshNearbyForView(
+      geocoded.latitude,
+      geocoded.longitude,
+      geocoded.city ?? null,
+    )
+  }
+
+  async function handlePrimaryCheckIn(variant: "inline" | "expanded") {
+    await previewMapForPendingCheckIn()
+
+    if (variant === "inline") {
+      setDialogIntent({ type: "check-in-popover" })
+      setDialogOpen(true)
+      return
+    }
+    setCheckInPopoverOpen(true)
+  }
+
+  function handleOpenEdit(variant: "inline" | "expanded") {
+    const own = mapData.ownCheckIn
+    if (!own) return
+
+    setEditLocationQuery(own.city ?? mapData.cityLabel)
+    setDraftNote(own.note ?? "")
+
+    if (variant === "inline") {
+      setDialogIntent({ type: "edit-popover" })
+      setDialogOpen(true)
+      return
+    }
+    setEditPopoverOpen(true)
+  }
+
+  async function submitCheckIn() {
+    setSubmitPending(true)
+    setSubmitError(null)
+
+    try {
+      const result = pendingLocation
+        ? await checkInAtLocation({
+            latitude: pendingLocation.latitude,
+            longitude: pendingLocation.longitude,
+            city: pendingLocation.city ?? searchQuery,
+            note: draftNote,
+          })
+        : await checkInBySearch({
+            query: searchQuery,
+            note: draftNote,
+          })
+
+      if (!result.ok) {
+        setSubmitError(result.error)
+        return
+      }
+
+      setMapData(result.mapData)
+      setCheckInPopoverOpen(false)
+      clearSearchState()
+      setDraftNote(result.mapData.ownCheckIn?.note ?? "")
+      setFlyTo({
+        latitude: result.mapData.origin.latitude,
+        longitude: result.mapData.origin.longitude,
+        zoom: 11.5,
+      })
+      setSelectedMemberId(null)
+    } finally {
+      setSubmitPending(false)
+    }
+  }
+
+  async function submitEdit() {
+    const own = mapData.ownCheckIn
+    if (!own) return
+
+    setSubmitPending(true)
+    setSubmitError(null)
+
+    try {
+      const locationChanged =
+        editLocationQuery.trim() !== (own.city ?? "").trim()
+
+      const result = locationChanged
+        ? await checkInBySearch({
+            query: editLocationQuery,
+            note: draftNote,
+          })
+        : await checkInAtLocation({
+            latitude: own.latitude,
+            longitude: own.longitude,
+            city: own.city,
+            note: draftNote,
+          })
+
+      if (!result.ok) {
+        setSubmitError(result.error)
+        return
+      }
+
+      setMapData(result.mapData)
+      setEditPopoverOpen(false)
+      setDraftNote(result.mapData.ownCheckIn?.note ?? "")
+      setFlyTo({
+        latitude: result.mapData.origin.latitude,
+        longitude: result.mapData.origin.longitude,
+        zoom: 11.5,
+      })
+    } finally {
+      setSubmitPending(false)
+    }
+  }
+
+  async function handleClearCheckIn() {
+    setSubmitPending(true)
+    setSubmitError(null)
+
+    try {
+      const result = await clearCheckIn()
+      if (!result.ok) {
+        setSubmitError(result.error)
+        return
+      }
+
+      setMapData(result.mapData)
+      clearSearchState()
+      setDraftNote("")
+      setEditLocationQuery("")
+      setViewMode("map")
+      setCheckInPopoverOpen(false)
+      setEditPopoverOpen(false)
+      setBundlePopoverOpen(false)
+      setSelectedMemberId(null)
+      setFlyTo(null)
+    } finally {
+      setSubmitPending(false)
     }
   }
 
   function handleListMemberClick(member: CheckedInMember) {
     setSelectedMemberId(null)
     setListDrawerPerson(member.person)
+    setBundlePopoverOpen(false)
   }
 
-  const checkInLabel = checkInPending
-    ? "Checking in…"
-    : checkInError
-      ? checkInError
-      : "Check in here"
+  function handleSelectBundle(
+    variant: "inline" | "expanded",
+    selection: CheckInBundleSelection,
+  ) {
+    if (variant === "inline") {
+      setDialogIntent({
+        type: "bundle",
+        members: selection.members,
+        cityLabel: selection.cityLabel,
+        center: selection.center,
+      })
+      setDialogOpen(true)
+      return
+    }
 
-  const surfaceProps: Omit<OnTheRoadSurfaceProps, "variant" | "onExpand" | "mapResizeWhen"> = {
+    setBundleMembers(selection.members)
+    setBundleCityLabel(selection.cityLabel)
+    setBundlePopoverOpen(true)
+  }
+
+  function renderMap(variant: "inline" | "expanded") {
+    return (
+      <NowMap
+        mapInstanceId={`now-check-in-${variant}`}
+        members={mapData.members}
+        origin={mapData.origin}
+        ownCheckIn={mapData.ownCheckIn}
+        selectedMemberId={selectedMemberId}
+        onSelectMember={setSelectedMemberId}
+        onSelectBundle={(selection) => handleSelectBundle(variant, selection)}
+        flyTo={flyTo}
+        resizeWhen={variant === "expanded" ? dialogOpen : undefined}
+      />
+    )
+  }
+
+  const inlineMapSlot = dialogOpen ? (
+    <div
+      className="absolute inset-0 bg-[repeating-linear-gradient(135deg,oklch(0.17_0.006_285.885)_0px,oklch(0.17_0.006_285.885)_12px,oklch(0.14_0.005_285.823)_12px,oklch(0.14_0.005_285.823)_24px)]"
+      aria-hidden
+    />
+  ) : (
+    renderMap("inline")
+  )
+
+  const surfaceProps = {
     mapData,
+    searchQuery,
+    onSearchQueryChange: setSearchQuery,
+    editLocationQuery,
+    onEditLocationQueryChange: setEditLocationQuery,
+    draftNote,
+    onDraftNoteChange: setDraftNote,
+    checkInPopoverOpen,
+    onCheckInPopoverOpenChange: setCheckInPopoverOpen,
+    editPopoverOpen,
+    onEditPopoverOpenChange: setEditPopoverOpen,
+    bundlePopoverOpen,
+    onBundlePopoverOpenChange: setBundlePopoverOpen,
+    bundleMembers,
+    bundleCityLabel,
+    viewMode,
+    onViewModeChange: setViewMode,
     selectedMemberId,
     onSelectMember: setSelectedMemberId,
-    flyTo,
-    checkInLabel,
-    checkInPending,
-    checkInError,
-    onCheckIn: () => void handleCheckIn(),
+    locatePending,
+    submitPending,
+    submitError,
+    onLocate: () => void handleLocate(),
+    onClearSearch: clearSearchState,
+    onSubmitCheckIn: () => void submitCheckIn(),
+    onSubmitEdit: () => void submitEdit(),
+    onClearCheckIn: () => void handleClearCheckIn(),
     onListMemberClick: handleListMemberClick,
   }
 
@@ -278,49 +553,39 @@ export function WhosAroundCard({
           className,
         )}
       >
-        <OnTheRoadSurface
+        <CheckInSurface
           variant="inline"
           {...surfaceProps}
-          onExpand={() => setExpandedOpen(true)}
+          mountPopovers={!dialogOpen}
+          onPrimaryCheckIn={() => handlePrimaryCheckIn("inline")}
+          onOpenEdit={() => handleOpenEdit("inline")}
+          onExpand={() => setDialogOpen(true)}
+          mapSlot={inlineMapSlot}
         />
-
-        <div className="border-t border-border p-3 lg:hidden">
-          <Button
-            className="w-full"
-            onClick={() => void handleCheckIn()}
-            disabled={checkInPending}
-            variant={checkInError ? "destructive" : "default"}
-          >
-            {checkInLabel}
-          </Button>
-        </div>
       </Card>
 
-      <Dialog open={expandedOpen} onOpenChange={setExpandedOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="flex h-[min(720px,90dvh)] w-[min(1100px,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
           <DialogTitle className="sr-only">On the Road</DialogTitle>
           <DialogDescription className="sr-only">
             Check in and see who is nearby on the map.
           </DialogDescription>
-          {expandedOpen ? (
-            <OnTheRoadSurface
+          {dialogOpen ? (
+            <CheckInSurface
               variant="expanded"
               {...surfaceProps}
-              mapResizeWhen={expandedOpen}
+              onPrimaryCheckIn={() => handlePrimaryCheckIn("expanded")}
+              onOpenEdit={() => handleOpenEdit("expanded")}
+              mapSlot={renderMap("expanded")}
             />
           ) : null}
         </DialogContent>
       </Dialog>
 
-      {listDrawerPerson ? (
-        <PersonProfileDrawer
-          person={listDrawerPerson}
-          open={Boolean(listDrawerPerson)}
-          onOpenChange={(open) => {
-            if (!open) setListDrawerPerson(null)
-          }}
-        />
-      ) : null}
+      <CheckInListDrawer
+        person={listDrawerPerson}
+        onClose={() => setListDrawerPerson(null)}
+      />
     </>
   )
 }

@@ -34,15 +34,19 @@ function AvailabilityBadge({ availability }: { availability: Person["availabilit
 
 export function PersonCard({
   person,
+  checkInNote,
   className,
   onProfileOpenChange,
 }: {
   person: Person
+  /** Optional check-in note (map popover / check-in surfaces only). */
+  checkInNote?: string | null
   className?: string
   onProfileOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
   const availability = availabilityConfig[person.availability]
+  const note = checkInNote?.trim()
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen)
@@ -80,6 +84,11 @@ export function PersonCard({
           </h3>
           <p className="text-sm text-muted-foreground">{person.role}</p>
         </div>
+        {note ? (
+          <p className="max-w-full px-1 text-sm text-foreground/90 text-pretty">
+            {note}
+          </p>
+        ) : null}
         <AvailabilityBadge availability={person.availability} />
       </div>
 
