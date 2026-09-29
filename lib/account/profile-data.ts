@@ -271,7 +271,6 @@ export function toPersonFromProfile(
     twitter: row.twitter?.trim() || undefined,
     linkedin: row.linkedin?.trim() || undefined,
     youtube: row.youtube?.trim() || undefined,
-    hasResume: Boolean(row.resume_url?.trim()),
     handle: row.handle?.trim() || undefined,
   }
 }
@@ -332,7 +331,6 @@ export const MEMBER_PROFILE_SELECT = [
   "twitter",
   "linkedin",
   "youtube",
-  "resume_url",
   "handle",
   "created_at",
   "updated_at",

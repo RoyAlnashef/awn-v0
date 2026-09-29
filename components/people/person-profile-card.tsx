@@ -41,7 +41,7 @@ import { engagementDisplayLabel } from "@/lib/jobs-data"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { getCrewProfilePath } from "@/lib/account/handle"
-import { getMemberResumeSignedUrl, toggleConnection } from "@/lib/people/actions"
+import { toggleConnection } from "@/lib/people/actions"
 import { CrewProfileBio } from "@/components/crew/crew-profile-bio"
 import { formatShortDate } from "@/lib/crew/format-profile-date"
 import { cn } from "@/lib/utils"
@@ -175,7 +175,7 @@ export function PersonProfileCard({
   className?: string
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
-  /** Called when public visitor requests print resume (no uploaded PDF). */
+  /** Called when visitor requests profile PDF via browser print. */
   onPrintResume?: () => void
   /** Replaces the default interactive footer when provided. */
   footer?: ReactNode
@@ -189,15 +189,13 @@ export function PersonProfileCard({
   const isPreview = mode === "preview"
   const isPublic = mode === "public"
   const isReadOnlyVouch = isPreview || isPublic
-  const showResumeButton =
-    isPublic || (isPreview ? Boolean(person.hasResume) : Boolean(person.handle))
+  const showResumeButton = Boolean(person.handle)
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef
   const [followed, setFollowed] = useState(person.followed)
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [isResumePending, startResumeTransition] = useTransition()
 
   function handleFollowToggle() {
     startTransition(async () => {
@@ -211,44 +209,18 @@ export function PersonProfileCard({
   }
 
   function handleResumeDownload() {
+    if (!person.handle) return
+
     if (isPublic) {
-      if (!person.handle) return
-
-      if (person.hasResume) {
-        window.location.assign(`/api/crew/${encodeURIComponent(person.handle)}/resume`)
-        return
-      }
-
       onPrintResume?.()
       return
     }
 
-    if (!person.hasResume) {
-      if (person.handle) {
-        window.open(
-          `${getCrewProfilePath(person.handle)}?print=resume`,
-          "_blank",
-          "noopener,noreferrer",
-        )
-      }
-      return
-    }
-
-    startResumeTransition(async () => {
-      const result = await getMemberResumeSignedUrl(person.id)
-      if (!result.ok) {
-        toast.error(result.error)
-        return
-      }
-
-      const link = document.createElement("a")
-      link.href = result.url
-      link.download = result.fileName
-      link.rel = "noreferrer"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    })
+    window.open(
+      `${getCrewProfilePath(person.handle)}?print=resume`,
+      "_blank",
+      "noopener,noreferrer",
+    )
   }
 
   const profileHref = person.handle ? getCrewProfilePath(person.handle) : null
@@ -348,17 +320,13 @@ export function PersonProfileCard({
                 {showResumeButton ? (
                   <PreviewTooltip
                     preview={isPreview}
-                    label={person.hasResume ? "Download resume" : "Save as PDF"}
+                    label="Save as PDF"
                     wrap
                   >
                     <Button
                       variant="secondary"
                       size="sm"
-                      disabled={
-                        isPreview ||
-                        isResumePending ||
-                        (!isPublic && !person.handle)
-                      }
+                      disabled={isPreview}
                       aria-disabled={isPreview}
                       onClick={handleResumeDownload}
                     >

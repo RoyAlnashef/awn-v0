@@ -182,7 +182,7 @@ Public paths include `/`, `/login`, `/crew/*`, `/apply`, `/request-access`, and 
 
 Schema lives in [`supabase/migrations/`](supabase/migrations/) (54 SQL files covering profiles, jobs, DMs, groups, push, email, onboarding, and more). Run migrations manually in the Supabase SQL Editor — check each file's header for instructions.
 
-Storage buckets: `avatars`, `banners`, `resumes`.
+Storage buckets: `avatars`, `banners`, `resumes` (membership signup PDFs only).
 
 ### Roles
 

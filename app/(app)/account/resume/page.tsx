@@ -1,5 +1,5 @@
-import { ResumeSection } from "@/components/account/resume-section"
+import { redirect } from "next/navigation"
 
 export default function AccountResumePage() {
-  return <ResumeSection />
+  redirect("/account/profile")
 }

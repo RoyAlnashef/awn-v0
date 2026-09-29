@@ -144,12 +144,8 @@ export function CrewProfileHero({
             {person.availability ? (
               <AvailabilityBadge availability={person.availability} />
             ) : null}
-            {handle ? (
-              <CrewResumeButton
-                handle={handle}
-                hasResume={Boolean(person.hasResume)}
-                onPrintResume={onPrintResume}
-              />
+            {handle && onPrintResume ? (
+              <CrewResumeButton onPrintResume={onPrintResume} />
             ) : null}
           </div>
         </div>

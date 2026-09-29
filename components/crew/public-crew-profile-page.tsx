@@ -68,12 +68,7 @@ export function PublicCrewProfilePage({
           <div className="mx-auto w-full max-w-6xl flex-1 px-6 pb-10 sm:px-8">
             {person.handle ? (
               <div className="mb-8 mt-2 lg:hidden">
-                <CrewResumeButton
-                  handle={person.handle}
-                  hasResume={Boolean(person.hasResume)}
-                  onPrintResume={handlePrint}
-                  fullWidth
-                />
+                <CrewResumeButton onPrintResume={handlePrint} fullWidth />
               </div>
             ) : null}
 

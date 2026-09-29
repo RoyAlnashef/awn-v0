@@ -120,7 +120,6 @@ export interface Person {
   twitter?: string
   linkedin?: string
   youtube?: string
-  hasResume?: boolean
   /** Public profile URL slug — /crew/[handle] */
   handle?: string
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { FileText, Link2, Star, User, Users } from "lucide-react"
+import { Link2, Star, User, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { label: "Credits", href: "/account/credits", icon: Star },
   { label: "Connections", href: "/account/network", icon: Users },
   { label: "Social", href: "/account/social", icon: Link2 },
-  { label: "Resume", href: "/account/resume", icon: FileText },
 ] as const
 
 export function AccountNav() {

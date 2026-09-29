@@ -106,37 +106,3 @@ export async function getPublicCrewProfileById(
 
   return fetchPublicProfileByHandle(handle)
 }
-
-export async function getPublicResumePath(
-  handle: string,
-): Promise<{ profileId: string; resumePath: string; fileName: string } | null> {
-  const admin = createAdminClient()
-  const normalized = normalizeHandle(handle)
-
-  const { data, error } = await admin
-    .from("profiles")
-    .select("id, handle, resume_url, resume_filename, status")
-    .eq("status", "active")
-    .ilike("handle", normalized)
-    .maybeSingle()
-
-  if (error || !data) {
-    return null
-  }
-
-  const resolvedHandle = data.handle?.trim()
-  if (!resolvedHandle || normalizeHandle(resolvedHandle) !== normalized) {
-    return null
-  }
-
-  const resumePath = data.resume_url?.trim()
-  if (!resumePath) {
-    return null
-  }
-
-  return {
-    profileId: data.id,
-    resumePath,
-    fileName: data.resume_filename?.trim() || "resume.pdf",
-  }
-}

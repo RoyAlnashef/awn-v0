@@ -81,7 +81,6 @@ export type JobApplication = {
   jobId: string
   applicantId: string
   note: string
-  resumeUrl?: string
   status: ApplicationStatus
   createdAt: string
   applicant: {
@@ -90,7 +89,6 @@ export type JobApplication = {
     avatar?: string
     email: string
     socialLinks: Partial<Record<SocialFieldId, string>>
-    resumeFileName?: string
   }
 }
 

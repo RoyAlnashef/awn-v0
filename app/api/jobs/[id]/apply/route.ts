@@ -70,22 +70,11 @@ export async function POST(request: Request, context: RouteContext) {
     return jsonError("You have already applied to this job", 409)
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("resume_url")
-    .eq("id", user.id)
-    .maybeSingle()
-
-  if (profileError) return jsonError(profileError.message, 500)
-
-  const resumeUrl = profile?.resume_url?.trim() || null
-
   if (existing?.status === "withdrawn") {
     const { error: updateError } = await supabase
       .from("job_applications")
       .update({
         note: body.note?.trim() ?? "",
-        resume_url: resumeUrl,
         status: "pending",
       })
       .eq("id", existing.id)
@@ -98,7 +87,6 @@ export async function POST(request: Request, context: RouteContext) {
     job_id: id,
     applicant_id: user.id,
     note: body.note?.trim() ?? "",
-    resume_url: resumeUrl,
     status: "pending",
   })
 

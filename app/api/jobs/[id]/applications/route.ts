@@ -13,7 +13,6 @@ type ApplicantJoin = {
   twitter: string | null
   linkedin: string | null
   youtube: string | null
-  resume_filename: string | null
 }
 
 function socialLinksFromProfile(
@@ -32,7 +31,6 @@ type ApplicationRow = {
   job_id: string
   applicant_id: string
   note: string
-  resume_url: string | null
   status: ApplicationStatus
   created_at: string
   applicant: ApplicantJoin | ApplicantJoin[] | null
@@ -80,7 +78,6 @@ export async function GET(_request: Request, context: RouteContext) {
       job_id,
       applicant_id,
       note,
-      resume_url,
       status,
       created_at,
       applicant:profiles!job_applications_applicant_id_fkey (
@@ -93,8 +90,7 @@ export async function GET(_request: Request, context: RouteContext) {
         facebook,
         twitter,
         linkedin,
-        youtube,
-        resume_filename
+        youtube
       )
     `,
     )
@@ -111,7 +107,6 @@ export async function GET(_request: Request, context: RouteContext) {
       jobId: row.job_id,
       applicantId: row.applicant_id,
       note: row.note,
-      resumeUrl: row.resume_url ?? undefined,
       status: row.status,
       createdAt: row.created_at,
       applicant: {
@@ -120,7 +115,6 @@ export async function GET(_request: Request, context: RouteContext) {
         avatar: profile?.avatar_url ?? undefined,
         email: profile?.email?.trim() || "",
         socialLinks: profile ? socialLinksFromProfile(profile) : {},
-        resumeFileName: profile?.resume_filename?.trim() || undefined,
       },
     }
   })

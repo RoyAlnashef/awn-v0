@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Ban, ChevronRight, Eye, FileText, Search, UserPlus } from "lucide-react"
+import { Ban, ChevronRight, Eye, Search, UserPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -17,7 +17,6 @@ import { SettingsSection } from "@/components/settings/settings-section"
 import { SettingsToggleRow } from "@/components/settings/settings-toggle-row"
 
 export function PrivacySettingsSection() {
-  const [resumeAccess, setResumeAccess] = useState("everyone")
   const [connectionRequests, setConnectionRequests] = useState("everyone")
 
   return (
@@ -47,29 +46,6 @@ export function PrivacySettingsSection() {
         title="Profile access"
         description="Manage who can view sensitive profile information."
       >
-        <SettingsRow
-          icon={FileText}
-          label="Who can view your resume"
-          description="Control access to your uploaded CV."
-          action={
-            <Select
-              value={resumeAccess}
-              onValueChange={(value) => {
-                if (value) setResumeAccess(value)
-              }}
-            >
-              <SelectTrigger size="sm" className="min-w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="everyone">Everyone</SelectItem>
-                <SelectItem value="connections">Connections</SelectItem>
-                <SelectItem value="nobody">Nobody</SelectItem>
-              </SelectContent>
-            </Select>
-          }
-        />
-        <Separator />
         <SettingsRow
           icon={UserPlus}
           label="Who can send connection requests"
