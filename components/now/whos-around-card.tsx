@@ -6,7 +6,6 @@ import dynamic from "next/dynamic"
 import {
   CheckInListDrawer,
   CheckInSurface,
-  type CheckInViewMode,
 } from "@/components/now/check-in-surface"
 import type {
   CheckInBundleSelection,
@@ -42,15 +41,12 @@ type PendingLocation = {
   city: string | null
 } | null
 
-export type CheckInDialogIntent =
-  | { type: "check-in-popover" }
-  | { type: "edit-popover" }
-  | {
-      type: "bundle"
-      members: CheckedInMember[]
-      cityLabel: string
-      center: Coordinates
-    }
+export type CheckInDialogIntent = {
+  type: "bundle"
+  members: CheckedInMember[]
+  cityLabel: string
+  center: Coordinates
+}
 
 function requestCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
@@ -167,7 +163,6 @@ export function WhosAroundCard({
     [],
   )
   const [bundleCityLabel, setBundleCityLabel] = React.useState("Nearby")
-  const [viewMode, setViewMode] = React.useState<CheckInViewMode>("map")
   const [selectedMemberId, setSelectedMemberId] = React.useState<string | null>(
     null,
   )
@@ -210,11 +205,7 @@ export function WhosAroundCard({
   React.useEffect(() => {
     if (!dialogOpen || !dialogIntent) return
 
-    if (dialogIntent.type === "check-in-popover") {
-      setCheckInPopoverOpen(true)
-    } else if (dialogIntent.type === "edit-popover") {
-      setEditPopoverOpen(true)
-    } else if (dialogIntent.type === "bundle") {
+    if (dialogIntent.type === "bundle") {
       setBundleMembers(dialogIntent.members)
       setBundleCityLabel(dialogIntent.cityLabel)
       setBundlePopoverOpen(true)
@@ -333,29 +324,17 @@ export function WhosAroundCard({
     )
   }
 
-  async function handlePrimaryCheckIn(variant: "inline" | "expanded") {
+  async function handlePrimaryCheckIn() {
     await previewMapForPendingCheckIn()
-
-    if (variant === "inline") {
-      setDialogIntent({ type: "check-in-popover" })
-      setDialogOpen(true)
-      return
-    }
     setCheckInPopoverOpen(true)
   }
 
-  function handleOpenEdit(variant: "inline" | "expanded") {
+  function handleOpenEdit() {
     const own = mapData.ownCheckIn
     if (!own) return
 
     setEditLocationQuery(own.city ?? mapData.cityLabel)
     setDraftNote(own.note ?? "")
-
-    if (variant === "inline") {
-      setDialogIntent({ type: "edit-popover" })
-      setDialogOpen(true)
-      return
-    }
     setEditPopoverOpen(true)
   }
 
@@ -452,7 +431,6 @@ export function WhosAroundCard({
       clearSearchState()
       setDraftNote("")
       setEditLocationQuery("")
-      setViewMode("map")
       setCheckInPopoverOpen(false)
       setEditPopoverOpen(false)
       setBundlePopoverOpen(false)
@@ -463,10 +441,16 @@ export function WhosAroundCard({
     }
   }
 
-  function handleListMemberClick(member: CheckedInMember) {
-    setSelectedMemberId(null)
+  function openMemberProfile(member: CheckedInMember) {
     setListDrawerPerson(member.person)
-    setBundlePopoverOpen(false)
+    window.requestAnimationFrame(() => {
+      setSelectedMemberId(null)
+      setBundlePopoverOpen(false)
+    })
+  }
+
+  function handleBundleMemberClick(member: CheckedInMember) {
+    openMemberProfile(member)
   }
 
   function handleSelectBundle(
@@ -499,6 +483,7 @@ export function WhosAroundCard({
         selectedMemberId={selectedMemberId}
         onSelectMember={setSelectedMemberId}
         onSelectBundle={(selection) => handleSelectBundle(variant, selection)}
+        onRequestMemberProfile={openMemberProfile}
         flyTo={flyTo}
         resizeWhen={variant === "expanded" ? dialogOpen : undefined}
       />
@@ -530,10 +515,6 @@ export function WhosAroundCard({
     onBundlePopoverOpenChange: setBundlePopoverOpen,
     bundleMembers,
     bundleCityLabel,
-    viewMode,
-    onViewModeChange: setViewMode,
-    selectedMemberId,
-    onSelectMember: setSelectedMemberId,
     locatePending,
     submitPending,
     submitError,
@@ -542,7 +523,7 @@ export function WhosAroundCard({
     onSubmitCheckIn: () => void submitCheckIn(),
     onSubmitEdit: () => void submitEdit(),
     onClearCheckIn: () => void handleClearCheckIn(),
-    onListMemberClick: handleListMemberClick,
+    onBundleMemberClick: handleBundleMemberClick,
   }
 
   return (
@@ -557,8 +538,8 @@ export function WhosAroundCard({
           variant="inline"
           {...surfaceProps}
           mountPopovers={!dialogOpen}
-          onPrimaryCheckIn={() => handlePrimaryCheckIn("inline")}
-          onOpenEdit={() => handleOpenEdit("inline")}
+          onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
+          onOpenEdit={() => handleOpenEdit()}
           onExpand={() => setDialogOpen(true)}
           mapSlot={inlineMapSlot}
         />
@@ -574,8 +555,8 @@ export function WhosAroundCard({
             <CheckInSurface
               variant="expanded"
               {...surfaceProps}
-              onPrimaryCheckIn={() => handlePrimaryCheckIn("expanded")}
-              onOpenEdit={() => handleOpenEdit("expanded")}
+              onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
+              onOpenEdit={() => handleOpenEdit()}
               mapSlot={renderMap("expanded")}
             />
           ) : null}

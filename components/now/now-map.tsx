@@ -12,10 +12,39 @@ import {
   initials,
 } from "@/lib/people-data"
 import type { CheckedInMember } from "@/lib/now/check-in"
-import type { Coordinates, MapOrigin } from "@/lib/now/geo"
+import { milesBetween, type Coordinates, type MapOrigin } from "@/lib/now/geo"
 import { cn } from "@/lib/utils"
 
 const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim()
+
+/** Same pin on the map — ~100 ft; avoids stacked avatars blocking clicks. */
+const COLOCATED_CHECK_IN_MILES = 0.02
+
+/** Slight nudge so colocated avatars stay visible; self stays on the true pin. */
+const COLOCATED_SPREAD_PX = 8
+
+const MARKER_Z_SELF_COLOCATED = 1
+const MARKER_Z_COLOCATED_CREW_BASE = 10
+
+function colocatedPinOffset(
+  slotIndex: number,
+  slotCount: number,
+): [number, number] {
+  if (slotCount <= 1 || slotIndex === 0) return [0, 0]
+
+  const othersCount = slotCount - 1
+  const otherIndex = slotIndex - 1
+
+  if (othersCount === 1) {
+    return [COLOCATED_SPREAD_PX, 0]
+  }
+
+  const angle = (2 * Math.PI * otherIndex) / othersCount - Math.PI / 2
+  return [
+    Math.cos(angle) * COLOCATED_SPREAD_PX,
+    Math.sin(angle) * COLOCATED_SPREAD_PX,
+  ]
+}
 
 export type FlyToTarget = Coordinates & { zoom?: number }
 
@@ -46,10 +75,12 @@ function MapAvatarMarker({
   member,
   selected,
   onSelect,
+  onRequestProfile,
 }: {
   member: CheckedInMember
   selected: boolean
   onSelect: (memberId: string | null) => void
+  onRequestProfile?: (member: CheckedInMember) => void
 }) {
   const availability = availabilityConfig[member.person.availability]
 
@@ -58,6 +89,7 @@ function MapAvatarMarker({
       member={member}
       open={selected}
       onOpenChange={(open) => onSelect(open ? member.person.id : null)}
+      onRequestProfile={onRequestProfile}
       trigger={
         <button
           type="button"
@@ -86,12 +118,23 @@ function MapAvatarMarker({
 function SelfYouMarker({
   name,
   avatarUrl,
+  colocatedCount,
+  onColocatedClick,
 }: {
   name: string
   avatarUrl?: string
+  colocatedCount: number
+  onColocatedClick?: () => void
 }) {
+  const hasColocated = colocatedCount > 0
+
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div
+      className={cn(
+        "flex flex-col items-center gap-0.5",
+        hasColocated && "pointer-events-none",
+      )}
+    >
       <Avatar className="size-9 border-2 border-chart-2 shadow-md ring-4 ring-chart-2/25">
         <AvatarImage src={avatarUrl} alt="" />
         <AvatarFallback className="text-xs font-medium">
@@ -101,6 +144,16 @@ function SelfYouMarker({
       <span className="text-[10px] font-semibold tracking-wide text-chart-2 uppercase">
         You
       </span>
+      {hasColocated ? (
+        <button
+          type="button"
+          className="pointer-events-auto rounded-full border border-border bg-background/95 px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted"
+          aria-label={`${colocatedCount} crew at this pin`}
+          onClick={onColocatedClick}
+        >
+          {colocatedCount} here
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -112,6 +165,7 @@ export function NowMap({
   selectedMemberId,
   onSelectMember,
   onSelectBundle,
+  onRequestMemberProfile,
   flyTo,
   className,
   resizeWhen,
@@ -123,6 +177,7 @@ export function NowMap({
   selectedMemberId: string | null
   onSelectMember: (memberId: string | null) => void
   onSelectBundle?: (selection: CheckInBundleSelection) => void
+  onRequestMemberProfile?: (member: CheckedInMember) => void
   flyTo?: FlyToTarget | null
   className?: string
   resizeWhen?: boolean | number
@@ -140,15 +195,54 @@ export function NowMap({
     [members],
   )
 
-  const membersForCluster = React.useMemo(
+  const otherMembers = React.useMemo(
     () => members.filter((member) => !member.isSelf),
     [members],
+  )
+
+  const colocatedMembers = React.useMemo(() => {
+    if (!ownCheckIn) return []
+    return otherMembers.filter(
+      (member) =>
+        milesBetween(ownCheckIn, member) <= COLOCATED_CHECK_IN_MILES,
+    )
+  }, [ownCheckIn, otherMembers])
+
+  const colocatedMemberIds = React.useMemo(
+    () => new Set(colocatedMembers.map((member) => member.person.id)),
+    [colocatedMembers],
+  )
+
+  const membersForCluster = React.useMemo(
+    () =>
+      otherMembers.filter(
+        (member) => !colocatedMemberIds.has(member.person.id),
+      ),
+    [otherMembers, colocatedMemberIds],
   )
 
   const memberById = React.useMemo(
     () => new Map(membersForCluster.map((member) => [member.person.id, member])),
     [membersForCluster],
   )
+
+  const openColocatedBundle = React.useCallback(() => {
+    if (!ownCheckIn || colocatedMembers.length === 0) return
+
+    const cityLabel =
+      colocatedMembers.find((member) => member.city)?.city ??
+      selfMember?.city ??
+      "Nearby"
+
+    onSelectBundle?.({
+      members: colocatedMembers,
+      cityLabel,
+      center: {
+        latitude: ownCheckIn.latitude,
+        longitude: ownCheckIn.longitude,
+      },
+    })
+  }, [colocatedMembers, onSelectBundle, ownCheckIn, selfMember?.city])
 
   const clusterIndex = React.useMemo(() => {
     const index = new Supercluster<MemberPointProperties, MemberPointProperties>({
@@ -260,6 +354,7 @@ export function NowMap({
   }
 
   const centerPin = ownCheckIn ?? origin
+  const colocatedSlotCount = colocatedMembers.length + (ownCheckIn ? 1 : 0)
 
   return (
     <div className={cn("absolute inset-0", className)}>
@@ -289,10 +384,23 @@ export function NowMap({
               longitude={ownCheckIn.longitude}
               latitude={ownCheckIn.latitude}
               anchor="center"
+              offset={
+                colocatedMembers.length > 0
+                  ? colocatedPinOffset(0, colocatedSlotCount)
+                  : undefined
+              }
+              style={{
+                zIndex:
+                  colocatedMembers.length > 0
+                    ? MARKER_Z_SELF_COLOCATED
+                    : undefined,
+              }}
             >
               <SelfYouMarker
                 name={selfMember?.person.name ?? "You"}
                 avatarUrl={selfMember?.person.avatar || undefined}
+                colocatedCount={colocatedMembers.length}
+                onColocatedClick={openColocatedBundle}
               />
             </Marker>
           ) : null}
@@ -339,10 +447,33 @@ export function NowMap({
                   member={member}
                   selected={selectedMemberId === member.person.id}
                   onSelect={onSelectMember}
+                  onRequestProfile={onRequestMemberProfile}
                 />
               </Marker>
             )
           })}
+
+          {ownCheckIn
+            ? colocatedMembers.map((member, index) => (
+                <Marker
+                  key={`colocated-${member.person.id}`}
+                  longitude={ownCheckIn.longitude}
+                  latitude={ownCheckIn.latitude}
+                  anchor="center"
+                  offset={colocatedPinOffset(index + 1, colocatedSlotCount)}
+                  style={{
+                    zIndex: MARKER_Z_COLOCATED_CREW_BASE + index,
+                  }}
+                >
+                  <MapAvatarMarker
+                    member={member}
+                    selected={selectedMemberId === member.person.id}
+                    onSelect={onSelectMember}
+                    onRequestProfile={onRequestMemberProfile}
+                  />
+                </Marker>
+              ))
+            : null}
         </MapGL>
       </div>
     </div>
