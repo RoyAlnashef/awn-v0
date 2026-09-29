@@ -289,20 +289,53 @@ export function CheckInSurface({
   )
 }
 
+const PROFILE_DRAWER_CLOSE_MS = 450
+
 export function CheckInListDrawer({
   person,
   onClose,
+  modal = true,
 }: {
   person: Person | null
   onClose: () => void
+  modal?: boolean
 }) {
-  if (!person) return null
+  const [activePerson, setActivePerson] = React.useState<Person | null>(null)
+  const [open, setOpen] = React.useState(false)
+  const closeTimerRef = React.useRef<number | null>(null)
+
+  React.useEffect(() => {
+    if (!person) return
+
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+
+    setActivePerson(person)
+    setOpen(false)
+    const frame = window.requestAnimationFrame(() => {
+      setOpen(true)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [person])
+
+  if (!activePerson) return null
+
   return (
     <PersonProfileDrawer
-      person={person}
-      open={Boolean(person)}
-      onOpenChange={(open) => {
-        if (!open) onClose()
+      person={activePerson}
+      open={open}
+      modal={modal}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (nextOpen) return
+
+        closeTimerRef.current = window.setTimeout(() => {
+          setActivePerson(null)
+          onClose()
+          closeTimerRef.current = null
+        }, PROFILE_DRAWER_CLOSE_MS)
       }}
     />
   )

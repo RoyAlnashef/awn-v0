@@ -25,6 +25,7 @@ export function PersonProfileDrawer({
   open,
   onOpenChange,
   footer,
+  modal = true,
 }: {
   person: Person
   tourCredits?: TourCredit[]
@@ -32,6 +33,8 @@ export function PersonProfileDrawer({
   open: boolean
   onOpenChange: (open: boolean) => void
   footer?: ReactNode
+  /** False when nested in an existing overlay (e.g. check-in dialog). */
+  modal?: boolean
 }) {
   const router = useRouter()
   const heroRef = useRef<HTMLDivElement>(null)
@@ -65,7 +68,12 @@ export function PersonProfileDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      swipeDirection="right"
+      modal={modal}
+    >
       <DrawerContent
         initialFocus={heroRef}
         className={FLYOUT_DRAWER_CONTENT_CLASS}

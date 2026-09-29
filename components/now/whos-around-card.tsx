@@ -538,28 +538,45 @@ export function WhosAroundCard({
         />
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) setListDrawerPerson(null)
+        }}
+      >
         <DialogContent className="flex h-[min(720px,90dvh)] w-[min(1100px,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
           <DialogTitle className="sr-only">On the Road</DialogTitle>
           <DialogDescription className="sr-only">
             Check in and see who is nearby on the map.
           </DialogDescription>
-          {dialogOpen ? (
-            <CheckInSurface
-              variant="expanded"
-              {...surfaceProps}
-              onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
-              onOpenEdit={() => handleOpenEdit()}
-              mapSlot={renderMap("expanded")}
-            />
-          ) : null}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            {dialogOpen ? (
+              <CheckInSurface
+                variant="expanded"
+                {...surfaceProps}
+                onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
+                onOpenEdit={() => handleOpenEdit()}
+                mapSlot={renderMap("expanded")}
+              />
+            ) : null}
+            {dialogOpen && listDrawerPerson ? (
+              <CheckInListDrawer
+                modal={false}
+                person={listDrawerPerson}
+                onClose={() => setListDrawerPerson(null)}
+              />
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
 
-      <CheckInListDrawer
-        person={listDrawerPerson}
-        onClose={() => setListDrawerPerson(null)}
-      />
+      {!dialogOpen ? (
+        <CheckInListDrawer
+          person={listDrawerPerson}
+          onClose={() => setListDrawerPerson(null)}
+        />
+      ) : null}
     </>
   )
 }
