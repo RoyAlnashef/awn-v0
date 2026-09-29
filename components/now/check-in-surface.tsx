@@ -189,8 +189,8 @@ export function CheckInSurface({
                       onChange={(event) =>
                         onSearchQueryChange(event.target.value)
                       }
-                      placeholder="Search city, venue or crew…"
-                      aria-label="Search city, venue or crew"
+                      placeholder="Type in a location"
+                      aria-label="Type in a location"
                     />
                     <InputGroupAddon align="inline-end" className="gap-1.5 pr-2">
                       {showHeaderCheckInButton ? (
