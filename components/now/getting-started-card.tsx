@@ -198,20 +198,27 @@ export function GettingStartedCard({
       <CardHeader>
         <CardTitle>Getting started</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-4 px-4">
         <Progress value={progressValue}>
           <ProgressLabel>
             {completedCount} of {total} complete
           </ProgressLabel>
         </Progress>
 
-        <Accordion defaultValue={defaultOpen}>
+        <Accordion
+          defaultValue={defaultOpen}
+          className="overflow-visible rounded-none border-0 **:data-[slot=accordion-content]:px-0"
+        >
           {checklistItems.map((item) => {
             const completed = status[item.id]
 
             return (
-              <AccordionItem key={item.id} value={item.id}>
-                <AccordionTrigger className="items-start gap-3 py-3">
+              <AccordionItem
+                key={item.id}
+                value={item.id}
+                className="border-b border-border first:border-t"
+              >
+                <AccordionTrigger className="items-start gap-3 px-2 py-3">
                   <StepStatusIcon
                     completed={completed}
                     highlighted={item.highlighted}
@@ -225,7 +232,7 @@ export function GettingStartedCard({
                     {item.title}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="pl-7">
+                <AccordionContent className="px-2 pl-7">
                   <p className="text-muted-foreground">{item.description}</p>
                   {completed ? null : (
                     <ItemCta id={item.id} onOpenHelpNow={onOpenHelpNow} />
