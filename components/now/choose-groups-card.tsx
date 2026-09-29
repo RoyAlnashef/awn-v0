@@ -20,7 +20,7 @@ export function ChooseGroupsCard({ className }: { className?: string }) {
   return (
     <Card className={cn("flex min-h-0 flex-col", className)}>
       <CardHeader>
-        <CardTitle>Choose your groups</CardTitle>
+        <CardTitle>Find your groups</CardTitle>
         <CardAction>
           <span className="text-sm text-muted-foreground tabular-nums">
             {joinedCount}/{availableCount}
