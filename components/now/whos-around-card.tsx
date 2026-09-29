@@ -441,16 +441,10 @@ export function WhosAroundCard({
     }
   }
 
-  function openMemberProfile(member: CheckedInMember) {
-    setListDrawerPerson(member.person)
-    window.requestAnimationFrame(() => {
-      setSelectedMemberId(null)
-      setBundlePopoverOpen(false)
-    })
-  }
-
   function handleBundleMemberClick(member: CheckedInMember) {
-    openMemberProfile(member)
+    setSelectedMemberId(null)
+    setListDrawerPerson(member.person)
+    setBundlePopoverOpen(false)
   }
 
   function handleSelectBundle(
@@ -483,7 +477,6 @@ export function WhosAroundCard({
         selectedMemberId={selectedMemberId}
         onSelectMember={setSelectedMemberId}
         onSelectBundle={(selection) => handleSelectBundle(variant, selection)}
-        onRequestMemberProfile={openMemberProfile}
         flyTo={flyTo}
         resizeWhen={variant === "expanded" ? dialogOpen : undefined}
       />

@@ -75,12 +75,10 @@ function MapAvatarMarker({
   member,
   selected,
   onSelect,
-  onRequestProfile,
 }: {
   member: CheckedInMember
   selected: boolean
   onSelect: (memberId: string | null) => void
-  onRequestProfile?: (member: CheckedInMember) => void
 }) {
   const availability = availabilityConfig[member.person.availability]
 
@@ -89,7 +87,6 @@ function MapAvatarMarker({
       member={member}
       open={selected}
       onOpenChange={(open) => onSelect(open ? member.person.id : null)}
-      onRequestProfile={onRequestProfile}
       trigger={
         <button
           type="button"
@@ -165,7 +162,6 @@ export function NowMap({
   selectedMemberId,
   onSelectMember,
   onSelectBundle,
-  onRequestMemberProfile,
   flyTo,
   className,
   resizeWhen,
@@ -177,7 +173,6 @@ export function NowMap({
   selectedMemberId: string | null
   onSelectMember: (memberId: string | null) => void
   onSelectBundle?: (selection: CheckInBundleSelection) => void
-  onRequestMemberProfile?: (member: CheckedInMember) => void
   flyTo?: FlyToTarget | null
   className?: string
   resizeWhen?: boolean | number
@@ -447,7 +442,6 @@ export function NowMap({
                   member={member}
                   selected={selectedMemberId === member.person.id}
                   onSelect={onSelectMember}
-                  onRequestProfile={onRequestMemberProfile}
                 />
               </Marker>
             )
@@ -469,7 +463,6 @@ export function NowMap({
                     member={member}
                     selected={selectedMemberId === member.person.id}
                     onSelect={onSelectMember}
-                    onRequestProfile={onRequestMemberProfile}
                   />
                 </Marker>
               ))

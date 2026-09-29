@@ -37,32 +37,20 @@ export function PersonCard({
   checkInNote,
   className,
   onProfileOpenChange,
-  onRequestProfile,
 }: {
   person: Person
   /** Optional check-in note (map popover / check-in surfaces only). */
   checkInNote?: string | null
   className?: string
   onProfileOpenChange?: (open: boolean) => void
-  /** When set, profile opens via parent (keeps flyout drawer enter animation). */
-  onRequestProfile?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const availability = availabilityConfig[person.availability]
   const note = checkInNote?.trim()
-  const usesExternalProfile = Boolean(onRequestProfile)
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen)
     onProfileOpenChange?.(nextOpen)
-  }
-
-  function handleOpenProfile() {
-    if (onRequestProfile) {
-      onRequestProfile()
-      return
-    }
-    setOpen(true)
   }
 
   return (
@@ -76,7 +64,7 @@ export function PersonCard({
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
         aria-label={`View ${person.name}'s profile`}
-        onClick={handleOpenProfile}
+        onClick={() => setOpen(true)}
       />
 
       <Avatar
@@ -104,13 +92,11 @@ export function PersonCard({
         <AvailabilityBadge availability={person.availability} />
       </div>
 
-      {usesExternalProfile ? null : (
-        <PersonProfileDrawer
-          person={person}
-          open={open}
-          onOpenChange={handleOpenChange}
-        />
-      )}
+      <PersonProfileDrawer
+        person={person}
+        open={open}
+        onOpenChange={handleOpenChange}
+      />
     </article>
   )
 }

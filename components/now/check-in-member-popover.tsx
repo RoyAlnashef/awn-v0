@@ -14,14 +14,12 @@ export function CheckInMemberPopover({
   member,
   open,
   onOpenChange,
-  onRequestProfile,
   trigger,
   side = "top",
 }: {
   member: CheckedInMember
   open: boolean
   onOpenChange: (open: boolean) => void
-  onRequestProfile?: (member: CheckedInMember) => void
   trigger: ReactElement
   side?: "top" | "bottom" | "left" | "right"
 }) {
@@ -38,9 +36,8 @@ export function CheckInMemberPopover({
           person={member.person}
           checkInNote={member.note}
           className="border-0 shadow-none hover:border-0"
-          onRequestProfile={() => {
-            onRequestProfile?.(member)
-            window.requestAnimationFrame(() => onOpenChange(false))
+          onProfileOpenChange={(profileOpen) => {
+            if (profileOpen) onOpenChange(false)
           }}
         />
       </PopoverContent>
