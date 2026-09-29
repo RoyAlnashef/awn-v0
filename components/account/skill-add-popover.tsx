@@ -89,7 +89,7 @@ export function SkillAddPopover({
               id="skill-name"
               value={value}
               autoFocus
-              placeholder="e.g. Tour budgeting"
+              placeholder="e.g. Production budgeting"
               onChange={(e) => {
                 setValue(e.target.value)
                 if (error) setError(null)

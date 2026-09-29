@@ -121,14 +121,14 @@ export interface PersonDirectoryExtras {
 
 const availabilityToUi: Record<DbMemberAvailability, Availability> = {
   available_now: "Available Now",
-  between_tours: "Between Tours",
-  on_tour: "On Tour",
+  between_tours: "Between gigs",
+  on_tour: "On assignment",
 }
 
 const availabilityToDb: Record<Availability, DbMemberAvailability> = {
   "Available Now": "available_now",
-  "Between Tours": "between_tours",
-  "On Tour": "on_tour",
+  "Between gigs": "between_tours",
+  "On assignment": "on_tour",
 }
 
 const venueTierToUi: Record<DbVenueTier, VenueTier> = {
@@ -246,7 +246,7 @@ export function toPersonFromProfile(
     homeBase: row.home_base?.trim() || "",
     city: row.city?.trim() || row.home_base?.split(",")[0]?.trim() || "",
     availability:
-      availabilityToUi[row.availability ?? "between_tours"] ?? "Between Tours",
+      availabilityToUi[row.availability ?? "between_tours"] ?? "Between gigs",
     availableFrom: toIsoDate(row.available_from),
     availableTo: toIsoDate(row.available_to),
     venueTiers: (row.venue_tiers ?? []).map((tier) => venueTierToUi[tier]),

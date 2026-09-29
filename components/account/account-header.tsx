@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator"
 const MOCK_MEMBER = {
   name: "Jordan Reyes",
   role: "Tour Manager",
-  company: "Reyes Touring Co.",
+  company: "Reyes Live Co.",
   homeBase: "Nashville, TN",
   avatar: "/images/avatar-jordan.png",
   verified: true,
@@ -78,7 +78,7 @@ export function AccountHeader() {
             <span className="font-heading text-base font-semibold tabular-nums">
               {m.credits}
             </span>
-            <span className="text-xs text-muted-foreground">Tour Credits</span>
+            <span className="text-xs text-muted-foreground">Credits</span>
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="font-heading text-base font-semibold tabular-nums">

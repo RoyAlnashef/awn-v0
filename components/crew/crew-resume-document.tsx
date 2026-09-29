@@ -92,7 +92,7 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
               {tourCredits.length > 0 ? (
                 <>
                   <h2 className="crew-resume-section-title mb-3">
-                    Tour Credits
+                    Credits
                   </h2>
                   <ul>
                     {tourCredits.map((credit, index) => {

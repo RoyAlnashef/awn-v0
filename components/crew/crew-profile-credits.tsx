@@ -1,13 +1,16 @@
 import { ThumbsUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { engagementDisplayLabel } from "@/lib/jobs-data"
 import type { TourCredit } from "@/lib/people-data"
 
 import { CrewProfileSectionLabel } from "./crew-profile-section-label"
 
 function creditStatus(credit: TourCredit): string | null {
-  if (credit.engagementType) return credit.engagementType
-  if (credit.isCurrent) return "Touring"
+  if (credit.engagementType) {
+    return engagementDisplayLabel(credit.engagementType)
+  }
+  if (credit.isCurrent) return "Current"
   if (credit.endedAt) return "Completed"
   return null
 }
@@ -17,7 +20,7 @@ export function CrewProfileCredits({ credits }: { credits: TourCredit[] }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <CrewProfileSectionLabel>Tour Credits</CrewProfileSectionLabel>
+      <CrewProfileSectionLabel>Credits</CrewProfileSectionLabel>
       <ul className="flex flex-col gap-2.5">
         {credits.map((credit, index) => {
           const status = creditStatus(credit)

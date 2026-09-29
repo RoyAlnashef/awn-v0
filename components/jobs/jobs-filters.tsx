@@ -4,6 +4,7 @@ import * as React from "react"
 import { Calendar as CalendarIcon, ChevronDown, Search, X } from "lucide-react"
 
 import {
+  engagementDisplayLabel,
   engagementTypes,
   roleGroups,
   type EngagementType,
@@ -172,7 +173,7 @@ export function JobsFilters({
                         : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    {type}
+                    {engagementDisplayLabel(type)}
                   </button>
                 )
               })}

@@ -74,7 +74,7 @@ function memberToPerson(member: DrawerMember): Person {
     department: "",
     homeBase: "",
     city: "",
-    availability: "Between Tours",
+    availability: "Between gigs",
     availableFrom: "",
     availableTo: "",
     venueTiers: [],

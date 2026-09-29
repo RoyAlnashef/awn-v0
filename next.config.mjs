@@ -21,6 +21,11 @@ const nextConfig = {
       permanent: true,
     },
     { source: "/popout/rooms", destination: "/popout/groups", permanent: true },
+    {
+      source: "/account/tour-credits",
+      destination: "/account/credits",
+      permanent: true,
+    },
   ],
 }
 

@@ -10,6 +10,7 @@ import { mutate } from "swr"
 
 import { HelpNowForm } from "@/components/help-now/help-now-form"
 import {
+  engagementDisplayLabel,
   engagementTypes,
   parseDateOnly,
   roleGroups,
@@ -408,7 +409,7 @@ export function JobFormPage({
   return (
     <JobPageLayout
       title={isEdit ? "Edit role" : "Post a role"}
-      description="Touring, festival, one-off, or residency — share it with the AWN network."
+      description="Multi-market, festival, one-off, or residency — share it with the AWN network."
       actions={
         <>
           {isEdit && job ? (
@@ -529,7 +530,7 @@ export function JobFormPage({
             </div>
 
             <div className="flex flex-col gap-2">
-              <FieldLabel htmlFor="production">Production / Tour Name</FieldLabel>
+              <FieldLabel htmlFor="production">Production / show name</FieldLabel>
               <Input
                 id="production"
                 value={form.production}
@@ -617,7 +618,7 @@ export function JobFormPage({
                           : "border-border bg-input/30 text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
-                      {type}
+                      {engagementDisplayLabel(type)}
                     </button>
                   )
                 })}

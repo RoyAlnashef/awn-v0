@@ -158,7 +158,7 @@ export function JobDetailContent({
               </div>
               <p className="text-sm text-muted-foreground">
                 {job.production ||
-                  (!isUrgent ? "Production / tour name" : "")}
+                  (!isUrgent ? "Production / show name" : "")}
               </p>
             </div>
             <JobMetadataBadges

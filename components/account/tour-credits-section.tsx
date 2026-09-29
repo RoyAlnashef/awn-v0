@@ -16,7 +16,7 @@ import {
   type AccountTourCredit,
   type EngagementType,
 } from "@/lib/account-profile"
-import { roleGroups } from "@/lib/jobs-data"
+import { engagementDisplayLabel, roleGroups } from "@/lib/jobs-data"
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -203,7 +203,7 @@ function CreditFormDialog({
                       : "border-border bg-background text-foreground hover:border-primary/50"
                   }`}
                 >
-                  {type}
+                  {engagementDisplayLabel(type)}
                 </button>
               ))}
             </div>
@@ -268,7 +268,7 @@ function CreditFormDialog({
               }
             />
             <Label htmlFor="credit-current" className="cursor-pointer text-sm font-normal">
-              Current / ongoing tour
+              Current / ongoing engagement
             </Label>
           </div>
 
@@ -347,7 +347,7 @@ export function TourCreditsSection() {
 
       setTourCredits(result.credits)
       setAddOpen(false)
-      toast.success("Tour credit added.")
+      toast.success("Credit added.")
     })
   }
 
@@ -371,7 +371,7 @@ export function TourCreditsSection() {
 
       setTourCredits(result.credits)
       setEditCredit(null)
-      toast.success("Tour credit updated.")
+      toast.success("Credit updated.")
     })
   }
 
@@ -391,9 +391,9 @@ export function TourCreditsSection() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
-            <h3 className="font-heading text-base font-semibold">Tour Credits</h3>
+            <h3 className="font-heading text-base font-semibold">Credits</h3>
             <p className="text-sm text-muted-foreground">
-              Your touring history and production credits.
+              Your work history and production credits.
             </p>
           </div>
           <Button
@@ -410,7 +410,7 @@ export function TourCreditsSection() {
 
         {tourCredits.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No tour credits yet. Add your first credit to show up on your profile card.
+            No credits yet. Add your first credit to show up on your profile card.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -431,7 +431,7 @@ export function TourCreditsSection() {
                       </span>
                       {credit.engagementType && (
                         <span className="text-[10px] font-semibold tracking-wide text-primary uppercase">
-                          {credit.engagementType}
+                          {engagementDisplayLabel(credit.engagementType)}
                         </span>
                       )}
                     </div>

@@ -111,7 +111,7 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
     category: "transactional",
     defaultSubject: applicationDeniedSubject(),
     previewHtml: applicationDeniedHtml({
-      note: "Thanks for your interest. We're keeping membership focused on active touring crew for now.",
+      note: "Thanks for your interest. We're keeping membership focused on active live entertainment crew for now.",
     }),
   },
   {
@@ -183,7 +183,7 @@ export const emailTemplateCatalog: EmailTemplateEntry[] = [
 ]
 
 const SAMPLE_DENIED_NOTE =
-  "Thanks for your interest. We're keeping membership focused on active touring crew for now."
+  "Thanks for your interest. We're keeping membership focused on active live entertainment crew for now."
 
 export function getTemplatePreviewHtml(
   id: string,

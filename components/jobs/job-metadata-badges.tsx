@@ -1,6 +1,6 @@
 import { CalendarClock, Clock, Eye, MapPin, Users } from "lucide-react"
 
-import { formatDateRange, type Job } from "@/lib/jobs-data"
+import { engagementDisplayLabel, formatDateRange, type Job } from "@/lib/jobs-data"
 import { formatJobDeadline } from "@/lib/jobs/format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -74,7 +74,9 @@ export function JobMetadataBadges({
       ) : null}
       {includeCategoryBadges ? (
         <>
-          <Badge variant="secondary">{job.engagement}</Badge>
+          <Badge variant="secondary">
+            {engagementDisplayLabel(job.engagement)}
+          </Badge>
           {job.kind !== "urgent" ? (
             <Badge variant="secondary">{job.department}</Badge>
           ) : null}

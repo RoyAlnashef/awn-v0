@@ -11,7 +11,7 @@ export const ENGAGEMENT_TYPES = [
 export type EngagementType = (typeof ENGAGEMENT_TYPES)[number]
 
 export const engagementTypeDescriptions: Record<EngagementType, string> = {
-  "Touring": "Full tour · multiple markets",
+  "Touring": "Multiple markets · extended run",
   "Run of Shows": "Multi-night run · single city",
   "Festival": "Festival dates",
   "One-Off": "Single show",

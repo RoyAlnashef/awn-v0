@@ -49,14 +49,14 @@ export const mainNav: NavItem[] = [
     title: "People",
     href: "/people",
     description:
-      "Find and connect with trusted touring crew across every department.",
+      "Find and connect with trusted crew across every department.",
     icon: Contact,
   },
   {
     title: "Jobs",
     href: "/jobs",
     description:
-      "Open calls, tour gigs, and one-off shifts matched to your skills.",
+      "Open calls, gigs, and one-off shifts matched to your skills.",
     icon: Briefcase,
     items: [
       { title: "Saved Jobs", href: "/my-jobs/saved" },

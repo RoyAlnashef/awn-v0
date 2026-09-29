@@ -37,6 +37,7 @@ import {
   createCreditVouch,
   deleteCreditVouch,
 } from "@/lib/account/tour-credits-actions"
+import { engagementDisplayLabel } from "@/lib/jobs-data"
 import { getPersonSocialLinks } from "@/lib/social-links"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import { getCrewProfilePath } from "@/lib/account/handle"
@@ -478,7 +479,7 @@ export function PersonProfileCard({
             {/* Tour credits */}
             {resolvedTourCredits.length > 0 ? (
               <section className="flex flex-col gap-3">
-                <SectionLabel>Tour Credits</SectionLabel>
+                <SectionLabel>Credits</SectionLabel>
                 <ul className="flex flex-col gap-2.5">
                   {resolvedTourCredits.map((credit, index) => (
                     <li
@@ -511,7 +512,9 @@ export function PersonProfileCard({
                         </div>
                         {credit.engagementType ?? credit.venueTier ? (
                           <Badge variant="secondary" className="shrink-0 font-normal">
-                            {credit.engagementType ?? credit.venueTier}
+                            {credit.engagementType
+                              ? engagementDisplayLabel(credit.engagementType)
+                              : credit.venueTier}
                           </Badge>
                         ) : null}
                       </div>

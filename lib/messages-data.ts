@@ -288,13 +288,13 @@ export const rooms: Room[] = [
     description: "Road life is hard. Talk about it here.",
     icon: "🧠",
     joined: false,
-    preview: "Checking in — how is everyone holding up mid-tour?",
+    preview: "Checking in — how is everyone holding up mid-run?",
     time: "1d",
   },
   {
     id: "r9",
     name: "Parents on the Road",
-    description: "Balancing touring and family life.",
+    description: "Balancing road life and family.",
     icon: "👶",
     joined: false,
     preview: "School schedules vs. routing — how do you manage it?",
@@ -303,7 +303,7 @@ export const rooms: Room[] = [
   {
     id: "r10",
     name: "Photo & Content",
-    description: "Tour photographers · Videographers · Editors.",
+    description: "Live event photographers · Videographers · Editors.",
     icon: "📷",
     joined: false,
     preview: "Best camera settings for low-light arena shoots?",
@@ -312,7 +312,7 @@ export const rooms: Room[] = [
   {
     id: "r11",
     name: "Production",
-    description: "Tour managers · Production managers · Coordinators.",
+    description: "Production managers · Coordinators · Ops leads.",
     icon: "📋",
     joined: false,
     preview: "Advance checklist template that actually works?",
@@ -329,7 +329,7 @@ export const rooms: Room[] = [
   },
   {
     id: "r13",
-    name: "Touring Life",
+    name: "Travel & Routing",
     description: "Road life, routes, venues, and travel tips.",
     icon: "🗺️",
     joined: false,
@@ -339,7 +339,7 @@ export const rooms: Room[] = [
   {
     id: "r14",
     name: "Women of the Industry",
-    description: "A space for women working in live touring.",
+    description: "A space for women working in live entertainment.",
     icon: "✨",
     joined: false,
     preview: "Networking event at PLASA — who's going?",
@@ -488,7 +488,7 @@ const roomThreads: Record<string, ThreadMessage[]> = {
       id: "r4-3",
       from: "them",
       author: "Priya Anand",
-      text: "Shure SE535 for me on most tours. What's everyone running for in-ear monitoring these days?",
+      text: "Shure SE535 for me on most gigs. What's everyone running for in-ear monitoring these days?",
       time: "10:02 AM",
       reactions: [
         {

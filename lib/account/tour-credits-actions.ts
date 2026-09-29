@@ -41,6 +41,7 @@ function actionError(error: unknown): { ok: false; error: string } {
 }
 
 function revalidateTourCreditPaths() {
+  revalidatePath("/account/credits")
   revalidatePath("/account/tour-credits")
   revalidatePath("/people")
   revalidatePath("/account", "layout")
@@ -133,7 +134,7 @@ export async function createTourCredit(
 
     const { error } = await supabase.from("tour_credits").insert({
       profile_id: profileId,
-      title: input.title.trim() || "New Tour Credit",
+      title: input.title.trim() || "New credit",
       artist: input.artist?.trim() || null,
       role: input.role.trim() || "Tour Manager",
       venue_tier: input.venueTier ? venueTierToDbValue(input.venueTier) : null,
@@ -351,7 +352,7 @@ export async function createCreditVouch(
       .single()
 
     if (fetchError || !credit) {
-      return { ok: false, error: "Tour credit not found." }
+      return { ok: false, error: "Credit not found." }
     }
 
     if (credit.profile_id === user.id) {
@@ -377,7 +378,7 @@ export async function createCreditVouch(
     await createNotification({
       userId: credit.profile_id,
       kind: "credit_vouched",
-      title: "Someone vouched for your tour credit",
+      title: "Someone vouched for your credit",
       body: `${voucherName} vouched for your credit: ${credit.title}`,
       data: { creditId, voucherId: user.id },
     })

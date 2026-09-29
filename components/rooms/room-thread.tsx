@@ -252,7 +252,7 @@ export function RoomThread({
       department: "",
       homeBase: "",
       city: "",
-      availability: "Between Tours",
+      availability: "Between gigs",
       availableFrom: "",
       availableTo: "",
       venueTiers: [],

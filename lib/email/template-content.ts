@@ -89,7 +89,7 @@ const TEMPLATE_DEFAULTS: Record<EmailTemplateId, EmailTemplateContent> = {
     preview: "{{inviterName}} invited you to join AWN",
     heading: "You're invited to AWN",
     paragraphs: [
-      "{{inviterName}} invited you to apply for membership on A Wright Network — the private network for touring live entertainment crew.",
+      "{{inviterName}} invited you to apply for membership on A Wright Network — the private network for live entertainment crew.",
       "Complete your application to join. Membership is reviewed manually by our team.",
     ],
     buttonLabel: "Start your application",
@@ -109,7 +109,7 @@ const TEMPLATE_DEFAULTS: Record<EmailTemplateId, EmailTemplateContent> = {
     preview: "Welcome to A Wright Network",
     heading: "You're approved",
     paragraphs: [
-      "Welcome to A Wright Network. Your membership application has been approved — sign in to start connecting with touring crew.",
+      "Welcome to A Wright Network. Your membership application has been approved — sign in to start connecting with crew across the network.",
     ],
     buttonLabel: "Sign in to AWN",
   },
@@ -155,7 +155,7 @@ const TEMPLATE_DEFAULTS: Record<EmailTemplateId, EmailTemplateContent> = {
     preview: "You're invited to A Wright Network",
     heading: "You're invited to AWN",
     paragraphs: [
-      "You've been invited to join A Wright Network — the private network for touring live entertainment crew.",
+      "You've been invited to join A Wright Network — the private network for live entertainment crew.",
       "Accept the invite to create your account and complete your profile.",
     ],
     buttonLabel: "Accept invite",

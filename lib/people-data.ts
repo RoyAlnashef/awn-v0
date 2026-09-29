@@ -1,9 +1,9 @@
-export type Availability = "Available Now" | "Between Tours" | "On Tour"
+export type Availability = "Available Now" | "Between gigs" | "On assignment"
 
 export const availabilityStatuses: Availability[] = [
   "Available Now",
-  "Between Tours",
-  "On Tour",
+  "Between gigs",
+  "On assignment",
 ]
 
 /**
@@ -28,17 +28,17 @@ export const availabilityConfig: Record<
     avatarBorder: "border-success",
     avatarRing: "ring-success",
   },
-  "Between Tours": {
+  "Between gigs": {
     dot: "bg-foreground/50",
     ping: false,
-    label: "Between Tours",
+    label: "Between gigs",
     avatarBorder: "border-border",
     avatarRing: "ring-popover",
   },
-  "On Tour": {
+  "On assignment": {
     dot: "bg-foreground/40",
     ping: false,
-    label: "On Tour",
+    label: "On assignment",
     avatarBorder: "border-border",
     avatarRing: "ring-popover",
   },
@@ -180,7 +180,7 @@ export function getPersonProfile(
 
   const bio =
     person.bio ??
-    `${person.name} is a ${person.role || "touring professional"} based in ${person.homeBase || "the road"} with ${person.yearsExperience}+ years across touring and live events. Known for ${skillsText}, ${firstName} works ${venueText}-scale productions and is currently ${person.availability.toLowerCase()}.`
+    `${person.name} is a ${person.role || "live entertainment professional"} based in ${person.homeBase || "the road"} with ${person.yearsExperience}+ years across live events. Known for ${skillsText}, ${firstName} works ${venueText}-scale productions and is currently ${person.availability.toLowerCase()}.`
 
   return {
     verified: person.verified ?? false,

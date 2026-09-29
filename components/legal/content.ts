@@ -296,7 +296,7 @@ export const termsOfService: LegalDocument = {
       id: "job-postings",
       title: "11. Job Postings",
       paragraphs: [
-        "Members and approved businesses may post employment, freelance, contract, touring, production, or other professional opportunities through AWN.",
+        "Members and approved businesses may post employment, freelance, contract, live event, production, or other professional opportunities through AWN.",
         "Job posters are solely responsible for the accuracy of their postings, including job descriptions, compensation, dates, locations, travel requirements, employment or contractor status, qualifications, application instructions, and other material terms.",
         "AWN does not guarantee that a job posting is legitimate, available, accurate, lawful, or suitable for any particular member.",
         "AWN does not guarantee that an employer will hire an applicant or that an applicant will perform satisfactorily.",

@@ -1,3 +1,4 @@
+import { engagementDisplayLabel } from "@/lib/jobs-data"
 import type { TourCredit } from "@/lib/people-data"
 
 export type ResumeCreditDisplay = {
@@ -7,8 +8,10 @@ export type ResumeCreditDisplay = {
 }
 
 function creditStatus(credit: TourCredit): string | null {
-  if (credit.engagementType) return credit.engagementType
-  if (credit.isCurrent) return "Touring"
+  if (credit.engagementType) {
+    return engagementDisplayLabel(credit.engagementType)
+  }
+  if (credit.isCurrent) return "Current"
   if (credit.endedAt) return "Completed"
   return null
 }

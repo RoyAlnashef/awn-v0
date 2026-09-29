@@ -106,9 +106,9 @@ export function NotificationsSettingsSection() {
         <Separator />
         <SettingsToggleRow
           icon={Star}
-          label="Tour credit vouches"
-          description="When a colleague vouches for one of your tour credits."
-          ariaLabel="Tour credit vouch notifications"
+          label="Credit vouches"
+          description="When a colleague vouches for one of your credits."
+          ariaLabel="Credit vouch notifications"
         />
         <Separator />
         <SettingsToggleRow

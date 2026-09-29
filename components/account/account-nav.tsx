@@ -9,7 +9,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const NAV_ITEMS = [
   { label: "Profile", href: "/account/profile", icon: User },
-  { label: "Tour Credits", href: "/account/tour-credits", icon: Star },
+  { label: "Credits", href: "/account/credits", icon: Star },
   { label: "Connections", href: "/account/network", icon: Users },
   { label: "Social", href: "/account/social", icon: Link2 },
   { label: "Resume", href: "/account/resume", icon: FileText },

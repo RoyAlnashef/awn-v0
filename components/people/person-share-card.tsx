@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 
 function memberShareToPerson(memberShare: MemberSharePayload): Person {
   const availability = (memberShare.availability ??
-    "Between Tours") as Availability
+    "Between gigs") as Availability
 
   return {
     id: memberShare.id,

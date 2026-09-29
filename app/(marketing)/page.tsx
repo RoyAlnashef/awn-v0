@@ -7,7 +7,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user"
 export const metadata: Metadata = {
   title: "AWN — A Wright Network",
   description:
-    "The private network for touring professionals. By invitation only — every member is vetted by hand.",
+    "The private network for live entertainment professionals. By invitation only — every member is vetted by hand.",
 }
 
 export default async function MarketingHomePage() {

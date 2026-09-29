@@ -34,7 +34,7 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "A Wright Network",
   description:
-    "The private, invite-only professional network for touring live entertainment crew.",
+    "The private, invite-only professional network for live entertainment crew.",
   icons: {
     icon: [
       { url: "/favicon.ico" },

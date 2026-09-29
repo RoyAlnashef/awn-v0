@@ -118,7 +118,7 @@ export function CreateRoomDialog({ onCreated, disabled }: Props) {
           <DialogHeader>
             <DialogTitle>Create group</DialogTitle>
             <DialogDescription>
-              Add a new community group for touring crew to join.
+              Add a new community group for live entertainment crew to join.
             </DialogDescription>
           </DialogHeader>
 
