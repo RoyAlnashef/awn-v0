@@ -163,6 +163,7 @@ export function NowMap({
   onSelectMember,
   onSelectBundle,
   flyTo,
+  onViewCenterChange,
   className,
   resizeWhen,
   mapInstanceId = "now-map",
@@ -174,6 +175,7 @@ export function NowMap({
   onSelectMember: (memberId: string | null) => void
   onSelectBundle?: (selection: CheckInBundleSelection) => void
   flyTo?: FlyToTarget | null
+  onViewCenterChange?: (center: Coordinates) => void
   className?: string
   resizeWhen?: boolean | number
   mapInstanceId?: string
@@ -186,6 +188,7 @@ export function NowMap({
     null,
   )
   const mapRef = React.useRef<MapRef>(null)
+  const suppressViewCenterChangeRef = React.useRef(false)
 
   const selfMember = React.useMemo(
     () => members.find((member) => member.isSelf) ?? null,
@@ -295,6 +298,21 @@ export function NowMap({
     ])
   }, [])
 
+  const handleMoveEnd = React.useCallback(() => {
+    syncMapView()
+    if (suppressViewCenterChangeRef.current) {
+      suppressViewCenterChangeRef.current = false
+      return
+    }
+    const map = mapRef.current?.getMap()
+    if (!map || !onViewCenterChange) return
+    const center = map.getCenter()
+    onViewCenterChange({
+      latitude: center.lat,
+      longitude: center.lng,
+    })
+  }, [onViewCenterChange, syncMapView])
+
   React.useEffect(() => {
     if (!flyTo || !mapRef.current || !ready) return
 
@@ -302,6 +320,7 @@ export function NowMap({
       const map = mapRef.current?.getMap()
       if (!map || !mapRef.current) return
       map.resize()
+      suppressViewCenterChangeRef.current = true
       mapRef.current.flyTo({
         center: [flyTo.longitude, flyTo.latitude],
         zoom: flyTo.zoom ?? 11.5,
@@ -338,6 +357,7 @@ export function NowMap({
     const canExpand = expansionZoom > mapZoom + 0.05
 
     if (canExpand) {
+      suppressViewCenterChangeRef.current = true
       mapRef.current?.flyTo({
         center: [longitude, latitude],
         zoom: Math.min(expansionZoom, 18),
@@ -408,7 +428,7 @@ export function NowMap({
           onError={(event) => {
             setMapLoadError(event.error?.message ?? "Map load error")
           }}
-          onMoveEnd={syncMapView}
+          onMoveEnd={handleMoveEnd}
           style={{ width: "100%", height: "100%" }}
         >
           {ownCheckIn ? (

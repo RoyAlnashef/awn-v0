@@ -9,6 +9,7 @@ import { HelpNowDialog } from "@/components/help-now/help-now-dialog"
 import { PageShell } from "@/components/page-shell"
 import type { CheckInMapData } from "@/lib/now/check-in"
 import type { OnboardingStatus } from "@/lib/onboarding/progress"
+import { cn } from "@/lib/utils"
 
 export function NowView({
   greeting,
@@ -25,29 +26,52 @@ export function NowView({
 }) {
   const [helpNowOpen, setHelpNowOpen] = React.useState(false)
   const [helpNowPosted, setHelpNowPosted] = React.useState(false)
+  const [showGettingStarted, setShowGettingStarted] = React.useState(
+    !onboardingDismissed,
+  )
 
   const openHelpNow = React.useCallback(() => setHelpNowOpen(true), [])
   const handleHelpNowPosted = React.useCallback(
     () => setHelpNowPosted(true),
     [],
   )
+  const handleGettingStartedVisibility = React.useCallback(
+    (visible: boolean) => setShowGettingStarted(visible),
+    [],
+  )
 
   return (
     <>
       <PageShell title={greeting} description={description}>
-        <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
+        <div
+          className={cn(
+            "grid min-h-0 gap-4 lg:items-start",
+            showGettingStarted
+              ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_minmax(0,2.25fr)]",
+          )}
+        >
           <GettingStartedCard
             onOpenHelpNow={openHelpNow}
+            onVisibilityChange={handleGettingStartedVisibility}
             initialStatus={onboardingStatus}
             initialDismissed={onboardingDismissed}
             helpNowPosted={helpNowPosted}
             className="order-1 lg:col-start-1 lg:row-start-1"
           />
 
-          <ChooseGroupsCard className="order-2 lg:col-start-2 lg:row-start-1" />
+          <ChooseGroupsCard
+            className={cn(
+              "order-2 lg:row-start-1",
+              showGettingStarted ? "lg:col-start-2" : "lg:col-start-1",
+            )}
+          />
 
           <WhosAroundCard
-            className="order-3 lg:col-start-3 lg:row-start-1"
+            className={cn(
+              "order-3 lg:row-start-1",
+              showGettingStarted ? "lg:col-start-3" : "lg:col-start-2",
+            )}
             initialMapData={checkInMapData}
           />
         </div>

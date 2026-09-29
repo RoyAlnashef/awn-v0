@@ -142,12 +142,14 @@ function ItemCta({
 export function GettingStartedCard({
   className,
   onOpenHelpNow,
+  onVisibilityChange,
   initialStatus,
   initialDismissed = false,
   helpNowPosted = false,
 }: {
   className?: string
   onOpenHelpNow?: () => void
+  onVisibilityChange?: (visible: boolean) => void
   initialStatus: OnboardingStatus
   initialDismissed?: boolean
   helpNowPosted?: boolean
@@ -178,10 +180,12 @@ export function GettingStartedCard({
 
   function handleDismiss() {
     setDismissed(true)
+    onVisibilityChange?.(false)
     startDismiss(async () => {
       const result = await dismissOnboarding()
       if (!result.ok) {
         setDismissed(false)
+        onVisibilityChange?.(true)
         toast.error(result.error)
       }
     })

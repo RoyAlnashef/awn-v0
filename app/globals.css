@@ -289,12 +289,8 @@ html.capacitor-native {
   }
 }
 
-/* On the Road: keep map controls above Mapbox WebGL hit targets (iOS Safari). */
+/* On the Road: allow pan/zoom on the map canvas; overlays use pointer-events-none with auto on controls only. */
 [data-check-in-map-shell] [data-check-in-map] .mapboxgl-canvas {
-  pointer-events: none;
-}
-
-[data-check-in-map-shell] [data-check-in-map] .mapboxgl-map {
   pointer-events: auto;
   touch-action: pan-x pan-y pinch-zoom;
 }

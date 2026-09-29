@@ -29,7 +29,7 @@ import {
   reloadCheckInMapData,
 } from "@/lib/now/actions"
 import type { CheckInMapData, CheckedInMember } from "@/lib/now/check-in"
-import type { Coordinates } from "@/lib/now/geo"
+import { milesBetween, type Coordinates } from "@/lib/now/geo"
 import type { Person } from "@/lib/people-data"
 import { cn } from "@/lib/utils"
 
@@ -37,6 +37,9 @@ const NowMap = dynamic(
   () => import("@/components/now/now-map").then((mod) => mod.NowMap),
   { ssr: false },
 )
+
+const PAN_REFRESH_DEBOUNCE_MS = 450
+const MIN_PAN_REFRESH_MILES = 1.5
 
 type PendingLocation = {
   latitude: number
@@ -206,23 +209,67 @@ export function WhosAroundCard({
   const [dialogIntent, setDialogIntent] =
     React.useState<CheckInDialogIntent | null>(null)
   const nearbyPreviewGeneration = React.useRef(0)
+  const lastNearbyRefreshCenter = React.useRef<Coordinates>({
+    latitude: initialMapData.origin.latitude,
+    longitude: initialMapData.origin.longitude,
+  })
+  const panDebounceTimerRef = React.useRef<number | undefined>(undefined)
+  const isCheckedInRef = React.useRef(Boolean(initialMapData.ownCheckIn))
+  isCheckedInRef.current = Boolean(mapData.ownCheckIn)
 
-  async function refreshNearbyForView(
-    latitude: number,
-    longitude: number,
-    city?: string | null,
-  ) {
-    const generation = ++nearbyPreviewGeneration.current
-    const result = await refreshNearbyCheckIns({
-      latitude,
-      longitude,
-      city,
-    })
-    if (generation !== nearbyPreviewGeneration.current) return
-    if (result.ok) {
-      setMapData(result.mapData)
+  const refreshNearbyForView = React.useCallback(
+    async (latitude: number, longitude: number, city?: string | null) => {
+      const generation = ++nearbyPreviewGeneration.current
+      const result = await refreshNearbyCheckIns({
+        latitude,
+        longitude,
+        city,
+      })
+      if (generation !== nearbyPreviewGeneration.current) return false
+      if (result.ok) {
+        setMapData(result.mapData)
+        lastNearbyRefreshCenter.current = { latitude, longitude }
+        return true
+      }
+      return false
+    },
+    [],
+  )
+
+  const handleViewCenterChange = React.useCallback(
+    (center: Coordinates) => {
+      if (panDebounceTimerRef.current !== undefined) {
+        window.clearTimeout(panDebounceTimerRef.current)
+      }
+      panDebounceTimerRef.current = window.setTimeout(() => {
+        panDebounceTimerRef.current = undefined
+        const last = lastNearbyRefreshCenter.current
+        if (milesBetween(last, center) < MIN_PAN_REFRESH_MILES) return
+
+        void (async () => {
+          const refreshed = await refreshNearbyForView(
+            center.latitude,
+            center.longitude,
+          )
+          if (!refreshed || isCheckedInRef.current) return
+          setPendingLocation({
+            latitude: center.latitude,
+            longitude: center.longitude,
+            city: null,
+          })
+        })()
+      }, PAN_REFRESH_DEBOUNCE_MS)
+    },
+    [refreshNearbyForView],
+  )
+
+  React.useEffect(() => {
+    return () => {
+      if (panDebounceTimerRef.current !== undefined) {
+        window.clearTimeout(panDebounceTimerRef.current)
+      }
     }
-  }
+  }, [])
 
   React.useEffect(() => {
     const id = window.setInterval(() => {
@@ -254,7 +301,13 @@ export function WhosAroundCard({
     setFlyTo(null)
     nearbyPreviewGeneration.current += 1
     void reloadCheckInMapData().then((result) => {
-      if (result.ok) setMapData(result.mapData)
+      if (result.ok) {
+        setMapData(result.mapData)
+        lastNearbyRefreshCenter.current = {
+          latitude: result.mapData.origin.latitude,
+          longitude: result.mapData.origin.longitude,
+        }
+      }
     })
   }
 
@@ -509,6 +562,7 @@ export function WhosAroundCard({
         onSelectMember={setSelectedMemberId}
         onSelectBundle={(selection) => handleSelectBundle(variant, selection)}
         flyTo={flyTo}
+        onViewCenterChange={handleViewCenterChange}
         resizeWhen={variant === "expanded" ? dialogOpen : undefined}
       />
     )
