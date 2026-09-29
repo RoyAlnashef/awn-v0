@@ -58,14 +58,14 @@ type MemberPointProperties = {
   memberId: string
 }
 
-function MapFallback() {
+function MapFallback({ hint }: { hint?: string }) {
   return (
     <div
       className="absolute inset-0 bg-[repeating-linear-gradient(135deg,oklch(0.17_0.006_285.885)_0px,oklch(0.17_0.006_285.885)_12px,oklch(0.14_0.005_285.823)_12px,oklch(0.14_0.005_285.823)_24px)]"
-      aria-hidden
+      aria-hidden={hint ? undefined : true}
     >
-      <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase">
-        Map tiles — AWN dark
+      <p className="absolute bottom-3 left-1/2 max-w-[90%] -translate-x-1/2 text-center text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase">
+        {hint ?? "Map tiles — AWN dark"}
       </p>
     </div>
   )
@@ -179,6 +179,8 @@ export function NowMap({
   mapInstanceId?: string
 }) {
   const [ready, setReady] = React.useState(false)
+  const [mapLoadError, setMapLoadError] = React.useState<string | null>(null)
+  const mapContainerRef = React.useRef<HTMLDivElement>(null)
   const [mapZoom, setMapZoom] = React.useState(origin.source === "none" ? 4 : 11.5)
   const [mapBounds, setMapBounds] = React.useState<[number, number, number, number] | null>(
     null,
@@ -261,6 +263,23 @@ export function NowMap({
     if (!mapBounds) return []
     return clusterIndex.getClusters(mapBounds, Math.floor(mapZoom))
   }, [clusterIndex, mapBounds, mapZoom])
+
+  React.useEffect(() => {
+    const node = mapContainerRef.current
+    if (!node || !mapboxToken) return
+
+    const resizeMap = () => {
+      mapRef.current?.getMap()?.resize()
+    }
+
+    const observer = new ResizeObserver(() => {
+      resizeMap()
+    })
+    observer.observe(node)
+    resizeMap()
+
+    return () => observer.disconnect()
+  }, [mapboxToken])
 
   const syncMapView = React.useCallback(() => {
     const map = mapRef.current?.getMap()
@@ -345,15 +364,28 @@ export function NowMap({
   }
 
   if (!mapboxToken) {
-    return <MapFallback />
+    return (
+      <MapFallback hint="Map token missing — set NEXT_PUBLIC_MAPBOX_TOKEN on this environment" />
+    )
   }
 
   const centerPin = ownCheckIn ?? origin
   const colocatedSlotCount = colocatedMembers.length + (ownCheckIn ? 1 : 0)
 
   return (
-    <div className={cn("absolute inset-0 z-0", className)}>
-      {!ready ? <MapFallback /> : null}
+    <div
+      ref={mapContainerRef}
+      className={cn("absolute inset-0 z-0", className)}
+    >
+      {!ready ? (
+        <MapFallback
+          hint={
+            mapLoadError
+              ? "Map failed to load — try refreshing"
+              : undefined
+          }
+        />
+      ) : null}
       <div className={cn("size-full", !ready && "opacity-0")}>
         <MapGL
           id={mapInstanceId}
@@ -368,8 +400,13 @@ export function NowMap({
           attributionControl={false}
           reuseMaps={false}
           onLoad={() => {
+            setMapLoadError(null)
             setReady(true)
+            mapRef.current?.getMap()?.resize()
             syncMapView()
+          }}
+          onError={(event) => {
+            setMapLoadError(event.error?.message ?? "Map load error")
           }}
           onMoveEnd={syncMapView}
           style={{ width: "100%", height: "100%" }}

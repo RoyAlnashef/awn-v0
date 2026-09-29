@@ -11,13 +11,16 @@ import type {
   CheckInBundleSelection,
   FlyToTarget,
 } from "@/components/now/now-map"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { XIcon } from "lucide-react"
 import {
   checkInAtLocation,
   checkInBySearch,
@@ -575,11 +578,26 @@ export function WhosAroundCard({
           if (!open) setListDrawerPerson(null)
         }}
       >
-        <DialogContent className="flex h-[min(720px,90dvh)] w-[min(1100px,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
+        <DialogContent
+          showCloseButton={false}
+          className="flex h-[min(720px,90dvh)] w-[min(1100px,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none"
+        >
           <DialogTitle className="sr-only">On the Road</DialogTitle>
           <DialogDescription className="sr-only">
             Check in and see who is nearby on the map.
           </DialogDescription>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="absolute top-3 right-3 z-50 touch-manipulation bg-background/90 sm:top-4 sm:right-4"
+                aria-label="Close"
+              />
+            }
+          >
+            <XIcon />
+          </DialogClose>
           <div className="relative flex min-h-0 flex-1 flex-col">
             {dialogOpen ? (
               <CheckInSurface
