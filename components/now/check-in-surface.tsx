@@ -129,7 +129,12 @@ export function CheckInSurface({
         {mapSlot}
 
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
-          <div className="pointer-events-auto flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div
+            className={cn(
+              "pointer-events-auto flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between",
+              !isInline && "pe-11 sm:pe-12",
+            )}
+          >
             <div
               ref={headerAnchorRef}
               className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-2"
