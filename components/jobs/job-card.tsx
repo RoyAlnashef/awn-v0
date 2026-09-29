@@ -1,6 +1,6 @@
 "use client"
 
-import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import { ApplicationSentDialog } from "@/components/jobs/application-sent-dialog"
 import {
   JobActionTooltip,
   JobActionTooltips,
@@ -22,7 +22,7 @@ import {
   urgentJobCardBorderStyles,
 } from "@/lib/jobs/format"
 import { type Job } from "@/lib/jobs-data"
-import { toggleSaveJob } from "@/lib/jobs/fetch"
+import { applyToJob, toggleSaveJob } from "@/lib/jobs/fetch"
 import { jobsListKey } from "@/lib/jobs/swr-keys"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -37,11 +37,29 @@ export function JobCard({ job }: { job: Job }) {
   useEffect(() => {
     setApplied(job.applied)
   }, [job.applied, job.id])
-  const [applyOpen, setApplyOpen] = useState(false)
+  const [sentOpen, setSentOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [applying, setApplying] = useState(false)
   const isUrgent = job.kind === "urgent"
   const applyEnabled = canApplyToJob({ status: job.status, applied })
+
+  async function handleApply() {
+    if (!applyEnabled || applying) return
+    setApplying(true)
+    try {
+      await applyToJob(job.id, {})
+      setApplied(true)
+      void revalidateJobs()
+      setSentOpen(true)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not submit application",
+      )
+    } finally {
+      setApplying(false)
+    }
+  }
 
   async function handleSave() {
     const previous = saved
@@ -132,10 +150,16 @@ export function JobCard({ job }: { job: Job }) {
                 <Button
                   size="sm"
                   className={cn(isUrgent && applyEnabled && urgentApplyButtonStyles)}
-                  disabled={!applyEnabled}
-                  onClick={() => setApplyOpen(true)}
+                  disabled={!applyEnabled || applying}
+                  onClick={() => void handleApply()}
                 >
-                  {jobApplyButtonLabel({ status: job.status, applied, kind: job.kind })}
+                  {applying
+                    ? "Applying..."
+                    : jobApplyButtonLabel({
+                        status: job.status,
+                        applied,
+                        kind: job.kind,
+                      })}
                 </Button>
               </div>
             </div>
@@ -152,12 +176,12 @@ export function JobCard({ job }: { job: Job }) {
         }}
       />
 
-      <ApplyJobDialog
+      <ApplicationSentDialog
         job={job}
-        open={applyOpen}
-        onOpenChange={setApplyOpen}
-        onApplied={() => {
-          setApplied(true)
+        open={sentOpen}
+        onOpenChange={setSentOpen}
+        onWithdrawn={() => {
+          setApplied(false)
           void revalidateJobs()
         }}
       />

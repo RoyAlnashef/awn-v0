@@ -14,7 +14,7 @@ import { toast } from "sonner"
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
-import { ApplyJobDialog } from "@/components/jobs/apply-job-dialog"
+import { ApplicationSentDialog } from "@/components/jobs/application-sent-dialog"
 import {
   JobActionTooltip,
   JobActionTooltips,
@@ -24,7 +24,7 @@ import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
 import { jobToSharePayload } from "@/lib/messages/job-share"
 import { type Job } from "@/lib/jobs-data"
-import { toggleSaveJob } from "@/lib/jobs/fetch"
+import { applyToJob, toggleSaveJob } from "@/lib/jobs/fetch"
 import {
   canApplyToJob,
   jobApplyButtonLabel,
@@ -79,12 +79,32 @@ export function JobDetailContent({
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
   const [followed, setFollowed] = useState(false)
-  const [applyOpen, setApplyOpen] = useState(false)
+  const [sentOpen, setSentOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [shareRoomOpen, setShareRoomOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [applying, setApplying] = useState(false)
   const isUrgent = job.kind === "urgent"
   const applyEnabled = canApplyToJob({ status: job.status, applied })
+
+  async function handleApply() {
+    if (!applyEnabled || applying || preview) return
+    setApplying(true)
+    try {
+      await applyToJob(job.id, {})
+      setApplied(true)
+      onApplied?.()
+      void revalidateJobs()
+      void mutate(jobDetailKey(job.id))
+      setSentOpen(true)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not submit application",
+      )
+    } finally {
+      setApplying(false)
+    }
+  }
 
   async function handleSave() {
     const previous = saved
@@ -296,22 +316,27 @@ export function JobDetailContent({
               isUrgent && applyEnabled && urgentApplyButtonStyles,
             )}
             size="sm"
-            disabled={preview || !applyEnabled}
-            onClick={() => setApplyOpen(true)}
+            disabled={preview || !applyEnabled || applying}
+            onClick={() => void handleApply()}
           >
-            {jobApplyButtonLabel({ status: job.status, applied, kind: job.kind })}
+            {applying
+              ? "Applying..."
+              : jobApplyButtonLabel({
+                  status: job.status,
+                  applied,
+                  kind: job.kind,
+                })}
           </Button>
         </div>
 
         {!preview ? (
           <>
-            <ApplyJobDialog
+            <ApplicationSentDialog
               job={job}
-              open={applyOpen}
-              onOpenChange={setApplyOpen}
-              onApplied={() => {
-                setApplied(true)
-                onApplied?.()
+              open={sentOpen}
+              onOpenChange={setSentOpen}
+              onWithdrawn={() => {
+                setApplied(false)
                 void revalidateJobs()
                 void mutate(jobDetailKey(job.id))
               }}
