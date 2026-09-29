@@ -48,32 +48,58 @@ export type CheckInDialogIntent = {
   center: Coordinates
 }
 
-function requestCurrentPosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Location is not supported in this browser."))
-      return
-    }
+function insecureLocationMessage(): string {
+  return "Location requires a secure connection (HTTPS). Open the production site, or use localhost on this device—not a LAN IP over HTTP."
+}
 
+function requestCurrentPositionOnce(
+  enableHighAccuracy: boolean,
+): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
+      enableHighAccuracy,
       timeout: 15000,
       maximumAge: 60_000,
     })
   })
 }
 
+async function requestCurrentPosition(): Promise<GeolocationPosition> {
+  if (!navigator.geolocation) {
+    throw new Error("Location is not supported in this browser.")
+  }
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    throw new Error(insecureLocationMessage())
+  }
+
+  try {
+    return await requestCurrentPositionOnce(true)
+  } catch (first) {
+    const code =
+      first && typeof first === "object" && "code" in first
+        ? (first as GeolocationPositionError).code
+        : null
+    if (code === 1) {
+      throw first
+    }
+    return requestCurrentPositionOnce(false)
+  }
+}
+
 function geolocationErrorMessage(error: GeolocationPositionError | Error): string {
   if ("code" in error) {
     if (error.code === error.PERMISSION_DENIED) {
-      return "Location access denied. Enable location to check in."
+      return "Location access denied. Allow location for this site in iOS Settings → Safari → Location (or the AWN app)."
     }
     if (error.code === error.POSITION_UNAVAILABLE) {
-      return "Location unavailable. Try again."
+      return "Location unavailable. Try again in a moment."
     }
     if (error.code === error.TIMEOUT) {
-      return "Location timed out. Try again."
+      return "Location timed out. Try again near a window or with Wi‑Fi on."
     }
+  }
+  if (error.message.includes("secure connection")) {
+    return error.message
   }
   return error.message || "Could not get location."
 }
@@ -276,11 +302,13 @@ export function WhosAroundCard({
       setFlyTo({ latitude, longitude, zoom: 11.5 })
       await refreshNearbyForView(latitude, longitude, city)
     } catch (error) {
-      setSubmitError(
-        geolocationErrorMessage(
-          error instanceof Error ? error : new Error("Could not get location."),
-        ),
-      )
+      const geoError: GeolocationPositionError | Error =
+        error && typeof error === "object" && "code" in error
+          ? (error as GeolocationPositionError)
+          : error instanceof Error
+            ? error
+            : new Error("Could not get location.")
+      setSubmitError(geolocationErrorMessage(geoError))
     } finally {
       setLocatePending(false)
     }
@@ -527,15 +555,17 @@ export function WhosAroundCard({
           className,
         )}
       >
-        <CheckInSurface
-          variant="inline"
-          {...surfaceProps}
-          mountPopovers={!dialogOpen}
-          onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
-          onOpenEdit={() => handleOpenEdit()}
-          onExpand={() => setDialogOpen(true)}
-          mapSlot={inlineMapSlot}
-        />
+        <div className="absolute inset-0">
+          <CheckInSurface
+            variant="inline"
+            {...surfaceProps}
+            mountPopovers={!dialogOpen}
+            onPrimaryCheckIn={() => void handlePrimaryCheckIn()}
+            onOpenEdit={() => handleOpenEdit()}
+            onExpand={() => setDialogOpen(true)}
+            mapSlot={inlineMapSlot}
+          />
+        </div>
       </Card>
 
       <Dialog

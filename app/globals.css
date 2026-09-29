@@ -288,3 +288,13 @@ html.capacitor-native {
     animation: none !important;
   }
 }
+
+/* On the Road: keep map controls above Mapbox WebGL hit targets (iOS Safari). */
+[data-check-in-map-shell] [data-check-in-map] .mapboxgl-canvas {
+  pointer-events: none;
+}
+
+[data-check-in-map-shell] [data-check-in-map] .mapboxgl-map {
+  pointer-events: auto;
+  touch-action: pan-x pan-y pinch-zoom;
+}

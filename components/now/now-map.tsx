@@ -352,7 +352,7 @@ export function NowMap({
   const colocatedSlotCount = colocatedMembers.length + (ownCheckIn ? 1 : 0)
 
   return (
-    <div className={cn("absolute inset-0", className)}>
+    <div className={cn("absolute inset-0 z-0", className)}>
       {!ready ? <MapFallback /> : null}
       <div className={cn("size-full", !ready && "opacity-0")}>
         <MapGL

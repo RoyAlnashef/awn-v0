@@ -113,33 +113,38 @@ export function CheckInSurface({
     mapData.ownCheckIn?.city ??
     (searchQuery.trim() || mapData.cityLabel)
 
-  return (
-    <div
-      className={cn(
-        "relative flex min-h-0 flex-1 flex-col",
-        isInline ? "min-h-80 lg:min-h-140" : "min-h-0 flex-1",
-      )}
-    >
-      <div
-        className={cn(
-          "relative min-h-0 flex-1",
-          isInline && "min-h-80 lg:min-h-140",
-        )}
-      >
-        {mapSlot}
+  const skipLocateClickAfterTouchRef = React.useRef(false)
 
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
-          <div
-            className={cn(
-              "pointer-events-auto flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between",
-              !isInline && "pe-11 sm:pe-12",
-            )}
-          >
-            <div
-              ref={headerAnchorRef}
-              className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-2"
-            >
-              {isCheckedIn ? (
+  const invokeLocate = React.useCallback(() => {
+    void onLocate()
+  }, [onLocate])
+
+  const locateButton = !showLocatedChrome ? (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="size-12 shrink-0 touch-manipulation bg-background"
+      aria-label="Use current location"
+      disabled={locatePending}
+      onTouchStart={(event) => {
+        event.stopPropagation()
+        skipLocateClickAfterTouchRef.current = true
+        invokeLocate()
+      }}
+      onClick={() => {
+        if (skipLocateClickAfterTouchRef.current) {
+          skipLocateClickAfterTouchRef.current = false
+          return
+        }
+        invokeLocate()
+      }}
+    >
+      <MapPin className="size-5" />
+    </Button>
+  ) : null
+
+  const headerContent = isCheckedIn ? (
                 <>
                   <div className="flex max-w-full items-center gap-2 rounded-full border border-border bg-background/90 py-1 pr-3 pl-1 backdrop-blur-sm">
                     <Avatar
@@ -177,73 +182,101 @@ export function CheckInSurface({
                     Clear
                   </Button>
                 </>
-              ) : (
-                <>
-                  <InputGroup className="h-12 w-full min-w-0 border-border bg-background/90 backdrop-blur-sm">
-                    <InputGroupAddon align="inline-start" className="pl-3.5">
-                      <Search className="size-5" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      className="h-full text-base md:text-base"
-                      value={searchQuery}
-                      onChange={(event) =>
-                        onSearchQueryChange(event.target.value)
-                      }
-                      placeholder="Type in a location"
-                      aria-label="Type in a location"
-                    />
-                    <InputGroupAddon align="inline-end" className="gap-1.5 pr-2">
-                      {showHeaderCheckInButton ? (
-                        <InputGroupButton
-                          variant="default"
-                          className="h-8 px-3 text-sm font-medium"
-                          disabled={locatePending}
-                          onClick={onPrimaryCheckIn}
-                        >
-                          Check In
-                        </InputGroupButton>
-                      ) : null}
-                      {showLocatedChrome ? (
-                        <InputGroupButton
-                          size="icon-sm"
-                          aria-label="Clear search"
-                          onClick={onClearSearch}
-                        >
-                          <X className="size-4" />
-                        </InputGroupButton>
-                      ) : (
-                        <InputGroupButton
-                          size="icon-sm"
-                          aria-label="Use current location"
-                          disabled={locatePending}
-                          onClick={() => void onLocate()}
-                        >
-                          <MapPin className="size-4" />
-                        </InputGroupButton>
-                      )}
-                    </InputGroupAddon>
-                  </InputGroup>
-                </>
-              )}
+  ) : (
+    <div className="flex w-full min-w-0 items-stretch gap-2">
+      <InputGroup className="h-12 min-w-0 flex-1 border-border bg-background">
+        <InputGroupAddon align="inline-start" className="pl-3.5">
+          <Search className="size-5" />
+        </InputGroupAddon>
+        <InputGroupInput
+          className="h-full text-base md:text-base"
+          value={searchQuery}
+          onChange={(event) => onSearchQueryChange(event.target.value)}
+          placeholder="Type in a location"
+          aria-label="Type in a location"
+        />
+        <InputGroupAddon align="inline-end" className="gap-1.5 pr-2">
+          {showHeaderCheckInButton ? (
+            <InputGroupButton
+              variant="default"
+              className="h-8 px-3 text-sm font-medium touch-manipulation"
+              disabled={locatePending}
+              onClick={onPrimaryCheckIn}
+            >
+              Check In
+            </InputGroupButton>
+          ) : null}
+          {showLocatedChrome ? (
+            <InputGroupButton
+              size="icon-sm"
+              className="size-11 touch-manipulation sm:size-8"
+              aria-label="Clear search"
+              onClick={onClearSearch}
+            >
+              <X className="size-4" />
+            </InputGroupButton>
+          ) : null}
+        </InputGroupAddon>
+      </InputGroup>
+      {locateButton}
+    </div>
+  )
+
+  const mapFooter = (
+    <>
+      <div className="inline-flex rounded-full border border-border/80 bg-background/90 px-3 py-1.5 text-sm text-muted-foreground sm:backdrop-blur-sm">
+        {mapData.checkedInCount} checked in nearby
+      </div>
+      {isInline && onExpand ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className="border-border bg-background/90 touch-manipulation sm:backdrop-blur-sm"
+          aria-label="Expand On the Road"
+          onClick={onExpand}
+        >
+          <Maximize2 />
+        </Button>
+      ) : null}
+    </>
+  )
+
+  return (
+    <div
+      className={cn(
+        "relative h-full w-full",
+        isInline ? "min-h-80 lg:min-h-140" : "flex min-h-0 flex-1 flex-col",
+      )}
+    >
+      <div
+        data-check-in-map-shell
+        className={cn("absolute inset-0", isInline && "min-h-80 lg:min-h-140")}
+      >
+        <div data-check-in-map className="absolute inset-0 z-0">
+          {mapSlot}
+        </div>
+
+        <div className="pointer-events-none absolute inset-0 z-10 flex transform-gpu flex-col justify-between p-3 sm:p-4">
+          <div
+            ref={headerAnchorRef}
+            className={cn(
+              "pointer-events-auto w-full",
+              !isInline && "pe-14 sm:pe-16",
+            )}
+          >
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+              {headerContent}
             </div>
+            {submitError && !checkInPopoverOpen && !editPopoverOpen ? (
+              <p className="mt-2 text-sm text-destructive" role="alert">
+                {submitError}
+              </p>
+            ) : null}
           </div>
 
           <div className="pointer-events-auto flex w-full items-end justify-between gap-2">
-            <div className="inline-flex rounded-full border border-border/80 bg-background/90 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-sm">
-              {mapData.checkedInCount} checked in nearby
-            </div>
-            {isInline && onExpand ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="border-border bg-background/90 backdrop-blur-sm"
-                aria-label="Expand On the Road"
-                onClick={onExpand}
-              >
-                <Maximize2 />
-              </Button>
-            ) : null}
+            {mapFooter}
           </div>
         </div>
       </div>
