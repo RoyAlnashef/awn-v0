@@ -6,6 +6,7 @@ import { ChooseGroupsCard } from "@/components/now/choose-groups-card"
 import { GettingStartedCard } from "@/components/now/getting-started-card"
 import { WhosAroundCard } from "@/components/now/whos-around-card"
 import { HelpNowDialog } from "@/components/help-now/help-now-dialog"
+import { HelpNowPageCallout } from "@/components/help-now/help-now-page-callout"
 import { PageShell } from "@/components/page-shell"
 import type { CheckInMapData } from "@/lib/now/check-in"
 import type { OnboardingStatus } from "@/lib/onboarding/progress"
@@ -42,7 +43,15 @@ export function NowView({
 
   return (
     <>
-      <PageShell title={greeting} description={description}>
+      <PageShell
+        title={greeting}
+        description={description}
+        actions={
+          !helpNowPosted ? (
+            <HelpNowPageCallout onOpen={openHelpNow} />
+          ) : null
+        }
+      >
         <div
           className={cn(
             "grid min-h-0 gap-4 lg:items-start",

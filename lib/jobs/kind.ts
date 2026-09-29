@@ -1,6 +1,8 @@
 import type { JobKind } from "@/lib/jobs-data"
 
-const URGENT_TTL_MS = 48 * 60 * 60 * 1000
+export const URGENT_TTL_HOURS = 24
+
+const URGENT_TTL_MS = URGENT_TTL_HOURS * 60 * 60 * 1000
 
 export function normalizeJobKind(kind: string | undefined): JobKind {
   return kind === "urgent" ? "urgent" : "full"

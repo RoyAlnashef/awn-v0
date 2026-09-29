@@ -24,6 +24,8 @@ import {
   emptyHelpNowForm,
   helpNowFormToCreatePayload,
   helpNowFormToUpdatePayload,
+  helpNowJobFormHelper,
+  helpNowPostedToast,
   jobToHelpNowForm,
   validateHelpNowForm,
   type HelpNowFormValues,
@@ -378,7 +380,7 @@ export function JobFormPage({
           router.push(`/jobs/${job.id}`)
         } else {
           const { job: created } = await createJob(payload)
-          toast.success("Urgent request posted — live for 48 hours")
+          toast.success(helpNowPostedToast)
           revalidateJobs()
           router.push(`/jobs/${created.id}`)
         }
@@ -486,8 +488,7 @@ export function JobFormPage({
           </div>
           {form.kind === "urgent" ? (
             <p className="text-xs text-muted-foreground">
-              Help Now posts stay live for 48 hours and are visible on the
-              jobs board.
+              {helpNowJobFormHelper}
             </p>
           ) : null}
         </div>

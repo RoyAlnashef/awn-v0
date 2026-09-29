@@ -27,7 +27,7 @@ export function PageShell({
           : "mx-auto w-full max-w-[1400px] min-w-0 flex-1 gap-8 px-4 py-8 md:px-6",
       )}
     >
-      <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex shrink-0 flex-col gap-8 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className={cn("flex flex-col", breadcrumb ? "gap-4" : "gap-2")}>
           {breadcrumb}
           <div className="flex flex-col gap-1">
@@ -42,7 +42,9 @@ export function PageShell({
           </div>
         </div>
         {actions ? (
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
+          <div className="flex w-full min-w-0 shrink-0 items-start gap-2 sm:w-auto sm:items-center">
+            {actions}
+          </div>
         ) : null}
       </div>
       {children ? (

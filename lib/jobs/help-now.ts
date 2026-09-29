@@ -1,7 +1,18 @@
 import type { CreateJobPayload, UpdateJobPayload } from "@/lib/jobs/fetch"
 import type { Job } from "@/lib/jobs-data"
+import { URGENT_TTL_HOURS } from "@/lib/jobs/kind"
 
 export const HELP_NOW_DETAILS_MAX = 280
+
+export const helpNowPostedToast = `Urgent request posted — live for ${URGENT_TTL_HOURS} hours`
+
+export const helpNowDialogDescription = `Post an urgent request — visible to available members for ${URGENT_TTL_HOURS} hours`
+
+export const helpNowCalloutDescription = `Post an urgent crew callout—visible to available members for ${URGENT_TTL_HOURS} hours.`
+
+export const helpNowJobFormHelper = `Help Now posts stay live for ${URGENT_TTL_HOURS} hours and are visible on the jobs board.`
+
+export const helpNowNotificationsDescription = `Urgent ${URGENT_TTL_HOURS}-hour crew needs in your department.`
 
 export type HelpNowFormValues = {
   role: string

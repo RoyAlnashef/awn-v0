@@ -8,7 +8,9 @@ import { HelpNowForm } from "@/components/help-now/help-now-form"
 import { createJob } from "@/lib/jobs/fetch"
 import {
   emptyHelpNowForm,
+  helpNowDialogDescription,
   helpNowFormToCreatePayload,
+  helpNowPostedToast,
   validateHelpNowForm,
 } from "@/lib/jobs/help-now"
 import { urgentApplyButtonStyles, urgentDotStyles } from "@/lib/jobs/format"
@@ -56,7 +58,7 @@ export function HelpNowDialog({
     setSubmitting(true)
     try {
       await createJob(helpNowFormToCreatePayload(values))
-      toast.success("Urgent request posted — live for 48 hours")
+      toast.success(helpNowPostedToast)
       revalidateJobs()
       onPosted?.()
       onOpenChange(false)
@@ -78,9 +80,7 @@ export function HelpNowDialog({
             />
             Help Now
           </DialogTitle>
-          <DialogDescription>
-            Post an urgent request — visible to available members for 48 hours
-          </DialogDescription>
+          <DialogDescription>{helpNowDialogDescription}</DialogDescription>
         </DialogHeader>
 
         <form

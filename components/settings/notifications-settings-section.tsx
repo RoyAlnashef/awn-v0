@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { helpNowNotificationsDescription } from "@/lib/jobs/help-now"
 import { Separator } from "@/components/ui/separator"
 import { SettingsSection } from "@/components/settings/settings-section"
 import { SettingsToggleRow } from "@/components/settings/settings-toggle-row"
@@ -81,7 +82,7 @@ export function NotificationsSettingsSection() {
         <SettingsToggleRow
           icon={Bell}
           label="Help Now callouts"
-          description="Urgent 48-hour crew needs in your department."
+          description={helpNowNotificationsDescription}
           comingSoon
           defaultChecked={false}
           ariaLabel="Help Now notifications"
