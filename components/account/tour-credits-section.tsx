@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { addDays } from "date-fns"
 import { toast } from "sonner"
-import { Pencil, Plus, ThumbsUp, X } from "lucide-react"
+import { Pencil, Plus, ThumbsUp } from "lucide-react"
 
 import {
   createTourCredit,
@@ -16,7 +16,10 @@ import {
   type AccountTourCredit,
   type EngagementType,
 } from "@/lib/account-profile"
-import { engagementDisplayLabel, roleGroups } from "@/lib/jobs-data"
+import { parseApplicationTitles } from "@/lib/applications/titles"
+import { engagementDisplayLabel } from "@/lib/jobs-data"
+import { RoleMultiSelectCombobox } from "@/components/apply/role-multi-select-combobox"
+import { CreditRemovePopover } from "@/components/account/credit-remove-popover"
 import { useAccountProfile } from "@/components/account/account-profile-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -34,15 +37,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
 // ---------------------------------------------------------------------------
@@ -51,7 +45,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 interface CreditFormState {
   title: string
-  role: string
+  roles: string[]
   engagementType: EngagementType | ""
   startedAt: string
   endedAt: string
@@ -61,7 +55,7 @@ interface CreditFormState {
 
 const BLANK_FORM: CreditFormState = {
   title: "",
-  role: "",
+  roles: [],
   engagementType: "",
   startedAt: "",
   endedAt: "",
@@ -72,7 +66,7 @@ const BLANK_FORM: CreditFormState = {
 function creditToFormState(credit: AccountTourCredit): CreditFormState {
   return {
     title: credit.title,
-    role: credit.role,
+    roles: parseApplicationTitles(credit.role),
     engagementType: (credit.engagementType as EngagementType) ?? "",
     startedAt: credit.startedAt ?? "",
     endedAt: credit.endedAt ?? "",
@@ -161,29 +155,21 @@ function CreditFormDialog({
 
           {/* Role */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="credit-role" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Your Role <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={form.role}
-              onValueChange={(v) => update({ role: v ?? "" })}
-            >
-              <SelectTrigger id="credit-role" className="w-full">
-                <SelectValue placeholder="Select role..." />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {roleGroups.map((group) => (
-                  <SelectGroup key={group.department}>
-                    <SelectLabel>{group.department}</SelectLabel>
-                    {group.roles.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-baseline justify-between gap-2">
+              <Label htmlFor="credit-role" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Your Role <span className="text-destructive">*</span>
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {form.roles.length} of 3
+              </p>
+            </div>
+            <RoleMultiSelectCombobox
+              id="credit-role"
+              value={form.roles}
+              onValueChange={(roles) => update({ roles })}
+              maxSelections={3}
+              disabled={isPending}
+            />
           </div>
 
           {/* Type of Engagement */}
@@ -300,7 +286,7 @@ function CreditFormDialog({
             disabled={
               isPending ||
               !form.title.trim() ||
-              !form.role ||
+              form.roles.length === 0 ||
               !form.engagementType ||
               !form.startedAt ||
               (!form.isCurrent && !form.endedAt)
@@ -332,7 +318,7 @@ export function TourCreditsSection() {
     startTransition(async () => {
       const result = await createTourCredit(userId, {
         title: form.title,
-        role: form.role,
+        role: form.roles.join(", "),
         engagementType: form.engagementType || null,
         startedAt: form.startedAt || null,
         endedAt: form.isCurrent ? null : (form.endedAt || null),
@@ -356,7 +342,7 @@ export function TourCreditsSection() {
     startTransition(async () => {
       const result = await updateTourCredit(userId, editCredit.id, {
         title: form.title,
-        role: form.role,
+        role: form.roles.join(", "),
         engagementType: form.engagementType || null,
         startedAt: form.startedAt || null,
         endedAt: form.isCurrent ? null : (form.endedAt || null),
@@ -456,16 +442,11 @@ export function TourCreditsSection() {
                         <Pencil className="mr-1 size-3" />
                         Edit
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        className="h-auto px-1.5 py-0.5 text-muted-foreground"
+                      <CreditRemovePopover
+                        creditTitle={credit.title}
                         disabled={isPending}
-                        onClick={() => handleRemoveCredit(credit.id)}
-                      >
-                        <X className="mr-1 size-3" />
-                        Remove
-                      </Button>
+                        onConfirm={() => handleRemoveCredit(credit.id)}
+                      />
                     </div>
                   </div>
                   <span className="shrink-0 text-xs text-muted-foreground">
