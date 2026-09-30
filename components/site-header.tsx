@@ -15,31 +15,33 @@ export function SiteHeader({ user }: { user: NavUserData }) {
   return (
     <header
       data-slot="site-header"
-      className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-sm"
+      className="sticky top-0 z-30 shrink-0 border-b bg-background/80 pt-[var(--site-header-inset-top)]"
     >
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-1 my-auto h-6" />
+      <div className="flex h-16 items-center gap-2 px-4 backdrop-blur-sm">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-1 my-auto h-6" />
 
-      <div className="relative max-w-md flex-1">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search crew, jobs, venues…"
-          className="pl-9"
-        />
-      </div>
+        <div className="relative max-w-md flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search crew, jobs, venues…"
+            className="pl-9"
+          />
+        </div>
 
-      <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <HelpNowHeaderButton />
-        <Rooms />
-        <Messages />
-        <Notifications />
-        <Separator
-          orientation="vertical"
-          className="mx-1 my-auto hidden h-6 sm:block"
-        />
-        <div className="hidden md:block">
-          <NavUser user={user} />
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <HelpNowHeaderButton />
+          <Rooms />
+          <Messages />
+          <Notifications />
+          <Separator
+            orientation="vertical"
+            className="mx-1 my-auto hidden h-6 sm:block"
+          />
+          <div className="hidden md:block">
+            <NavUser user={user} />
+          </div>
         </div>
       </div>
     </header>

@@ -132,6 +132,11 @@
   --chart-5: oklch(0.437 0.078 188.216);
   --radius: 0.625rem;
   --site-header-height: 4rem;
+  --site-header-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --site-header-block-size: calc(
+    var(--site-header-height) + var(--site-header-inset-top)
+  );
   --sidebar: var(--background);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(1 0 0);
@@ -250,11 +255,7 @@ html.capacitor-native [data-slot="site-header"] {
   position: sticky;
   top: 0;
   z-index: 30;
-  box-sizing: border-box;
   isolation: isolate;
-  height: auto;
-  min-height: var(--site-header-block-size);
-  padding-top: var(--site-header-inset-top);
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: var(--border);
