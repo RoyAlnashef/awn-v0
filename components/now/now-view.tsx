@@ -7,18 +7,21 @@ import { GettingStartedCard } from "@/components/now/getting-started-card"
 import { WhosAroundCard } from "@/components/now/whos-around-card"
 import { HelpNowDialog } from "@/components/help-now/help-now-dialog"
 import { HelpNowPageCallout } from "@/components/help-now/help-now-page-callout"
+import { useNowGreeting } from "@/components/now/use-now-greeting"
 import { PageShell } from "@/components/page-shell"
 import type { CheckInMapData } from "@/lib/now/check-in"
 import type { OnboardingStatus } from "@/lib/onboarding/progress"
 import { cn } from "@/lib/utils"
 
 export function NowView({
-  greeting,
+  firstName,
+  greeting: serverGreeting,
   description,
   onboardingStatus,
   onboardingDismissed,
   checkInMapData,
 }: {
+  firstName: string
   greeting: string
   description: string
   onboardingStatus: OnboardingStatus
@@ -40,6 +43,8 @@ export function NowView({
     (visible: boolean) => setShowGettingStarted(visible),
     [],
   )
+
+  const greeting = useNowGreeting(firstName, serverGreeting)
 
   return (
     <>
