@@ -33,7 +33,7 @@ export const mainNav: NavItem[] = [
     title: "Now",
     href: "/now",
     description:
-      "Live availability, Help Now callouts, and who's on the road right now.",
+      "Get help now, find your people, and stay connected while you're on the move.",
     icon: Radio,
     live: true,
   },
