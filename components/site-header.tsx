@@ -13,7 +13,10 @@ import { Rooms } from "@/components/rooms"
 
 export function SiteHeader({ user }: { user: NavUserData }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-sm">
+    <header
+      data-slot="site-header"
+      className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-sm"
+    >
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-1 my-auto h-6" />
 

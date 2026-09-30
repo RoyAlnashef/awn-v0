@@ -10,6 +10,11 @@ export function CapacitorNativeRoot() {
 
     document.documentElement.classList.add("capacitor-native")
 
+    void import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
+      void StatusBar.setStyle({ style: Style.Dark })
+      void StatusBar.setBackgroundColor({ color: "#080807" })
+    })
+
     return () => {
       document.documentElement.classList.remove("capacitor-native")
     }

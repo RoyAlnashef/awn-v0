@@ -131,6 +131,7 @@
   --chart-4: oklch(0.511 0.096 186.391);
   --chart-5: oklch(0.437 0.078 188.216);
   --radius: 0.625rem;
+  --site-header-height: 4rem;
   --sidebar: var(--background);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(1 0 0);
@@ -193,8 +194,83 @@ body {
 }
 }
 
+.app-viewport-below-header {
+  height: calc(100svh - var(--site-header-height));
+  min-height: 0;
+}
+
 html.capacitor-native {
+  --site-header-inset-top: env(safe-area-inset-top, 0px);
+  --site-header-block-size: calc(
+    var(--site-header-height) + var(--site-header-inset-top)
+  );
   overscroll-behavior-y: none;
+}
+
+html.capacitor-native body {
+  height: 100svh;
+  overflow: hidden;
+}
+
+html.capacitor-native [data-slot="sidebar-wrapper"] {
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
+html.capacitor-native main[data-slot="sidebar-inset"] {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.capacitor-native
+  main[data-slot="sidebar-inset"]
+  > :not([data-slot="site-header"]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+html.capacitor-native
+  main[data-slot="sidebar-inset"]
+  > .app-viewport-below-header {
+  overflow: hidden;
+}
+
+html.capacitor-native .app-viewport-below-header {
+  height: 100%;
+  min-height: 0;
+}
+
+html.capacitor-native [data-slot="site-header"] {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  isolation: isolate;
+  height: auto;
+  min-height: var(--site-header-block-size);
+  padding-top: var(--site-header-inset-top);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border);
+  background-color: var(--background);
+  backdrop-filter: none;
+}
+
+html.capacitor-native [data-slot="site-header"]::before {
+  position: absolute;
+  top: calc(-1 * var(--site-header-inset-top) - 0.5rem);
+  right: 0;
+  left: 0;
+  z-index: -1;
+  height: calc(var(--site-header-inset-top) + 0.5rem);
+  background-color: var(--background);
+  content: "";
 }
 
 @keyframes typing-dot {

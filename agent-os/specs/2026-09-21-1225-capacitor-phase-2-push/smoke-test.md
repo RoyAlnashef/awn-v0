@@ -45,6 +45,7 @@
 
 Requires web overscroll changes deployed to production **and** `scrollEnabled: true` synced via `npm run cap:sync` + Xcode rebuild.
 
+- [ ] Now (or any PageShell page without fillViewport): scroll aggressively; page title (e.g. greeting) must not appear in the gap above SiteHeader
 - [x] Jobs / People: page scrolls vertically
 - [x] Messages / Groups: thread scrolls; inbox scrolls; page header stays fixed; no whole-page scroll while inside thread
 - [x] Account / Job edit (fill-viewport): inner column scrolls without moving header

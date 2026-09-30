@@ -21,7 +21,7 @@ export default async function PopoutMessagesPage({
   const params = await searchParams
 
   return (
-    <div className="flex h-[calc(100svh-4rem)] flex-col overflow-hidden p-4">
+    <div className="app-viewport-below-header flex flex-col overflow-hidden p-4">
       <Suspense fallback={null}>
         <MessagesView
           title={item.title}

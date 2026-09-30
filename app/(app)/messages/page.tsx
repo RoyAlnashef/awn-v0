@@ -21,7 +21,7 @@ export default async function MessagesPage({
   const params = await searchParams
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-4rem)] w-full max-w-[1400px] min-w-0 flex-col overflow-hidden px-4 py-8 md:px-6">
+    <div className="app-viewport-below-header mx-auto flex w-full max-w-[1400px] min-w-0 flex-col overflow-hidden px-4 py-8 md:px-6">
       <Suspense fallback={null}>
         <MessagesView
           title={item.title}

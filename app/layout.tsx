@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -30,6 +30,10 @@ const dmMono = DM_Mono({
   weight: ["400", "500"],
   variable: "--font-mono",
 });
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "A Wright Network",
