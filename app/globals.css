@@ -205,7 +205,6 @@ body {
 }
 
 html.capacitor-native {
-  --site-header-inset-top: env(safe-area-inset-top, 0px);
   --site-header-block-size: calc(
     var(--site-header-height) + var(--site-header-inset-top)
   );

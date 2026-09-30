@@ -1,7 +1,10 @@
 "use client"
 
+import { useLayoutEffect } from "react"
 import { Search } from "lucide-react"
 
+import { syncSafeAreaInsets } from "@/lib/capacitor/sync-safe-area-insets"
+import { isNativePlatform } from "@/lib/push/is-native-platform"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
@@ -12,10 +15,16 @@ import { Notifications } from "@/components/notifications"
 import { Rooms } from "@/components/rooms"
 
 export function SiteHeader({ user }: { user: NavUserData }) {
+  useLayoutEffect(() => {
+    if (isNativePlatform()) {
+      syncSafeAreaInsets()
+    }
+  }, [])
+
   return (
     <header
       data-slot="site-header"
-      className="sticky top-0 z-30 shrink-0 border-b bg-background/80 pt-(--site-header-inset-top)"
+      className="sticky top-0 z-30 shrink-0 border-b bg-background/80 pt-[var(--site-header-inset-top)]"
     >
       <div className="flex h-16 items-center gap-2 px-4 backdrop-blur-sm">
         <SidebarTrigger className="-ml-1" />
