@@ -161,7 +161,7 @@ export const privacyPolicy: LegalDocument = {
       title: "17. Contact",
       paragraphs: [
         "A Wright Network LLC",
-        "[LEGAL ADDRESS]",
+        "3940 Laurel Canyon Blvd, Studio City, CA 91604",
         "Privacy inquiries: privacy@awrightnetwork.com",
       ],
     },
@@ -453,7 +453,7 @@ export const termsOfService: LegalDocument = {
       title: "28. Contact",
       paragraphs: [
         "A Wright Network LLC",
-        "[LEGAL ADDRESS]",
+        "3940 Laurel Canyon Blvd, Studio City, CA 91604",
         "Email: info@awrightnetwork.com",
       ],
     },

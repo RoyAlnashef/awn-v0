@@ -9,7 +9,9 @@ import { MessagesProvider } from "@/components/messages/messages-provider"
 import { PushProvider } from "@/components/push/push-provider"
 import { PresenceHeartbeat } from "@/components/presence-heartbeat"
 import { RoomsProvider } from "@/components/rooms/rooms-provider"
+import { LegalAcceptanceGate } from "@/components/legal/legal-acceptance-gate"
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { getOutstandingLegalDocuments } from "@/lib/legal/acceptance"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const sessionUser = await getSessionUser()
@@ -23,7 +25,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/pending")
   }
 
-  const cookieStore = await cookies()
+  const [cookieStore, outstandingLegal] = await Promise.all([
+    cookies(),
+    getOutstandingLegalDocuments(),
+  ])
   const sidebarState = cookieStore.get("sidebar_state")?.value
   const defaultOpen = sidebarState !== "false"
 
@@ -76,6 +81,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             />
             {children}
           </SidebarInset>
+          {outstandingLegal.length > 0 && (
+            <LegalAcceptanceGate
+              outstanding={outstandingLegal.map((entry) => ({
+                key: entry.key,
+                title: entry.document.title,
+                document: entry.document,
+              }))}
+            />
+          )}
           </PushProvider>
         </MessagesProvider>
       </RoomsProvider>
