@@ -24,7 +24,7 @@ export function PageShell({
         "flex flex-col",
         fillViewport
           ? "app-viewport-below-header mx-auto flex w-full max-w-350 min-w-0 flex-col gap-8 overflow-hidden px-4 py-8 md:px-6"
-          : "mx-auto w-full max-w-350 min-w-0 min-h-0 flex-1 flex-col gap-8 px-4 py-8 md:px-6",
+          : "mx-auto w-full max-w-350 min-w-0 flex-col gap-8 px-4 py-8 md:px-6",
       )}
     >
       <div className="flex shrink-0 flex-col gap-8 sm:flex-row sm:items-start sm:justify-between sm:gap-4">

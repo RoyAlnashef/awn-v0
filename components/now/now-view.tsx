@@ -54,7 +54,7 @@ export function NowView({
       >
         <div
           className={cn(
-            "grid min-h-0 gap-4 lg:items-start",
+            "grid min-h-min gap-4 lg:min-h-0 lg:items-start",
             showGettingStarted
               ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]"
               : "lg:grid-cols-[minmax(0,1fr)_minmax(0,2.25fr)]",

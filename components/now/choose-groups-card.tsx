@@ -18,7 +18,7 @@ export function ChooseGroupsCard({ className }: { className?: string }) {
   const availableCount = rooms.length
 
   return (
-    <Card className={cn("flex min-h-0 flex-col", className)}>
+    <Card className={cn("flex min-h-80 flex-col lg:min-h-0", className)}>
       <CardHeader>
         <CardTitle>Find your groups</CardTitle>
         <CardAction>
@@ -27,7 +27,7 @@ export function ChooseGroupsCard({ className }: { className?: string }) {
           </span>
         </CardAction>
       </CardHeader>
-      <CardContent className="max-h-120 overflow-y-auto overscroll-contain p-0">
+      <CardContent className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-0 lg:max-h-120">
         <RoomsInbox
           embedded
           showSearch={false}
