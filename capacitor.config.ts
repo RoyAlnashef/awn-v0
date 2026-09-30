@@ -13,11 +13,11 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: "always",
-    backgroundColor: "#0C0B09",
+    backgroundColor: "#120E0F",
     scrollEnabled: true,
   },
   android: {
-    backgroundColor: "#0C0B09",
+    backgroundColor: "#120E0F",
   },
   plugins: {
     StatusBar: {
@@ -31,8 +31,8 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"],
     },
     SplashScreen: {
-      launchShowDuration: 0,
-      backgroundColor: "#0C0B09",
+      launchAutoHide: false,
+      backgroundColor: "#120E0F",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },
