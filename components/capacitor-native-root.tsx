@@ -15,6 +15,18 @@ export function CapacitorNativeRoot() {
       void StatusBar.setBackgroundColor({ color: "#080807" })
     })
 
+    // Dismiss native splash when the WebView loads (required if the installed shell
+    // was built with launchAutoHide: false).
+    void import("@capacitor/splash-screen").then(({ SplashScreen }) => {
+      const hide = () => {
+        void SplashScreen.hide({ fadeOutDuration: 200 })
+      }
+      requestAnimationFrame(() => {
+        requestAnimationFrame(hide)
+      })
+      window.setTimeout(hide, 15_000)
+    })
+
     return () => {
       document.documentElement.classList.remove("capacitor-native")
     }
