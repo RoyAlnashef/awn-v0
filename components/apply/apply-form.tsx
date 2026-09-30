@@ -12,11 +12,18 @@ import {
 import { RoleMultiSelectCombobox } from "@/components/apply/role-multi-select-combobox"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { PasswordField } from "@/components/auth/password-field"
+import { LegalSignupAcceptance } from "@/components/legal/legal-signup-acceptance"
 import { SOCIAL_FIELD_ICONS } from "@/components/icons/social-brand-icons"
 import {
   submitApplication,
   submitRequestAccessApplication,
 } from "@/lib/applications/actions"
+import { acceptLegalDocuments } from "@/lib/legal/actions"
+import {
+  createLegalAcceptanceState,
+  LEGAL_DOCUMENTS,
+  type LegalDocumentKey,
+} from "@/lib/legal/documents"
 import { reportClientError } from "@/lib/logs/report-client-error"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -78,10 +85,15 @@ export function ApplyForm(props: ApplyFormProps) {
     linkedin: "",
     youtube: "",
   })
+  const [legalAccepted, setLegalAccepted] = useState(createLegalAcceptanceState)
 
   const isRequestAccess = props.mode === "request_access"
   const steps = isRequestAccess ? REQUEST_ACCESS_STEPS : APPLY_STEPS
   const signInEmail = isRequestAccess ? email.trim().toLowerCase() : props.inviteeEmail
+  const allLegalAccepted = LEGAL_DOCUMENTS.every(
+    (entry) => legalAccepted[entry.key],
+  )
+  const onLegalStep = steps[currentStep]?.id === "legal"
 
   function validateCredentials(): boolean {
     if (isRequestAccess) {
@@ -131,6 +143,19 @@ export function ApplyForm(props: ApplyFormProps) {
     return true
   }
 
+  function validateLegalAcceptance(): boolean {
+    const allAccepted = LEGAL_DOCUMENTS.every((entry) => legalAccepted[entry.key])
+    if (!allAccepted) {
+      toast.error("Accept every policy and guideline to submit your application.")
+      return false
+    }
+    return true
+  }
+
+  function handleLegalCheckedChange(key: LegalDocumentKey, value: boolean) {
+    setLegalAccepted((current) => ({ ...current, [key]: value }))
+  }
+
   function handleContinue() {
     if (currentStep === 0) {
       if (!validateCredentials()) return
@@ -144,7 +169,13 @@ export function ApplyForm(props: ApplyFormProps) {
       return
     }
 
-    if (!validateSocialLinks()) return
+    if (currentStep === 2) {
+      if (!validateSocialLinks()) return
+      setCurrentStep(3)
+      return
+    }
+
+    if (!validateLegalAcceptance()) return
     submitForm()
   }
 
@@ -206,6 +237,13 @@ export function ApplyForm(props: ApplyFormProps) {
           return
         }
 
+        const acceptResult = await acceptLegalDocuments(
+          LEGAL_DOCUMENTS.map((entry) => entry.key),
+        )
+        if (!acceptResult.ok) {
+          toast.error(acceptResult.error)
+        }
+
         toast.success("Application submitted")
         router.push("/pending")
         router.refresh()
@@ -243,6 +281,7 @@ export function ApplyForm(props: ApplyFormProps) {
         onBack={handleBack}
         onContinue={handleContinue}
         isPending={isPending}
+        continueDisabled={onLegalStep && !allLegalAccepted}
         steps={steps}
       >
         {currentStep === 0 ? (
@@ -340,6 +379,14 @@ export function ApplyForm(props: ApplyFormProps) {
               />
             </div>
           </div>
+        ) : null}
+
+        {currentStep === 3 ? (
+          <LegalSignupAcceptance
+            checked={legalAccepted}
+            onCheckedChange={handleLegalCheckedChange}
+            disabled={isPending}
+          />
         ) : null}
 
         {currentStep === 2 ? (

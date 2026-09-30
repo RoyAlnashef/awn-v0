@@ -16,6 +16,10 @@ export type LegalDocumentEntry = {
   key: LegalDocumentKey
   document: LegalDocument
   version: string
+  /** Marketing route for the full document (signup links open in a new tab). */
+  href: string
+  /** One-line copy for signup / lightweight acceptance UIs. */
+  signupSummary: string
 }
 
 /**
@@ -31,23 +35,40 @@ export const LEGAL_DOCUMENTS: LegalDocumentEntry[] = [
     key: "community-guidelines",
     document: communityGuidelines,
     version: communityGuidelines.lastUpdated,
+    href: "/community-guidelines",
+    signupSummary: "Professional conduct and respect on AWN.",
   },
   {
     key: "terms",
     document: termsOfService,
     version: termsOfService.lastUpdated,
+    href: "/terms",
+    signupSummary: "Rules for your account and using AWN.",
   },
   {
     key: "privacy",
     document: privacyPolicy,
     version: privacyPolicy.lastUpdated,
+    href: "/privacy",
+    signupSummary: "How we collect and use your information.",
   },
   {
     key: "job-posting-policy",
     document: jobPostingPolicy,
     version: jobPostingPolicy.lastUpdated,
+    href: "/job-posting-policy",
+    signupSummary: "Accurate, legitimate job posts only.",
   },
 ]
+
+/** Default unchecked state for signup checkbox UI. */
+export function createLegalAcceptanceState(
+  accepted = false,
+): Record<LegalDocumentKey, boolean> {
+  return Object.fromEntries(
+    LEGAL_DOCUMENTS.map((entry) => [entry.key, accepted]),
+  ) as Record<LegalDocumentKey, boolean>
+}
 
 const LEGAL_DOCUMENTS_BY_KEY = new Map<LegalDocumentKey, LegalDocumentEntry>(
   LEGAL_DOCUMENTS.map((entry) => [entry.key, entry]),

@@ -37,6 +37,11 @@ export const APPLY_STEPS: ApplyFormStep[] = [
     description:
       "Add at least two links so admins can verify your online presence.",
   },
+  {
+    id: "legal",
+    title: "Policies and guidelines",
+    description: "Review and accept AWN's terms and guidelines",
+  },
 ]
 
 export const REQUEST_ACCESS_STEPS: ApplyFormStep[] = [
@@ -47,15 +52,15 @@ export const REQUEST_ACCESS_STEPS: ApplyFormStep[] = [
   },
   APPLY_STEPS[1],
   APPLY_STEPS[2],
+  APPLY_STEPS[3],
 ]
-
-const APPLY_FORM_STEPPER_STEPS = APPLY_STEPS.map(({ id }) => ({ id }))
 
 export function ApplyFormSteps({
   currentStep,
   onBack,
   onContinue,
   isPending,
+  continueDisabled = false,
   steps = APPLY_STEPS,
   children,
 }: {
@@ -63,6 +68,8 @@ export function ApplyFormSteps({
   onBack: () => void
   onContinue: () => void
   isPending?: boolean
+  /** When true, the Continue / Submit button is disabled (e.g. legal step checkboxes). */
+  continueDisabled?: boolean
   steps?: readonly ApplyFormStep[]
   children: React.ReactNode
 }) {
@@ -73,7 +80,7 @@ export function ApplyFormSteps({
   return (
     <div className="flex flex-col gap-5">
       <Stepper
-        steps={APPLY_FORM_STEPPER_STEPS}
+        steps={steps.map(({ id }) => ({ id }))}
         value={steps[currentStep].id}
         indicators={{
           completed: <Check aria-hidden="true" className="scale-[0.8]" />,
@@ -113,7 +120,11 @@ export function ApplyFormSteps({
           <ChevronLeft data-icon="inline-start" aria-hidden="true" />
           Back
         </Button>
-        <Button type="button" onClick={onContinue} disabled={isPending}>
+        <Button
+          type="button"
+          onClick={onContinue}
+          disabled={isPending || continueDisabled}
+        >
           {isPending ? (
             "Submitting…"
           ) : isLastStep ? (
