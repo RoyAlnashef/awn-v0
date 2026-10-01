@@ -15,6 +15,8 @@ const config: CapacitorConfig = {
     contentInset: "always",
     backgroundColor: "#120E0F",
     scrollEnabled: true,
+    // Ensures boot script can detect the native shell via UA before the bridge loads.
+    appendUserAgent: "CapacitorAWN",
   },
   android: {
     backgroundColor: "#120E0F",

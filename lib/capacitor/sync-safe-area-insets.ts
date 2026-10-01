@@ -1,7 +1,8 @@
 import {
-  getNativePlatform,
-  isNativePlatform,
-} from "@/lib/push/is-native-platform"
+  applyCapacitorNativeHtmlClasses,
+  isCapacitorIosWebView,
+} from "@/lib/capacitor/is-capacitor-ios-webview"
+import { isNativePlatform } from "@/lib/push/is-native-platform"
 
 /** Typical portrait inset when env(safe-area-inset-top) is 0 in WKWebView. */
 const IOS_FALLBACK_INSET_TOP_PX = 47
@@ -38,22 +39,13 @@ export function measureSafeAreaInsetBottom(): number {
 }
 
 function shouldApplyIosSafeAreaFallback(): boolean {
-  if (!isNativePlatform()) return false
-  if (getNativePlatform() === "ios") return true
-
-  const platform = (
-    window as Window & {
-      Capacitor?: { getPlatform?: () => string }
-    }
-  ).Capacitor?.getPlatform?.()
-
-  return platform === "ios"
+  return isCapacitorIosWebView()
 }
 
 export function syncSafeAreaInsets(): void {
-  if (!isNativePlatform()) return
+  if (!isNativePlatform() && !isCapacitorIosWebView()) return
 
-  document.documentElement.classList.add("capacitor-native")
+  applyCapacitorNativeHtmlClasses()
 
   let top = measureSafeAreaInsetTop()
   let bottom = measureSafeAreaInsetBottom()

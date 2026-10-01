@@ -2,6 +2,7 @@ import {
   dismissSplashWhenReady,
   scheduleSplashDismissWithFallback,
 } from "@/lib/capacitor/dismiss-splash-when-ready"
+import { isCapacitorIosWebView } from "@/lib/capacitor/is-capacitor-ios-webview"
 import { syncSafeAreaInsets } from "@/lib/capacitor/sync-safe-area-insets"
 import { getNativePlatform, isNativePlatform } from "@/lib/push/is-native-platform"
 
@@ -11,7 +12,7 @@ const IOS_COLD_START_RETRY_MS = [50, 150, 400, 800] as const
 const CAPACITOR_READY_POLL_MS = [0, 16, 50, 100, 250, 500, 1000, 2000, 3000] as const
 
 function scheduleIosColdStartRetries(timeoutIds: number[]): void {
-  if (getNativePlatform() !== "ios") return
+  if (!isCapacitorIosWebView() && getNativePlatform() !== "ios") return
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => syncSafeAreaInsets())
@@ -23,7 +24,6 @@ function scheduleIosColdStartRetries(timeoutIds: number[]): void {
 }
 
 function attachNativeSafeAreaSync(): () => void {
-  document.documentElement.classList.add("capacitor-native")
   syncSafeAreaInsets()
 
   const onViewportChange = () => syncSafeAreaInsets()
@@ -72,7 +72,9 @@ export function startNativeSafeAreaSync(): () => void {
   const pollTimeoutIds: number[] = []
 
   const tryAttach = () => {
-    if (attachedCleanup || !isNativePlatform()) return
+    if (attachedCleanup || (!isNativePlatform() && !isCapacitorIosWebView())) {
+      return
+    }
     attachedCleanup = attachNativeSafeAreaSync()
   }
 
