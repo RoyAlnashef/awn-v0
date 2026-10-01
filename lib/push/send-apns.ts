@@ -79,10 +79,11 @@ function extractApnsFailureReason(error: unknown): string {
 }
 
 function shouldRetryAlternateApnsEnvironment(reason: string): boolean {
-  return (
-    reason === "BadEnvironmentKeyInToken" ||
-    reason === "BadDeviceToken"
-  )
+  return reason === "BadEnvironmentKeyInToken"
+}
+
+function apnsTokenForSend(token: string): string {
+  return token.replace(/\s+/g, "").toUpperCase()
 }
 
 export function isApnsConfigured(): boolean {
@@ -135,8 +136,10 @@ export async function sendApnsPush(
         return
       }
 
-      const token = (subscription as { token?: string }).token
-      if (!token) return
+      const rawToken = (subscription as { token?: string }).token
+      if (!rawToken) return
+
+      const token = apnsTokenForSend(rawToken)
 
       try {
         await sendOneApns(primaryClient, token, payload)
@@ -156,7 +159,7 @@ export async function sendApnsPush(
               failures.push({
                 channel: "apns",
                 endpointPrefix: endpointPrefix(token),
-                message: `${extractApnsFailureReason(retryError)} (retried ${alternateHost})`,
+                message: `${reason} (${primaryHost}) → ${extractApnsFailureReason(retryError)} (${alternateHost})`,
               })
               return
             }

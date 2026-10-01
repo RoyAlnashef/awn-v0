@@ -29,7 +29,9 @@ Apple returns this when the **device token environment** does not match the **AP
 
 If the log still shows this error with `apnsSandboxMode: true`, the installed app may be using a **production** token (Release scheme, or production entitlement in the signed build). Try `false`, or rebuild with Debug + development entitlements.
 
-Server code also **retries the alternate APNs host** once on `BadEnvironmentKeyInToken` / `BadDeviceToken` (deploy latest app code for this).
+Server code **retries the alternate APNs host** once only on `BadEnvironmentKeyInToken`. Log messages show both attempts, e.g. `BadEnvironmentKeyInToken (api.sandbox…) → BadDeviceToken (api.push…)`.
+
+If **`total` is 2** but you expect one device, list all rows for that user and remove stale web/iOS duplicates before testing.
 
 Verify token shape in Supabase: `endpoint` should be **64 hex characters** (32 bytes). Shorter values are invalid — delete the row and re-open the app after a native rebuild.
 
