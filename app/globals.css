@@ -211,6 +211,12 @@ html.capacitor-native {
   overscroll-behavior-y: none;
 }
 
+/* Capacitor iOS: fixed inset (see lib/capacitor/ios-native-inset-px.ts). */
+html.capacitor-native-ios {
+  --site-header-inset-top: 34px;
+  --safe-area-inset-bottom: 34px;
+}
+
 html.capacitor-native body {
   height: 100svh;
   overflow: hidden;

@@ -1,5 +1,8 @@
-/** Inline boot script — iOS inset floor lives in globals.css (html.capacitor-native-ios). */
+import { CAPACITOR_IOS_FIXED_INSET_PX } from "@/lib/capacitor/ios-native-inset-px"
+
+/** Inline boot script — keep CAPACITOR_IOS_FIXED_INSET_PX in sync with globals.css. */
 export const CAPACITOR_SAFE_AREA_BOOT_SCRIPT = `(function(){try{
+var FIXED=${CAPACITOR_IOS_FIXED_INSET_PX};
 function isCapAppIos(){
   var ua=navigator.userAgent||"";
   var ios=/iPhone|iPad|iPod/i.test(ua);
@@ -8,14 +11,13 @@ function isCapAppIos(){
   if(c&&c.isNativePlatform&&c.isNativePlatform()&&c.getPlatform&&c.getPlatform()==="ios")return true;
   return ua.indexOf("Capacitor")>-1||ua.indexOf("CapacitorAWN")>-1;
 }
-function markNativeShell(){
+function applyIosFixed(){
   if(!isCapAppIos())return;
   document.documentElement.classList.add("capacitor-native","capacitor-native-ios");
-  document.documentElement.style.removeProperty("--site-header-inset-top");
-  document.documentElement.style.removeProperty("--safe-area-inset-bottom");
+  document.documentElement.style.setProperty("--site-header-inset-top",FIXED+"px");
+  document.documentElement.style.setProperty("--safe-area-inset-bottom",FIXED+"px");
 }
-function sync(){
-  markNativeShell();
+function syncAndroid(){
   if(isCapAppIos())return;
   var c=window.Capacitor;
   if(!c||!c.isNativePlatform||!c.isNativePlatform())return;
@@ -34,8 +36,8 @@ function sync(){
   document.documentElement.style.setProperty("--site-header-inset-top",top+"px");
   document.documentElement.style.setProperty("--safe-area-inset-bottom",bottom+"px");
 }
-markNativeShell();
-sync();
-document.addEventListener("DOMContentLoaded",function(){markNativeShell();sync();});
-[0,50,100,250,500,1000,2000,3000].forEach(function(ms){setTimeout(function(){markNativeShell();sync();},ms);});
+function run(){applyIosFixed();syncAndroid();}
+run();
+document.addEventListener("DOMContentLoaded",run);
+[0,50,100,250,500,1000,2000,3000].forEach(function(ms){setTimeout(run,ms);});
 }catch(e){}})();`
