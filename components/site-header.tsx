@@ -24,7 +24,7 @@ export function SiteHeader({ user }: { user: NavUserData }) {
   return (
     <header
       data-slot="site-header"
-      className="sticky top-0 z-30 shrink-0 border-b bg-background/80 pt-[var(--site-header-inset-top)]"
+      className="sticky top-0 z-30 shrink-0 border-b bg-background/80 pt-(--site-header-inset-top)"
     >
       <div className="flex h-16 items-center gap-2 px-4 backdrop-blur-sm">
         <SidebarTrigger className="-ml-1" />
