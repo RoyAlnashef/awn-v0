@@ -211,9 +211,8 @@ html.capacitor-native {
   overscroll-behavior-y: none;
 }
 
-/* Capacitor iOS: fixed inset (see lib/capacitor/ios-native-inset-px.ts). */
+/* Capacitor iOS: top inset from JS (resolve-ios-header-inset-top.ts); bottom fallback. */
 html.capacitor-native-ios {
-  --site-header-inset-top: 34px;
   --safe-area-inset-bottom: 34px;
 }
 

@@ -1,7 +1,10 @@
 "use client"
 
+import { useLayoutEffect } from "react"
 import { Search } from "lucide-react"
 
+import { isCapacitorIosWebView } from "@/lib/capacitor/is-capacitor-ios-webview"
+import { syncSafeAreaInsets } from "@/lib/capacitor/sync-safe-area-insets"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
@@ -12,6 +15,12 @@ import { Notifications } from "@/components/notifications"
 import { Rooms } from "@/components/rooms"
 
 export function SiteHeader({ user }: { user: NavUserData }) {
+  useLayoutEffect(() => {
+    if (isCapacitorIosWebView()) {
+      syncSafeAreaInsets()
+    }
+  }, [])
+
   return (
     <header
       data-slot="site-header"

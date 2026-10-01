@@ -2,7 +2,8 @@ import {
   applyCapacitorNativeHtmlClasses,
   isCapacitorIosWebView,
 } from "@/lib/capacitor/is-capacitor-ios-webview"
-import { CAPACITOR_IOS_FIXED_INSET_PX } from "@/lib/capacitor/ios-native-inset-px"
+import { CAPACITOR_IOS_BOTTOM_INSET_PX } from "@/lib/capacitor/ios-native-inset-px"
+import { resolveIosHeaderInsetTop } from "@/lib/capacitor/resolve-ios-header-inset-top"
 import { isNativePlatform } from "@/lib/push/is-native-platform"
 
 function measureEnvInset(edge: "top" | "bottom"): number {
@@ -33,10 +34,21 @@ export function measureSafeAreaInsetBottom(): number {
   return measureEnvInset("bottom")
 }
 
-function applyIosFixedInsets(): void {
-  const px = `${CAPACITOR_IOS_FIXED_INSET_PX}px`
-  document.documentElement.style.setProperty("--site-header-inset-top", px)
-  document.documentElement.style.setProperty("--safe-area-inset-bottom", px)
+function applyInsetCssVar(name: string, px: number): void {
+  if (px <= 0) {
+    document.documentElement.style.removeProperty(name)
+    return
+  }
+  document.documentElement.style.setProperty(name, `${px}px`)
+}
+
+function applyIosCompensatedInsets(): void {
+  const top = resolveIosHeaderInsetTop()
+  applyInsetCssVar("--site-header-inset-top", top)
+  applyInsetCssVar(
+    "--safe-area-inset-bottom",
+    CAPACITOR_IOS_BOTTOM_INSET_PX,
+  )
 }
 
 export function syncSafeAreaInsets(): void {
@@ -45,15 +57,12 @@ export function syncSafeAreaInsets(): void {
   applyCapacitorNativeHtmlClasses()
 
   if (isCapacitorIosWebView()) {
-    applyIosFixedInsets()
+    applyIosCompensatedInsets()
     return
   }
 
   const top = measureSafeAreaInsetTop()
   const bottom = measureSafeAreaInsetBottom()
-  document.documentElement.style.setProperty("--site-header-inset-top", `${top}px`)
-  document.documentElement.style.setProperty(
-    "--safe-area-inset-bottom",
-    `${bottom}px`,
-  )
+  applyInsetCssVar("--site-header-inset-top", top)
+  applyInsetCssVar("--safe-area-inset-bottom", bottom)
 }

@@ -70,9 +70,27 @@ limit 10;
 
 Requires a **production deploy** of the web app (native shell loads `https://awrightnetwork.com`).
 
+Top inset is **viewport-compensated** (`resolveIosHeaderInsetTop`): 34px when the webview origin is shifted up (cold launch), 0px on relaunch when origin is 0. Bottom stays 34px.
+
 1. Delete app → reinstall from Xcode → **first open** (before dismissing push prompt): site header clears status bar / Dynamic Island (no overlap with time or icons).
 2. Allow or deny notifications → header inset unchanged (no jump under status bar).
-3. Web Inspector on `<html>`: `--site-header-inset-top` is non-zero (env or 47px fallback).
+3. Web Inspector console (initial login and **2nd login** after force-quit):
+
+```javascript
+const header = document.querySelector('[data-slot="site-header"]');
+const row = header?.querySelector(":scope > div");
+console.log({
+  headerTop: header?.getBoundingClientRect().top,
+  rowTop: row?.getBoundingClientRect().top,
+  headerPaddingTop: header && getComputedStyle(header).paddingTop,
+  htmlInset: getComputedStyle(document.documentElement).getPropertyValue(
+    "--site-header-inset-top",
+  ),
+});
+```
+
+Expect **`rowTop` ~0–2px** on both loads; initial: `headerPaddingTop` 34px, `headerTop` ~−34; 2nd: `headerPaddingTop` 0px (or unset), `headerTop` 0.
+
 4. Background app → foreground → inset still correct.
 5. Force-quit → **second open** → layout still correct (no double gap).
 6. Rotate once → header/sheets respect inset without overlap.
