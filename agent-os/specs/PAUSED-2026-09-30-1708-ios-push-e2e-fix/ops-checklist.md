@@ -66,6 +66,17 @@ order by updated_at desc
 limit 10;
 ```
 
+## iOS safe-area (cold start)
+
+Requires a **production deploy** of the web app (native shell loads `https://awrightnetwork.com`).
+
+1. Delete app → reinstall from Xcode → **first open** (before dismissing push prompt): site header clears status bar / Dynamic Island (no overlap with time or icons).
+2. Allow or deny notifications → header inset unchanged (no jump under status bar).
+3. Web Inspector on `<html>`: `--site-header-inset-top` is non-zero (env or 47px fallback).
+4. Background app → foreground → inset still correct.
+5. Force-quit → **second open** → layout still correct (no double gap).
+6. Rotate once → header/sheets respect inset without overlap.
+
 ## Device smoke (physical iPhone)
 
 1. Delete app → reinstall from Xcode → login → allow notifications → Settings shows **Push enabled**.

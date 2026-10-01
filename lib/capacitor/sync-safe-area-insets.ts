@@ -1,4 +1,7 @@
-import { getNativePlatform } from "@/lib/push/is-native-platform"
+import {
+  getNativePlatform,
+  isNativePlatform,
+} from "@/lib/push/is-native-platform"
 
 /** Typical portrait inset when env(safe-area-inset-top) is 0 in WKWebView. */
 const IOS_FALLBACK_INSET_TOP_PX = 47
@@ -34,11 +37,24 @@ export function measureSafeAreaInsetBottom(): number {
   return measureEnvInset("bottom")
 }
 
+function shouldApplyIosSafeAreaFallback(): boolean {
+  if (!isNativePlatform()) return false
+  if (getNativePlatform() === "ios") return true
+
+  const platform = (
+    window as Window & {
+      Capacitor?: { getPlatform?: () => string }
+    }
+  ).Capacitor?.getPlatform?.()
+
+  return platform === "ios"
+}
+
 export function syncSafeAreaInsets(): void {
   let top = measureSafeAreaInsetTop()
   let bottom = measureSafeAreaInsetBottom()
 
-  if (getNativePlatform() === "ios") {
+  if (shouldApplyIosSafeAreaFallback()) {
     if (top === 0) top = IOS_FALLBACK_INSET_TOP_PX
     if (bottom === 0) bottom = IOS_FALLBACK_INSET_BOTTOM_PX
   }
