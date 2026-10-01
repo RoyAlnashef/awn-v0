@@ -15,7 +15,9 @@ export function CapacitorNativeRoot() {
 
   useEffect(() => {
     if (!isNativePlatform() && !isCapacitorIosWebView()) return
-    syncSafeAreaInsets()
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => syncSafeAreaInsets())
+    })
   }, [pathname])
 
   return null

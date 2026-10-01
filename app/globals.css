@@ -211,12 +211,6 @@ html.capacitor-native {
   overscroll-behavior-y: none;
 }
 
-/* WKWebView often reports env(safe-area-inset-*) as 0 on cold launch. */
-html.capacitor-native-ios {
-  --site-header-inset-top: max(env(safe-area-inset-top, 0px), 47px);
-  --safe-area-inset-bottom: max(env(safe-area-inset-bottom, 0px), 34px);
-}
-
 html.capacitor-native body {
   height: 100svh;
   overflow: hidden;
