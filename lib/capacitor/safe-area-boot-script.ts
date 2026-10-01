@@ -1,4 +1,4 @@
-/** Inline boot script — keep in sync with sync-safe-area-insets.ts fallbacks (47/34). */
+/** Inline boot script — iOS inset floor lives in globals.css (html.capacitor-native-ios). */
 export const CAPACITOR_SAFE_AREA_BOOT_SCRIPT = `(function(){try{
 function isCapAppIos(){
   var ua=navigator.userAgent||"";
@@ -11,14 +11,15 @@ function isCapAppIos(){
 function markNativeShell(){
   if(!isCapAppIos())return;
   document.documentElement.classList.add("capacitor-native","capacitor-native-ios");
+  document.documentElement.style.removeProperty("--site-header-inset-top");
+  document.documentElement.style.removeProperty("--safe-area-inset-bottom");
 }
 function sync(){
   markNativeShell();
+  if(isCapAppIos())return;
   var c=window.Capacitor;
   if(!c||!c.isNativePlatform||!c.isNativePlatform())return;
   document.documentElement.classList.add("capacitor-native");
-  var ios=c.getPlatform&&c.getPlatform()==="ios";
-  if(ios)document.documentElement.classList.add("capacitor-native-ios");
   function m(p){
     var d=document.createElement("div");
     d.style.cssText="position:fixed;visibility:hidden;"+p;
@@ -30,7 +31,6 @@ function sync(){
   }
   var top=m("padding-top:env(safe-area-inset-top,0px)");
   var bottom=m("padding-bottom:env(safe-area-inset-bottom,0px)");
-  if(ios){if(top===0)top=47;if(bottom===0)bottom=34;}
   document.documentElement.style.setProperty("--site-header-inset-top",top+"px");
   document.documentElement.style.setProperty("--safe-area-inset-bottom",bottom+"px");
 }

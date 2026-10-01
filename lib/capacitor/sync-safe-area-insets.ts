@@ -4,12 +4,6 @@ import {
 } from "@/lib/capacitor/is-capacitor-ios-webview"
 import { isNativePlatform } from "@/lib/push/is-native-platform"
 
-/** Typical portrait inset when env(safe-area-inset-top) is 0 in WKWebView. */
-const IOS_FALLBACK_INSET_TOP_PX = 47
-
-/** Typical home-indicator inset when env(safe-area-inset-bottom) is 0 in WKWebView. */
-const IOS_FALLBACK_INSET_BOTTOM_PX = 34
-
 function measureEnvInset(edge: "top" | "bottom"): number {
   if (typeof document === "undefined") return 0
 
@@ -47,13 +41,16 @@ export function syncSafeAreaInsets(): void {
 
   applyCapacitorNativeHtmlClasses()
 
+  if (shouldApplyIosSafeAreaFallback()) {
+    // Let html.capacitor-native-ios CSS use max(env(...), 47px). Inline values from
+    // measureEnvInset() often report a partial inset (e.g. 8px) and override that floor.
+    document.documentElement.style.removeProperty("--site-header-inset-top")
+    document.documentElement.style.removeProperty("--safe-area-inset-bottom")
+    return
+  }
+
   let top = measureSafeAreaInsetTop()
   let bottom = measureSafeAreaInsetBottom()
-
-  if (shouldApplyIosSafeAreaFallback()) {
-    if (top === 0) top = IOS_FALLBACK_INSET_TOP_PX
-    if (bottom === 0) bottom = IOS_FALLBACK_INSET_BOTTOM_PX
-  }
 
   document.documentElement.style.setProperty(
     "--site-header-inset-top",
