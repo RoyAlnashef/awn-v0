@@ -1,8 +1,7 @@
 import type { CrewResumeData } from "@/lib/crew/build-resume-data"
 import { formatResumeCredit } from "@/lib/crew/format-resume-credit"
-import { availabilityConfig, initials } from "@/lib/people-data"
+import { getPersonSocialLinks } from "@/lib/social-links"
 
-import { CrewResumeQr } from "./crew-resume-qr"
 import "./crew-print.css"
 
 function ResumeSkills({ data }: { data: CrewResumeData }) {
@@ -18,20 +17,46 @@ function ResumeSkills({ data }: { data: CrewResumeData }) {
   return (
     <section>
       <h2 className="crew-resume-section-title mb-3">Skills</h2>
-      <div className="flex flex-wrap gap-1.5">
+      <ul className="crew-resume-sidebar-list">
         {skills.map((skill) => (
-          <span key={skill} className="crew-resume-skill-pill">
+          <li key={skill} className="crew-resume-sidebar-list-item">
             {skill}
-          </span>
+          </li>
         ))}
-      </div>
+      </ul>
+    </section>
+  )
+}
+
+function ResumeLinks({ data }: { data: CrewResumeData }) {
+  const socialLinks = getPersonSocialLinks(data.person)
+  if (socialLinks.length === 0) return null
+
+  return (
+    <section>
+      <h2 className="crew-resume-section-title mb-3">Links</h2>
+      <ul className="crew-resume-sidebar-list">
+        {socialLinks.map((link) => (
+          <li key={link.id} className="crew-resume-sidebar-list-item">
+            <span className="crew-resume-link-display">{link.display}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function ResumeProfileLink({ data }: { data: CrewResumeData }) {
+  return (
+    <section>
+      <h2 className="crew-resume-section-title mb-3">Profile</h2>
+      <p className="crew-resume-link-display text-sm">{data.displayProfileUrl}</p>
     </section>
   )
 }
 
 export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
   const { person, tourCredits, bio } = data
-  const availability = availabilityConfig[person.availability]
   const location = person.homeBase || person.city
   const subtitle = [person.role, location].filter(Boolean).join(" • ")
 
@@ -40,32 +65,13 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
       <div className="mx-auto max-w-204">
         <header className="crew-resume-header px-8 pt-5">
           <div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-5">
-            <div className="flex items-start gap-4">
-              {person.avatar ? (
-                <img
-                  src={person.avatar}
-                  alt=""
-                  className="size-16 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-white text-lg font-semibold text-neutral-600">
-                  {initials(person.name)}
-                </div>
-              )}
-              <div>
-                <h1 className="crew-resume-name text-2xl font-semibold tracking-tight">
-                  {person.name}
-                </h1>
-                {subtitle ? (
-                  <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
-                ) : null}
-                <p className="mt-2 inline-flex items-center gap-1.5">
-                  <span className="crew-resume-availability-dot" />
-                  <span className="crew-resume-availability-label">
-                    {availability.label}
-                  </span>
-                </p>
-              </div>
+            <div>
+              <h1 className="crew-resume-name text-2xl font-semibold tracking-tight">
+                {person.name}
+              </h1>
+              {subtitle ? (
+                <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
+              ) : null}
             </div>
             <div className="flex flex-col items-end">
               <img
@@ -81,19 +87,23 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
         </header>
 
         <div className="px-8 py-6">
-          {bio ? (
-            <p className="mb-6 text-sm leading-relaxed text-neutral-800 whitespace-pre-line">
-              {bio}
-            </p>
-          ) : null}
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8">
+            <aside className="space-y-5">
+              <ResumeSkills data={data} />
+              <ResumeLinks data={data} />
+              <ResumeProfileLink data={data} />
+            </aside>
 
-          <div className="grid grid-cols-[1.6fr_1fr] gap-8">
-            <section>
+            <main className="space-y-6">
+              {bio ? (
+                <p className="crew-resume-bio text-sm leading-relaxed text-neutral-800 whitespace-pre-line">
+                  {bio}
+                </p>
+              ) : null}
+
               {tourCredits.length > 0 ? (
-                <>
-                  <h2 className="crew-resume-section-title mb-3">
-                    Credits
-                  </h2>
+                <section>
+                  <h2 className="crew-resume-section-title mb-3">Credits</h2>
                   <ul>
                     {tourCredits.map((credit, index) => {
                       const display = formatResumeCredit(credit)
@@ -127,40 +137,9 @@ export function CrewResumeDocument({ data }: { data: CrewResumeData }) {
                       )
                     })}
                   </ul>
-                </>
-              ) : null}
-            </section>
-
-            <aside className="space-y-5">
-              {data.detailsRows.length > 0 ? (
-                <section>
-                  <h2 className="crew-resume-section-title mb-3">Details</h2>
-                  <dl className="space-y-2.5">
-                    {data.detailsRows.map((row) => (
-                      <div key={row.label} className="crew-resume-details-row">
-                        <dt className="crew-resume-details-label">
-                          {row.label}
-                        </dt>
-                        <dd className="crew-resume-details-value">
-                          {row.value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
                 </section>
               ) : null}
-
-              <ResumeSkills data={data} />
-
-              <div className="flex items-center gap-3 pt-1">
-                <div className="shrink-0">
-                  <CrewResumeQr url={data.profileUrl} />
-                </div>
-                <p className="text-[10px] leading-snug text-neutral-500">
-                  Scan for live profile
-                </p>
-              </div>
-            </aside>
+            </main>
           </div>
 
           <footer className="mt-8 flex items-end justify-between border-t border-neutral-200 pt-4 text-[10px] text-neutral-500">

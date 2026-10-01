@@ -49,49 +49,34 @@
   text-transform: uppercase;
 }
 
-.crew-resume-details-row {
-  align-items: baseline;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+.crew-resume-sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.crew-resume-details-label {
-  color: #9ca3af;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.crew-resume-details-value {
-  color: #1a1a1a;
-  font-size: 0.8125rem;
-  text-align: right;
-}
-
-.crew-resume-skill-pill {
-  border: 1px solid #d1d5db;
-  border-radius: 9999px;
+.crew-resume-sidebar-list-item {
+  border-bottom: 1px solid #e5e7eb;
   color: #374151;
-  display: inline-block;
-  font-size: 0.75rem;
-  line-height: 1.25rem;
-  padding: 0.125rem 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  padding: 0.625rem 0;
 }
 
-.crew-resume-availability-dot {
-  background: #0d9488;
-  border-radius: 9999px;
-  display: inline-block;
-  height: 0.375rem;
-  width: 0.375rem;
+.crew-resume-sidebar-list-item:first-child {
+  padding-top: 0;
 }
 
-.crew-resume-availability-label {
-  color: #0d9488;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.crew-resume-sidebar-list-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.crew-resume-link-display {
+  color: #6b7280;
+  word-break: break-word;
+}
+
+.crew-resume-bio {
+  font-style: normal;
 }

@@ -31,10 +31,5 @@ export function formatResumeCredit(credit: TourCredit): ResumeCreditDisplay {
   const status = creditStatus(credit)
   if (status) metadata.push(status)
 
-  const vouchCount = credit.vouchCount ?? 0
-  if (vouchCount > 0) {
-    metadata.push(`${vouchCount} ${vouchCount === 1 ? "vouch" : "vouches"}`)
-  }
-
   return { primary, subtitle, metadata }
 }
