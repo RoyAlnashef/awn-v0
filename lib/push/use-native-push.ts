@@ -13,16 +13,26 @@ type NativePushState = {
   error: string | null
 }
 
+const MAX_TOKEN_REGISTER_ATTEMPTS = 8
+const TOKEN_REGISTER_RETRY_MS = 500
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export function useNativePush() {
   const router = useRouter()
   const listenersRef = useRef<Array<{ remove: () => void }>>([])
+  const pendingTokenRef = useRef<string | null>(null)
   const [state, setState] = useState<NativePushState>({
     enabled: false,
     loading: false,
     error: null,
   })
 
-  const registerToken = useCallback(async (token: string) => {
+  const postRegisterToken = useCallback(async (token: string) => {
     const supabase = createClient()
     const {
       data: { session },
@@ -36,7 +46,7 @@ export function useNativePush() {
       headers.Authorization = `Bearer ${session.access_token}`
     }
 
-    const response = await fetch("/api/push/register-token", {
+    return fetch("/api/push/register-token", {
       method: "POST",
       headers,
       credentials: "include",
@@ -45,13 +55,34 @@ export function useNativePush() {
         platform: getNativePlatform(),
       }),
     })
-
-    if (!response.ok) {
-      throw new Error("Failed to register push token")
-    }
-
-    setState((current) => ({ ...current, enabled: true, error: null }))
   }, [])
+
+  const registerToken = useCallback(
+    async (token: string, isCancelled: () => boolean) => {
+      pendingTokenRef.current = token
+
+      for (let attempt = 0; attempt < MAX_TOKEN_REGISTER_ATTEMPTS; attempt += 1) {
+        if (isCancelled()) return
+
+        const response = await postRegisterToken(token)
+
+        if (response.ok) {
+          pendingTokenRef.current = null
+          setState((current) => ({ ...current, enabled: true, error: null }))
+          return
+        }
+
+        if (response.status !== 401) {
+          throw new Error("Failed to register push token")
+        }
+
+        await sleep(TOKEN_REGISTER_RETRY_MS * (attempt + 1))
+      }
+
+      throw new Error("Failed to register push token")
+    },
+    [postRegisterToken],
+  )
 
   const enableNativePush = useCallback(async () => {
     if (!isNativePlatform()) {
@@ -95,6 +126,24 @@ export function useNativePush() {
     if (!isNativePlatform()) return
 
     let cancelled = false
+    const isCancelled = () => cancelled
+
+    const supabase = createClient()
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const pending = pendingTokenRef.current
+      if (!session || !pending || cancelled) return
+
+      void registerToken(pending, isCancelled).catch(() => {
+        if (!cancelled) {
+          setState((current) => ({
+            ...current,
+            error: "Failed to save push token",
+          }))
+        }
+      })
+    })
 
     void (async () => {
       try {
@@ -105,7 +154,7 @@ export function useNativePush() {
         const registrationListener = await PushNotifications.addListener(
           "registration",
           (event) => {
-            void registerToken(event.value).catch(() => {
+            void registerToken(event.value, isCancelled).catch(() => {
               if (!cancelled) {
                 setState((current) => ({
                   ...current,
@@ -157,6 +206,7 @@ export function useNativePush() {
 
     return () => {
       cancelled = true
+      authSubscription.unsubscribe()
       for (const listener of listenersRef.current) {
         listener.remove()
       }

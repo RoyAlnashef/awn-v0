@@ -1,5 +1,6 @@
 import { logError } from "@/lib/logs/log-error"
 
+import { isApnsSandboxMode } from "./send-apns"
 import type { DispatchResult, NotificationDispatchInput } from "./types"
 
 export async function logDispatchIssue(
@@ -24,6 +25,7 @@ export async function logDispatchIssue(
       kind: notification.kind,
       sent: result.sent,
       total: result.total,
+      apnsSandboxMode: isApnsSandboxMode(),
       failures: result.failures ?? [],
     },
   })

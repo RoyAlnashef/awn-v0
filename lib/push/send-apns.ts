@@ -11,11 +11,14 @@ type ApnsSendResult = {
   failures: PushDispatchFailure[]
 }
 
-let productionClient: ApnsClient | null = null
-let sandboxClient: ApnsClient | null = null
+const SANDBOX_HOST = "api.sandbox.push.apple.com"
+const PRODUCTION_HOST = "api.push.apple.com"
 
-function isApnsSandbox(): boolean {
-  return process.env.APNS_USE_SANDBOX === "true"
+const clients = new Map<string, ApnsClient>()
+
+export function isApnsSandboxMode(): boolean {
+  const raw = process.env.APNS_USE_SANDBOX?.trim().toLowerCase()
+  return raw === "true" || raw === "1" || raw === "yes"
 }
 
 function endpointPrefix(endpoint: string): string {
@@ -41,32 +44,79 @@ function createApnsClient(host: string): ApnsClient | null {
   })
 }
 
-function getApnsClient(): ApnsClient | null {
-  const sandbox = isApnsSandbox()
+function getApnsClientForHost(host: string): ApnsClient | null {
+  const existing = clients.get(host)
+  if (existing) return existing
 
-  if (sandbox) {
-    if (!sandboxClient) {
-      sandboxClient = createApnsClient("api.sandbox.push.apple.com")
-    }
-    return sandboxClient
+  const client = createApnsClient(host)
+  if (client) {
+    clients.set(host, client)
   }
+  return client
+}
 
-  if (!productionClient) {
-    productionClient = createApnsClient("api.push.apple.com")
+function primaryApnsHost(): string {
+  return isApnsSandboxMode() ? SANDBOX_HOST : PRODUCTION_HOST
+}
+
+function alternateApnsHost(host: string): string {
+  return host === SANDBOX_HOST ? PRODUCTION_HOST : SANDBOX_HOST
+}
+
+function extractApnsFailureReason(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "reason" in error &&
+    typeof (error as { reason: unknown }).reason === "string"
+  ) {
+    return (error as { reason: string }).reason
   }
-  return productionClient
+  if (error instanceof Error) {
+    return error.message
+  }
+  return "APNs send failed"
+}
+
+function shouldRetryAlternateApnsEnvironment(reason: string): boolean {
+  return (
+    reason === "BadEnvironmentKeyInToken" ||
+    reason === "BadDeviceToken"
+  )
 }
 
 export function isApnsConfigured(): boolean {
-  return getApnsClient() !== null
+  return getApnsClientForHost(primaryApnsHost()) !== null
+}
+
+async function sendOneApns(
+  client: ApnsClient,
+  token: string,
+  payload: PushPayload,
+): Promise<void> {
+  const notification = new Notification(token, {
+    alert: {
+      title: payload.title,
+      body: payload.body,
+    },
+    sound: "default",
+    badge: 1,
+    data: {
+      url: payload.url,
+      tag: payload.tag,
+    },
+  })
+
+  await client.send(notification)
 }
 
 export async function sendApnsPush(
   rows: PushSubscriptionRow[],
   payload: PushPayload,
 ): Promise<ApnsSendResult> {
-  const client = getApnsClient()
-  if (!client) {
+  const primaryHost = primaryApnsHost()
+  const primaryClient = getApnsClientForHost(primaryHost)
+  if (!primaryClient) {
     return { sent: 0, failures: [] }
   }
 
@@ -88,37 +138,35 @@ export async function sendApnsPush(
       const token = (subscription as { token?: string }).token
       if (!token) return
 
-      const notification = new Notification(token, {
-        alert: {
-          title: payload.title,
-          body: payload.body,
-        },
-        sound: "default",
-        badge: 1,
-        data: {
-          url: payload.url,
-          tag: payload.tag,
-        },
-      })
-
       try {
-        await client.send(notification)
+        await sendOneApns(primaryClient, token, payload)
         sent += 1
       } catch (error) {
-        const message =
-          typeof error === "object" &&
-          error !== null &&
-          "reason" in error &&
-          typeof (error as { reason: unknown }).reason === "string"
-            ? (error as { reason: string }).reason
-            : error instanceof Error
-              ? error.message
-              : "APNs send failed"
+        const reason = extractApnsFailureReason(error)
+
+        if (shouldRetryAlternateApnsEnvironment(reason)) {
+          const alternateHost = alternateApnsHost(primaryHost)
+          const alternateClient = getApnsClientForHost(alternateHost)
+          if (alternateClient) {
+            try {
+              await sendOneApns(alternateClient, token, payload)
+              sent += 1
+              return
+            } catch (retryError) {
+              failures.push({
+                channel: "apns",
+                endpointPrefix: endpointPrefix(token),
+                message: `${extractApnsFailureReason(retryError)} (retried ${alternateHost})`,
+              })
+              return
+            }
+          }
+        }
 
         failures.push({
           channel: "apns",
           endpointPrefix: endpointPrefix(token),
-          message,
+          message: `${reason} (${primaryHost})`,
         })
       }
     }),

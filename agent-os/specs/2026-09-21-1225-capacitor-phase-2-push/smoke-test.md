@@ -71,3 +71,27 @@ Requires web overscroll changes deployed to production **and** `scrollEnabled: t
 - [ ] Send test DM → in-app notification + push on iOS (Xcode debug with `APNS_USE_SANDBOX=true`)
 - [ ] 3 rapid DMs without opening thread → push on each message (requires UPDATE webhook)
 - [ ] Tap push → deep link opens correct screen
+
+## iOS E2E fix (Xcode debug)
+
+Spec: [2026-09-30-1708-ios-push-e2e-fix](../2026-09-30-1708-ios-push-e2e-fix/plan.md) — AppDelegate token forwarding + registration retry.
+
+### Code (this repo)
+
+- [x] `AppDelegate.swift` — Capacitor `didRegister` / `didFailToRegister` callbacks
+- [x] `use-native-push.ts` — session-aware token registration retry
+
+### Ops (Vercel + Supabase)
+
+See [ops-checklist.md](../2026-09-30-1708-ios-push-e2e-fix/ops-checklist.md).
+
+- [ ] Vercel: `APNS_USE_SANDBOX=true` for Xcode debug testing
+- [ ] Supabase: `notifications` **UPDATE** webhook (INSERT may already exist)
+
+### Device verification (physical iPhone)
+
+- [ ] Registration → `push_subscriptions` iOS row + Settings **Push enabled**
+- [ ] Push via `createNotification` path (app force-quit)
+- [ ] Push via DM INSERT webhook
+- [ ] Push via DM UPDATE webhook (aggregated messages)
+- [ ] Tap push → deep link

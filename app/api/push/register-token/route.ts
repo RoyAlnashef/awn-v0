@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { normalizeApnsToken } from "@/lib/push/normalize-apns-token"
 import { requireApiUser } from "@/lib/push/require-api-user"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -19,12 +20,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const token = body.token?.trim()
   const platform = body.platform
 
-  if (!token || (platform !== "ios" && platform !== "android")) {
+  if (platform !== "ios" && platform !== "android") {
     return NextResponse.json(
       { error: "Missing token or platform" },
+      { status: 400 },
+    )
+  }
+
+  const token =
+    platform === "ios"
+      ? normalizeApnsToken(body.token ?? "")
+      : body.token?.trim()
+
+  if (!token) {
+    return NextResponse.json(
+      { error: "Missing or invalid token" },
       { status: 400 },
     )
   }
