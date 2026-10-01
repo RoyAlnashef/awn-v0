@@ -89,7 +89,7 @@ console.log({
 });
 ```
 
-Expect **`rowTop` ~0–2px** on both loads; initial: `headerPaddingTop` 34px, `headerTop` ~−34; 2nd: `headerPaddingTop` 0px (or unset), `headerTop` 0.
+Expect **`rowTop` ~0–2px** on both loads; initial: `headerPaddingTop` 34px, `headerTop` ~−34; 2nd: `headerPaddingTop` **0px**, `headerTop` 0 (not ~8px from `env(safe-area-inset-top)`).
 
 4. Background app → foreground → inset still correct.
 5. Force-quit → **second open** → layout still correct (no double gap).

@@ -211,8 +211,9 @@ html.capacitor-native {
   overscroll-behavior-y: none;
 }
 
-/* Capacitor iOS: top inset from JS (resolve-ios-header-inset-top.ts); bottom fallback. */
+/* Capacitor iOS: top from JS; 0 default blocks env(safe-area-inset-top) leaking on relaunch. */
 html.capacitor-native-ios {
+  --site-header-inset-top: 0px;
   --safe-area-inset-bottom: 34px;
 }
 

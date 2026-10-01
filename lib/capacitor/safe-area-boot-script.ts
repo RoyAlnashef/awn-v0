@@ -24,11 +24,7 @@ function applyIosInsets(){
   if(!isCapAppIos())return;
   document.documentElement.classList.add("capacitor-native","capacitor-native-ios");
   var top=resolveTop();
-  if(top<=0){
-    document.documentElement.style.removeProperty("--site-header-inset-top");
-  }else{
-    document.documentElement.style.setProperty("--site-header-inset-top",top+"px");
-  }
+  document.documentElement.style.setProperty("--site-header-inset-top",top+"px");
   document.documentElement.style.setProperty("--safe-area-inset-bottom",BOTTOM+"px");
 }
 function syncAndroid(){

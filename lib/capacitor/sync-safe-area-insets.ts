@@ -44,7 +44,8 @@ function applyInsetCssVar(name: string, px: number): void {
 
 function applyIosCompensatedInsets(): void {
   const top = resolveIosHeaderInsetTop()
-  applyInsetCssVar("--site-header-inset-top", top)
+  // Always set px (including 0). removeProperty would fall back to env(safe-area-inset-top) (~8px).
+  document.documentElement.style.setProperty("--site-header-inset-top", `${top}px`)
   applyInsetCssVar(
     "--safe-area-inset-bottom",
     CAPACITOR_IOS_BOTTOM_INSET_PX,
