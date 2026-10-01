@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { DM_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -68,10 +69,12 @@ export default function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{function sync(){var c=window.Capacitor;if(!c||!c.isNativePlatform||!c.isNativePlatform())return;document.documentElement.classList.add("capacitor-native");var ios=c.getPlatform&&c.getPlatform()==="ios";function m(p){var d=document.createElement("div");d.style.cssText="position:fixed;visibility:hidden;"+p;document.documentElement.appendChild(d);var s=getComputedStyle(d);var v=p.indexOf("padding-top")===0?parseFloat(s.paddingTop)||0:parseFloat(s.paddingBottom)||0;d.remove();return v;}var top=m("padding-top:env(safe-area-inset-top,0px)");var bottom=m("padding-bottom:env(safe-area-inset-bottom,0px)");if(ios){if(top===0)top=47;if(bottom===0)bottom=34;}document.documentElement.style.setProperty("--site-header-inset-top",top+"px");document.documentElement.style.setProperty("--safe-area-inset-bottom",bottom+"px");}sync();document.addEventListener("DOMContentLoaded",sync);setTimeout(sync,0);setTimeout(sync,100);}catch(e){}})();`,
+            __html: `(function(){try{function sync(){var c=window.Capacitor;if(!c||!c.isNativePlatform||!c.isNativePlatform())return;document.documentElement.classList.add("capacitor-native");var ios=c.getPlatform&&c.getPlatform()==="ios";function m(p){var d=document.createElement("div");d.style.cssText="position:fixed;visibility:hidden;"+p;document.documentElement.appendChild(d);var s=getComputedStyle(d);var v=p.indexOf("padding-top")===0?parseFloat(s.paddingTop)||0:parseFloat(s.paddingBottom)||0;d.remove();return v;}var top=m("padding-top:env(safe-area-inset-top,0px)");var bottom=m("padding-bottom:env(safe-area-inset-bottom,0px)");if(ios){if(top===0)top=47;if(bottom===0)bottom=34;}document.documentElement.style.setProperty("--site-header-inset-top",top+"px");document.documentElement.style.setProperty("--safe-area-inset-bottom",bottom+"px");}sync();document.addEventListener("DOMContentLoaded",sync);[0,50,100,250,500,1000,2000,3000].forEach(function(ms){setTimeout(sync,ms);});}catch(e){}})();`,
           }}
         />
-        <CapacitorNativeRoot />
+        <Suspense fallback={null}>
+          <CapacitorNativeRoot />
+        </Suspense>
         <ThemeProvider defaultTheme="dark">
           {children}
           <ErrorReporter />

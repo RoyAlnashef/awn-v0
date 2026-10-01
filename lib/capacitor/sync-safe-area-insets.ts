@@ -51,6 +51,10 @@ function shouldApplyIosSafeAreaFallback(): boolean {
 }
 
 export function syncSafeAreaInsets(): void {
+  if (!isNativePlatform()) return
+
+  document.documentElement.classList.add("capacitor-native")
+
   let top = measureSafeAreaInsetTop()
   let bottom = measureSafeAreaInsetBottom()
 
