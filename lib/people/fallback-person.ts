@@ -1,6 +1,27 @@
 import type { DirectConversation, ThreadMessage } from "@/lib/messages-data"
 import type { Person } from "@/lib/people-data"
 
+/**
+ * True when `person` matches the minimal shell from the factories below
+ * (before `getMemberById`). Keep field checks in sync if those stubs change.
+ */
+export function isProfileShellPerson(person: Person): boolean {
+  return (
+    person.department === "" &&
+    person.homeBase === "" &&
+    person.city === "" &&
+    person.availableFrom === "" &&
+    person.availableTo === "" &&
+    person.venueTiers.length === 0 &&
+    person.workAuth.length === 0 &&
+    person.yearsExperience === 0 &&
+    person.credits === 0 &&
+    person.vouches === 0 &&
+    person.topTours.length === 0 &&
+    person.skills.length === 0
+  )
+}
+
 /** Minimal person shell from conversation metadata before a full profile fetch. */
 export function personFromConversation(conversation: DirectConversation): Person {
   return {

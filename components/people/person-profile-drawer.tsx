@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import { useRouter } from "next/navigation"
 
+import { isProfileShellPerson } from "@/lib/people/fallback-person"
 import { type Person, type TourCredit } from "@/lib/people-data"
 import { getMemberById } from "@/lib/people/actions"
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/messages/flyout-drawer"
 import { useMessages } from "@/components/messages/messages-provider"
 import { PersonProfileCard } from "@/components/people/person-profile-card"
+import { PersonProfileCardSkeleton } from "@/components/people/person-profile-card-skeleton"
 import {
   Drawer,
   DrawerContent,
@@ -44,6 +46,8 @@ export function PersonProfileDrawer({
   const [resolvedTourCredits, setResolvedTourCredits] = useState<TourCredit[]>(
     tourCredits ?? [],
   )
+  const [isProfileLoading, setIsProfileLoading] = useState(false)
+  const profileFetchIdRef = useRef(0)
 
   useEffect(() => {
     setResolvedPerson(person)
@@ -55,14 +59,24 @@ export function PersonProfileDrawer({
   }, [person, tourCredits])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setIsProfileLoading(false)
+      return
+    }
+
+    const showSkeleton = isProfileShellPerson(person)
+    setIsProfileLoading(showSkeleton)
+
+    const fetchId = ++profileFetchIdRef.current
 
     void getMemberById(person.id).then((result) => {
+      if (fetchId !== profileFetchIdRef.current) return
+      setIsProfileLoading(false)
       if (!result.ok) return
       setResolvedPerson(result.person)
       setResolvedTourCredits(result.tourCredits)
     })
-  }, [open, person.id])
+  }, [open, person.id, person])
 
   function handleMessage() {
     onOpenChange(false)
@@ -86,18 +100,26 @@ export function PersonProfileDrawer({
           Extended profile for {resolvedPerson.name}, {resolvedPerson.role}.
         </DrawerDescription>
 
-        <PersonProfileCard
-          person={resolvedPerson}
-          tourCredits={resolvedTourCredits}
-          mode="interactive"
-          online={online}
-          heroRef={heroRef}
-          onMessage={handleMessage}
-          footer={footer}
-          viewerProfileId={currentUser.id}
-          reserveTopRightForClose
-          className="min-h-0 flex-1"
-        />
+        {isProfileLoading ? (
+          <PersonProfileCardSkeleton
+            heroRef={heroRef}
+            reserveTopRightForClose
+            className="min-h-0 flex-1"
+          />
+        ) : (
+          <PersonProfileCard
+            person={resolvedPerson}
+            tourCredits={resolvedTourCredits}
+            mode="interactive"
+            online={online}
+            heroRef={heroRef}
+            onMessage={handleMessage}
+            footer={footer}
+            viewerProfileId={currentUser.id}
+            reserveTopRightForClose
+            className="min-h-0 flex-1"
+          />
+        )}
       </DrawerContent>
     </Drawer>
   )
