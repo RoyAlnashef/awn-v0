@@ -38,6 +38,7 @@ import {
   toPersonFromProfile,
   type MemberProfileRow,
 } from "@/lib/account/profile-data"
+import { membersAreBlocked } from "@/lib/moderation/blocks"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -70,6 +71,7 @@ type InboxRow = {
   last_message_at: string | null
   my_last_read_at: string | null
   conversation_updated_at: string
+  messaging_blocked?: boolean | null
 }
 
 type ThreadRpcMessage = ReplyRpcRow &
@@ -531,6 +533,7 @@ function inboxRowToConversation(
     avatar: row.other_avatar_url ?? undefined,
     otherProfileId: row.other_profile_id,
     isPersisted: true,
+    messagingBlocked: Boolean(row.messaging_blocked),
   }
 }
 
@@ -657,6 +660,26 @@ export async function sendMessage(
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    const { data: participantRows, error: participantError } = await supabase
+      .from("dm_participants")
+      .select("profile_id")
+      .eq("conversation_id", conversationId)
+
+    if (participantError) {
+      return { ok: false, error: participantError.message }
+    }
+
+    const otherParticipantId = (participantRows ?? [])
+      .map((row) => row.profile_id as string)
+      .find((profileId) => profileId !== userId)
+
+    if (
+      otherParticipantId &&
+      (await membersAreBlocked(userId, otherParticipantId))
+    ) {
+      return { ok: false, error: "You can't message this member." }
+    }
 
     if (replyToMessageId) {
       if (!isUuid(replyToMessageId)) {

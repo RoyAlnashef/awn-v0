@@ -7,6 +7,7 @@ import {
 } from "@/lib/account/profile-data"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import type { Person } from "@/lib/people-data"
+import { fetchBlockedProfileIdsForUser } from "@/lib/moderation/blocks"
 import { createClient } from "@/lib/supabase/server"
 
 import {
@@ -245,7 +246,9 @@ export async function getNearbyCheckInsFromOrigin(
     profileIds,
   )
 
-  return toCheckedInMembers(rows, origin, userId, extrasMap)
+  const members = toCheckedInMembers(rows, origin, userId, extrasMap)
+  const blockedIds = await fetchBlockedProfileIdsForUser(userId)
+  return members.filter((member) => !blockedIds.has(member.id))
 }
 
 function cityLabelFromMembers(

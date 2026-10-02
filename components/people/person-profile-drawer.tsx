@@ -10,6 +10,7 @@ import {
   FLYOUT_DRAWER_CONTENT_CLASS,
   FlyoutDrawerClose,
 } from "@/components/messages/flyout-drawer"
+import { useMessages } from "@/components/messages/messages-provider"
 import { PersonProfileCard } from "@/components/people/person-profile-card"
 import {
   Drawer,
@@ -37,6 +38,7 @@ export function PersonProfileDrawer({
   modal?: boolean
 }) {
   const router = useRouter()
+  const { currentUser } = useMessages()
   const heroRef = useRef<HTMLDivElement>(null)
   const [resolvedPerson, setResolvedPerson] = useState(person)
   const [resolvedTourCredits, setResolvedTourCredits] = useState<TourCredit[]>(
@@ -92,6 +94,7 @@ export function PersonProfileDrawer({
           heroRef={heroRef}
           onMessage={handleMessage}
           footer={footer}
+          viewerProfileId={currentUser.id}
           reserveTopRightForClose
           className="min-h-0 flex-1"
         />

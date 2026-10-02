@@ -31,6 +31,7 @@ import type {
 } from "@/lib/messages-data"
 import { createNotification } from "@/lib/notifications/actions"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchBlockedProfileIdsForUser } from "@/lib/moderation/blocks"
 import { createClient } from "@/lib/supabase/server"
 
 // ---------------------------------------------------------------------------
@@ -633,9 +634,14 @@ export async function getRoomThread(
 
     const payload = data as ThreadRpcResult
 
-    const messages: ThreadMessage[] = (payload.messages ?? []).map((row) =>
-      mapRoomThreadMessage(row as ThreadRpcMessage, userId),
-    )
+    const blockedIds = await fetchBlockedProfileIdsForUser(userId)
+
+    const messages: ThreadMessage[] = (payload.messages ?? [])
+      .filter(
+        (row) =>
+          !blockedIds.has((row as ThreadRpcMessage).sender_id),
+      )
+      .map((row) => mapRoomThreadMessage(row as ThreadRpcMessage, userId))
 
     return {
       ok: true,
@@ -686,7 +692,7 @@ export async function getRoomMembersPreview(
       return { ok: false, error: "Invalid room id." }
     }
 
-    await requireUserId()
+    const userId = await requireUserId()
     const supabase = await createClient()
 
     const { data, error } = await supabase
@@ -695,10 +701,12 @@ export async function getRoomMembersPreview(
       .eq("room_id", roomId)
 
     if (error) return { ok: false, error: error.message }
+    const blockedIds = await fetchBlockedProfileIdsForUser(userId)
 
     const members = ((data ?? []) as unknown as RoomMembershipProfileRow[])
       .map(profileFromMembershipRow)
       .filter((member): member is RoomMemberPreview => member != null)
+      .filter((member) => !blockedIds.has(member.id))
 
     return {
       ok: true,

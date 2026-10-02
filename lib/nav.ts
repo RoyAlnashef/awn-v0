@@ -90,6 +90,11 @@ export const adminNav: NavItem[] = [
         href: "/applications",
         description: "Review membership applications and verify new crew.",
       },
+      {
+        title: "Reports",
+        href: "/reports",
+        description: "Review member reports and take moderation action.",
+      },
     ],
   },
   {

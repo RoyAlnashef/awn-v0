@@ -17,6 +17,10 @@ import { AuthError } from "@/lib/auth/require-admin"
 import { personToSharePayload } from "@/lib/messages/member-share"
 import type { MemberSharePayload } from "@/lib/messages-data"
 import type { Person, TourCredit } from "@/lib/people-data"
+import {
+  fetchBlockedProfileIdsForUser,
+  membersAreBlocked,
+} from "@/lib/moderation/blocks"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -150,10 +154,14 @@ export async function listDirectoryMembers(): Promise<ListDirectoryMembersResult
     }
 
     const rows = (data ?? []) as unknown as MemberProfileRow[]
-    const profileIds = rows.map((row) => row.id)
+    const blockedIds = await fetchBlockedProfileIdsForUser(userId)
+    const visibleRows = rows.filter(
+      (row) => row.id !== userId && !blockedIds.has(row.id),
+    )
+    const profileIds = visibleRows.map((row) => row.id)
     const extrasMap = await fetchDirectoryExtras(supabase, userId, profileIds)
 
-    const people = rows.map((row) =>
+    const people = visibleRows.map((row) =>
       toPersonFromProfile(row, extrasMap.get(row.id)),
     )
 
@@ -194,6 +202,10 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
     }
 
     if (!profileResult.data) {
+      return { ok: false, error: "Member not found." }
+    }
+
+    if (await membersAreBlocked(userId, profileId)) {
       return { ok: false, error: "Member not found." }
     }
 

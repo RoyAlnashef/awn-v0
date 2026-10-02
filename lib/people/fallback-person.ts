@@ -25,6 +25,34 @@ export function personFromConversation(conversation: DirectConversation): Person
   }
 }
 
+/** Minimal person shell for admin report rows before a full profile fetch. */
+export function personFromReportMember(member: {
+  id: string
+  name: string
+  avatar?: string
+}): Person {
+  return {
+    id: member.id,
+    name: member.name,
+    role: "AWN Member",
+    department: "",
+    homeBase: "",
+    city: "",
+    availability: "Between gigs",
+    availableFrom: "",
+    availableTo: "",
+    venueTiers: [],
+    workAuth: [],
+    yearsExperience: 0,
+    credits: 0,
+    vouches: 0,
+    topTours: [],
+    skills: [],
+    avatar: member.avatar,
+    followed: false,
+  }
+}
+
 /** Minimal person shell from a room message before a full profile fetch. */
 export function personFromRoomMessage(message: ThreadMessage): Person | null {
   if (message.from === "me") return null

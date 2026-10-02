@@ -766,8 +766,12 @@ export function MessageThread({
     requestScrollToEnd()
   }
 
+  const messagingBlocked = Boolean(conversation.messagingBlocked)
+
   const canSend =
-    Boolean(draft.trim() || pendingJobShare || pendingMemberShare) && !sending
+    !messagingBlocked &&
+    Boolean(draft.trim() || pendingJobShare || pendingMemberShare) &&
+    !sending
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -1061,6 +1065,11 @@ export function MessageThread({
       </MessageAutoScrollProvider>
 
       <div className="shrink-0 border-t p-3">
+        {messagingBlocked ? (
+          <p className="mb-2 text-sm text-muted-foreground">
+            You can&apos;t message this member. This conversation is view-only.
+          </p>
+        ) : null}
         {loadingMemberShare ? (
           <p className="mb-2 text-xs text-muted-foreground">
             Loading member attachment…
@@ -1092,7 +1101,7 @@ export function MessageThread({
             onDismiss={() => setPendingReply(null)}
           />
         ) : null}
-        <InputGroup>
+        <InputGroup className={messagingBlocked ? "pointer-events-none opacity-50" : undefined}>
           <InputGroupTextarea
             ref={composerRef}
             value={draft}
@@ -1100,7 +1109,10 @@ export function MessageThread({
             onBlur={onComposerBlur}
             placeholder={`Message ${conversation.name.split(" ")[0]}…`}
             rows={1}
+            disabled={messagingBlocked}
+            readOnly={messagingBlocked}
             onKeyDown={(e) => {
+              if (messagingBlocked) return
               if (
                 e.key === "Enter" &&
                 !e.shiftKey &&

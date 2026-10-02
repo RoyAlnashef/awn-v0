@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Ban, ChevronRight, Eye, Search, UserPlus } from "lucide-react"
 
+import { BlockedMembersDrawer } from "@/components/settings/blocked-members-drawer"
+
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -18,6 +20,7 @@ import { SettingsToggleRow } from "@/components/settings/settings-toggle-row"
 
 export function PrivacySettingsSection() {
   const [connectionRequests, setConnectionRequests] = useState("everyone")
+  const [blockedDrawerOpen, setBlockedDrawerOpen] = useState(false)
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,15 +81,25 @@ export function PrivacySettingsSection() {
         <SettingsRow
           icon={Ban}
           label="Blocked accounts"
-          description="No blocked members"
+          description="View and unblock members you have blocked"
           action={
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-muted-foreground"
+              onClick={() => setBlockedDrawerOpen(true)}
+            >
               Manage
               <ChevronRight className="size-3.5" />
             </Button>
           }
         />
       </SettingsSection>
+
+      <BlockedMembersDrawer
+        open={blockedDrawerOpen}
+        onOpenChange={setBlockedDrawerOpen}
+      />
     </div>
   )
 }

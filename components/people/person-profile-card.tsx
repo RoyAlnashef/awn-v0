@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import {
+  useEffect,
   useRef,
   useState,
   useTransition,
@@ -15,15 +16,9 @@ import {
   CalendarClock,
   ExternalLink,
   FileDown,
-  Flag,
-  Users,
-  MessageSquare,
-  MessagesSquare,
   Plane,
-  Plus,
   Sparkles,
   ThumbsUp,
-  UserMinus,
 } from "lucide-react"
 
 import {
@@ -39,9 +34,8 @@ import {
 } from "@/lib/account/tour-credits-actions"
 import { engagementDisplayLabel } from "@/lib/jobs-data"
 import { getPersonSocialLinks } from "@/lib/social-links"
-import { personToSharePayload } from "@/lib/messages/member-share"
 import { getCrewProfilePath } from "@/lib/account/handle"
-import { toggleConnection } from "@/lib/people/actions"
+import { PersonProfileInteractiveFooter } from "@/components/people/person-profile-interactive-footer"
 import { CrewProfileBio } from "@/components/crew/crew-profile-bio"
 import { formatShortDate } from "@/lib/crew/format-profile-date"
 import { cn } from "@/lib/utils"
@@ -49,8 +43,6 @@ import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { JobActionTooltip } from "@/components/jobs/job-action-tooltip"
-import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
-import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Tooltip,
@@ -166,6 +158,7 @@ export function PersonProfileCard({
   onMessage,
   onPrintResume,
   footer,
+  viewerProfileId,
   reserveTopRightForClose = false,
 }: {
   person: Person
@@ -179,6 +172,8 @@ export function PersonProfileCard({
   onPrintResume?: () => void
   /** Replaces the default interactive footer when provided. */
   footer?: ReactNode
+  /** When set, hides report/block on the viewer's own profile. */
+  viewerProfileId?: string
   /** Leave room for a drawer close button at the hero's top-right. */
   reserveTopRightForClose?: boolean
 }) {
@@ -193,20 +188,10 @@ export function PersonProfileCard({
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef
   const [followed, setFollowed] = useState(person.followed)
-  const [shareOpen, setShareOpen] = useState(false)
-  const [shareRoomOpen, setShareRoomOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
 
-  function handleFollowToggle() {
-    startTransition(async () => {
-      const result = await toggleConnection(person.id, followed)
-      if (!result.ok) {
-        toast.error(result.error)
-        return
-      }
-      setFollowed(result.connected)
-    })
-  }
+  useEffect(() => {
+    setFollowed(person.followed)
+  }, [person.followed, person.id])
 
   function handleResumeDownload() {
     if (!person.handle) return
@@ -510,92 +495,13 @@ export function PersonProfileCard({
 
         {/* Footer actions */}
         {!isPublic && footer ? footer : null}
-        {!isPublic && !footer ? (
-        <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-card p-4">
-          <div className="flex items-center gap-2">
-            <PreviewTooltip preview={isPreview} label="Share as a message" wrap>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Share as a message"
-                disabled={isPreview}
-                aria-disabled={isPreview}
-                onClick={() => setShareOpen(true)}
-              >
-                <MessagesSquare className="size-4" />
-              </Button>
-            </PreviewTooltip>
-            <PreviewTooltip preview={isPreview} label="Share to a group" wrap>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Share to a group"
-                disabled={isPreview}
-                aria-disabled={isPreview}
-                onClick={() => setShareRoomOpen(true)}
-              >
-                <Users className="size-4" />
-              </Button>
-            </PreviewTooltip>
-            <PreviewTooltip
-              preview={isPreview}
-              label={followed ? "Disconnect" : "Connect"}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={followed ? "Disconnect" : "Connect"}
-                aria-pressed={followed}
-                disabled={isPreview || isPending}
-                aria-disabled={isPreview}
-                onClick={handleFollowToggle}
-              >
-                {followed ? <UserMinus /> : <Plus />}
-              </Button>
-            </PreviewTooltip>
-            <PreviewTooltip preview={isPreview} label="Message">
-              <Button
-                className="min-w-0 flex-1 shrink"
-                disabled={isPreview}
-                aria-disabled={isPreview}
-                onClick={onMessage}
-              >
-                <MessageSquare />
-                Message
-              </Button>
-            </PreviewTooltip>
-          </div>
-          <PreviewTooltip preview={isPreview} label="Report member">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mx-auto text-xs text-muted-foreground"
-              disabled={isPreview}
-              aria-disabled={isPreview}
-            >
-              <Flag className="size-3" />
-              Report member
-            </Button>
-          </PreviewTooltip>
-        </div>
-        ) : null}
-
-        {!isPreview && !isPublic ? (
-          <>
-            <ShareToMessagesDrawer
-              open={shareOpen}
-              onOpenChange={setShareOpen}
-              shareMember={person.id}
-              shareLabel={personToSharePayload(person).name}
-            />
-
-            <ShareToRoomsDrawer
-              open={shareRoomOpen}
-              onOpenChange={setShareRoomOpen}
-              shareMember={person.id}
-              shareLabel={personToSharePayload(person).name}
-            />
-          </>
+        {!isPublic && !footer && !isPreview ? (
+          <PersonProfileInteractiveFooter
+            person={person}
+            followed={followed}
+            onMessage={onMessage}
+            viewerProfileId={viewerProfileId}
+          />
         ) : null}
       </div>
     </TooltipProvider>

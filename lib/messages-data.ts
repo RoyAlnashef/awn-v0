@@ -19,6 +19,8 @@ export interface DirectConversation {
   isPersisted?: boolean
   /** True for a conversation just started from "New message" (empty transcript). */
   isNew?: boolean
+  /** When true, the thread is view-only (member block). */
+  messagingBlocked?: boolean
 }
 
 /** Which part of a message a reaction applies to. */
