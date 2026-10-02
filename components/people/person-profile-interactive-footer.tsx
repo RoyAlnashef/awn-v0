@@ -35,6 +35,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const footerSheetClassName =
   "flex shrink-0 flex-col gap-3 border-t bg-popover p-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out"
@@ -211,92 +217,101 @@ export function PersonProfileInteractiveFooter({
 
   return (
     <>
-      <div className="relative z-10 flex shrink-0 flex-col gap-2 border-t bg-card p-4">
-        <div className="flex items-center gap-2">
-          <JobActionTooltip label="Share as a message" wrap>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Share as a message"
-              onClick={() => setShareOpen(true)}
-            >
-              <MessagesSquare className="size-4" />
-            </Button>
+      <div className="relative z-10 flex shrink-0 items-center gap-2 border-t bg-card p-4">
+        <DropdownMenu>
+          <JobActionTooltip label="Report this member" wrap>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Report this member"
+                  disabled={isPending}
+                >
+                  <Flag className="size-4" />
+                </Button>
+              }
+            />
           </JobActionTooltip>
-          <JobActionTooltip label="Share to a group" wrap>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Share to a group"
-              onClick={() => setShareRoomOpen(true)}
-            >
-              <Users className="size-4" />
-            </Button>
-          </JobActionTooltip>
-          <JobActionTooltip label={followed ? "Disconnect" : "Connect"}>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={followed ? "Disconnect" : "Connect"}
-              aria-pressed={followed}
-              disabled={isPending || isBlocked}
-              onClick={handleFollowToggle}
-            >
-              {followed ? <UserMinus /> : <Plus />}
-            </Button>
-          </JobActionTooltip>
-          <JobActionTooltip
-            label={
-              isBlocked
-                ? "Open your existing conversation from Messages"
-                : "Message"
-            }
-          >
-            <Button
-              className="min-w-0 flex-1 shrink"
-              disabled={isBlocked}
-              onClick={onMessage}
-            >
-              <MessageSquare />
-              Message
-            </Button>
-          </JobActionTooltip>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {isBlocked ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground"
-              disabled={isPending}
-              onClick={handleUnblock}
-            >
-              <Ban className="size-3" />
-              Unblock member
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground"
-              disabled={isPending}
-              onClick={() => setBlockDialogOpen(true)}
-            >
-              <Ban className="size-3" />
-              Block member
-            </Button>
-          )}
+          <DropdownMenuContent align="start" side="top" sideOffset={6}>
+            {hasOpenReport ? (
+              <DropdownMenuItem disabled>
+                <Flag />
+                Report submitted
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={isPending}
+                onClick={() => setFooterMode("report")}
+              >
+                <Flag />
+                Report member
+              </DropdownMenuItem>
+            )}
+            {isBlocked ? (
+              <DropdownMenuItem disabled={isPending} onClick={handleUnblock}>
+                <Ban />
+                Unblock member
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={isPending}
+                onClick={() => setBlockDialogOpen(true)}
+              >
+                <Ban />
+                Block member
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <JobActionTooltip label="Share as a message" wrap>
           <Button
             variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground"
-            disabled={isPending || hasOpenReport}
-            onClick={() => setFooterMode("report")}
+            size="icon"
+            aria-label="Share as a message"
+            onClick={() => setShareOpen(true)}
           >
-            <Flag className="size-3" />
-            {hasOpenReport ? "Report submitted" : "Report member"}
+            <MessagesSquare className="size-4" />
           </Button>
-        </div>
+        </JobActionTooltip>
+        <JobActionTooltip label="Share to a group" wrap>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Share to a group"
+            onClick={() => setShareRoomOpen(true)}
+          >
+            <Users className="size-4" />
+          </Button>
+        </JobActionTooltip>
+        <JobActionTooltip label={followed ? "Disconnect" : "Connect"}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={followed ? "Disconnect" : "Connect"}
+            aria-pressed={followed}
+            disabled={isPending || isBlocked}
+            onClick={handleFollowToggle}
+          >
+            {followed ? <UserMinus /> : <Plus />}
+          </Button>
+        </JobActionTooltip>
+        <JobActionTooltip
+          label={
+            isBlocked
+              ? "Open your existing conversation from Messages"
+              : "Message"
+          }
+        >
+          <Button
+            className="min-w-0 flex-1 shrink"
+            disabled={isBlocked}
+            onClick={onMessage}
+          >
+            <MessageSquare />
+            Message
+          </Button>
+        </JobActionTooltip>
       </div>
 
       <ShareToMessagesDrawer

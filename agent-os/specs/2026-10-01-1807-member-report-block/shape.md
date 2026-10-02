@@ -7,7 +7,7 @@ Member report + block from profile card; admin Community Reports triage at `/com
 ## Decisions
 
 - Report reasons from UI mockup (six options + Other)
-- Submit report or Submit & block; standalone Block/Unblock on profile footer
+- Submit report or Submit & block; report and block via flag dropup on profile footer
 - Mutual block: hide in directories, group member lists/messages; DMs view-only (no new threads)
 - One open report per reporter→reportee; dismiss soft-hides from admin table
 - Admin suspend via existing `updateUserStatus`
