@@ -7,6 +7,7 @@ import {
   UserCheck,
   Mail,
   ScrollText,
+  Flag,
   type LucideIcon,
 } from "lucide-react"
 
@@ -90,12 +91,13 @@ export const adminNav: NavItem[] = [
         href: "/applications",
         description: "Review membership applications and verify new crew.",
       },
-      {
-        title: "Reports",
-        href: "/reports",
-        description: "Review member reports and take moderation action.",
-      },
     ],
+  },
+  {
+    title: "Community Reports",
+    href: "/community-reports",
+    description: "Review member and job reports from the community.",
+    icon: Flag,
   },
   {
     title: "Emails",

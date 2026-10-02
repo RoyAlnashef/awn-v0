@@ -77,7 +77,7 @@ function revalidateModerationPaths() {
   revalidatePath("/messages")
   revalidatePath("/groups")
   revalidatePath("/settings/privacy")
-  revalidatePath("/reports")
+  revalidatePath("/community-reports/members")
 }
 
 export async function getMemberModerationState(
@@ -379,7 +379,7 @@ export async function dismissMemberReport(reportId: string): Promise<ActionOk | 
       return { ok: false, error: error.message }
     }
 
-    revalidatePath("/reports")
+    revalidatePath("/community-reports/members")
     return { ok: true }
   } catch (error) {
     return actionError(error)

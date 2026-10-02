@@ -2,7 +2,7 @@
 
 ## Scope
 
-Member report + block from profile card; admin Reports triage at `/reports`; Settings blocked list; mutual hide across People, Now, and groups; existing DMs remain in inbox view-only when blocked.
+Member report + block from profile card; admin Community Reports triage at `/community-reports/members`; Settings blocked list; mutual hide across People, Now, and groups; existing DMs remain in inbox view-only when blocked.
 
 ## Decisions
 
