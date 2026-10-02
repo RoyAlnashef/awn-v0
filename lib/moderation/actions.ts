@@ -200,7 +200,6 @@ export async function submitMemberReport(
       reporter_id: userId,
       reportee_id: reporteeId,
       reason,
-      blocked_on_submit: false,
     })
 
     if (insertError) {
@@ -270,7 +269,6 @@ export async function listBlockedMembers(): Promise<ListBlockedMembersResult> {
 type ReportDbRow = {
   id: string
   reason: MemberReportReason
-  blocked_on_submit: boolean
   created_at: string
   reporter: {
     id: string
@@ -299,7 +297,6 @@ export async function listMemberReports(): Promise<ListMemberReportsResult> {
         `
         id,
         reason,
-        blocked_on_submit,
         created_at,
         reporter:profiles!member_reports_reporter_id_fkey (
           id,
@@ -330,7 +327,6 @@ export async function listMemberReports(): Promise<ListMemberReportsResult> {
         return {
           id: row.id,
           reason: row.reason,
-          blockedOnSubmit: row.blocked_on_submit,
           createdAt: row.created_at,
           reporter: {
             id: row.reporter.id,

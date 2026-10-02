@@ -19,7 +19,6 @@ import {
   TablePaginationControls,
 } from "@/components/table-pagination"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -147,7 +146,6 @@ export function MemberReportsTable({
               <TableHead>Reporter</TableHead>
               <TableHead>Reported</TableHead>
               <TableHead>Reason</TableHead>
-              <TableHead>Blocked</TableHead>
               <TableHead>Submitted</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -155,7 +153,7 @@ export function MemberReportsTable({
           <TableBody>
             {paginated.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground">
+                <TableCell colSpan={5} className="text-muted-foreground">
                   No open reports.
                 </TableCell>
               </TableRow>
@@ -175,13 +173,6 @@ export function MemberReportsTable({
                     />
                   </TableCell>
                   <TableCell>{memberReportReasonLabel(report.reason)}</TableCell>
-                  <TableCell>
-                    {report.blockedOnSubmit ? (
-                      <Badge variant="secondary">Yes</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">No</span>
-                    )}
-                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatRelativeTime(report.createdAt)}
                   </TableCell>

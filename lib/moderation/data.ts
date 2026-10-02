@@ -11,7 +11,6 @@ export type BlockedMemberSummary = {
 export type MemberReportRow = {
   id: string
   reason: MemberReportReason
-  blockedOnSubmit: boolean
   createdAt: string
   reporter: {
     id: string
