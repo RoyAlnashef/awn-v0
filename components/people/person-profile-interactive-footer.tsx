@@ -12,7 +12,11 @@ import {
   submitMemberReport,
   unblockMember,
 } from "@/lib/moderation/actions"
-import { MEMBER_REPORT_REASONS } from "@/lib/moderation/report-reasons"
+import {
+  MEMBER_REPORT_REASONS,
+  isMemberReportReason,
+  memberReportReasonLabel,
+} from "@/lib/moderation/report-reasons"
 import { JobActionTooltip } from "@/components/jobs/job-action-tooltip"
 import { ShareToMessagesDrawer } from "@/components/messages/share-to-messages-flyout"
 import { ShareToRoomsDrawer } from "@/components/rooms/share-to-rooms-flyout"
@@ -171,7 +175,13 @@ export function PersonProfileInteractiveFooter({
           <Label htmlFor="report-reason">Why are you reporting this member?</Label>
           <Select value={reason} onValueChange={(value) => value && setReason(value)}>
             <SelectTrigger id="report-reason" className="w-full">
-              <SelectValue placeholder="Select a reason…" />
+              <SelectValue placeholder="Select a reason…">
+                {(value) =>
+                  value && isMemberReportReason(value)
+                    ? memberReportReasonLabel(value)
+                    : value
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {MEMBER_REPORT_REASONS.map((entry) => (
