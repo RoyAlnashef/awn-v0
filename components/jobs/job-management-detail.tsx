@@ -390,7 +390,7 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
           />
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div id="job-applicants" className="flex flex-col gap-3 scroll-mt-6">
           <h3 className="font-heading text-base font-semibold">Applicants</h3>
 
           {error ? (

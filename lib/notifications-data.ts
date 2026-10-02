@@ -58,12 +58,14 @@ const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
 const DM_DB_KINDS = new Set(["dm_message", "message"])
 const JOB_DB_KINDS = new Set([
   "application_accepted",
+  "job_application_received",
   "job_under_review",
   "job_review_released",
   "job_review_closed",
 ])
 
 const JOB_POSTER_MANAGEMENT_DB_KINDS = new Set([
+  "job_application_received",
   "job_under_review",
   "job_review_released",
   "job_review_closed",
@@ -142,6 +144,11 @@ export function isJobApiNotification(dbKind: string): boolean {
 /** Job notifications that should open poster management for a listing. */
 export function isJobPosterManagementNotification(dbKind: string): boolean {
   return JOB_POSTER_MANAGEMENT_DB_KINDS.has(dbKind)
+}
+
+/** Job notifications that should scroll to the applicants table on the management page. */
+export function isJobApplicantsSectionNotification(dbKind: string): boolean {
+  return dbKind === "job_application_received"
 }
 
 /** Conversation id for navigating from a job acceptance notification. */

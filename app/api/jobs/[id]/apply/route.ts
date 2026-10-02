@@ -1,5 +1,7 @@
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
 import { expireStaleJobs } from "@/lib/jobs/expire"
+import { notifyJobPosterOfApplication } from "@/lib/jobs/job-poster-application-notifications"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -13,6 +15,39 @@ type RouteContext = {
 
 type ApplyBody = {
   note?: string
+}
+
+async function loadApplicantDisplayName(
+  supabase: SupabaseClient,
+  applicantId: string,
+): Promise<string> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", applicantId)
+    .maybeSingle()
+
+  return profile?.full_name?.trim() || "Someone"
+}
+
+async function notifyPosterForApplication(
+  supabase: SupabaseClient,
+  input: {
+    applicantId: string
+    posterId: string
+    jobId: string
+    applicationId: string
+    role: string
+  },
+): Promise<void> {
+  const applicantName = await loadApplicantDisplayName(supabase, input.applicantId)
+  await notifyJobPosterOfApplication({
+    posterId: input.posterId,
+    jobId: input.jobId,
+    applicationId: input.applicationId,
+    role: input.role,
+    applicantName,
+  })
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -43,7 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { data: job, error: jobError } = await supabase
     .from("job_postings")
-    .select("id, poster_id, status")
+    .select("id, poster_id, status, role")
     .eq("id", id)
     .maybeSingle()
 
@@ -80,17 +115,46 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", existing.id)
 
     if (updateError) return jsonError(updateError.message, 500)
+
+    try {
+      await notifyPosterForApplication(supabase, {
+        applicantId: user.id,
+        posterId: job.poster_id,
+        jobId: job.id,
+        applicationId: existing.id,
+        role: job.role ?? "",
+      })
+    } catch {
+      // Best-effort: apply already succeeded.
+    }
+
     return Response.json({ ok: true })
   }
 
-  const { error: insertError } = await supabase.from("job_applications").insert({
-    job_id: id,
-    applicant_id: user.id,
-    note: body.note?.trim() ?? "",
-    status: "pending",
-  })
+  const { data: inserted, error: insertError } = await supabase
+    .from("job_applications")
+    .insert({
+      job_id: id,
+      applicant_id: user.id,
+      note: body.note?.trim() ?? "",
+      status: "pending",
+    })
+    .select("id")
+    .single()
 
   if (insertError) return jsonError(insertError.message, 500)
+
+  try {
+    await notifyPosterForApplication(supabase, {
+      applicantId: user.id,
+      posterId: job.poster_id,
+      jobId: job.id,
+      applicationId: inserted.id,
+      role: job.role ?? "",
+    })
+  } catch {
+    // Best-effort: apply already succeeded.
+  }
 
   return Response.json({ ok: true }, { status: 201 })
 }

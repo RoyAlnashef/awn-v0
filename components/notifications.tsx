@@ -10,6 +10,7 @@ import { useMessages } from "@/components/messages/messages-provider"
 import {
   getJobNotificationConversationId,
   getRoomNotificationRoomId,
+  isJobApplicantsSectionNotification,
   isJobApiNotification,
   isJobPosterManagementNotification,
   isMentionTabNotification,
@@ -193,7 +194,9 @@ export function Notifications() {
     if (isJobApiNotification(item.dbKind) && item.data?.jobId) {
       const jobId = item.data.jobId
       const destination = isJobPosterManagementNotification(item.dbKind)
-        ? `/jobs/${jobId}`
+        ? isJobApplicantsSectionNotification(item.dbKind)
+          ? `/jobs/${jobId}#job-applicants`
+          : `/jobs/${jobId}`
         : "/my-jobs/applications"
       void (async () => {
         const previous = notifications

@@ -1,17 +1,15 @@
 "use server"
 
-import { after } from "next/server"
-
 import { getSessionUser } from "@/lib/auth/get-session-user"
-import { dispatchPushForNotification } from "@/lib/push/dispatch"
 import { formatRelativeTime, isUuid } from "@/lib/messages/format"
 import {
   notificationDisplayKind,
   type AppNotification,
   type NotificationData,
 } from "@/lib/notifications-data"
-import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { persistNotification } from "@/lib/notifications/persist-notification"
+import { scheduleNotificationPush } from "@/lib/notifications/schedule-notification-push"
 
 type ActionError = { ok: false; error: string }
 
@@ -23,17 +21,14 @@ export type MarkNotificationReadResult = { ok: true } | ActionError
 
 export type MarkAllNotificationsReadResult = { ok: true } | ActionError
 
-export type CreateNotificationResult =
-  | { ok: true; id: string }
-  | ActionError
-
-export type CreateNotificationInput = {
-  userId: string
-  kind: string
-  title: string
-  body: string
-  data?: Record<string, unknown>
-}
+export type {
+  CreateNotificationInput,
+  CreateNotificationResult,
+} from "@/lib/notifications/create-notification-types"
+import type {
+  CreateNotificationInput,
+  CreateNotificationResult,
+} from "@/lib/notifications/create-notification-types"
 
 type NotificationRow = {
   id: string
@@ -217,54 +212,13 @@ export async function createNotification(
   input: CreateNotificationInput,
 ): Promise<CreateNotificationResult> {
   try {
-    if (!isUuid(input.userId)) {
-      return { ok: false, error: "Invalid user." }
+    const result = await persistNotification(input)
+    if (!result.ok) {
+      return result
     }
 
-    const kind = input.kind.trim()
-    const title = input.title.trim()
-    const body = input.body.trim()
-
-    if (!kind || !title || !body) {
-      return { ok: false, error: "Kind, title, and body are required." }
-    }
-
-    const admin = createAdminClient()
-
-    const { data, error } = await admin
-      .from("notifications")
-      .insert({
-        user_id: input.userId,
-        kind,
-        title,
-        body,
-        data: input.data ?? {},
-      })
-      .select("id")
-      .single()
-
-    if (error) {
-      return { ok: false, error: error.message }
-    }
-
-    after(async () => {
-      try {
-        await dispatchPushForNotification({
-          id: data.id,
-          user_id: input.userId,
-          kind,
-          title,
-          body,
-          data: (input.data ?? null) as Record<string, unknown> | null,
-          room_id:
-            typeof input.data?.roomId === "string" ? input.data.roomId : null,
-        })
-      } catch {
-        // Push delivery is best-effort; in-app notification already exists.
-      }
-    })
-
-    return { ok: true, id: data.id }
+    scheduleNotificationPush(result, input)
+    return { ok: true, id: result.id }
   } catch (error) {
     return actionError(error)
   }

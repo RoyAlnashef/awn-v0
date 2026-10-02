@@ -5,6 +5,7 @@ export const PUSH_WORTHY_KINDS = new Set([
   "room_mention",
   "room_reply",
   "application_accepted",
+  "job_application_received",
   "job_under_review",
   "job_review_released",
   "job_review_closed",

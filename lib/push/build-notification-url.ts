@@ -44,6 +44,9 @@ export function buildNotificationUrl(
   }
 
   const jobId = typeof payload.jobId === "string" ? payload.jobId : undefined
+  if (kind === "job_application_received" && jobId) {
+    return `/jobs/${encodeURIComponent(jobId)}#job-applicants`
+  }
   if (
     (kind === "job_under_review" ||
       kind === "job_review_released" ||
