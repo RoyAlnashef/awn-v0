@@ -28,7 +28,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { NavUser, type NavUserData } from "@/components/nav-user"
-import { useErrorLogsUnreadCount } from "@/lib/logs/hooks/use-error-logs-unread-count"
 import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { useRoomsUnreadCount } from "@/lib/rooms/hooks/use-rooms-unread-count"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
@@ -47,13 +46,11 @@ function NavItemBadge({
   item,
   messagesUnreadCount,
   roomsUnreadCount,
-  errorLogsUnreadCount,
   className,
 }: {
   item: NavItem
   messagesUnreadCount: number
   roomsUnreadCount: number
-  errorLogsUnreadCount: number
   className?: string
 }) {
   if (item.liveBadge === "messages" && messagesUnreadCount > 0) {
@@ -66,13 +63,6 @@ function NavItemBadge({
   if (item.liveBadge === "rooms" && roomsUnreadCount > 0) {
     return (
       <SidebarMenuBadge className={className}>{roomsUnreadCount}</SidebarMenuBadge>
-    )
-  }
-  if (item.liveBadge === "logs" && errorLogsUnreadCount > 0) {
-    return (
-      <SidebarMenuBadge className={className}>
-        {errorLogsUnreadCount}
-      </SidebarMenuBadge>
     )
   }
   if (item.badge) {
@@ -88,13 +78,11 @@ function CollapsibleNavItem({
   pathname,
   messagesUnreadCount,
   roomsUnreadCount,
-  errorLogsUnreadCount,
 }: {
   item: NavItem
   pathname: string
   messagesUnreadCount: number
   roomsUnreadCount: number
-  errorLogsUnreadCount: number
 }) {
   const sectionActive = isSectionActive(pathname, item)
   const [open, setOpen] = React.useState(sectionActive)
@@ -119,7 +107,6 @@ function CollapsibleNavItem({
             item={item}
             messagesUnreadCount={messagesUnreadCount}
             roomsUnreadCount={roomsUnreadCount}
-            errorLogsUnreadCount={errorLogsUnreadCount}
             className="static"
           />
           <CollapsibleTrigger
@@ -162,13 +149,11 @@ function FlatNavItem({
   pathname,
   messagesUnreadCount,
   roomsUnreadCount,
-  errorLogsUnreadCount,
 }: {
   item: NavItem
   pathname: string
   messagesUnreadCount: number
   roomsUnreadCount: number
-  errorLogsUnreadCount: number
 }) {
   const active = isSubActive(pathname, item.href)
 
@@ -194,7 +179,6 @@ function FlatNavItem({
         item={item}
         messagesUnreadCount={messagesUnreadCount}
         roomsUnreadCount={roomsUnreadCount}
-        errorLogsUnreadCount={errorLogsUnreadCount}
       />
     </SidebarMenuItem>
   )
@@ -214,7 +198,6 @@ export function AppSidebar({
   const { isMobile, setOpenMobile } = useSidebar()
   const { unreadCount: messagesUnreadCount } = useUnreadCount()
   const { unreadCount: roomsUnreadCount } = useRoomsUnreadCount()
-  const { unreadCount: errorLogsUnreadCount } = useErrorLogsUnreadCount()
 
   React.useEffect(() => {
     if (isMobile) {
@@ -273,7 +256,6 @@ export function AppSidebar({
                     pathname={pathname}
                     messagesUnreadCount={messagesUnreadCount}
                     roomsUnreadCount={roomsUnreadCount}
-                    errorLogsUnreadCount={errorLogsUnreadCount}
                   />
                 ) : (
                   <FlatNavItem
@@ -282,7 +264,6 @@ export function AppSidebar({
                     pathname={pathname}
                     messagesUnreadCount={messagesUnreadCount}
                     roomsUnreadCount={roomsUnreadCount}
-                    errorLogsUnreadCount={errorLogsUnreadCount}
                   />
                 ),
               )}
@@ -303,7 +284,6 @@ export function AppSidebar({
                       pathname={pathname}
                       messagesUnreadCount={messagesUnreadCount}
                       roomsUnreadCount={roomsUnreadCount}
-                      errorLogsUnreadCount={errorLogsUnreadCount}
                     />
                   ) : (
                     <FlatNavItem
@@ -312,7 +292,6 @@ export function AppSidebar({
                       pathname={pathname}
                       messagesUnreadCount={messagesUnreadCount}
                       roomsUnreadCount={roomsUnreadCount}
-                      errorLogsUnreadCount={errorLogsUnreadCount}
                     />
                   ),
                 )}
