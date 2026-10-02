@@ -15,7 +15,6 @@ import {
   BadgeCheck,
   CalendarClock,
   ExternalLink,
-  FileDown,
   Plane,
   Sparkles,
   ThumbsUp,
@@ -156,7 +155,6 @@ export function PersonProfileCard({
   className,
   heroRef: heroRefProp,
   onMessage,
-  onPrintResume,
   footer,
   viewerProfileId,
   reserveTopRightForClose = false,
@@ -168,8 +166,6 @@ export function PersonProfileCard({
   className?: string
   heroRef?: RefObject<HTMLDivElement | null>
   onMessage?: () => void
-  /** Called when visitor requests profile PDF via browser print. */
-  onPrintResume?: () => void
   /** Replaces the default interactive footer when provided. */
   footer?: ReactNode
   /** When set, hides report/block on the viewer's own profile. */
@@ -184,7 +180,6 @@ export function PersonProfileCard({
   const isPreview = mode === "preview"
   const isPublic = mode === "public"
   const isReadOnlyVouch = isPreview || isPublic
-  const showResumeButton = Boolean(person.handle)
   const internalHeroRef = useRef<HTMLDivElement>(null)
   const heroRef = heroRefProp ?? internalHeroRef
   const [followed, setFollowed] = useState(person.followed)
@@ -192,21 +187,6 @@ export function PersonProfileCard({
   useEffect(() => {
     setFollowed(person.followed)
   }, [person.followed, person.id])
-
-  function handleResumeDownload() {
-    if (!person.handle) return
-
-    if (isPublic) {
-      onPrintResume?.()
-      return
-    }
-
-    window.open(
-      `${getCrewProfilePath(person.handle)}?print=resume`,
-      "_blank",
-      "noopener,noreferrer",
-    )
-  }
 
   const profileHref = person.handle ? getCrewProfilePath(person.handle) : null
   const profileButton = profileHref ? (
@@ -301,24 +281,6 @@ export function PersonProfileCard({
                       {profileButton}
                     </PreviewTooltip>
                   )
-                ) : null}
-                {showResumeButton ? (
-                  <PreviewTooltip
-                    preview={isPreview}
-                    label="Save as PDF"
-                    wrap
-                  >
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      disabled={isPreview}
-                      aria-disabled={isPreview}
-                      onClick={handleResumeDownload}
-                    >
-                      <FileDown />
-                      Resume
-                    </Button>
-                  </PreviewTooltip>
                 ) : null}
               </div>
             </div>
