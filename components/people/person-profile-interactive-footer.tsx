@@ -122,21 +122,18 @@ export function PersonProfileInteractiveFooter({
     })
   }
 
-  function handleSubmitReport(alsoBlock: boolean) {
+  function handleSubmitReport() {
     if (!reason) {
       toast.error("Select a reason for your report.")
       return
     }
     startTransition(async () => {
-      const result = await submitMemberReport(person.id, reason, alsoBlock)
+      const result = await submitMemberReport(person.id, reason)
       if (!result.ok) {
         toast.error(result.error)
         return
       }
       setHasOpenReport(true)
-      if (alsoBlock) {
-        setIsBlocked(true)
-      }
       setFooterMode("thanks")
     })
   }
@@ -194,35 +191,26 @@ export function PersonProfileInteractiveFooter({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex items-center gap-2">
           <Button
-            className="flex-1"
+            variant="ghost"
+            className="shrink-0 text-muted-foreground"
+            disabled={isPending}
+            onClick={() => {
+              setReason("")
+              setFooterMode("actions")
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="min-w-0 flex-1"
             disabled={isPending || !reason}
-            onClick={() => handleSubmitReport(false)}
+            onClick={handleSubmitReport}
           >
             Submit report
           </Button>
-          <Button
-            variant="secondary"
-            className="flex-1"
-            disabled={isPending || !reason}
-            onClick={() => handleSubmitReport(true)}
-          >
-            Submit & block
-          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="self-start text-muted-foreground"
-          disabled={isPending}
-          onClick={() => {
-            setReason("")
-            setFooterMode("actions")
-          }}
-        >
-          Cancel
-        </Button>
       </div>
     )
   }

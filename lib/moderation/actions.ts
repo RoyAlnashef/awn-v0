@@ -171,7 +171,6 @@ export async function unblockMember(
 export async function submitMemberReport(
   reporteeId: string,
   reason: string,
-  alsoBlock: boolean,
 ): Promise<SubmitMemberReportResult> {
   try {
     if (!isMemberReportReason(reason)) {
@@ -201,18 +200,11 @@ export async function submitMemberReport(
       reporter_id: userId,
       reportee_id: reporteeId,
       reason,
-      blocked_on_submit: alsoBlock,
+      blocked_on_submit: false,
     })
 
     if (insertError) {
       return { ok: false, error: insertError.message }
-    }
-
-    if (alsoBlock) {
-      const blockResult = await blockMember(reporteeId)
-      if (!blockResult.ok) {
-        return blockResult
-      }
     }
 
     revalidateModerationPaths()
