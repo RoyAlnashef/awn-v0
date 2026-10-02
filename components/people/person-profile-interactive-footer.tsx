@@ -172,7 +172,9 @@ export function PersonProfileInteractiveFooter({
       <div className={footerSheetClassName}>
         <p className="text-sm font-medium">Report {person.name}</p>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="report-reason">Why are you reporting this member?</Label>
+          <Label htmlFor="report-reason" className="font-normal text-muted-foreground">
+            Why are you reporting this member?
+          </Label>
           <Select value={reason} onValueChange={(value) => value && setReason(value)}>
             <SelectTrigger id="report-reason" className="w-full">
               <SelectValue placeholder="Select a reason…">
