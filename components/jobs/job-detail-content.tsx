@@ -334,11 +334,6 @@ export function JobDetailContent({
               job={job}
               open={sentOpen}
               onOpenChange={setSentOpen}
-              onWithdrawn={() => {
-                setApplied(false)
-                void revalidateJobs()
-                void mutate(jobDetailKey(job.id))
-              }}
             />
 
             <ShareToMessagesDrawer

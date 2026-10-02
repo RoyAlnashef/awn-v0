@@ -178,10 +178,6 @@ export function JobRow({ job }: { job: Job }) {
         job={job}
         open={sentOpen}
         onOpenChange={setSentOpen}
-        onWithdrawn={() => {
-          setApplied(false)
-          void revalidateJobs()
-        }}
       />
     </>
   )
