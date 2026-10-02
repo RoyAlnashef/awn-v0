@@ -314,23 +314,18 @@ export function JobReportsTable({
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex max-w-[220px] flex-col items-start gap-1.5">
+                      <div className="flex max-w-sm min-w-0 items-center gap-2">
                         <button
                           type="button"
                           onClick={() => openJob(report.job.id)}
-                          className="min-w-0 truncate text-left hover:underline"
+                          className="min-w-0 truncate text-left font-medium hover:underline"
                         >
-                          <span className="font-medium">{report.job.role}</span>
-                          {report.job.production ? (
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {report.job.production}
-                            </span>
-                          ) : null}
+                          {report.job.role}
                         </button>
                         <JobStatusBadge
                           status={report.job.status}
                           underReviewAt={report.job.underReviewAt}
-                          className="px-2 text-xs"
+                          className="shrink-0 px-2 text-xs"
                         />
                       </div>
                     </TableCell>
