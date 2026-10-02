@@ -171,7 +171,10 @@ function MyJobTableRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap items-center gap-1.5">
-          <JobStatusBadge status={job.status} />
+          <JobStatusBadge
+            status={job.status}
+            underReviewAt={job.underReviewAt}
+          />
           {job.kind === "urgent" ? <JobUrgentHelpBadge /> : null}
         </div>
       </TableCell>

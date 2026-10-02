@@ -295,4 +295,6 @@ export interface Job {
   shareCount?: number
   /** Populated on poster management views. */
   isHidden?: boolean
+  /** Set when an admin has locked poster edits pending review. */
+  underReviewAt?: string | null
 }

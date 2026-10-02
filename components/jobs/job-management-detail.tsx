@@ -212,6 +212,10 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
   const applications = data?.applications ?? []
 
   function handleSelectApplication(application: JobApplication) {
+    if (currentJob.underReviewAt) {
+      toast.error("This job is under review by AWN.")
+      return
+    }
     const isFirstMount = selectedApplication === null
     setSelectedApplication(application)
     if (isFirstMount) {
@@ -331,12 +335,14 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
           <JobStatusSelect
             jobId={currentJob.id}
             status={currentJob.status}
+            disabled={Boolean(currentJob.underReviewAt)}
             onStatusChange={(_status, updatedJob) => setCurrentJob(updatedJob)}
           />
           <Button
             size="sm"
             variant="outline"
             nativeButton={false}
+            disabled={Boolean(currentJob.underReviewAt)}
             render={<Link href={`/jobs/${currentJob.id}/edit`} />}
           >
             <Pencil />
@@ -347,14 +353,23 @@ export function JobManagementDetail({ job: initialJob }: { job: Job }) {
       previewJob={currentJob}
     >
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2">
-          <JobStatusBadge
-            status={currentJob.status}
-            className="px-2.5 text-xs"
-          />
-          <span className="text-xs text-muted-foreground">
-            Posted {currentJob.postedAt}
-          </span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <JobStatusBadge
+              status={currentJob.status}
+              underReviewAt={currentJob.underReviewAt}
+              className="px-2.5 text-xs"
+            />
+            <span className="text-xs text-muted-foreground">
+              Posted {currentJob.postedAt}
+            </span>
+          </div>
+          {currentJob.underReviewAt ? (
+            <p className="text-sm text-muted-foreground">
+              This job is under review by AWN. You can view applicants but cannot
+              edit the posting or change applications until review is complete.
+            </p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

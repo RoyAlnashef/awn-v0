@@ -98,6 +98,24 @@ export const jobStatusLabels: Record<JobStatus, string> = {
   deleted: "Deleted",
 }
 
+export function jobManagementStatusLabel(job: {
+  status: JobStatus
+  underReviewAt?: string | null
+}): string {
+  if (job.underReviewAt) return "Under review"
+  return jobStatusLabels[job.status]
+}
+
+export function jobManagementStatusStyles(job: {
+  status: JobStatus
+  underReviewAt?: string | null
+}): string {
+  if (job.underReviewAt) {
+    return "border-destructive/30 bg-destructive/10 text-destructive"
+  }
+  return jobStatusStyles[job.status]
+}
+
 /** Lower values sort first when ascending (active jobs before closed). */
 export const jobStatusSortOrder: Record<JobStatus, number> = {
   open: 0,

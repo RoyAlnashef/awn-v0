@@ -56,7 +56,18 @@ export const notificationIcons: Record<NotificationKind, LucideIcon> = {
 const INVITE_DB_KINDS = new Set(["invite_accepted", "application_denied"])
 const VOUCH_DB_KINDS = new Set(["credit_vouched", "profile_vouched"])
 const DM_DB_KINDS = new Set(["dm_message", "message"])
-const JOB_DB_KINDS = new Set(["application_accepted"])
+const JOB_DB_KINDS = new Set([
+  "application_accepted",
+  "job_under_review",
+  "job_review_released",
+  "job_review_closed",
+])
+
+const JOB_POSTER_MANAGEMENT_DB_KINDS = new Set([
+  "job_under_review",
+  "job_review_released",
+  "job_review_closed",
+])
 const ROOM_MENTION_DB_KINDS = new Set(["room_mention"])
 const ROOM_REPLY_DB_KINDS = new Set(["room_reply"])
 const ROOM_JOIN_REQUEST_DB_KINDS = new Set(["room_join_request"])
@@ -126,6 +137,11 @@ export function isRoomJoinRequestNotification(
 /** Whether a notification is job-related in the API feed. */
 export function isJobApiNotification(dbKind: string): boolean {
   return JOB_DB_KINDS.has(dbKind)
+}
+
+/** Job notifications that should open poster management for a listing. */
+export function isJobPosterManagementNotification(dbKind: string): boolean {
+  return JOB_POSTER_MANAGEMENT_DB_KINDS.has(dbKind)
 }
 
 /** Conversation id for navigating from a job acceptance notification. */

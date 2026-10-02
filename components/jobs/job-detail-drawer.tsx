@@ -98,9 +98,12 @@ export function JobDetailDrawer({
           <JobDetailContent
             job={data.job}
             applicantCount={data.applicantCount}
+            viewerIsPoster={data.viewerIsPoster}
+            hasOpenReport={data.hasOpenReport}
             heroRef={heroRef}
             className="min-h-0 flex-1"
             onApplied={onApplied}
+            onHidden={() => onOpenChange(false)}
           />
         ) : null}
       </DrawerContent>

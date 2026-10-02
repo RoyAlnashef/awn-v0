@@ -8,6 +8,7 @@ import {
   normalizeJobKind,
   urgentExpiresAt,
 } from "@/lib/jobs/kind"
+import { assertPosterCanMutateJob } from "@/lib/moderation/job-review"
 import { mapJobPostingRow } from "@/lib/jobs/map"
 
 type PosterJoin = {
@@ -35,6 +36,7 @@ type JobRow = {
   filled_at: string | null
   view_count: number
   is_hidden: boolean
+  under_review_at: string | null
   created_at: string
   updated_at: string
   poster: PosterJoin | PosterJoin[] | null
@@ -94,6 +96,7 @@ export async function GET(_request: Request, context: RouteContext) {
       expires_at,
       filled_at,
       view_count,
+      under_review_at,
       created_at,
       updated_at,
       poster:profiles!job_postings_poster_id_fkey (
@@ -119,27 +122,40 @@ export async function GET(_request: Request, context: RouteContext) {
       .eq("id", id)
   }
 
-  const [{ count: applicantCount }, savedResult, appliedResult] =
-    await Promise.all([
-      supabase
-        .from("job_applications")
-        .select("id", { count: "exact", head: true })
-        .eq("job_id", id)
-        .neq("status", "withdrawn"),
-      supabase
-        .from("saved_jobs")
-        .select("job_id")
-        .eq("user_id", user.id)
-        .eq("job_id", id)
-        .maybeSingle(),
-      supabase
-        .from("job_applications")
-        .select("job_id")
-        .eq("applicant_id", user.id)
-        .eq("job_id", id)
-        .neq("status", "withdrawn")
-        .maybeSingle(),
-    ])
+  const [
+    { count: applicantCount },
+    savedResult,
+    appliedResult,
+    openReportResult,
+  ] = await Promise.all([
+    supabase
+      .from("job_applications")
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", id)
+      .neq("status", "withdrawn"),
+    supabase
+      .from("saved_jobs")
+      .select("job_id")
+      .eq("user_id", user.id)
+      .eq("job_id", id)
+      .maybeSingle(),
+    supabase
+      .from("job_applications")
+      .select("job_id")
+      .eq("applicant_id", user.id)
+      .eq("job_id", id)
+      .neq("status", "withdrawn")
+      .maybeSingle(),
+    isPoster
+      ? Promise.resolve({ data: null, error: null })
+      : supabase
+          .from("job_reports")
+          .select("id")
+          .eq("reporter_id", user.id)
+          .eq("job_id", id)
+          .is("dismissed_at", null)
+          .maybeSingle(),
+  ])
 
   const job = mapJobPostingRow(
     {
@@ -161,6 +177,8 @@ export async function GET(_request: Request, context: RouteContext) {
     applicantCount: applicantCount ?? 0,
     posterId: typedRow.poster_id,
     viewCount: job.viewCount ?? 0,
+    viewerIsPoster: isPoster,
+    hasOpenReport: Boolean(openReportResult.data),
   })
 }
 
@@ -210,8 +228,10 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (existingError) return jsonError(existingError.message, 500)
   if (!existing) return jsonError("Job not found", 404)
-  if (existing.poster_id !== user.id) {
-    return jsonError("Forbidden", 403)
+
+  const mutateCheck = await assertPosterCanMutateJob(id, user.id)
+  if (!mutateCheck.ok) {
+    return jsonError(mutateCheck.error, mutateCheck.error === "Forbidden" ? 403 : 400)
   }
 
   const existingKind = normalizeJobKind(existing.kind as string)
@@ -360,8 +380,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   if (existingError) return jsonError(existingError.message, 500)
   if (!existing) return jsonError("Job not found", 404)
-  if (existing.poster_id !== user.id) {
-    return jsonError("Forbidden", 403)
+
+  const mutateCheck = await assertPosterCanMutateJob(id, user.id)
+  if (!mutateCheck.ok) {
+    return jsonError(mutateCheck.error, mutateCheck.error === "Forbidden" ? 403 : 400)
   }
 
   const { error: updateError } = await supabase

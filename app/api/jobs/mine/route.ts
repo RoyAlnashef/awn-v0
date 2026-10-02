@@ -36,6 +36,7 @@ type JobRow = {
   filled_at: string | null
   view_count: number
   is_hidden: boolean
+  under_review_at: string | null
   created_at: string
   updated_at: string
   poster: PosterJoin | PosterJoin[] | null
@@ -73,6 +74,7 @@ const JOB_SELECT = `
   filled_at,
   view_count,
   is_hidden,
+  under_review_at,
   created_at,
   updated_at,
   poster:profiles!job_postings_poster_id_fkey (

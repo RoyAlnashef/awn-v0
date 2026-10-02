@@ -28,11 +28,16 @@ import {
 
 export function MyJobActionsDropdown({ job }: { job: Job }) {
   const router = useRouter()
+  const underReview = Boolean(job.underReviewAt)
   const [pausing, setPausing] = React.useState(false)
   const [duplicating, setDuplicating] = React.useState(false)
   const [hiding, setHiding] = React.useState(false)
 
   async function handlePause() {
+    if (underReview) {
+      toast.error("This job is under review by AWN.")
+      return
+    }
     if (job.status === "draft") {
       toast.info("This job is already paused")
       return
@@ -123,13 +128,16 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
           <FileText />
           View job
         </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href={`/jobs/${job.id}/edit`} />}>
+        <DropdownMenuItem
+          disabled={underReview}
+          render={<Link href={`/jobs/${job.id}/edit`} />}
+        >
           <Pencil />
           Edit
         </DropdownMenuItem>
         {job.status === "open" ? (
           <DropdownMenuItem
-            disabled={pausing}
+            disabled={pausing || underReview}
             onClick={() => void handlePause()}
           >
             <Pause />
@@ -137,7 +145,7 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem
-          disabled={duplicating}
+          disabled={duplicating || underReview}
           onClick={() => void handleDuplicate()}
         >
           <Copy />
@@ -145,7 +153,7 @@ export function MyJobActionsDropdown({ job }: { job: Job }) {
         </DropdownMenuItem>
         {canHide || job.isHidden ? (
           <DropdownMenuItem
-            disabled={hiding}
+            disabled={hiding || underReview}
             onClick={() => void handleHideToggle()}
           >
             {job.isHidden ? <Eye /> : <EyeOff />}

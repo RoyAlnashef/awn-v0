@@ -1,11 +1,13 @@
-export default function CommunityReportsJobsPage() {
+import { JobReportsTable } from "@/components/reports/job-reports-table"
+import { listJobReports } from "@/lib/moderation/actions"
+
+export default async function CommunityReportsJobsPage() {
+  const result = await listJobReports()
+
   return (
-    <div className="rounded-lg border border-dashed p-8 text-center">
-      <p className="text-sm font-medium">No job reports yet</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Job reporting from member profiles will appear here once that flow is
-        enabled.
-      </p>
-    </div>
+    <JobReportsTable
+      initialReports={result.ok ? result.reports : []}
+      loadError={result.ok ? null : result.error}
+    />
   )
 }

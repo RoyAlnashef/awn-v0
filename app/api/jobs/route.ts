@@ -145,7 +145,25 @@ export async function GET(request: Request) {
     return jsonError(listError.message, 500)
   }
 
-  const filtered = ((rows ?? []) as JobRow[]).filter((row) => {
+  let filtered = (rows ?? []) as JobRow[]
+
+  if (!savedOnly) {
+    const { data: hiddenRows, error: hiddenError } = await supabase
+      .from("job_board_hides")
+      .select("job_id")
+      .eq("user_id", user.id)
+
+    if (hiddenError) {
+      return jsonError(hiddenError.message, 500)
+    }
+
+    const hiddenIds = new Set((hiddenRows ?? []).map((row) => row.job_id as string))
+    if (hiddenIds.size > 0) {
+      filtered = filtered.filter((row) => !hiddenIds.has(row.id))
+    }
+  }
+
+  filtered = filtered.filter((row) => {
     if (search) {
       const haystack =
         `${row.role} ${row.production} ${row.location}`.toLowerCase()

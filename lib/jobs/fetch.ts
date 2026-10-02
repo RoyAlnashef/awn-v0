@@ -74,6 +74,8 @@ export type JobDetailResponse = {
   applicantCount: number
   posterId: string
   viewCount: number
+  viewerIsPoster: boolean
+  hasOpenReport: boolean
 }
 
 export type JobApplication = {

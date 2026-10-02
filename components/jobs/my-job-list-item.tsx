@@ -38,7 +38,10 @@ export function MyJobListItem({ job }: { job: Job }) {
             ) : null}
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <JobStatusBadge status={job.status} />
+            <JobStatusBadge
+              status={job.status}
+              underReviewAt={job.underReviewAt}
+            />
             <JobMetadataBadges
               job={job}
               includeUrgentBadge

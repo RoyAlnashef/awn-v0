@@ -1,5 +1,6 @@
 import type { ApplicationStatus } from "@/lib/jobs-data"
 import { jsonError, requireApiUser } from "@/lib/jobs/api-auth"
+import { assertPosterCanMutateJob } from "@/lib/moderation/job-review"
 
 const REVIEW_STATUSES = new Set<ApplicationStatus>([
   "approved",
@@ -51,7 +52,11 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (jobError) return jsonError(jobError.message, 500)
   if (!job) return jsonError("Job not found", 404)
-  if (job.poster_id !== user.id) return jsonError("Forbidden", 403)
+
+  const mutateCheck = await assertPosterCanMutateJob(id, user.id)
+  if (!mutateCheck.ok) {
+    return jsonError(mutateCheck.error, mutateCheck.error === "Forbidden" ? 403 : 400)
+  }
 
   const { data: application, error: fetchError } = await supabase
     .from("job_applications")

@@ -43,5 +43,15 @@ export function buildNotificationUrl(
     return "/my-jobs/applications"
   }
 
+  const jobId = typeof payload.jobId === "string" ? payload.jobId : undefined
+  if (
+    (kind === "job_under_review" ||
+      kind === "job_review_released" ||
+      kind === "job_review_closed") &&
+    jobId
+  ) {
+    return `/jobs/${encodeURIComponent(jobId)}`
+  }
+
   return "/"
 }

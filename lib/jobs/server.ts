@@ -28,6 +28,7 @@ type JobRow = {
   details: string
   view_count: number
   share_count: number
+  under_review_at: string | null
   created_at: string
   poster: PosterJoin | PosterJoin[] | null
 }
@@ -49,6 +50,7 @@ const JOB_SELECT = `
   details,
   view_count,
   share_count,
+  under_review_at,
   created_at,
   poster:profiles!job_postings_poster_id_fkey (
     full_name,

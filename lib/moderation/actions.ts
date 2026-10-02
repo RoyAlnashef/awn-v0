@@ -5,11 +5,22 @@ import { revalidatePath } from "next/cache"
 import { AuthError } from "@/lib/auth/require-admin"
 import { requireAdmin } from "@/lib/auth/require-admin"
 import { membersAreBlocked } from "@/lib/moderation/blocks"
-import type { BlockedMemberSummary, MemberReportRow } from "@/lib/moderation/data"
+import type {
+  BlockedMemberSummary,
+  JobReportRow,
+  MemberReportRow,
+} from "@/lib/moderation/data"
+import {
+  isJobReportReason,
+  type JobReportReason,
+} from "@/lib/moderation/job-report-reasons"
 import {
   isMemberReportReason,
   type MemberReportReason,
 } from "@/lib/moderation/report-reasons"
+import type { JobStatus } from "@/lib/jobs-data"
+import { urgentExpiresAt } from "@/lib/jobs/kind"
+import { notifyJobPoster } from "@/lib/moderation/job-poster-notifications"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -33,6 +44,21 @@ export type ListBlockedMembersResult =
 
 export type ListMemberReportsResult =
   | { ok: true; reports: MemberReportRow[] }
+  | ActionError
+
+export type SubmitJobReportResult = ActionOk | ActionError
+
+export type JobModerationStateResult =
+  | {
+      ok: true
+      isPoster: boolean
+      hasOpenReport: boolean
+      isHiddenFromBoard: boolean
+    }
+  | ActionError
+
+export type ListJobReportsResult =
+  | { ok: true; reports: JobReportRow[] }
   | ActionError
 
 function actionError(error: unknown): ActionError {
@@ -78,6 +104,12 @@ function revalidateModerationPaths() {
   revalidatePath("/groups")
   revalidatePath("/settings/privacy")
   revalidatePath("/community-reports/members")
+}
+
+function revalidateJobModerationPaths() {
+  revalidatePath("/jobs")
+  revalidatePath("/jobs/mine")
+  revalidatePath("/community-reports/jobs")
 }
 
 export async function getMemberModerationState(
@@ -368,6 +400,450 @@ export async function dismissMemberReport(reportId: string): Promise<ActionOk | 
     }
 
     revalidatePath("/community-reports/members")
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function getJobModerationState(
+  jobId: string,
+): Promise<JobModerationStateResult> {
+  try {
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select("poster_id")
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job) {
+      return { ok: false, error: "Job not found." }
+    }
+    if (job.poster_id === userId) {
+      return {
+        ok: true,
+        isPoster: true,
+        hasOpenReport: false,
+        isHiddenFromBoard: false,
+      }
+    }
+
+    const [openReportResult, hideResult] = await Promise.all([
+      supabase
+        .from("job_reports")
+        .select("id")
+        .eq("reporter_id", userId)
+        .eq("job_id", jobId)
+        .is("dismissed_at", null)
+        .maybeSingle(),
+      supabase
+        .from("job_board_hides")
+        .select("job_id")
+        .eq("user_id", userId)
+        .eq("job_id", jobId)
+        .maybeSingle(),
+    ])
+
+    return {
+      ok: true,
+      isPoster: false,
+      hasOpenReport: Boolean(openReportResult.data),
+      isHiddenFromBoard: Boolean(hideResult.data),
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function submitJobReport(
+  jobId: string,
+  reason: string,
+): Promise<SubmitJobReportResult> {
+  try {
+    if (!isJobReportReason(reason)) {
+      return { ok: false, error: "Select a reason for your report." }
+    }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select("poster_id")
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job) {
+      return { ok: false, error: "Job not found." }
+    }
+    if (job.poster_id === userId) {
+      return { ok: false, error: "You cannot report your own job." }
+    }
+
+    const { data: existing } = await supabase
+      .from("job_reports")
+      .select("id")
+      .eq("reporter_id", userId)
+      .eq("job_id", jobId)
+      .is("dismissed_at", null)
+      .maybeSingle()
+
+    if (existing) {
+      return { ok: false, error: "You have already reported this job." }
+    }
+
+    const { error: insertError } = await supabase.from("job_reports").insert({
+      reporter_id: userId,
+      job_id: jobId,
+      reason,
+    })
+
+    if (insertError) {
+      return { ok: false, error: insertError.message }
+    }
+
+    revalidateJobModerationPaths()
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function hideJobFromBoard(jobId: string): Promise<ActionOk | ActionError> {
+  try {
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select("poster_id")
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job) {
+      return { ok: false, error: "Job not found." }
+    }
+    if (job.poster_id === userId) {
+      return { ok: false, error: "You cannot hide your own job." }
+    }
+
+    const { error: insertError } = await supabase.from("job_board_hides").insert({
+      user_id: userId,
+      job_id: jobId,
+    })
+
+    if (insertError && insertError.code !== "23505") {
+      return { ok: false, error: insertError.message }
+    }
+
+    revalidateJobModerationPaths()
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+type JobReportDbRow = {
+  id: string
+  reason: JobReportReason
+  created_at: string
+  reporter: {
+    id: string
+    full_name: string | null
+    email: string | null
+    avatar_url: string | null
+    status: string
+  } | null
+  job: {
+    id: string
+    role: string
+    production: string
+    status: string
+    poster_id: string
+    under_review_at: string | null
+    poster: {
+      id: string
+      full_name: string | null
+      email: string | null
+      status: string
+    } | null
+  } | null
+}
+
+export async function listJobReports(): Promise<ListJobReportsResult> {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from("job_reports")
+      .select(
+        `
+        id,
+        reason,
+        created_at,
+        reporter:profiles!job_reports_reporter_id_fkey (
+          id,
+          full_name,
+          email,
+          avatar_url,
+          status
+        ),
+        job:job_postings!job_reports_job_id_fkey (
+          id,
+          role,
+          production,
+          status,
+          poster_id,
+          under_review_at,
+          poster:profiles!job_postings_poster_id_fkey (
+            id,
+            full_name,
+            email,
+            status
+          )
+        )
+      `,
+      )
+      .is("dismissed_at", null)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+
+    const reports: JobReportRow[] = ((data ?? []) as unknown as JobReportDbRow[])
+      .map((row) => {
+        if (!row.reporter || !row.job || !row.job.poster) return null
+        return {
+          id: row.id,
+          reason: row.reason,
+          createdAt: row.created_at,
+          reporter: {
+            id: row.reporter.id,
+            name: row.reporter.full_name ?? "Member",
+            email: row.reporter.email ?? "",
+            avatar: row.reporter.avatar_url ?? undefined,
+            status: row.reporter.status,
+          },
+          job: {
+            id: row.job.id,
+            role: row.job.role,
+            production: row.job.production,
+            status: row.job.status as JobStatus,
+            posterId: row.job.poster_id,
+            posterName: row.job.poster.full_name ?? "Member",
+            posterEmail: row.job.poster.email ?? "",
+            posterStatus: row.job.poster.status,
+            underReviewAt: row.job.under_review_at,
+          },
+        }
+      })
+      .filter((report): report is JobReportRow => report != null)
+
+    return { ok: true, reports }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function dismissJobReport(reportId: string): Promise<ActionOk | ActionError> {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from("job_reports")
+      .update({ dismissed_at: new Date().toISOString() })
+      .eq("id", reportId)
+      .is("dismissed_at", null)
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+
+    revalidateJobModerationPaths()
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function startJobUnderReview(
+  jobId: string,
+  reportId?: string,
+): Promise<ActionOk | ActionError> {
+  try {
+    const { userId: adminId } = await requireAdmin()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select("id, status, under_review_at, poster_id, role")
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job) {
+      return { ok: false, error: "Job not found." }
+    }
+    if (job.under_review_at) {
+      return { ok: false, error: "This job is already under review." }
+    }
+
+    const { error: updateError } = await supabase
+      .from("job_postings")
+      .update({
+        under_review_at: new Date().toISOString(),
+        status_before_review: job.status,
+        under_review_by: adminId,
+        under_review_report_id: reportId ?? null,
+        status: "draft",
+      })
+      .eq("id", jobId)
+
+    if (updateError) {
+      return { ok: false, error: updateError.message }
+    }
+
+    void notifyJobPoster({
+      posterId: job.poster_id as string,
+      jobId,
+      role: job.role as string,
+      event: "under_review",
+    })
+
+    revalidateJobModerationPaths()
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function releaseJobFromReview(jobId: string): Promise<ActionOk | ActionError> {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select(
+        "status_before_review, kind, under_review_at, poster_id, role",
+      )
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job?.under_review_at) {
+      return { ok: false, error: "This job is not under review." }
+    }
+    if (!job.status_before_review) {
+      return { ok: false, error: "Missing review snapshot." }
+    }
+
+    const restoredStatus = job.status_before_review as JobStatus
+    const jobKind = job.kind as string
+    const patch: Record<string, unknown> = {
+      status: restoredStatus,
+      under_review_at: null,
+      status_before_review: null,
+      under_review_by: null,
+      under_review_report_id: null,
+    }
+
+    if (restoredStatus === "open" && jobKind === "urgent") {
+      patch.expires_at = urgentExpiresAt()
+    }
+
+    const { error: updateError } = await supabase
+      .from("job_postings")
+      .update(patch)
+      .eq("id", jobId)
+
+    if (updateError) {
+      return { ok: false, error: updateError.message }
+    }
+
+    void notifyJobPoster({
+      posterId: job.poster_id as string,
+      jobId,
+      role: job.role as string,
+      event: "released",
+    })
+
+    revalidateJobModerationPaths()
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function closeJobFromReview(
+  jobId: string,
+  status: "filled" | "deleted",
+): Promise<ActionOk | ActionError> {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    const { data: job, error: jobError } = await supabase
+      .from("job_postings")
+      .select("under_review_at, poster_id, role")
+      .eq("id", jobId)
+      .maybeSingle()
+
+    if (jobError) {
+      return { ok: false, error: jobError.message }
+    }
+    if (!job?.under_review_at) {
+      return { ok: false, error: "This job is not under review." }
+    }
+
+    const patch: Record<string, unknown> = {
+      status,
+      under_review_at: null,
+      status_before_review: null,
+      under_review_by: null,
+      under_review_report_id: null,
+    }
+    if (status === "filled") {
+      patch.filled_at = new Date().toISOString()
+    }
+
+    const { error: updateError } = await supabase
+      .from("job_postings")
+      .update(patch)
+      .eq("id", jobId)
+
+    if (updateError) {
+      return { ok: false, error: updateError.message }
+    }
+
+    void notifyJobPoster({
+      posterId: job.poster_id as string,
+      jobId,
+      role: job.role as string,
+      event: "closed",
+      closeStatus: status,
+    })
+
+    revalidateJobModerationPaths()
     return { ok: true }
   } catch (error) {
     return actionError(error)

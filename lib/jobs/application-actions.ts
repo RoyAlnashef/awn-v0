@@ -7,6 +7,7 @@ import {
   sendMessage,
 } from "@/lib/messages/actions"
 import { createNotification } from "@/lib/notifications/actions"
+import { JOB_UNDER_REVIEW_MESSAGE } from "@/lib/moderation/job-review"
 import { createClient } from "@/lib/supabase/server"
 
 type ActionError = { ok: false; error: string }
@@ -53,7 +54,7 @@ export async function acceptJobApplicationWithMessage(
 
     const { data: job, error: jobError } = await supabase
       .from("job_postings")
-      .select("poster_id, role")
+      .select("poster_id, role, under_review_at")
       .eq("id", jobId)
       .maybeSingle()
 
@@ -61,6 +62,9 @@ export async function acceptJobApplicationWithMessage(
     if (!job) return { ok: false, error: "Job not found." }
     if (job.poster_id !== user.id) {
       return { ok: false, error: "Forbidden" }
+    }
+    if (job.under_review_at) {
+      return { ok: false, error: JOB_UNDER_REVIEW_MESSAGE }
     }
 
     const { data: application, error: applicationError } = await supabase

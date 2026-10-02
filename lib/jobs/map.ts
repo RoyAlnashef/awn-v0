@@ -31,6 +31,7 @@ export type JobPostingSource = {
   view_count?: number
   share_count?: number
   is_hidden?: boolean
+  under_review_at?: string | null
   created_at: string
   poster?: PosterProfile | null
 }
@@ -81,5 +82,6 @@ export function mapJobPostingRow(
     applicationCount: options.applicationCount,
     shareCount: options.shareCount ?? row.share_count,
     isHidden: row.is_hidden ?? false,
+    underReviewAt: row.under_review_at ?? null,
   }
 }

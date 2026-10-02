@@ -2,16 +2,10 @@
 
 import { useRef, useState } from "react"
 import { mutate } from "swr"
-import {
-  Bookmark,
-  Flag,
-  MessagesSquare,
-  Plus,
-  UserMinus,
-  Users,
-} from "lucide-react"
+import { Bookmark, MessagesSquare, Plus, UserMinus, Users } from "lucide-react"
 import { toast } from "sonner"
 
+import { JobDetailInteractiveFooter } from "@/components/jobs/job-detail-interactive-footer"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { JobUrgentHelpBadge } from "@/components/jobs/job-urgent-help-badge"
 import { ApplicationSentDialog } from "@/components/jobs/application-sent-dialog"
@@ -67,6 +61,9 @@ export function JobDetailContent({
   embedded = false,
   className,
   onApplied,
+  onHidden,
+  viewerIsPoster = false,
+  hasOpenReport: initialHasOpenReport = false,
 }: {
   job: Job
   applicantCount: number
@@ -75,6 +72,9 @@ export function JobDetailContent({
   embedded?: boolean
   className?: string
   onApplied?: () => void
+  onHidden?: () => void
+  viewerIsPoster?: boolean
+  hasOpenReport?: boolean
 }) {
   const [saved, setSaved] = useState(job.saved)
   const [applied, setApplied] = useState(job.applied)
@@ -253,81 +253,80 @@ export function JobDetailContent({
           </div>
         </ScrollArea>
 
-        <div className="flex shrink-0 items-center gap-2 border-t p-4">
-          <div className="flex shrink-0 items-center gap-2">
-            <JobActionTooltip
-              label={saved ? "Remove bookmark" : "Bookmark job"}
-            >
+        <JobDetailInteractiveFooter
+          job={job}
+          preview={preview}
+          viewerIsPoster={viewerIsPoster}
+          initialHasOpenReport={initialHasOpenReport}
+          onHidden={onHidden}
+          trailing={
+            <>
+              <div className="flex shrink-0 items-center gap-2">
+                <JobActionTooltip
+                  label={saved ? "Remove bookmark" : "Bookmark job"}
+                >
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={saved ? "Remove bookmark" : "Bookmark job"}
+                    aria-pressed={saved}
+                    disabled={preview || saving}
+                    onClick={() => void handleSave()}
+                  >
+                    <Bookmark
+                      className={cn(
+                        "size-4",
+                        saved &&
+                          (isUrgent
+                            ? urgentBookmarkSavedStyles
+                            : "fill-current text-primary"),
+                      )}
+                    />
+                  </Button>
+                </JobActionTooltip>
+                <JobActionTooltip label="Share as a message" wrap>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Share as a message"
+                    disabled={preview}
+                    onClick={() => setShareOpen(true)}
+                  >
+                    <MessagesSquare className="size-4" />
+                  </Button>
+                </JobActionTooltip>
+                <JobActionTooltip label="Share to a group" wrap>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Share to a group"
+                    disabled={preview}
+                    onClick={() => setShareRoomOpen(true)}
+                  >
+                    <Users className="size-4" />
+                  </Button>
+                </JobActionTooltip>
+              </div>
               <Button
-                variant="outline"
-                size="icon"
-                aria-label={saved ? "Remove bookmark" : "Bookmark job"}
-                aria-pressed={saved}
-                disabled={preview || saving}
-                onClick={() => void handleSave()}
+                className={cn(
+                  "min-w-0 flex-1",
+                  isUrgent && applyEnabled && urgentApplyButtonStyles,
+                )}
+                size="sm"
+                disabled={preview || !applyEnabled || applying}
+                onClick={() => void handleApply()}
               >
-                <Bookmark
-                  className={cn(
-                    "size-4",
-                    saved &&
-                      (isUrgent
-                        ? urgentBookmarkSavedStyles
-                        : "fill-current text-primary"),
-                  )}
-                />
+                {applying
+                  ? "Applying..."
+                  : jobApplyButtonLabel({
+                      status: job.status,
+                      applied,
+                      kind: job.kind,
+                    })}
               </Button>
-            </JobActionTooltip>
-            <JobActionTooltip label="Share as a message" wrap>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-label="Share as a message"
-                disabled={preview}
-                onClick={() => setShareOpen(true)}
-              >
-                <MessagesSquare className="size-4" />
-              </Button>
-            </JobActionTooltip>
-            <JobActionTooltip label="Share to a group" wrap>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-label="Share to a group"
-                disabled={preview}
-                onClick={() => setShareRoomOpen(true)}
-              >
-                <Users className="size-4" />
-              </Button>
-            </JobActionTooltip>
-            <JobActionTooltip label="Report job">
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="Report job"
-                disabled={preview}
-              >
-                <Flag className="size-4" />
-              </Button>
-            </JobActionTooltip>
-          </div>
-          <Button
-            className={cn(
-              "min-w-0 flex-1",
-              isUrgent && applyEnabled && urgentApplyButtonStyles,
-            )}
-            size="sm"
-            disabled={preview || !applyEnabled || applying}
-            onClick={() => void handleApply()}
-          >
-            {applying
-              ? "Applying..."
-              : jobApplyButtonLabel({
-                  status: job.status,
-                  applied,
-                  kind: job.kind,
-                })}
-          </Button>
-        </div>
+            </>
+          }
+        />
 
         {!preview ? (
           <>

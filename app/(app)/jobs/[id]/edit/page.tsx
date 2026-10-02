@@ -15,6 +15,9 @@ export default async function EditJobPage({ params }: PageProps) {
   const { id } = await params
   const job = await getJobForManagement(id, sessionUser.id)
   if (!job) notFound()
+  if (job.underReviewAt) {
+    redirect(`/jobs/${id}`)
+  }
 
   return (
     <JobFormPage

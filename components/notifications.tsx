@@ -11,6 +11,7 @@ import {
   getJobNotificationConversationId,
   getRoomNotificationRoomId,
   isJobApiNotification,
+  isJobPosterManagementNotification,
   isMentionTabNotification,
   isPanelNotification,
   isRoomJoinRequestNotification,
@@ -190,6 +191,10 @@ export function Notifications() {
     }
 
     if (isJobApiNotification(item.dbKind) && item.data?.jobId) {
+      const jobId = item.data.jobId
+      const destination = isJobPosterManagementNotification(item.dbKind)
+        ? `/jobs/${jobId}`
+        : "/my-jobs/applications"
       void (async () => {
         const previous = notifications
         await mutate(
@@ -202,7 +207,7 @@ export function Notifications() {
           return
         }
         setOpen(false)
-        router.push("/my-jobs/applications")
+        router.push(destination)
         void mutate()
       })()
       return
