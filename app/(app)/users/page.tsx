@@ -41,14 +41,6 @@ export default async function UsersPage() {
           >
             Applications
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            nativeButton={false}
-            render={<Link href="/community-reports/members" />}
-          >
-            Community Reports
-          </Button>
           <InviteUserDialog disabled={!result.ok} />
         </>
       }

@@ -41,14 +41,6 @@ export default async function ApplicationsPage() {
           >
             Invites
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            nativeButton={false}
-            render={<Link href="/community-reports/members" />}
-          >
-            Community Reports
-          </Button>
           <InvitePopoverTrigger />
         </>
       }
