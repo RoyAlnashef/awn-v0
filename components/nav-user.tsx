@@ -15,7 +15,11 @@ import {
 import { getCrewProfilePath } from "@/lib/account/handle"
 import { signOut } from "@/lib/auth/sign-out"
 import { setAvailableForWork } from "@/lib/account/profile-actions"
-import { setAppearOffline, touchPresence } from "@/lib/presence/actions"
+import {
+  setAppearOffline,
+  setIncognito,
+  touchPresence,
+} from "@/lib/presence/actions"
 import { iconWithTextDimClass } from "@/lib/icon-styles"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -42,6 +46,7 @@ export type NavUserData = {
   handle?: string
   appearOffline: boolean
   availableForWork: boolean
+  incognito: boolean
   online: boolean
 }
 
@@ -58,9 +63,11 @@ function NavUserMenuContent({
   showOnlineDot,
   availableForWork,
   appearOffline,
+  incognito,
   isPending,
   onAvailableForWorkChange,
   onAppearOfflineChange,
+  onIncognitoChange,
   onSignOut,
   onNavigate,
 }: {
@@ -69,9 +76,11 @@ function NavUserMenuContent({
   showOnlineDot: boolean
   availableForWork: boolean
   appearOffline: boolean
+  incognito: boolean
   isPending: boolean
   onAvailableForWorkChange: (checked: boolean) => void
   onAppearOfflineChange: (checked: boolean) => void
+  onIncognitoChange: (checked: boolean) => void
   onSignOut: () => void
   onNavigate: () => void
 }) {
@@ -127,6 +136,22 @@ function NavUserMenuContent({
           checked={appearOffline}
           onCheckedChange={onAppearOfflineChange}
           aria-label="Appear offline"
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+        <label
+          htmlFor="incognito"
+          className="text-sm font-medium leading-none"
+          title="Hidden from People and the map; still visible in conversations you're already in."
+        >
+          Go incognito
+        </label>
+        <Switch
+          id="incognito"
+          checked={incognito}
+          onCheckedChange={onIncognitoChange}
+          aria-label="Go incognito. Hidden from People and the map; still visible in conversations you're already in."
         />
       </div>
 
@@ -193,6 +218,7 @@ export function NavUser({
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [appearOffline, setAppearOfflineState] = useState(user.appearOffline)
+  const [incognito, setIncognitoState] = useState(user.incognito)
   const [availableForWork, setAvailableForWorkState] = useState(
     user.availableForWork,
   )
@@ -204,9 +230,10 @@ export function NavUser({
 
   useEffect(() => {
     setAppearOfflineState(user.appearOffline)
+    setIncognitoState(user.incognito)
     setAvailableForWorkState(user.availableForWork)
     setOnline(user.online)
-  }, [user.appearOffline, user.availableForWork, user.online])
+  }, [user.appearOffline, user.incognito, user.availableForWork, user.online])
 
   useEffect(() => {
     if (!appearOffline) {
@@ -257,6 +284,26 @@ export function NavUser({
     })
   }
 
+  function handleIncognitoChange(checked: boolean) {
+    const previousIncognito = incognito
+    const previousAppearOffline = appearOffline
+    const previousOnline = online
+
+    setIncognitoState(checked)
+    if (checked) {
+      setAppearOfflineState(true)
+      setOnline(false)
+    }
+
+    void setIncognito(checked).then((result) => {
+      if (!result.ok) {
+        setIncognitoState(previousIncognito)
+        setAppearOfflineState(previousAppearOffline)
+        setOnline(previousOnline)
+      }
+    })
+  }
+
   const triggerClassName = cn(
     "flex items-center gap-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
     isSidebar
@@ -301,9 +348,11 @@ export function NavUser({
     showOnlineDot,
     availableForWork,
     appearOffline,
+    incognito,
     isPending,
     onAvailableForWorkChange: handleAvailableForWorkChange,
     onAppearOfflineChange: handleAppearOfflineChange,
+    onIncognitoChange: handleIncognitoChange,
     onSignOut: handleSignOut,
     onNavigate: handleClose,
   }

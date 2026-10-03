@@ -51,6 +51,7 @@ export default async function PopoutLayout({
               handle: sessionUser.handle,
               appearOffline: sessionUser.appearOffline,
               availableForWork: sessionUser.availableForWork,
+              incognito: sessionUser.incognito,
               online: sessionUser.online,
             }}
           />
@@ -65,6 +66,7 @@ export default async function PopoutLayout({
                 handle: sessionUser.handle,
                 appearOffline: sessionUser.appearOffline,
                 availableForWork: sessionUser.availableForWork,
+                incognito: sessionUser.incognito,
                 online: sessionUser.online,
               }}
             />

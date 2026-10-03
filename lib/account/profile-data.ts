@@ -65,6 +65,7 @@ export interface MemberProfileRow {
   youtube: string | null
   resume_url: string | null
   handle: string | null
+  incognito?: boolean | null
   created_at: string
   updated_at: string
 }
@@ -332,6 +333,7 @@ export const MEMBER_PROFILE_SELECT = [
   "linkedin",
   "youtube",
   "handle",
+  "incognito",
   "created_at",
   "updated_at",
 ].join(", ")

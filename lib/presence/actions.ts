@@ -1,5 +1,7 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
+
 import { isUuid } from "@/lib/messages/format"
 import { profileIsOnline } from "@/lib/presence/is-online"
 import { createClient } from "@/lib/supabase/server"
@@ -63,6 +65,30 @@ export async function getProfileOnline(
         data?.appear_offline ?? false,
       ),
     }
+  } catch (error) {
+    if (error instanceof Error) {
+      return { ok: false, error: error.message }
+    }
+    return { ok: false, error: "Something went wrong." }
+  }
+}
+
+export async function setIncognito(enabled: boolean): Promise<PresenceResult> {
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase.rpc("set_incognito", {
+      p_enabled: enabled,
+    })
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+
+    revalidatePath("/", "layout")
+    revalidatePath("/now")
+    revalidatePath("/people")
+    revalidatePath("/messages")
+    return { ok: true }
   } catch (error) {
     if (error instanceof Error) {
       return { ok: false, error: error.message }

@@ -21,6 +21,7 @@ import {
   fetchBlockedProfileIdsForUser,
   membersAreBlocked,
 } from "@/lib/moderation/blocks"
+import { viewerMaySeeIncognitoProfile } from "@/lib/privacy/incognito-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -156,7 +157,10 @@ export async function listDirectoryMembers(): Promise<ListDirectoryMembersResult
     const rows = (data ?? []) as unknown as MemberProfileRow[]
     const blockedIds = await fetchBlockedProfileIdsForUser(userId)
     const visibleRows = rows.filter(
-      (row) => row.id !== userId && !blockedIds.has(row.id),
+      (row) =>
+        row.id !== userId &&
+        !blockedIds.has(row.id) &&
+        !row.incognito,
     )
     const profileIds = visibleRows.map((row) => row.id)
     const extrasMap = await fetchDirectoryExtras(supabase, userId, profileIds)
@@ -210,6 +214,13 @@ export async function getMemberById(profileId: string): Promise<GetMemberResult>
     }
 
     const row = profileResult.data as unknown as MemberProfileRow
+
+    if (
+      row.incognito &&
+      !(await viewerMaySeeIncognitoProfile(userId, profileId, supabase))
+    ) {
+      return { ok: false, error: "Member not found." }
+    }
     const creditRows = sortTourCreditRowsByStartDateDesc(
       (creditsResult.data ?? []) as unknown as TourCreditRow[],
     )

@@ -62,6 +62,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               handle: sessionUser.handle,
               appearOffline: sessionUser.appearOffline,
               availableForWork: sessionUser.availableForWork,
+              incognito: sessionUser.incognito,
               online: sessionUser.online,
             }}
           />
@@ -76,6 +77,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                 handle: sessionUser.handle,
                 appearOffline: sessionUser.appearOffline,
                 availableForWork: sessionUser.availableForWork,
+                incognito: sessionUser.incognito,
                 online: sessionUser.online,
               }}
             />

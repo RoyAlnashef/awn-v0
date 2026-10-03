@@ -40,6 +40,10 @@ async function fetchPublicProfileByHandle(
     return null
   }
 
+  if (row.incognito) {
+    return null
+  }
+
   const { data: creditRows, error: creditsError } = await admin
     .from("tour_credits")
     .select(TOUR_CREDIT_SELECT)

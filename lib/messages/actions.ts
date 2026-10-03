@@ -899,6 +899,7 @@ export async function searchMessageableUsers(
       .from("profiles")
       .select("id, full_name, title, avatar_url, last_active_at, appear_offline")
       .eq("status", "active")
+      .eq("incognito", false)
       .neq("id", userId)
       .order("full_name", { ascending: true })
       .limit(50)

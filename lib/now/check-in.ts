@@ -168,6 +168,7 @@ function toCheckedInMembers(
     if (milesBetween(origin, coords) > NEARBY_RADIUS_MILES) continue
 
     const profile = row.profiles
+    if (profile.incognito && row.profile_id !== userId) continue
     const person = toPersonFromProfile(profile, extrasMap.get(row.profile_id))
 
     members.push({
