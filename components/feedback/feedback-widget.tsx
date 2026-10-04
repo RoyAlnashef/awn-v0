@@ -312,7 +312,7 @@ export function FeedbackWidget({
                   Share feedback
                 </PopoverTitle>
                 <PopoverDescription className="text-sm leading-relaxed text-pretty">
-                  {"Bugs, rough edges, ideas — it all helps shape A Wright Network."}
+                  Your feedback helps us shape AWN. Thanks for your help!
                 </PopoverDescription>
               </div>
               <Button
