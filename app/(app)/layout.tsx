@@ -10,6 +10,7 @@ import { PushProvider } from "@/components/push/push-provider"
 import { PresenceHeartbeat } from "@/components/presence-heartbeat"
 import { RoomsProvider } from "@/components/rooms/rooms-provider"
 import { LegalAcceptanceGate } from "@/components/legal/legal-acceptance-gate"
+import { FeedbackWidget } from "@/components/feedback/feedback-widget"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { getOutstandingLegalDocuments } from "@/lib/legal/acceptance"
 
@@ -83,6 +84,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             />
             {children}
           </SidebarInset>
+          <FeedbackWidget
+            email={sessionUser.email}
+            firstName={sessionUser.name.split(" ")[0] || sessionUser.name}
+            isAdmin={sessionUser.canAccessAdmin}
+          />
           {outstandingLegal.length > 0 && (
             <LegalAcceptanceGate
               outstanding={outstandingLegal.map((entry) => ({

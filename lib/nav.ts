@@ -8,6 +8,7 @@ import {
   Mail,
   ScrollText,
   Flag,
+  MessageSquareText,
   type LucideIcon,
 } from "lucide-react"
 
@@ -105,6 +106,12 @@ export const adminNav: NavItem[] = [
     description:
       "Preview transactional templates and broadcast messages to members.",
     icon: Mail,
+  },
+  {
+    title: "Feedback",
+    href: "/feedback",
+    description: "Triage bugs, UX issues, and ideas submitted by early members.",
+    icon: MessageSquareText,
   },
   {
     title: "Logs",
