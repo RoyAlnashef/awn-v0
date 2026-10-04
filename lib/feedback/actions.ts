@@ -4,8 +4,14 @@ import { revalidatePath } from "next/cache"
 
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 import {
+  deleteFeedbackRecord,
+  feedbackAttachmentStoragePath,
+  FEEDBACK_ATTACHMENTS_BUCKET,
+  insertFeedbackAttachments,
   insertFeedbackRecord,
   listFeedbackRecords,
   updateFeedbackRecord,
@@ -19,7 +25,6 @@ import {
   isFeedbackStatus,
   isFeedbackType,
   type Feedback,
-  type FeedbackAttachment,
   type FeedbackContext,
   type FeedbackStatus,
 } from "./types"
@@ -34,6 +39,10 @@ export type ListFeedbackResult =
 
 export type UpdateFeedbackResult =
   | { ok: true; item: Feedback }
+  | { ok: false; error: string }
+
+export type FeedbackNewCountResult =
+  | { ok: true; count: number }
   | { ok: false; error: string }
 
 function readString(formData: FormData, key: string): string {
@@ -69,18 +78,38 @@ function parseContext(raw: string): FeedbackContext {
   }
 }
 
-/**
- * Temporary: encodes images as data URLs for the in-memory store.
- * Future: upload each file to a private `feedback-attachments` Supabase
- * Storage bucket under `${userId}/${feedbackId}/` and store the object path.
- */
-async function persistAttachment(file: File): Promise<FeedbackAttachment> {
+async function uploadFeedbackAttachment(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  feedbackId: string,
+  file: File,
+): Promise<{ id: string; storagePath: string; name: string; contentType: string; sizeBytes: number }> {
+  const id = crypto.randomUUID()
+  const contentType = file.type
+  const storagePath = feedbackAttachmentStoragePath(
+    userId,
+    feedbackId,
+    id,
+    contentType,
+  )
   const buffer = Buffer.from(await file.arrayBuffer())
+
+  const { error } = await admin.storage
+    .from(FEEDBACK_ATTACHMENTS_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType,
+      upsert: false,
+    })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
   return {
-    id: crypto.randomUUID(),
+    id,
+    storagePath,
     name: file.name.slice(0, 200),
-    url: `data:${file.type};base64,${buffer.toString("base64")}`,
-    contentType: file.type,
+    contentType,
     sizeBytes: file.size,
   }
 }
@@ -140,8 +169,10 @@ export async function submitFeedback(
       ? impactRaw
       : null
 
+  let feedbackId: string | null = null
+  const uploadedPaths: string[] = []
+
   try {
-    const attachments = await Promise.all(files.map(persistAttachment))
     const record = await insertFeedbackRecord({
       type,
       impact,
@@ -149,21 +180,79 @@ export async function submitFeedback(
       summary,
       details,
       allowContact,
-      attachments,
+      attachments: [],
       context,
-      submitter: {
-        id: sessionUser.id,
-        name: sessionUser.name,
-        email: sessionUser.email,
-        avatarUrl: sessionUser.avatarUrl,
-        initials: sessionUser.initials,
-      },
+      submitter: { id: sessionUser.id },
     })
+    feedbackId = record.id
+
+    if (files.length > 0) {
+      const admin = createAdminClient()
+      const uploaded = []
+
+      for (const file of files) {
+        const item = await uploadFeedbackAttachment(
+          admin,
+          sessionUser.id,
+          record.id,
+          file,
+        )
+        uploadedPaths.push(item.storagePath)
+        uploaded.push({
+          id: item.id,
+          storagePath: item.storagePath,
+          name: item.name,
+          contentType: item.contentType,
+          sizeBytes: item.sizeBytes,
+        })
+      }
+
+      await insertFeedbackAttachments(record.id, uploaded)
+    }
+
     revalidatePath("/feedback")
     return { ok: true, reference: record.reference }
   } catch (error) {
     console.error("[feedback] submit failed", error)
+
+    if (feedbackId) {
+      try {
+        await deleteFeedbackRecord(feedbackId)
+      } catch (cleanupError) {
+        console.error("[feedback] cleanup failed", cleanupError)
+      }
+    } else if (uploadedPaths.length > 0) {
+      try {
+        const admin = createAdminClient()
+        await admin.storage.from(FEEDBACK_ATTACHMENTS_BUCKET).remove(uploadedPaths)
+      } catch (cleanupError) {
+        console.error("[feedback] storage cleanup failed", cleanupError)
+      }
+    }
+
     return { ok: false, error: "Something went wrong sending your feedback." }
+  }
+}
+
+export async function getFeedbackNewCount(): Promise<FeedbackNewCountResult> {
+  try {
+    await requireAdmin()
+    const supabase = await createClient()
+
+    const { count, error } = await supabase
+      .from("feedback")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new")
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+
+    return { ok: true, count: count ?? 0 }
+  } catch (error) {
+    const message =
+      error instanceof AuthError ? error.message : "Failed to load feedback count."
+    return { ok: false, error: message }
   }
 }
 

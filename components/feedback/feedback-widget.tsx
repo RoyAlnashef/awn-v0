@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Spinner } from "@/components/ui/spinner"
+import { mutateFeedbackNewCount } from "@/lib/feedback/hooks/use-feedback-new-count"
 import { submitFeedback } from "@/lib/feedback/actions"
 import { compressImage } from "@/lib/feedback/compress-image"
 import {
@@ -244,6 +245,7 @@ export function FeedbackWidget({
       const result = await submitFeedback(formData)
       if (result.ok) {
         setSubmitted({ reference: result.reference })
+        void mutateFeedbackNewCount()
         return
       }
       setFormError(result.error)

@@ -1,18 +1,16 @@
+import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
+import { initials } from "@/lib/users-data"
+
 import type {
   Feedback,
   FeedbackAttachment,
   FeedbackContext,
   FeedbackImpact,
   FeedbackStatus,
-  FeedbackSubmitter,
   FeedbackType,
 } from "./types"
-
-/**
- * Temporary in-memory persistence. Every function here maps 1:1 to a future
- * Supabase query (see comments), so wiring the database means replacing the
- * bodies of this file only. Data resets when the server restarts.
- */
+import { FEEDBACK_STATUSES, isFeedbackImpact, isFeedbackStatus, isFeedbackType } from "./types"
 
 export type CreateFeedbackInput = {
   type: FeedbackType
@@ -23,242 +21,337 @@ export type CreateFeedbackInput = {
   allowContact: boolean
   attachments: FeedbackAttachment[]
   context: FeedbackContext
-  submitter: FeedbackSubmitter
+  submitter: { id: string }
 }
 
-type Store = { items: Feedback[]; nextReference: number }
-
-const globalForFeedback = globalThis as unknown as {
-  __awnFeedbackStore?: Store
+export type NewFeedbackAttachmentInput = {
+  id: string
+  storagePath: string
+  name: string
+  contentType: string
+  sizeBytes: number
+  width?: number
+  height?: number
 }
 
-function hoursAgo(hours: number) {
-  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
-}
+const FEEDBACK_BUCKET = "feedback-attachments"
+const SIGNED_URL_TTL_SECONDS = 3600
 
-const desktopContext = (path: string, title: string): FeedbackContext => ({
-  url: `https://app.awrightnetwork.com${path}`,
-  pageTitle: title,
-  userAgent:
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36",
-  viewport: "1512×857",
-  platform: "web",
-})
-
-const iosContext = (path: string, title: string): FeedbackContext => ({
-  url: `capacitor://localhost${path}`,
-  pageTitle: title,
-  userAgent:
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-  viewport: "393×852",
-  platform: "ios",
-})
-
-function seed(): Store {
-  const items: Feedback[] = [
-    {
-      id: "fb_seed_1",
-      reference: "FB-1007",
-      type: "bug",
-      status: "new",
-      impact: "annoying",
-      area: "Now",
-      summary: "Location search bar overlaps the pin button on the map",
-      details:
-        "On the Now page, when the window is around 1400px wide the location search input runs underneath the 'use my location' pin button. I can't click the right edge of the input and the placeholder gets cut off.\n\nExpected: search bar stops before the button.",
-      allowContact: true,
-      attachments: [
-        {
-          id: "att_seed_1",
-          name: "map-overlap.png",
-          url: "/feedback/sample-map-overlap.png",
-          contentType: "image/png",
-          sizeBytes: 412_000,
-        },
-      ],
-      context: desktopContext("/now", "Now"),
-      submitter: {
-        id: "u_seed_1",
-        name: "Maya Okafor",
-        email: "maya@example.com",
-        initials: "MO",
-      },
-      adminNote: "",
-      createdAt: hoursAgo(2),
-      updatedAt: hoursAgo(2),
-    },
-    {
-      id: "fb_seed_2",
-      reference: "FB-1006",
-      type: "bug",
-      status: "triaged",
-      impact: "blocking",
-      area: "Jobs",
-      summary: "Can't post a job with a start date next month",
-      details:
-        "Picking any date in November shows 'Invalid date' and the Post Job button stays disabled. Tried on my phone twice. Dates this month work fine.",
-      allowContact: true,
-      attachments: [
-        {
-          id: "att_seed_2",
-          name: "IMG_2231.png",
-          url: "/feedback/sample-job-form-error.png",
-          contentType: "image/png",
-          sizeBytes: 286_000,
-        },
-      ],
-      context: iosContext("/jobs/new", "Post a job"),
-      submitter: {
-        id: "u_seed_2",
-        name: "Dante Reyes",
-        email: "dante@example.com",
-        initials: "DR",
-      },
-      adminNote: "Repro'd on iOS Safari. Timezone parsing in the date picker.",
-      createdAt: hoursAgo(9),
-      updatedAt: hoursAgo(5),
-    },
-    {
-      id: "fb_seed_3",
-      reference: "FB-1005",
-      type: "ux",
-      status: "new",
-      impact: "minor",
-      area: "Groups",
-      summary: "Not obvious which groups I've already joined",
-      details:
-        "In Find your groups, joined groups and suggested groups look the same until you scroll and see the Join button. A checkmark or a section header would help.",
-      allowContact: false,
-      attachments: [],
-      context: desktopContext("/groups", "Groups"),
-      submitter: {
-        id: "u_seed_3",
-        name: "Priya Shah",
-        email: "priya@example.com",
-        initials: "PS",
-      },
-      adminNote: "",
-      createdAt: hoursAgo(20),
-      updatedAt: hoursAgo(20),
-    },
-    {
-      id: "fb_seed_4",
-      reference: "FB-1004",
-      type: "idea",
-      status: "planned",
-      impact: null,
-      area: "People",
-      summary: "Filter people by gear they own",
-      details:
-        "When I need a sub for audio gigs it would be great to filter for people who own their own IEM rig or a console. Could be a 'gear' section on profiles.",
-      allowContact: true,
-      attachments: [],
-      context: desktopContext("/people", "People"),
-      submitter: {
-        id: "u_seed_4",
-        name: "Jordan Lee",
-        email: "jordan@example.com",
-        initials: "JL",
-      },
-      adminNote: "Bundling with profile v2.",
-      createdAt: hoursAgo(46),
-      updatedAt: hoursAgo(30),
-    },
-    {
-      id: "fb_seed_5",
-      reference: "FB-1003",
-      type: "praise",
-      status: "resolved",
-      impact: null,
-      area: "Now",
-      summary: "Help Now got me a stagehand in 15 minutes",
-      details:
-        "Posted a callout at load-in when someone no-showed and had two replies before I finished my coffee. This alone is worth it.",
-      allowContact: true,
-      attachments: [],
-      context: iosContext("/now", "Now"),
-      submitter: {
-        id: "u_seed_5",
-        name: "Sam Whitaker",
-        email: "sam@example.com",
-        initials: "SW",
-      },
-      adminNote: "",
-      createdAt: hoursAgo(70),
-      updatedAt: hoursAgo(60),
-    },
-    {
-      id: "fb_seed_6",
-      reference: "FB-1002",
-      type: "ux",
-      status: "wont_fix",
-      impact: "annoying",
-      area: "Messages",
-      summary: "Enter sends the message before I'm done typing",
-      details:
-        "I keep sending half-finished messages. Would prefer Cmd+Enter to send.",
-      allowContact: true,
-      attachments: [],
-      context: desktopContext("/messages", "Messages"),
-      submitter: {
-        id: "u_seed_6",
-        name: "Alex Moreno",
-        email: "alex@example.com",
-        initials: "AM",
-      },
-      adminNote:
-        "Keeping Enter-to-send for consistency. Shift+Enter adds a new line; will surface a hint.",
-      createdAt: hoursAgo(120),
-      updatedAt: hoursAgo(96),
-    },
-  ]
-
-  return { items, nextReference: 1008 }
-}
-
-function getStore(): Store {
-  if (!globalForFeedback.__awnFeedbackStore) {
-    globalForFeedback.__awnFeedbackStore = seed()
-  }
-  return globalForFeedback.__awnFeedbackStore
-}
-
-/** Future: `select ... from feedback join feedback_attachments ... order by created_at desc` */
-export async function listFeedbackRecords(): Promise<Feedback[]> {
-  return [...getStore().items].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
+const FEEDBACK_SELECT = `
+  id,
+  reference,
+  type,
+  status,
+  impact,
+  area,
+  summary,
+  details,
+  allow_contact,
+  context,
+  admin_note,
+  created_at,
+  updated_at,
+  user_id,
+  submitter:profiles!feedback_user_id_fkey (
+    id,
+    full_name,
+    email,
+    avatar_url
+  ),
+  feedback_attachments (
+    id,
+    storage_path,
+    file_name,
+    content_type,
+    size_bytes,
+    width,
+    height
   )
+`
+
+type AttachmentRow = {
+  id: string
+  storage_path: string
+  file_name: string
+  content_type: string
+  size_bytes: number
+  width: number | null
+  height: number | null
 }
 
-/** Future: insert into `feedback`, then insert rows into `feedback_attachments`. */
+type FeedbackRow = {
+  id: string
+  reference: string
+  type: string
+  status: string
+  impact: string | null
+  area: string
+  summary: string
+  details: string
+  allow_contact: boolean
+  context: FeedbackContext | null
+  admin_note: string
+  created_at: string
+  updated_at: string
+  user_id: string
+  submitter: {
+    id: string
+    full_name: string | null
+    email: string | null
+    avatar_url: string | null
+  } | null
+  feedback_attachments: AttachmentRow[] | null
+}
+
+function parseContext(raw: FeedbackContext | null | undefined): FeedbackContext {
+  const value: Partial<FeedbackContext> = raw ?? {}
+  return {
+    url: String(value.url ?? ""),
+    pageTitle: String(value.pageTitle ?? ""),
+    userAgent: String(value.userAgent ?? ""),
+    viewport: String(value.viewport ?? ""),
+    platform:
+      value.platform === "ios" || value.platform === "android"
+        ? value.platform
+        : "web",
+    appVersion: value.appVersion ? String(value.appVersion) : undefined,
+  }
+}
+
+async function signedAttachmentUrls(
+  rows: AttachmentRow[],
+): Promise<FeedbackAttachment[]> {
+  if (rows.length === 0) return []
+
+  const admin = createAdminClient()
+  const results = await Promise.all(
+    rows.map(async (row) => {
+      const { data, error } = await admin.storage
+        .from(FEEDBACK_BUCKET)
+        .createSignedUrl(row.storage_path, SIGNED_URL_TTL_SECONDS)
+
+      return {
+        id: row.id,
+        name: row.file_name,
+        url: error ? "" : (data?.signedUrl ?? ""),
+        contentType: row.content_type,
+        sizeBytes: row.size_bytes,
+        width: row.width ?? undefined,
+        height: row.height ?? undefined,
+      } satisfies FeedbackAttachment
+    }),
+  )
+
+  return results
+}
+
+async function mapFeedbackRow(row: FeedbackRow): Promise<Feedback | null> {
+  if (!row.submitter) return null
+  if (!isFeedbackType(row.type) || !isFeedbackStatus(row.status)) return null
+
+  const impact =
+    row.impact === null
+      ? null
+      : isFeedbackImpact(row.impact)
+        ? row.impact
+        : null
+
+  const name =
+    row.submitter.full_name?.trim() ||
+    row.submitter.email?.split("@")[0] ||
+    "Member"
+
+  const attachmentRows = row.feedback_attachments ?? []
+
+  return {
+    id: row.id,
+    reference: row.reference,
+    type: row.type,
+    status: row.status,
+    impact,
+    area: row.area,
+    summary: row.summary,
+    details: row.details,
+    allowContact: row.allow_contact,
+    attachments: await signedAttachmentUrls(attachmentRows),
+    context: parseContext(row.context),
+    submitter: {
+      id: row.submitter.id,
+      name,
+      email: row.submitter.email ?? "",
+      avatarUrl: row.submitter.avatar_url ?? undefined,
+      initials: initials(name),
+    },
+    adminNote: row.admin_note,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+async function fetchFeedbackById(
+  id: string,
+  scope: "user" | "admin" = "user",
+): Promise<Feedback | null> {
+  const supabase =
+    scope === "admin" ? createAdminClient() : await createClient()
+  const { data, error } = await supabase
+    .from("feedback")
+    .select(FEEDBACK_SELECT)
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return mapFeedbackRow(data as unknown as FeedbackRow)
+}
+
+export async function listFeedbackRecords(): Promise<Feedback[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("feedback")
+    .select(FEEDBACK_SELECT)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const rows = (data ?? []) as unknown as FeedbackRow[]
+  const mapped = await Promise.all(rows.map((row) => mapFeedbackRow(row)))
+  return mapped.filter((item): item is Feedback => item !== null)
+}
+
 export async function insertFeedbackRecord(
   input: CreateFeedbackInput,
 ): Promise<Feedback> {
-  const store = getStore()
-  const now = new Date().toISOString()
-  const record: Feedback = {
-    ...input,
-    id: crypto.randomUUID(),
-    reference: `FB-${store.nextReference++}`,
-    status: "new",
-    adminNote: "",
-    createdAt: now,
-    updatedAt: now,
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("feedback")
+    .insert({
+      user_id: input.submitter.id,
+      type: input.type,
+      impact: input.impact,
+      area: input.area,
+      summary: input.summary,
+      details: input.details,
+      allow_contact: input.allowContact,
+      context: input.context,
+    })
+    .select("id, reference")
+    .single()
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to create feedback.")
   }
-  store.items.unshift(record)
+
+  const record = await fetchFeedbackById(data.id, "admin")
+  if (!record) {
+    throw new Error("Failed to load feedback after insert.")
+  }
+
   return record
 }
 
-/** Future: `update feedback set status/admin_note, updated_at = now() where id = $1` */
+export async function insertFeedbackAttachments(
+  feedbackId: string,
+  items: NewFeedbackAttachmentInput[],
+): Promise<void> {
+  if (items.length === 0) return
+
+  const admin = createAdminClient()
+  const { error } = await admin.from("feedback_attachments").insert(
+    items.map((item) => ({
+      id: item.id,
+      feedback_id: feedbackId,
+      storage_path: item.storagePath,
+      file_name: item.name,
+      content_type: item.contentType,
+      size_bytes: item.sizeBytes,
+      width: item.width ?? null,
+      height: item.height ?? null,
+    })),
+  )
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function deleteFeedbackRecord(feedbackId: string): Promise<void> {
+  const admin = createAdminClient()
+
+  const { data: attachmentRows } = await admin
+    .from("feedback_attachments")
+    .select("storage_path")
+    .eq("feedback_id", feedbackId)
+
+  const paths = (attachmentRows ?? []).map(
+    (row) => row.storage_path as string,
+  )
+
+  if (paths.length > 0) {
+    await admin.storage.from(FEEDBACK_BUCKET).remove(paths)
+  }
+
+  const { error } = await admin.from("feedback").delete().eq("id", feedbackId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 export async function updateFeedbackRecord(
   id: string,
   patch: { status?: FeedbackStatus; adminNote?: string },
 ): Promise<Feedback | null> {
-  const store = getStore()
-  const record = store.items.find((item) => item.id === id)
-  if (!record) return null
-  if (patch.status) record.status = patch.status
-  if (patch.adminNote !== undefined) record.adminNote = patch.adminNote
-  record.updatedAt = new Date().toISOString()
-  return record
+  const supabase = await createClient()
+
+  const updates: Record<string, unknown> = {}
+  if (patch.status !== undefined) {
+    if (!FEEDBACK_STATUSES.includes(patch.status)) return null
+    updates.status = patch.status
+  }
+  if (patch.adminNote !== undefined) {
+    updates.admin_note = patch.adminNote
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return fetchFeedbackById(id)
+  }
+
+  const { error } = await supabase.from("feedback").update(updates).eq("id", id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return fetchFeedbackById(id)
+}
+
+/** @internal exported for actions upload path helper */
+export const FEEDBACK_ATTACHMENTS_BUCKET = FEEDBACK_BUCKET
+
+export function feedbackAttachmentStoragePath(
+  userId: string,
+  feedbackId: string,
+  attachmentId: string,
+  contentType: string,
+): string {
+  const ext = extForContentType(contentType)
+  return `${userId}/${feedbackId}/${attachmentId}.${ext}`
+}
+
+function extForContentType(contentType: string): string {
+  switch (contentType) {
+    case "image/png":
+      return "png"
+    case "image/jpeg":
+      return "jpg"
+    case "image/webp":
+      return "webp"
+    case "image/gif":
+      return "gif"
+    default:
+      return "bin"
+  }
 }

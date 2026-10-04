@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ImageIcon, InboxIcon } from "lucide-react"
 
 import {
@@ -24,7 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   FEEDBACK_STATUS_CONFIG,
   FEEDBACK_STATUSES,
@@ -34,6 +33,7 @@ import {
   type FeedbackStatus,
   type FeedbackType,
 } from "@/lib/feedback/types"
+import { mutateFeedbackNewCount } from "@/lib/feedback/hooks/use-feedback-new-count"
 import { formatRelativeTime } from "@/lib/messages/format"
 
 import {
@@ -54,7 +54,7 @@ export function FeedbackInbox({
   loadError?: string | null
 }) {
   const [items, setItems] = useState(initialItems)
-  const [status, setStatus] = useState<StatusFilter>("new")
+  const [status, setStatus] = useState<StatusFilter>("all")
   const [type, setType] = useState<TypeFilter>("all")
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -63,20 +63,9 @@ export function FeedbackInbox({
 
   const selected = items.find((item) => item.id === selectedId) ?? null
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<StatusFilter, number> = {
-      all: items.length,
-      new: 0,
-      triaged: 0,
-      planned: 0,
-      resolved: 0,
-      wont_fix: 0,
-    }
-    items.forEach((item) => {
-      counts[item.status] += 1
-    })
-    return counts
-  }, [items])
+  useEffect(() => {
+    void mutateFeedbackNewCount()
+  }, [])
 
   const q = search.trim().toLowerCase()
   const filtered = useMemo(
@@ -103,6 +92,7 @@ export function FeedbackInbox({
     setItems((current) =>
       current.map((item) => (item.id === updated.id ? updated : item)),
     )
+    void mutateFeedbackNewCount()
   }
 
   return (
@@ -113,30 +103,7 @@ export function FeedbackInbox({
         </div>
       ) : null}
 
-      <Tabs
-        value={status}
-        onValueChange={(value) => {
-          setStatus(value as StatusFilter)
-          setPage(1)
-        }}
-      >
-        <div className="-mx-1 overflow-x-auto px-1">
-          <TabsList>
-            {(["new", ...FEEDBACK_STATUSES.filter((s) => s !== "new"), "all"] as StatusFilter[]).map(
-              (value) => (
-                <TabsTrigger key={value} value={value} className="gap-1.5">
-                  {value === "all" ? "All" : FEEDBACK_STATUS_CONFIG[value].label}
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {statusCounts[value]}
-                  </span>
-                </TabsTrigger>
-              ),
-            )}
-          </TabsList>
-        </div>
-      </Tabs>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Input
           value={search}
           onChange={(event) => {
@@ -147,6 +114,29 @@ export function FeedbackInbox({
           className="sm:max-w-sm"
           aria-label="Search feedback"
         />
+        <Select
+          value={status}
+          onValueChange={(value) => {
+            setStatus((value ?? "all") as StatusFilter)
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-full sm:w-44" aria-label="Filter by status">
+            <SelectValue>
+              {(value: StatusFilter) =>
+                value === "all" ? "All states" : FEEDBACK_STATUS_CONFIG[value].label
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All states</SelectItem>
+            {FEEDBACK_STATUSES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {FEEDBACK_STATUS_CONFIG[value].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select
           value={type}
           onValueChange={(value) => {

@@ -1,7 +1,6 @@
 /**
- * Feedback domain model. Shapes mirror the planned `feedback` and
- * `feedback_attachments` tables so the in-memory store can be swapped
- * for Supabase without touching UI code.
+ * Feedback domain model. Shapes mirror `feedback` and `feedback_attachments`
+ * in Supabase. Attachment `url` is populated at read time (signed Storage URL).
  */
 
 export const FEEDBACK_TYPES = ["bug", "ux", "idea", "praise"] as const
@@ -41,6 +40,7 @@ export const FEEDBACK_ACCEPTED_IMAGE_TYPES = [
 export type FeedbackAttachment = {
   id: string
   name: string
+  /** Signed Storage URL when loaded for admin; empty if signing failed. */
   url: string
   contentType: string
   sizeBytes: number

@@ -28,6 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { NavUser, type NavUserData } from "@/components/nav-user"
+import { useFeedbackNewCount } from "@/lib/feedback/hooks/use-feedback-new-count"
 import { useUnreadCount } from "@/lib/messages/hooks/use-unread-count"
 import { useRoomsUnreadCount } from "@/lib/rooms/hooks/use-rooms-unread-count"
 import { mainNav, adminNav, type NavItem } from "@/lib/nav"
@@ -46,11 +47,13 @@ function NavItemBadge({
   item,
   messagesUnreadCount,
   roomsUnreadCount,
+  feedbackNewCount,
   className,
 }: {
   item: NavItem
   messagesUnreadCount: number
   roomsUnreadCount: number
+  feedbackNewCount: number
   className?: string
 }) {
   if (item.liveBadge === "messages" && messagesUnreadCount > 0) {
@@ -63,6 +66,11 @@ function NavItemBadge({
   if (item.liveBadge === "rooms" && roomsUnreadCount > 0) {
     return (
       <SidebarMenuBadge className={className}>{roomsUnreadCount}</SidebarMenuBadge>
+    )
+  }
+  if (item.liveBadge === "feedback" && feedbackNewCount > 0) {
+    return (
+      <SidebarMenuBadge className={className}>{feedbackNewCount}</SidebarMenuBadge>
     )
   }
   if (item.badge) {
@@ -78,11 +86,13 @@ function CollapsibleNavItem({
   pathname,
   messagesUnreadCount,
   roomsUnreadCount,
+  feedbackNewCount,
 }: {
   item: NavItem
   pathname: string
   messagesUnreadCount: number
   roomsUnreadCount: number
+  feedbackNewCount: number
 }) {
   const sectionActive = isSectionActive(pathname, item)
   const [open, setOpen] = React.useState(sectionActive)
@@ -107,6 +117,7 @@ function CollapsibleNavItem({
             item={item}
             messagesUnreadCount={messagesUnreadCount}
             roomsUnreadCount={roomsUnreadCount}
+            feedbackNewCount={feedbackNewCount}
             className="static"
           />
           <CollapsibleTrigger
@@ -149,11 +160,13 @@ function FlatNavItem({
   pathname,
   messagesUnreadCount,
   roomsUnreadCount,
+  feedbackNewCount,
 }: {
   item: NavItem
   pathname: string
   messagesUnreadCount: number
   roomsUnreadCount: number
+  feedbackNewCount: number
 }) {
   const active = isSubActive(pathname, item.href)
 
@@ -179,6 +192,7 @@ function FlatNavItem({
         item={item}
         messagesUnreadCount={messagesUnreadCount}
         roomsUnreadCount={roomsUnreadCount}
+        feedbackNewCount={feedbackNewCount}
       />
     </SidebarMenuItem>
   )
@@ -198,6 +212,7 @@ export function AppSidebar({
   const { isMobile, setOpenMobile } = useSidebar()
   const { unreadCount: messagesUnreadCount } = useUnreadCount()
   const { unreadCount: roomsUnreadCount } = useRoomsUnreadCount()
+  const { newCount: feedbackNewCount } = useFeedbackNewCount(showAdminNav)
 
   React.useEffect(() => {
     if (isMobile) {
@@ -256,6 +271,7 @@ export function AppSidebar({
                     pathname={pathname}
                     messagesUnreadCount={messagesUnreadCount}
                     roomsUnreadCount={roomsUnreadCount}
+                    feedbackNewCount={feedbackNewCount}
                   />
                 ) : (
                   <FlatNavItem
@@ -264,6 +280,7 @@ export function AppSidebar({
                     pathname={pathname}
                     messagesUnreadCount={messagesUnreadCount}
                     roomsUnreadCount={roomsUnreadCount}
+                    feedbackNewCount={feedbackNewCount}
                   />
                 ),
               )}
@@ -284,6 +301,7 @@ export function AppSidebar({
                       pathname={pathname}
                       messagesUnreadCount={messagesUnreadCount}
                       roomsUnreadCount={roomsUnreadCount}
+                      feedbackNewCount={feedbackNewCount}
                     />
                   ) : (
                     <FlatNavItem
@@ -292,6 +310,7 @@ export function AppSidebar({
                       pathname={pathname}
                       messagesUnreadCount={messagesUnreadCount}
                       roomsUnreadCount={roomsUnreadCount}
+                      feedbackNewCount={feedbackNewCount}
                     />
                   ),
                 )}
