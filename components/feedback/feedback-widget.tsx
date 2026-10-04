@@ -108,7 +108,9 @@ export function FeedbackWidget({
   const [processingCount, setProcessingCount] = useState(0)
   const [submitted, setSubmitted] = useState<{ reference: string } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [exitUiActive, setExitUiActive] = useState(false)
   const previewUrls = useRef(new Set<string>())
+  const fabShowsOpen = open || exitUiActive
 
   const areaOptions = useMemo(() => {
     const options = [
@@ -132,7 +134,14 @@ export function FeedbackWidget({
       setDraft((current) => ({ ...current, area: currentArea }))
     }
     if (!next && submitted) resetForm()
+    setExitUiActive(!next)
     setOpen(next)
+  }
+
+  function handleOpenChangeComplete(nextOpen: boolean) {
+    if (!nextOpen) {
+      setExitUiActive(false)
+    }
   }
 
   function updateDraft(patch: Partial<FeedbackDraft>) {
@@ -254,30 +263,36 @@ export function FeedbackWidget({
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <Popover
+      open={open}
+      onOpenChange={handleOpenChange}
+      onOpenChangeComplete={handleOpenChangeComplete}
+    >
       <PopoverTrigger
         render={
           <button
             type="button"
-            aria-label={open ? "Close feedback" : "Share feedback"}
+            aria-label={fabShowsOpen ? "Close feedback" : "Share feedback"}
             className={cn(
-              "fixed right-4 bottom-[calc(var(--safe-area-inset-bottom,0px)+1rem)] z-40 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-foreground/10 transition-transform outline-none hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95 md:right-6 md:bottom-6",
+              "fixed right-4 bottom-[calc(var(--safe-area-inset-bottom,0px)+1rem)] z-40 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-foreground/10 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:right-6 md:bottom-6",
+              !fabShowsOpen &&
+                "transition-transform hover:scale-105 active:scale-95",
             )}
           />
         }
       >
-        {open ? (
+        {fabShowsOpen ? (
           <XIcon className="size-5" aria-hidden />
         ) : (
           <MessageSquarePlusIcon className="size-5" aria-hidden />
         )}
-        {!open && dirty && !submitted ? (
+        {!fabShowsOpen && dirty && !submitted ? (
           <span
             className="absolute top-0.5 right-0.5 size-3 rounded-full bg-success ring-2 ring-background"
             aria-hidden
           />
         ) : null}
-        {!open && dirty && !submitted ? (
+        {!fabShowsOpen && dirty && !submitted ? (
           <span className="sr-only">(draft saved)</span>
         ) : null}
       </PopoverTrigger>
