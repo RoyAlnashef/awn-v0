@@ -55,7 +55,7 @@ export function personFromReportMember(member: {
   return {
     id: member.id,
     name: member.name,
-    role: "AWN Member",
+    role: "",
     department: "",
     homeBase: "",
     city: "",
@@ -81,7 +81,7 @@ export function personFromRoomMessage(message: ThreadMessage): Person | null {
   return {
     id: message.authorId ?? message.id,
     name: message.author?.trim() || "Member",
-    role: "AWN Member",
+    role: "",
     department: "",
     homeBase: "",
     city: "",

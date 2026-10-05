@@ -10,6 +10,7 @@
     "lint": "eslint",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test lib/**/*.test.ts",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
     "cap:sync": "npx cap sync",

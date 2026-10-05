@@ -123,9 +123,11 @@ export function PersonShareCard({
         <span className="truncate font-medium text-foreground">
           {memberShare.name}
         </span>
-        <span className="truncate text-sm text-muted-foreground">
-          {memberShare.role}
-        </span>
+        {memberShare.role?.trim() ? (
+          <span className="truncate text-sm text-muted-foreground">
+            {memberShare.role}
+          </span>
+        ) : null}
       </div>
     </div>
   )

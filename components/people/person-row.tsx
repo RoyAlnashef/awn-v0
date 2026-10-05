@@ -64,7 +64,9 @@ export function PersonRow({ person }: { person: Person }) {
             <Badge variant="outline">{person.department}</Badge>
           ) : null}
         </div>
-        <p className="text-sm text-foreground/90">{person.role}</p>
+        {person.role ? (
+          <p className="text-sm text-foreground/90">{person.role}</p>
+        ) : null}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {person.homeBase ? (
             <span className="flex items-center gap-1">

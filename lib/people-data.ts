@@ -130,9 +130,9 @@ export interface TourCredit {
   title: string
   /** Artist or act name when distinct from the tour/show title. */
   artist?: string
-  venueTier: VenueTier
+  venueTier?: VenueTier
   role: string
-  years: string
+  years?: string
   engagementType?: string
   startedAt?: string
   endedAt?: string
@@ -147,9 +147,8 @@ export interface PersonProfile {
   verified: boolean
   founding: boolean
   company?: string
-  bio: string
+  bio?: string
   memberSince: string
-  website: string
   tourCredits: TourCredit[]
 }
 
@@ -162,24 +161,14 @@ export function initials(name: string) {
 }
 
 /**
- * Builds a fully-populated profile for the profile drawer. Explicit fields on
- * the Person win; tour credits come from the database when provided.
+ * Profile view-model for cards and public pages. Only includes member-provided
+ * fields — no synthesized bio or filler copy.
  */
 export function getPersonProfile(
   person: Person,
   tourCredits: TourCredit[] = [],
 ): PersonProfile {
-  const firstName = person.name.split(" ")[0]
-  const skillsText =
-    person.skills.length > 0 ? person.skills.join(", ") : "live production"
-  const venueText =
-    person.venueTiers.length > 0
-      ? person.venueTiers.join(" and ").toLowerCase()
-      : "arena and festival"
-
-  const bio =
-    person.bio ??
-    `${person.name} is a ${person.role || "live entertainment professional"} based in ${person.homeBase || "the road"} with ${person.yearsExperience}+ years across live events. Known for ${skillsText}, ${firstName} works ${venueText}-scale productions and is currently ${person.availability.toLowerCase()}.`
+  const bio = person.bio?.trim() || undefined
 
   return {
     verified: person.verified ?? false,
@@ -187,7 +176,6 @@ export function getPersonProfile(
     company: person.company,
     bio,
     memberSince: person.memberSince ?? "",
-    website: person.website ?? "",
     tourCredits,
   }
 }

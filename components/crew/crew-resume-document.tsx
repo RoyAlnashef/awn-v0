@@ -5,12 +5,7 @@ import { getPersonSocialLinks } from "@/lib/social-links"
 import "./crew-print.css"
 
 function ResumeSkills({ data }: { data: CrewResumeData }) {
-  const skills =
-    data.person.skills.length > 0
-      ? data.person.skills
-      : data.person.department
-        ? [data.person.department]
-        : []
+  const skills = data.person.skills
 
   if (skills.length === 0) return null
 

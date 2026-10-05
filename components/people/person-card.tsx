@@ -82,7 +82,9 @@ export function PersonCard({
           <h3 className="font-heading text-base font-semibold tracking-tight text-balance">
             {person.name}
           </h3>
-          <p className="text-sm text-muted-foreground">{person.role}</p>
+          {person.role ? (
+            <p className="text-sm text-muted-foreground">{person.role}</p>
+          ) : null}
         </div>
         {note ? (
           <p className="max-w-full px-1 text-sm text-foreground/90 text-pretty">

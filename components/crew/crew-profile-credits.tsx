@@ -42,8 +42,12 @@ export function CrewProfileCredits({ credits }: { credits: TourCredit[] }) {
                   </span>
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                     {credit.role ? <span>{credit.role}</span> : null}
-                    {credit.role && credit.years ? <span>·</span> : null}
-                    {credit.years ? <span>{credit.years}</span> : null}
+                    {credit.role && credit.years && credit.years !== "—" ? (
+                      <span>·</span>
+                    ) : null}
+                    {credit.years && credit.years !== "—" ? (
+                      <span>{credit.years}</span>
+                    ) : null}
                   </div>
                 </div>
                 {status ? (

@@ -209,6 +209,12 @@ export function PersonProfileCard({
   )
 
   const socialLinks = getPersonSocialLinks(person)
+  const displayName = person.name.trim()
+  const hasMetaChips =
+    person.venueTiers.length > 0 ||
+    Boolean(person.availableFrom) ||
+    person.workAuth.length > 0 ||
+    Boolean(profile.memberSince)
 
   return (
     <TooltipProvider delay={400}>
@@ -287,9 +293,11 @@ export function PersonProfileCard({
 
             <div className="mt-3 flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-heading text-xl font-semibold tracking-tight">
-                  {person.name || "Your name"}
-                </h2>
+                {displayName ? (
+                  <h2 className="font-heading text-xl font-semibold tracking-tight">
+                    {displayName}
+                  </h2>
+                ) : null}
                 {profile.verified ? (
                   <BadgeCheck className="size-5 text-primary" aria-label="Verified" />
                 ) : null}
@@ -365,28 +373,32 @@ export function PersonProfileCard({
             ) : null}
 
             {/* Meta chips */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {person.venueTiers.map((tier) => (
-                <Badge key={tier} variant="secondary">
-                  {tier}
-                </Badge>
-              ))}
-              {person.availableFrom ? (
-                <Badge variant="secondary" className="gap-1 font-normal">
-                  <CalendarClock className="size-3" />
-                  Free {formatShortDate(person.availableFrom)}
-                </Badge>
-              ) : null}
-              {person.workAuth.map((auth) => (
-                <Badge key={auth} variant="secondary" className="gap-1 font-normal">
-                  {auth === "Passport" ? <Plane className="size-3" /> : null}
-                  {auth}
-                </Badge>
-              ))}
-              <Badge variant="secondary" className="font-normal">
-                Member since {profile.memberSince}
-              </Badge>
-            </div>
+            {hasMetaChips ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {person.venueTiers.map((tier) => (
+                  <Badge key={tier} variant="secondary">
+                    {tier}
+                  </Badge>
+                ))}
+                {person.availableFrom ? (
+                  <Badge variant="secondary" className="gap-1 font-normal">
+                    <CalendarClock className="size-3" />
+                    Free {formatShortDate(person.availableFrom)}
+                  </Badge>
+                ) : null}
+                {person.workAuth.map((auth) => (
+                  <Badge key={auth} variant="secondary" className="gap-1 font-normal">
+                    {auth === "Passport" ? <Plane className="size-3" /> : null}
+                    {auth}
+                  </Badge>
+                ))}
+                {profile.memberSince ? (
+                  <Badge variant="secondary" className="font-normal">
+                    Member since {profile.memberSince}
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
 
             {/* Bio */}
             {profile.bio ? <CrewProfileBio bio={profile.bio} /> : null}
@@ -412,8 +424,12 @@ export function PersonProfileCard({
                           </span>
                           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                             {credit.role ? <span>{credit.role}</span> : null}
-                            {credit.role && credit.years ? <span>·</span> : null}
-                            {credit.years ? <span>{credit.years}</span> : null}
+                            {credit.role && credit.years && credit.years !== "—" ? (
+                              <span>·</span>
+                            ) : null}
+                            {credit.years && credit.years !== "—" ? (
+                              <span>{credit.years}</span>
+                            ) : null}
                           </div>
                           {isReadOnlyVouch ? (
                             <span className="mt-1 inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">

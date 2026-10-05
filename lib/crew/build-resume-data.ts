@@ -17,7 +17,7 @@ export type CrewResumeData = {
   displayProfileUrl: string
   person: Person
   tourCredits: TourCredit[]
-  bio: string
+  bio?: string
   detailsRows: ProfileDetailsRow[]
 }
 
