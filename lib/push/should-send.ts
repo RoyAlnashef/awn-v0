@@ -35,6 +35,27 @@ export async function shouldSendPushForNotification(
     return { ok: false, reason: "user_viewing_conversation" }
   }
 
+  if (DM_KINDS.has(notification.kind) && conversationId) {
+    const { data: membership, error: membershipError } = await admin
+      .from("dm_participants")
+      .select("muted_at, hidden_at")
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", notification.user_id)
+      .maybeSingle()
+
+    if (membershipError) {
+      return { ok: false, reason: membershipError.message }
+    }
+
+    if (membership?.muted_at) {
+      return { ok: false, reason: "dm_muted" }
+    }
+
+    if (membership?.hidden_at) {
+      return { ok: false, reason: "dm_hidden" }
+    }
+  }
+
   if (
     ROOM_KINDS.has(notification.kind) &&
     roomId &&

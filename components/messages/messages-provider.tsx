@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
@@ -55,6 +56,9 @@ type MessagesContextValue = {
   ) => void
   upsertConversation: (conversation: DirectConversation) => void
   syncConversationsFromInbox: (conversations: DirectConversation[]) => void
+  registerSkipAutoRead: (conversationId: string) => void
+  clearSkipAutoRead: (conversationId: string) => void
+  removeConversationFromInbox: (conversationId: string) => void
 }
 
 const MessagesContext = createContext<MessagesContextValue | null>(null)
@@ -77,6 +81,7 @@ export function MessagesProvider({
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     null,
   )
+  const skipAutoReadRef = useRef(new Set<string>())
 
   const conversations = useMemo(
     () => sortConversationsForInbox(conversationList, activityOrder),
@@ -98,6 +103,9 @@ export function MessagesProvider({
             preview: locallyTouched ? local.preview : server.preview,
             time: locallyTouched ? local.time : server.time,
             unread: locallyTouched ? local.unread : server.unread,
+            canMarkUnread: locallyTouched
+              ? local.canMarkUnread
+              : server.canMarkUnread,
           }
         })
 
@@ -155,7 +163,23 @@ export function MessagesProvider({
     setActivityOrder((prev) => touchActivityOrder(prev, conversation.id))
   }, [])
 
+  const registerSkipAutoRead = useCallback((conversationId: string) => {
+    skipAutoReadRef.current.add(conversationId)
+  }, [])
+
+  const clearSkipAutoRead = useCallback((conversationId: string) => {
+    skipAutoReadRef.current.delete(conversationId)
+  }, [])
+
+  const removeConversationFromInbox = useCallback((conversationId: string) => {
+    setConversationList((prev) => prev.filter((c) => c.id !== conversationId))
+    setActivityOrder((prev) => prev.filter((id) => id !== conversationId))
+    skipAutoReadRef.current.delete(conversationId)
+  }, [])
+
   const markConversationRead = useCallback((id: string) => {
+    if (skipAutoReadRef.current.has(id)) return
+
     setConversationList((prev) =>
       prev.map((c) => (c.id === id && c.unread ? { ...c, unread: false } : c)),
     )
@@ -245,6 +269,7 @@ export function MessagesProvider({
                 time: "Now",
                 unread: options?.unread ?? false,
                 isNew: false,
+                canMarkUnread: from === "them",
               }
             : c,
         ),
@@ -268,6 +293,9 @@ export function MessagesProvider({
         bumpConversation,
         upsertConversation,
         syncConversationsFromInbox,
+        registerSkipAutoRead,
+        clearSkipAutoRead,
+        removeConversationFromInbox,
       }}
     >
       <MessagesRealtimeBridge />

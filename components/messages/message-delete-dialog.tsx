@@ -25,6 +25,12 @@ const copy = {
     description: "This will remove the message for everyone in this group.",
     confirm: "Delete",
   },
+  hide: {
+    title: "Delete for you?",
+    description:
+      "This removes the message from your thread only. The other person can still see it.",
+    confirm: "Delete for me",
+  },
 } as const
 
 export function MessageDeleteDialog({
@@ -36,7 +42,7 @@ export function MessageDeleteDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  variant: "unsend" | "delete"
+  variant: "unsend" | "delete" | "hide"
   pending?: boolean
   onConfirm: () => void
 }) {

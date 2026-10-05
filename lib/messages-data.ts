@@ -21,6 +21,12 @@ export interface DirectConversation {
   isNew?: boolean
   /** When true, the thread is view-only (member block). */
   messagingBlocked?: boolean
+  /** Suppresses unread badges and push for this DM. */
+  muted?: boolean
+  /** Conversation is in the Archived inbox section. */
+  archived?: boolean
+  /** False when the last message is yours or the thread is empty. */
+  canMarkUnread?: boolean
 }
 
 /** Which part of a message a reaction applies to. */

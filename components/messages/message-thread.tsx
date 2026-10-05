@@ -12,6 +12,7 @@ import {
   getOrCreateConversation,
   getMemberSharePayload,
   deleteMessage as deleteMessageAction,
+  hideMessageForMe as hideMessageForMeAction,
   sendMessage as sendMessageAction,
   setMessageReaction,
 } from "@/lib/messages/actions"
@@ -65,7 +66,9 @@ import { MessageDeleteDialog } from "@/components/messages/message-delete-dialog
 import {
   applyLocalMessageDelete,
   applyMessageDelete,
+  applyMessageHide,
   canDeleteOwnMessage,
+  canHideReceivedMessage,
   isLatestMessage,
   previewAfterDelete,
 } from "@/lib/messages/delete"
@@ -562,7 +565,8 @@ export function MessageThread({
     if (!previewInfo) return
 
     if (!previewInfo.preview.trim()) {
-      void mutateSwr(inboxKey, undefined, { revalidate: true })
+      void mutateSwr(inboxKey(false), undefined, { revalidate: true })
+      void mutateSwr(inboxKey(true), undefined, { revalidate: true })
       return
     }
 
@@ -575,6 +579,7 @@ export function MessageThread({
     if (!deleteTarget || deletePending) return
 
     const target = deleteTarget
+    const isHide = target.from === "them"
     setDeletePending(true)
 
     if (pendingReply?.id === target.id) {
@@ -589,20 +594,23 @@ export function MessageThread({
     ) {
       const wasLatest = isLatestMessage(messages, target.id)
       let previousCache: ThreadCache | undefined
+      const applyRemoval = isHide ? applyMessageHide : applyMessageDelete
 
       void mutate(
         (current) => {
           previousCache = current
-          return current ? applyMessageDelete(current, target.id) : current
+          return current ? applyRemoval(current, target.id) : current
         },
         { revalidate: false },
       )
 
-      const result = await deleteMessageAction(target.id)
+      const result = isHide
+        ? await hideMessageForMeAction(target.id)
+        : await deleteMessageAction(target.id)
 
       if (!result.ok) {
         void mutate(previousCache, { revalidate: false })
-        toast.error("Could not unsend message")
+        toast.error(isHide ? "Could not delete message" : "Could not unsend message")
         setDeletePending(false)
         return
       }
@@ -615,7 +623,7 @@ export function MessageThread({
         )
       }
 
-      toast.success("Message unsent")
+      toast.success(isHide ? "Message deleted for you" : "Message unsent")
       setDeleteTarget(null)
       setDeletePending(false)
       return
@@ -623,7 +631,7 @@ export function MessageThread({
 
     setLocalMessages((prev) => applyLocalMessageDelete(prev, target.id))
     updateInboxPreviewAfterDelete(conversation.id, localMessages, target.id)
-    toast.success("Message unsent")
+    toast.success(isHide ? "Message deleted for you" : "Message unsent")
     setDeleteTarget(null)
     setDeletePending(false)
   }
@@ -826,7 +834,7 @@ export function MessageThread({
         onOpenChange={(open) => {
           if (!open && !deletePending) setDeleteTarget(null)
         }}
-        variant="unsend"
+        variant={deleteTarget?.from === "them" ? "hide" : "unsend"}
         pending={deletePending}
         onConfirm={() => void handleConfirmDelete()}
       />
@@ -868,7 +876,12 @@ export function MessageThread({
                             onDelete: () => handleDeleteRequest(message),
                             deleteLabel: "Unsend" as const,
                           }
-                        : {}),
+                        : canHideReceivedMessage(message, isPersisted)
+                          ? {
+                              onDelete: () => handleDeleteRequest(message),
+                              deleteLabel: "Delete" as const,
+                            }
+                          : {}),
                       replyTo: message.replyTo,
                     }
                     const shareMessageActions = {

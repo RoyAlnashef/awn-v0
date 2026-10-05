@@ -34,8 +34,11 @@ import { MessagesInbox } from "@/components/messages/messages-inbox"
 import { MessageThread } from "@/components/messages/message-thread"
 import { NewMessageDrawer } from "@/components/messages/new-message-drawer"
 import { useMessages } from "@/components/messages/messages-provider"
+import { useArchivedCount } from "@/lib/messages/hooks/use-archived-count"
+import { useConversationInboxActions } from "@/lib/messages/hooks/use-conversation-inbox-actions"
 import { useInbox } from "@/lib/messages/hooks/use-inbox"
 import { prefetchThread } from "@/lib/messages/hooks/use-thread"
+import { ConversationDeleteDialog } from "@/components/messages/conversation-delete-dialog"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { PopOutButton } from "@/components/popout-button"
 
@@ -71,8 +74,25 @@ export function MessagesView({
     getConversation,
     ensureConversation,
     setActiveConversationId,
+    clearSkipAutoRead,
   } = useMessages()
-  const { isLoading: isInboxLoading } = useInbox({ enabled: true })
+  const [inboxMode, setInboxMode] = useState<"main" | "archived">("main")
+  const [deleteTarget, setDeleteTarget] =
+    useState<DirectConversation | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
+  const { isLoading: isInboxLoading } = useInbox({ enabled: true, archived: false })
+  const { data: archivedList, isLoading: isArchivedInboxLoading } = useInbox({
+    enabled: inboxMode === "archived",
+    archived: true,
+  })
+  const { data: archivedCount = 0 } = useArchivedCount()
+  const {
+    toggleMute,
+    toggleArchive: toggleArchiveAction,
+    markUnread,
+    deleteForMe,
+  } = useConversationInboxActions()
+
   const hydrated = useHydrated()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [active, setActive] = useState<DirectConversation | null>(null)
@@ -207,6 +227,9 @@ export function MessagesView({
   )
 
   const clearActiveConversation = useCallback(() => {
+    if (selectedIdRef.current) {
+      clearSkipAutoRead(selectedIdRef.current)
+    }
     cancelScheduledUrlSync()
     ++selectionEpochRef.current
     pendingUrlConversationIdRef.current = null
@@ -230,7 +253,44 @@ export function MessagesView({
         params.delete("newMessage")
       })
     })
-  }, [cancelScheduledUrlSync, replaceSearchParams])
+  }, [cancelScheduledUrlSync, clearSkipAutoRead, replaceSearchParams])
+
+  const toggleArchive = useCallback(
+    async (conversationId: string, currentlyArchived: boolean) => {
+      const result = await toggleArchiveAction(conversationId, currentlyArchived)
+      if (
+        result.ok &&
+        !currentlyArchived &&
+        (selectedIdRef.current === conversationId ||
+          active?.id === conversationId)
+      ) {
+        clearActiveConversation()
+      }
+      return result
+    },
+    [toggleArchiveAction, active?.id, clearActiveConversation],
+  )
+
+  async function handleConfirmDeleteConversation() {
+    if (!deleteTarget || deletePending) return
+    setDeletePending(true)
+    try {
+      const result = await deleteForMe(deleteTarget.id)
+      if (!result.ok) return
+      if (
+        selectedIdRef.current === deleteTarget.id ||
+        active?.id === deleteTarget.id
+      ) {
+        clearActiveConversation()
+      }
+      setDeleteTarget(null)
+    } finally {
+      setDeletePending(false)
+    }
+  }
+
+  const inboxConversations =
+    inboxMode === "archived" ? (archivedList ?? []) : conversations
 
   useEffect(() => {
     if (!initialNewMessage) return
@@ -515,11 +575,21 @@ export function MessagesView({
         >
           <MessagesInbox
             activeId={visibleSelectedId ?? undefined}
-            conversations={conversations}
+            conversations={inboxConversations}
             onSelectConversation={selectConversation}
             onPrefetchConversation={prefetchThread}
             onNewMessage={() => setNewOpen(true)}
-            isLoading={isInboxLoading}
+            isLoading={
+              inboxMode === "archived" ? isArchivedInboxLoading : isInboxLoading
+            }
+            inboxMode={inboxMode}
+            archivedCount={archivedCount}
+            onShowArchived={() => setInboxMode("archived")}
+            onBackToMain={() => setInboxMode("main")}
+            onToggleMute={toggleMute}
+            onToggleArchive={toggleArchive}
+            onMarkUnread={markUnread}
+            onRequestDeleteConversation={setDeleteTarget}
           />
         </div>
 
@@ -587,6 +657,16 @@ export function MessagesView({
           )}
         </div>
       </div>
+
+      <ConversationDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+        contactName={deleteTarget?.name ?? "this member"}
+        pending={deletePending}
+        onConfirm={handleConfirmDeleteConversation}
+      />
 
       <NewMessageDrawer
         open={newOpen}

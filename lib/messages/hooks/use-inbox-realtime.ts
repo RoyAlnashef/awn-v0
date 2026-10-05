@@ -11,7 +11,12 @@ import {
 } from "@/lib/messages/delete"
 import { formatMessageTime } from "@/lib/messages/format"
 import { mapRealtimeReply } from "@/lib/messages/reply"
-import { inboxKey, threadKey, unreadCountKey } from "@/lib/messages/swr-keys"
+import {
+  archivedCountKey,
+  inboxKey,
+  threadKey,
+  unreadCountKey,
+} from "@/lib/messages/swr-keys"
 import { notificationsKey } from "@/lib/notifications/swr-keys"
 import { fetchThreadPage, type ThreadCache } from "@/lib/messages/thread-cache"
 import type { ThreadMessage } from "@/lib/messages-data"
@@ -66,6 +71,10 @@ export function useInboxRealtime() {
             from: isMine ? "me" : "them",
             unread: !isMine && !isActive,
           })
+
+          void mutateSwr(inboxKey(false))
+          void mutateSwr(inboxKey(true))
+          void mutateSwr(archivedCountKey)
 
           if (!isMine && isActive) {
             markConversationRead(row.conversation_id)
@@ -152,7 +161,8 @@ export function useInboxRealtime() {
 
               if (wasLatest && previewInfo) {
                 if (!previewInfo.preview.trim()) {
-                  void mutateSwr(inboxKey, undefined, { revalidate: true })
+                  void mutateSwr(inboxKey(false), undefined, { revalidate: true })
+                  void mutateSwr(inboxKey(true), undefined, { revalidate: true })
                 } else {
                   bumpConversation(row.conversation_id, previewInfo.preview, {
                     from: previewInfo.from,

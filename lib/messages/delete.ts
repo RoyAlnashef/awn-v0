@@ -12,6 +12,23 @@ export function canDeleteOwnMessage(
   return true
 }
 
+export function canHideReceivedMessage(
+  message: ThreadMessage,
+  isPersisted: boolean,
+): boolean {
+  if (message.from !== "them") return false
+  if (message.id.startsWith("optimistic-")) return false
+  if (isPersisted) return isUuid(message.id)
+  return false
+}
+
+export function applyMessageHide<T extends { messages: ThreadMessage[] }>(
+  cache: T,
+  messageId: string,
+): T {
+  return applyMessageDelete(cache, messageId)
+}
+
 export function applyMessageDelete<T extends { messages: ThreadMessage[] }>(
   cache: T,
   messageId: string,

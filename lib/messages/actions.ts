@@ -72,7 +72,13 @@ type InboxRow = {
   my_last_read_at: string | null
   conversation_updated_at: string
   messaging_blocked?: boolean | null
+  muted?: boolean | null
+  archived?: boolean | null
 }
+
+export type ConversationActionResult = { ok: true } | ActionError
+
+export type ArchivedCountResult = { ok: true; count: number } | ActionError
 
 type ThreadRpcMessage = ReplyRpcRow &
   JobShareRpcRow &
@@ -475,12 +481,25 @@ function profileToMessageableMember(profile: ProfileRow): MessageableMember {
   }
 }
 
+function canMarkConversationUnread(
+  lastMessageAt: string | null | undefined,
+  lastMessageSenderId: string | null | undefined,
+  currentUserId: string,
+): boolean {
+  return Boolean(
+    lastMessageAt &&
+      lastMessageSenderId &&
+      lastMessageSenderId !== currentUserId,
+  )
+}
+
 function profileToConversation(
   conversationId: string,
   profile: ProfileRow,
   preview: string,
   updatedAt: string,
   unread: boolean,
+  canMarkUnread = false,
 ): DirectConversation {
   return {
     id: conversationId,
@@ -496,6 +515,7 @@ function profileToConversation(
     avatar: profile.avatar_url ?? undefined,
     otherProfileId: profile.id,
     isPersisted: true,
+    canMarkUnread,
   }
 }
 
@@ -516,11 +536,14 @@ function inboxRowToConversation(
     : "New conversation"
   const updatedAt =
     row.last_message_at ?? row.conversation_updated_at
-  const unread = row.last_message_at
-    ? row.last_message_sender_id !== currentUserId &&
-      (!row.my_last_read_at ||
-        new Date(row.last_message_at) > new Date(row.my_last_read_at))
-    : false
+  const muted = Boolean(row.muted)
+  const unread = muted
+    ? false
+    : row.last_message_at
+      ? row.last_message_sender_id !== currentUserId &&
+        (!row.my_last_read_at ||
+          new Date(row.last_message_at) > new Date(row.my_last_read_at))
+      : false
 
   return {
     id: row.conversation_id,
@@ -534,15 +557,39 @@ function inboxRowToConversation(
     otherProfileId: row.other_profile_id,
     isPersisted: true,
     messagingBlocked: Boolean(row.messaging_blocked),
+    muted,
+    archived: Boolean(row.archived),
+    canMarkUnread: canMarkConversationUnread(
+      row.last_message_at,
+      row.last_message_sender_id,
+      currentUserId,
+    ),
   }
 }
 
-export async function listConversations(): Promise<ListConversationsResult> {
+async function revealConversationIfHidden(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  conversationId: string,
+  userId: string,
+) {
+  await supabase
+    .from("dm_participants")
+    .update({ hidden_at: null })
+    .eq("conversation_id", conversationId)
+    .eq("profile_id", userId)
+    .not("hidden_at", "is", null)
+}
+
+export async function listConversations(options?: {
+  archived?: boolean
+}): Promise<ListConversationsResult> {
   try {
     const userId = await requireUserId()
     const supabase = await createClient()
 
-    const { data, error } = await supabase.rpc("list_dm_inbox")
+    const { data, error } = await supabase.rpc("list_dm_inbox", {
+      p_archived: options?.archived ?? false,
+    })
 
     if (error) {
       if (error.code === "42883" || error.code === "PGRST202") {
@@ -595,6 +642,8 @@ export async function getConversationThread(
 
     const userId = await requireUserId()
     const supabase = await createClient()
+
+    await revealConversationIfHidden(supabase, conversationId, userId)
 
     const { data, error } = await supabase.rpc("get_dm_thread", {
       p_conversation_id: conversationId,
@@ -827,6 +876,8 @@ export async function getOrCreateConversation(
       return { ok: false, error: "Failed to open conversation." }
     }
 
+    await revealConversationIfHidden(supabase, conversationId, userId)
+
     const profile = await fetchOtherParticipant(
       supabase,
       conversationId,
@@ -875,6 +926,11 @@ export async function getOrCreateConversation(
       preview,
       updatedAt,
       unread,
+      canMarkConversationUnread(
+        conversationRow?.last_message_at,
+        conversationRow?.last_message_sender_id,
+        userId,
+      ),
     )
 
     return {
@@ -1057,6 +1113,292 @@ export async function deleteMessage(
 
     if (deleteError) return { ok: false, error: deleteError.message }
 
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+async function requireParticipant(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  conversationId: string,
+  userId: string,
+) {
+  const { data, error } = await supabase
+    .from("dm_participants")
+    .select("profile_id")
+    .eq("conversation_id", conversationId)
+    .eq("profile_id", userId)
+    .maybeSingle()
+
+  if (error) return { ok: false as const, error: error.message }
+  if (!data) return { ok: false as const, error: "Not a participant." }
+  return { ok: true as const }
+}
+
+export async function getArchivedCount(): Promise<ArchivedCountResult> {
+  try {
+    await requireUserId()
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc("get_dm_archived_count")
+    if (error) {
+      if (error.code === "42883" || error.code === "PGRST202") {
+        return { ok: true, count: 0 }
+      }
+      return { ok: false, error: error.message }
+    }
+    return { ok: true, count: typeof data === "number" ? data : 0 }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function muteConversation(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({ muted_at: new Date().toISOString() })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function unmuteConversation(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({ muted_at: null })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function archiveConversation(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function unarchiveConversation(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({ archived_at: null })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function markConversationUnread(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { data: lastMessage, error: messageError } = await supabase
+      .from("dm_messages")
+      .select("id, created_at, sender_id")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (messageError) return { ok: false, error: messageError.message }
+
+    if (
+      !lastMessage ||
+      lastMessage.sender_id === userId ||
+      !lastMessage.created_at
+    ) {
+      return { ok: false, error: "Nothing to mark as unread." }
+    }
+
+    const readAt = new Date(lastMessage.created_at)
+    readAt.setMilliseconds(readAt.getMilliseconds() - 1)
+
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({ last_read_at: readAt.toISOString() })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function deleteConversationForMe(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    if (!isUuid(conversationId)) {
+      return { ok: false, error: "Invalid conversation id." }
+    }
+    const userId = await requireUserId()
+    const supabase = await createClient()
+    const participant = await requireParticipant(
+      supabase,
+      conversationId,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const now = new Date().toISOString()
+    const { error } = await supabase
+      .from("dm_participants")
+      .update({
+        cleared_at: now,
+        hidden_at: now,
+        archived_at: null,
+      })
+      .eq("conversation_id", conversationId)
+      .eq("profile_id", userId)
+
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export type HideMessageResult = { ok: true } | ActionError
+
+export async function hideMessageForMe(
+  messageId: string,
+): Promise<HideMessageResult> {
+  try {
+    if (!isUuid(messageId)) {
+      return { ok: false, error: "Invalid message id." }
+    }
+
+    const userId = await requireUserId()
+    const supabase = await createClient()
+
+    const { data: messageRow, error: messageError } = await supabase
+      .from("dm_messages")
+      .select("id, conversation_id, sender_id")
+      .eq("id", messageId)
+      .maybeSingle()
+
+    if (messageError) return { ok: false, error: messageError.message }
+    if (!messageRow) return { ok: false, error: "Message not found." }
+
+    if (messageRow.sender_id === userId) {
+      return {
+        ok: false,
+        error: "Use Unsend to remove your own messages.",
+      }
+    }
+
+    const participant = await requireParticipant(
+      supabase,
+      messageRow.conversation_id,
+      userId,
+    )
+    if (!participant.ok) return participant
+
+    const { error: hideError } = await supabase.from("dm_message_hides").upsert(
+      {
+        message_id: messageId,
+        profile_id: userId,
+        hidden_at: new Date().toISOString(),
+      },
+      { onConflict: "message_id,profile_id" },
+    )
+
+    if (hideError) return { ok: false, error: hideError.message }
     return { ok: true }
   } catch (error) {
     return actionError(error)
