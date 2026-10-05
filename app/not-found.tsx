@@ -14,11 +14,12 @@ export const metadata: Metadata = {
 async function resolveHome() {
   try {
     const user = await getSessionUser()
-    if (!user) return { href: "/", label: "Back to home" }
-    if (!user.isApproved) return { href: "/pending", label: "Back to my application" }
-    return { href: "/now", label: "Back to home" }
+    if (!user) return { href: "/", label: "Back to home", canRequestAccess: true }
+    if (!user.isApproved)
+      return { href: "/pending", label: "Back to my application", canRequestAccess: false }
+    return { href: "/now", label: "Back to home", canRequestAccess: false }
   } catch {
-    return { href: "/", label: "Back to home" }
+    return { href: "/", label: "Back to home", canRequestAccess: true }
   }
 }
 
@@ -47,7 +48,7 @@ export default async function NotFound() {
           </p>
         </div>
 
-        <div className="animate-in fade-in slide-in-from-bottom-2 mt-10 delay-300 duration-700 fill-mode-backwards">
+        <div className="animate-in fade-in slide-in-from-bottom-2 mt-10 flex flex-col items-center gap-3 delay-300 duration-700 fill-mode-backwards sm:flex-row">
           <Button
             size="lg"
             className="min-w-44"
@@ -57,6 +58,17 @@ export default async function NotFound() {
             <ArrowLeft data-icon="inline-start" />
             {home.label}
           </Button>
+          {home.canRequestAccess && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="min-w-44"
+              nativeButton={false}
+              render={<Link href="/request-access" />}
+            >
+              Request access
+            </Button>
+          )}
         </div>
       </div>
 
