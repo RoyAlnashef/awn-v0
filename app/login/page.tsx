@@ -5,6 +5,8 @@ import { AuthShell } from "@/components/auth/auth-shell"
 import { LoginForm } from "@/components/auth/login-form"
 import { getSessionUser } from "@/lib/auth/get-session-user"
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
+import { suspendedLoginSearchParams } from "@/lib/auth/suspended-message"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function LoginPage({
   searchParams,
@@ -14,6 +16,11 @@ export default async function LoginPage({
   const params = await searchParams
   const sessionUser = await getSessionUser()
   if (sessionUser) {
+    if (sessionUser.isSuspended) {
+      const supabase = await createClient()
+      await supabase.auth.signOut()
+      redirect(`/login?${suspendedLoginSearchParams()}`)
+    }
     if (!sessionUser.isApproved) {
       redirect("/pending")
     }

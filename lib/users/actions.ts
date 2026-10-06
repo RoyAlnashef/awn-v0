@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
+import { revokeAllUserSessions } from "@/lib/auth/revoke-user-sessions"
 import { AuthError, requireAdmin } from "@/lib/auth/require-admin"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
@@ -30,6 +31,22 @@ function actionError(error: unknown): ActionResult {
     return { ok: false, error: error.message }
   }
   return { ok: false, error: "Something went wrong." }
+}
+
+async function revokeSessionsForSuspendedUsers(
+  userIds: string[],
+): Promise<ActionResult> {
+  const results = await Promise.all(
+    userIds.map((id) => revokeAllUserSessions(id)),
+  )
+  const failed = results.find((r) => !r.ok)
+  if (failed && !failed.ok) {
+    return {
+      ok: false,
+      error: `User suspended but session revocation failed: ${failed.error}`,
+    }
+  }
+  return { ok: true }
 }
 
 const PROFILE_COLUMNS =
@@ -245,6 +262,11 @@ export async function updateUserStatus(
 
     if (error) return { ok: false, error: error.message }
 
+    if (status === "Suspended") {
+      const revoked = await revokeSessionsForSuspendedUsers([userId])
+      if (!revoked.ok) return revoked
+    }
+
     revalidatePath("/users")
     return { ok: true }
   } catch (error) {
@@ -334,6 +356,11 @@ export async function bulkUpdateStatus(
       .in("id", ids)
 
     if (error) return { ok: false, error: error.message }
+
+    if (status === "Suspended") {
+      const revoked = await revokeSessionsForSuspendedUsers(ids)
+      if (!revoked.ok) return revoked
+    }
 
     revalidatePath("/users")
     return { ok: true }

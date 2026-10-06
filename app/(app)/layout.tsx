@@ -12,6 +12,7 @@ import { RoomsProvider } from "@/components/rooms/rooms-provider"
 import { LegalAcceptanceGate } from "@/components/legal/legal-acceptance-gate"
 import { FeedbackWidget } from "@/components/feedback/feedback-widget"
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { suspendedLoginSearchParams } from "@/lib/auth/suspended-message"
 import { getOutstandingLegalDocuments } from "@/lib/legal/acceptance"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -20,6 +21,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Middleware should redirect first; this is a server-side safety net.
   if (!sessionUser) {
     redirect("/login")
+  }
+
+  if (sessionUser.isSuspended) {
+    redirect(`/login?${suspendedLoginSearchParams()}`)
   }
 
   if (!sessionUser.isApproved) {

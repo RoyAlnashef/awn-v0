@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header"
 import { MessagesProvider } from "@/components/messages/messages-provider"
 import { RoomsProvider } from "@/components/rooms/rooms-provider"
 import { getSessionUser } from "@/lib/auth/get-session-user"
+import { suspendedLoginSearchParams } from "@/lib/auth/suspended-message"
 
 export default async function PopoutLayout({
   children,
@@ -18,6 +19,10 @@ export default async function PopoutLayout({
 
   if (!sessionUser) {
     redirect("/login")
+  }
+
+  if (sessionUser.isSuspended) {
+    redirect(`/login?${suspendedLoginSearchParams()}`)
   }
 
   const cookieStore = await cookies()

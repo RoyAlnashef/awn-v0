@@ -16,6 +16,7 @@ export type SessionUser = {
   canAccessAdmin: boolean
   canPostJobs: boolean
   isApproved: boolean
+  isSuspended: boolean
   appearOffline: boolean
   availableForWork: boolean
   incognito: boolean
@@ -62,6 +63,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     canAccessAdmin: canAccessAdmin(profile),
     canPostJobs: canPostJobs(profile),
     isApproved: profile?.is_approved ?? false,
+    isSuspended: profile?.status === "suspended",
     appearOffline,
     incognito: profile?.incognito ?? false,
     availableForWork: profile?.availability === "available_now",

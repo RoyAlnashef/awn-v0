@@ -4,15 +4,21 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
-import { Loader2, Mail, KeyRound } from "lucide-react"
+import { Loader2, Mail, KeyRound, TriangleAlert, X } from "lucide-react"
 
 import { AnimatedIcon } from "@/components/icons/animated-icon"
 import { MailCheckIcon } from "@/components/ui/mail-check"
 
 import { createClient } from "@/lib/supabase/client"
 import { safeRedirectPath } from "@/lib/auth/safe-redirect"
+import { SUSPENDED_ACCOUNT_MESSAGE } from "@/lib/auth/suspended-message"
 import { PasswordField } from "@/components/auth/password-field"
 import { cn } from "@/lib/utils"
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+} from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,12 +39,23 @@ export function LoginForm({
   const [password, setPassword] = React.useState("")
   const [pending, setPending] = React.useState(false)
   const [magicSent, setMagicSent] = React.useState(false)
+  const [accessNotice, setAccessNotice] = React.useState<string | null>(
+    initialError ?? null,
+  )
 
   React.useEffect(() => {
     if (initialError) {
-      toast.error(initialError)
+      setAccessNotice(initialError)
     }
   }, [initialError])
+
+  function dismissAccessNotice() {
+    setAccessNotice(null)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("error")
+    const query = params.toString()
+    router.replace(query ? `/login?${query}` : "/login", { scroll: false })
+  }
 
   async function handlePasswordSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -53,6 +70,23 @@ export function LoginForm({
         toast.error(error.message)
         return
       }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("status")
+          .eq("id", user.id)
+          .maybeSingle()
+        if (profile?.status === "suspended") {
+          await supabase.auth.signOut()
+          setAccessNotice(SUSPENDED_ACCOUNT_MESSAGE)
+          return
+        }
+      }
+
       router.replace(next)
       router.refresh()
     } finally {
@@ -124,6 +158,25 @@ export function LoginForm({
 
   return (
     <div className="grid gap-6">
+      {accessNotice ? (
+        <Alert variant="warning">
+          <TriangleAlert />
+          <AlertDescription>{accessNotice}</AlertDescription>
+          <AlertAction>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-current"
+              aria-label="Dismiss"
+              onClick={dismissAccessNotice}
+            >
+              <X />
+            </Button>
+          </AlertAction>
+        </Alert>
+      ) : null}
+
       <div
         role="tablist"
         aria-label="Sign-in method"
