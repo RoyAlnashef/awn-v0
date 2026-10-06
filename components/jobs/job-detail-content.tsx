@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { mutate } from "swr"
-import { Bookmark, MessagesSquare, Plus, UserMinus, Users } from "lucide-react"
+import { Bookmark, MessagesSquare, Plus, UserGroup, UserMinus } from "lucide-react"
 import { toast } from "sonner"
 
 import { JobDetailInteractiveFooter } from "@/components/jobs/job-detail-interactive-footer"
@@ -303,7 +303,7 @@ export function JobDetailContent({
                     disabled={preview}
                     onClick={() => setShareRoomOpen(true)}
                   >
-                    <Users className="size-4" />
+                    <UserGroup className="size-4" />
                   </Button>
                 </JobActionTooltip>
               </div>

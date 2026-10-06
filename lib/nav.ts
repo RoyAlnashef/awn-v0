@@ -1,9 +1,9 @@
 import {
   Radio,
   Briefcase,
-  Contact,
   MessagesSquare,
   Users,
+  UserGroup,
   UserCheck,
   Mail,
   ScrollText,
@@ -44,7 +44,7 @@ export const mainNav: NavItem[] = [
     href: "/groups",
     description:
       "Chat in the AWN communities.",
-    icon: Users,
+    icon: UserGroup,
     liveBadge: "rooms",
   },
   {
@@ -52,7 +52,7 @@ export const mainNav: NavItem[] = [
     href: "/people",
     description:
       "Find and connect with trusted crew across every department.",
-    icon: Contact,
+    icon: Users,
   },
   {
     title: "Jobs",

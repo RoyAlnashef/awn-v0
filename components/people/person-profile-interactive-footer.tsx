@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
-import { Ban, Flag, MessageSquare, MessagesSquare, Plus, UserMinus, Users } from "lucide-react"
+import { Ban, Flag, MessageSquare, MessagesSquare, Plus, UserGroup, UserMinus } from "lucide-react"
 import { toast } from "sonner"
 
 import type { Person } from "@/lib/people-data"
@@ -281,7 +281,7 @@ export function PersonProfileInteractiveFooter({
             aria-label="Share to a group"
             onClick={() => setShareRoomOpen(true)}
           >
-            <Users className="size-4" />
+            <UserGroup className="size-4" />
           </Button>
         </JobActionTooltip>
         <JobActionTooltip label={followed ? "Disconnect" : "Connect"}>

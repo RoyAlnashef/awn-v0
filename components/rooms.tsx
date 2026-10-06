@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Users } from "lucide-react"
+import { UserGroup } from "lucide-react"
 
 import { type Room } from "@/lib/messages-data"
 import { Button } from "@/components/ui/button"
@@ -65,7 +65,7 @@ export function Rooms() {
               unreadCount > 0 ? `Groups, ${unreadCount} unread` : "Groups"
             }
           >
-            <Users className="size-5" />
+            <UserGroup className="size-5" />
             {unreadCount > 0 ? (
               <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-success text-[10px] font-semibold text-success-foreground">
                 {unreadCount}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { BadgeCheck, Users, MapPin, MessageSquare, MessagesSquare } from "lucide-react"
+import { BadgeCheck, MapPin, MessageSquare, MessagesSquare, UserGroup } from "lucide-react"
 
 import { availabilityConfig, initials, type Person } from "@/lib/people-data"
 import { toggleConnection } from "@/lib/people/actions"
@@ -122,7 +122,7 @@ export function PersonRow({ person }: { person: Person }) {
         </PersonShareToMessagesButton>
         <PersonShareToRoomsButton person={person}>
           <Button size="icon" variant="outline" aria-label="Share to a group">
-            <Users className="size-4" />
+            <UserGroup className="size-4" />
           </Button>
         </PersonShareToRoomsButton>
       </div>
