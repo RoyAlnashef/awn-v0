@@ -69,6 +69,17 @@ export type ListApplicationsResult =
 
 export type ReviewApplicationResult = { ok: true } | ActionError
 
+export type BulkApplicationReviewResult = {
+  succeeded: number
+  skipped: number
+  failed: number
+}
+
+const PENDING_ONLY_APPROVE_ERROR =
+  "Only pending applications can be approved."
+const PENDING_ONLY_DENY_ERROR = "Only pending applications can be denied."
+const NOT_FOUND_ERROR = "Application not found."
+
 export type ResumeSignedUrlResult =
   | { ok: true; url: string }
   | ActionError
@@ -892,6 +903,92 @@ export async function denyApplication(input: {
     revalidatePath("/users")
 
     return { ok: true }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+function isSkippedReviewError(error: string): boolean {
+  return (
+    error === PENDING_ONLY_APPROVE_ERROR ||
+    error === PENDING_ONLY_DENY_ERROR ||
+    error === NOT_FOUND_ERROR
+  )
+}
+
+async function aggregateBulkReview(
+  results: ReviewApplicationResult[],
+): Promise<BulkApplicationReviewResult> {
+  let succeeded = 0
+  let skipped = 0
+  let failed = 0
+
+  for (const result of results) {
+    if (result.ok) {
+      succeeded++
+    } else if (isSkippedReviewError(result.error)) {
+      skipped++
+    } else {
+      failed++
+    }
+  }
+
+  return { succeeded, skipped, failed }
+}
+
+export async function bulkApproveApplications(
+  applicationIds: string[],
+): Promise<{ ok: true; result: BulkApplicationReviewResult } | ActionError> {
+  try {
+    await requireAdmin()
+    const ids = [...new Set(applicationIds.filter(Boolean))]
+
+    if (ids.length === 0) {
+      return { ok: false, error: "No applications selected." }
+    }
+
+    const results = await Promise.all(ids.map((id) => approveApplication(id)))
+    const result = await aggregateBulkReview(results)
+
+    revalidatePath("/applications")
+    revalidatePath("/invites")
+    revalidatePath("/users")
+
+    return { ok: true, result }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function bulkDenyApplications(input: {
+  applicationIds: string[]
+  note?: string
+  noteVisibility?: ApplicationNoteVisibility
+}): Promise<{ ok: true; result: BulkApplicationReviewResult } | ActionError> {
+  try {
+    await requireAdmin()
+    const ids = [...new Set(input.applicationIds.filter(Boolean))]
+
+    if (ids.length === 0) {
+      return { ok: false, error: "No applications selected." }
+    }
+
+    const results = await Promise.all(
+      ids.map((applicationId) =>
+        denyApplication({
+          applicationId,
+          note: input.note,
+          noteVisibility: input.noteVisibility,
+        }),
+      ),
+    )
+    const result = await aggregateBulkReview(results)
+
+    revalidatePath("/applications")
+    revalidatePath("/pending")
+    revalidatePath("/users")
+
+    return { ok: true, result }
   } catch (error) {
     return actionError(error)
   }
