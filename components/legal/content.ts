@@ -14,14 +14,14 @@ export type LegalDocument = {
 export const privacyPolicy: LegalDocument = {
   title: "Privacy Policy",
   subtitle:
-    "How A Wright Network LLC collects, uses, and protects your information on AWN.",
+    "How A Wright World LLC, doing business as AWN, collects, uses, and protects your information on AWN.",
   lastUpdated: "October 1, 2026",
   sections: [
     {
       id: "introduction",
       title: "Introduction",
       paragraphs: [
-        "A Wright Network LLC (\"AWN,\" \"we,\" \"us,\" or \"our\") respects your privacy.",
+        "A Wright World LLC, doing business as AWN (\"AWN,\" \"we,\" \"us,\" or \"our\") respects your privacy.",
         "This Privacy Policy explains how we collect, use, disclose, retain, and protect information when you use the A Wright Network website, applications, member network, messaging features, job postings, profiles, community spaces, and related services.",
         "By using AWN, you acknowledge the practices described in this Privacy Policy.",
       ],
@@ -120,7 +120,7 @@ export const privacyPolicy: LegalDocument = {
       paragraphs: [
         "Depending on where you live and applicable law, you may have rights concerning your personal information, including rights to request access, correction, deletion, portability, or information about how your information is used or disclosed.",
         "California residents may have additional rights under applicable California privacy laws.",
-        "To submit a privacy request, contact: privacy@awrightnetwork.com",
+        "To submit a privacy request, contact: privacy@awrightworld.com",
         "AWN may need to verify your identity before completing certain requests.",
       ],
     },
@@ -160,9 +160,9 @@ export const privacyPolicy: LegalDocument = {
       id: "contact",
       title: "17. Contact",
       paragraphs: [
-        "A Wright Network LLC",
+        "A Wright World LLC, doing business as AWN",
         "3940 Laurel Canyon Blvd, Studio City, CA 91604",
-        "Privacy inquiries: privacy@awrightnetwork.com",
+        "Privacy inquiries: privacy@awrightworld.com",
       ],
     },
   ],
@@ -179,7 +179,7 @@ export const termsOfService: LegalDocument = {
       title: "Introduction",
       paragraphs: [
         "Welcome to A Wright Network.",
-        "These Terms of Service (\"Terms\") govern your access to and use of the A Wright Network website, applications, services, member network, messaging features, job postings, profiles, community spaces, and related services (collectively, the \"Services\") operated by A Wright Network LLC (\"AWN,\" \"we,\" \"us,\" or \"our\").",
+        "These Terms of Service (\"Terms\") govern your access to and use of the A Wright Network website, applications, services, member network, messaging features, job postings, profiles, community spaces, and related services (collectively, the \"Services\") operated by A Wright World LLC, doing business as AWN (\"AWN,\" \"we,\" \"us,\" or \"our\").",
         "By creating an account, requesting access to the Services, accepting an invitation, or otherwise accessing or using the Services, you agree to these Terms and our Privacy Policy.",
         "If you do not agree to these Terms, you may not access or use the Services.",
       ],
@@ -379,18 +379,6 @@ export const termsOfService: LegalDocument = {
       ],
     },
     {
-      id: "copyright-and-dmca",
-      title: "20. Copyright and DMCA",
-      paragraphs: [
-        "Users may not upload or distribute material that infringes another person's copyright.",
-        "AWN maintains procedures for receiving copyright infringement notices and responding to qualifying claims in accordance with applicable law.",
-        "Copyright complaints may be directed to:",
-        "[DMCA AGENT NAME]",
-        "[DMCA EMAIL]",
-        "[DMCA ADDRESS]",
-      ],
-    },
-    {
       id: "disclaimers",
       title: "21. Disclaimers",
       paragraphs: [
@@ -425,13 +413,6 @@ export const termsOfService: LegalDocument = {
       ],
     },
     {
-      id: "dispute-resolution",
-      title: "25. Dispute Resolution",
-      paragraphs: [
-        "[ATTORNEY TO FINALIZE GOVERNING LAW, VENUE, ARBITRATION, CLASS ACTION WAIVER, JURY WAIVER, AND RELATED PROVISIONS.]",
-      ],
-    },
-    {
       id: "changes",
       title: "26. Changes to These Terms",
       paragraphs: [
@@ -452,9 +433,9 @@ export const termsOfService: LegalDocument = {
       id: "contact",
       title: "28. Contact",
       paragraphs: [
-        "A Wright Network LLC",
+        "A Wright World LLC, doing business as AWN",
         "3940 Laurel Canyon Blvd, Studio City, CA 91604",
-        "Email: info@awrightnetwork.com",
+        "Email: info@awrightworld.com",
       ],
     },
   ],
