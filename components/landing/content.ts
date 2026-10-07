@@ -21,7 +21,7 @@ export const landingContent = {
     tagline: "Not open to the public",
   },
   footer: {
-    copyright: "© 2026 A Wright Network LLC",
+    copyright: "© 2026 A Wright World LLC",
     legal: "Private, by invitation only.",
   },
 } as const
