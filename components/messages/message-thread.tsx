@@ -98,6 +98,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group"
 import { useMessages } from "@/components/messages/messages-provider"
+import { MessageThreadModeration } from "@/components/messages/message-thread-moderation"
 import { MessageThreadSkeleton } from "@/components/messages/message-thread-skeleton"
 import { MessageThreadScrollButton } from "@/components/messages/message-thread-scroll-button"
 import { TypingMessageHandoffSlot } from "@/components/messages/typing-message-handoff-slot"
@@ -819,6 +820,18 @@ export function MessageThread({
             </p>
           </div>
         </button>
+        {isPersistedConversation(conversation) && conversation.otherProfileId ? (
+          <div className="ml-auto shrink-0">
+            <MessageThreadModeration
+              memberId={conversation.otherProfileId}
+              memberName={conversation.name}
+              onReportOpen={() => setProfileOpen(false)}
+              onModerationChange={() => {
+                void mutateSwr(inboxKey())
+              }}
+            />
+          </div>
+        ) : null}
       </header>
 
       <PersonProfileDrawer
