@@ -55,4 +55,4 @@ The agent-os standards index ([agent-os/standards/index.yml](../../standards/ind
 
 - Run `npx cap sync` after adding push plugin dependencies
 - iOS: APNs tokens from Capacitor (not FCM); Android: FCM tokens
-- Follow Phase 1 Capacitor config in [capacitor.config.ts](../../../capacitor.config.ts) — remote URL mode, app ID `com.awrightworld.awn`
+- Follow Phase 1 Capacitor config in [capacitor.config.ts](../../../capacitor.config.ts) — remote URL mode, app ID `com.awrightworld.awn.app`

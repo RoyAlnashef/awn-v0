@@ -23,7 +23,7 @@ End-to-end iOS push for **Xcode debug** builds first: native APNs token delivery
 | Variable | Value for debug |
 | -------- | ---------------- |
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY` | Valid Apple `.p8` key |
-| `APNS_BUNDLE_ID` | `com.awrightworld.awn` |
+| `APNS_BUNDLE_ID` | `com.awrightworld.awn.app` |
 | **`APNS_USE_SANDBOX`** | **`true`** |
 | `INTERNAL_API_SECRET` | Webhook + dispatch auth |
 | `SUPABASE_SERVICE_ROLE_KEY` | Dispatch reads subscriptions |

@@ -10,7 +10,7 @@ You confirmed:
 - **Approach:** Build fresh in awn-v0 conventions; old app (`_misc/awn-old`) is UX/reference only
 - **Visuals:** Follow old app push UX patterns (auto-register on native, "Enable push" in settings)
 - **Credentials on hand:**
-  - `GoogleService-Info.plist` — **done** — at [ios/App/App/GoogleService-Info.plist](../../../ios/App/App/GoogleService-Info.plist) (project `awrightnetwork`, bundle `com.awrightworld.awn`)
+  - `GoogleService-Info.plist` — **done** — at [ios/App/App/GoogleService-Info.plist](../../../ios/App/App/GoogleService-Info.plist) (project `awrightnetwork`, bundle `com.awrightworld.awn.app`)
   - `google-services.json` — **done** — at [android/app/google-services.json](../../../android/app/google-services.json) (gitignored; same Firebase project)
 
 ## Architecture
@@ -126,7 +126,7 @@ FIREBASE_SERVICE_ACCOUNT_JSON=
 APNS_KEY_ID=
 APNS_TEAM_ID=
 APNS_KEY=
-APNS_BUNDLE_ID=com.awrightworld.awn
+APNS_BUNDLE_ID=com.awrightworld.awn.app
 
 # Internal webhook auth                     ← UT-6
 INTERNAL_API_SECRET=

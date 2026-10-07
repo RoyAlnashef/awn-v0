@@ -73,5 +73,5 @@ The old app lives at `_misc/awn-old/`. It registered native tokens but never imp
 ## Firebase Config Files
 
 - **Original source (archival):** [agent-os/product/misc/GoogleService-Info.plist](../../product/misc/GoogleService-Info.plist)
-- **Wired iOS copy:** [ios/App/App/GoogleService-Info.plist](../../../ios/App/App/GoogleService-Info.plist) — project `awrightnetwork`, bundle `com.awrightworld.awn`
+- **Wired iOS copy:** [ios/App/App/GoogleService-Info.plist](../../../ios/App/App/GoogleService-Info.plist) — project `awrightnetwork`, bundle `com.awrightworld.awn.app`
 - **Android copy:** [android/app/google-services.json](../../../android/app/google-services.json) — gitignored, same Firebase project

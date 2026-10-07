@@ -9,7 +9,7 @@ Confirm or set:
 - `APNS_KEY_ID`
 - `APNS_TEAM_ID`
 - `APNS_KEY` (PEM content; `\n` escaped if single-line)
-- `APNS_BUNDLE_ID=com.awrightworld.awn`
+- `APNS_BUNDLE_ID=com.awrightworld.awn.app`
 - **`APNS_USE_SANDBOX=true`** (required for Xcode debug device tokens)
 - `INTERNAL_API_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`

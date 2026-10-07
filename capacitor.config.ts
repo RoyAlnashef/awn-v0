@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.awrightworld.awn",
+  appId: "com.awrightworld.awn.app",
   appName: "AWN",
   // Remote URL mode — the native shell loads the live production site.
   // webDir is required by the CLI for project generation but is never synced at runtime.

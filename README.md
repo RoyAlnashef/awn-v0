@@ -139,7 +139,7 @@ Create `.env.local` from [`.env.example`](.env.example).
 | `APNS_KEY_ID` | Apple Push Notification key ID |
 | `APNS_TEAM_ID` | Apple Developer team ID |
 | `APNS_KEY` | APNs auth key (`.p8` contents) |
-| `APNS_BUNDLE_ID` | iOS bundle ID (default `com.awrightworld.awn`) |
+| `APNS_BUNDLE_ID` | iOS bundle ID (default `com.awrightworld.awn.app`) |
 | `APNS_USE_SANDBOX` | `true` for Xcode debug builds; `false` for TestFlight/App Store |
 
 ### Internal
@@ -210,7 +210,7 @@ Storage buckets: `avatars`, `banners`, `resumes` (membership signup PDFs only).
 
 Native iOS and Android shells use **remote URL mode** — they load the live production site at `https://awrightnetwork.com` rather than bundling the web app locally.
 
-- App ID: `com.awrightworld.awn`
+- App ID: `com.awrightworld.awn.app`
 - Config: [`capacitor.config.ts`](capacitor.config.ts)
 - Push requires the platform-specific env vars listed above
 

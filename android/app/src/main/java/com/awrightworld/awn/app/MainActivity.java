@@ -1,4 +1,4 @@
-package com.awrightworld.awn;
+package com.awrightworld.awn.app;
 
 import com.getcapacitor.BridgeActivity;
 

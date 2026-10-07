@@ -3,7 +3,7 @@
 ## Context
 
 - Reference config: `_misc/awn-old/capacitor.config.ts` — remote URL mode loading `https://awrightnetwork.com`
-- App ID: `com.awrightworld.awn` (preserving continuity)
+- App ID: `com.awrightworld.awn.app` (preserving continuity)
 - Background color: `#0C0B09` (matches current v0 design)
 - awn-v0 is a clean slate — no Capacitor files exist yet
 - `next.config.mjs` already has `images: { unoptimized: true }` ✅

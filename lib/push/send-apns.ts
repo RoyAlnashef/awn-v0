@@ -29,7 +29,7 @@ function createApnsClient(host: string): ApnsClient | null {
   const team = process.env.APNS_TEAM_ID
   const keyId = process.env.APNS_KEY_ID
   const signingKey = process.env.APNS_KEY
-  const topic = process.env.APNS_BUNDLE_ID ?? "com.awrightworld.awn"
+  const topic = process.env.APNS_BUNDLE_ID ?? "com.awrightworld.awn.app"
 
   if (!team || !keyId || !signingKey) {
     return null
