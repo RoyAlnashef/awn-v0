@@ -7,7 +7,7 @@ import { MarketingContentPage } from "@/components/landing/marketing-content-pag
 export const metadata: Metadata = {
   title: "Privacy Policy — AWN",
   description:
-    "How A Wright World LLC, doing business as AWN, collects, uses, and protects your information on AWN.",
+    "How A Wright World LLC, doing business as A Wright Network (AWN), collects, uses, and protects your information on AWN.",
 }
 
 export default function PrivacyPage() {

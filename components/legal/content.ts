@@ -14,14 +14,14 @@ export type LegalDocument = {
 export const privacyPolicy: LegalDocument = {
   title: "Privacy Policy",
   subtitle:
-    "How A Wright World LLC, doing business as AWN, collects, uses, and protects your information on AWN.",
+    "How A Wright World LLC, doing business as A Wright Network (AWN), collects, uses, and protects your information on AWN.",
   lastUpdated: "October 1, 2026",
   sections: [
     {
       id: "introduction",
       title: "Introduction",
       paragraphs: [
-        "A Wright World LLC, doing business as AWN (\"AWN,\" \"we,\" \"us,\" or \"our\") respects your privacy.",
+        "A Wright World LLC, doing business as A Wright Network (AWN) (\"AWN,\" \"we,\" \"us,\" or \"our\") respects your privacy.",
         "This Privacy Policy explains how we collect, use, disclose, retain, and protect information when you use the A Wright Network website, applications, member network, messaging features, job postings, profiles, community spaces, and related services.",
         "By using AWN, you acknowledge the practices described in this Privacy Policy.",
       ],
@@ -160,7 +160,7 @@ export const privacyPolicy: LegalDocument = {
       id: "contact",
       title: "17. Contact",
       paragraphs: [
-        "A Wright World LLC, doing business as AWN",
+        "A Wright World LLC, doing business as A Wright Network (AWN)",
         "3940 Laurel Canyon Blvd, Studio City, CA 91604",
         "Privacy inquiries: privacy@awrightworld.com",
       ],
@@ -179,7 +179,7 @@ export const termsOfService: LegalDocument = {
       title: "Introduction",
       paragraphs: [
         "Welcome to A Wright Network.",
-        "These Terms of Service (\"Terms\") govern your access to and use of the A Wright Network website, applications, services, member network, messaging features, job postings, profiles, community spaces, and related services (collectively, the \"Services\") operated by A Wright World LLC, doing business as AWN (\"AWN,\" \"we,\" \"us,\" or \"our\").",
+        "These Terms of Service (\"Terms\") govern your access to and use of the A Wright Network website, applications, services, member network, messaging features, job postings, profiles, community spaces, and related services (collectively, the \"Services\") operated by A Wright World LLC, doing business as A Wright Network (AWN) (\"AWN,\" \"we,\" \"us,\" or \"our\").",
         "By creating an account, requesting access to the Services, accepting an invitation, or otherwise accessing or using the Services, you agree to these Terms and our Privacy Policy.",
         "If you do not agree to these Terms, you may not access or use the Services.",
       ],
@@ -433,7 +433,7 @@ export const termsOfService: LegalDocument = {
       id: "contact",
       title: "28. Contact",
       paragraphs: [
-        "A Wright World LLC, doing business as AWN",
+        "A Wright World LLC, doing business as A Wright Network (AWN)",
         "3940 Laurel Canyon Blvd, Studio City, CA 91604",
         "Email: info@awrightworld.com",
       ],
