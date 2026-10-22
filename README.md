@@ -75,7 +75,7 @@ flowchart TD
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 20+
+- [Node.js](https://nodejs.org/) 24 LTS (minimum **24.22.1** — Oct 2026 security release). Use [`.nvmrc`](.nvmrc) / [`.node-version`](.node-version). Production (Vercel) should use Node **24.x** and stay on the latest 24 patch when [Node security advisories](https://nodejs.org/en/blog/vulnerability/) ship.
 - [pnpm](https://pnpm.io/) 9+ (preferred package manager)
 - [Supabase CLI](https://supabase.com/docs/guides/cli) (optional, for local DB)
 
