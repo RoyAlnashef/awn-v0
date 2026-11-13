@@ -1,4 +1,4 @@
-export const PUBLIC_SITE_ORIGIN = "https://awrightnetwork.com"
+export const PUBLIC_SITE_ORIGIN = "https://awn-v0.vercel.app/"
 
 function normalizeOrigin(origin: string): string {
   return origin.replace(/\/$/, "")

@@ -11,7 +11,7 @@ Collect confirmations from users that they accept the four legal/conduct documen
 - **App-layout gate, server-checked.** `getOutstandingLegalDocuments()` runs in `app/(app)/layout.tsx` so any authenticated route triggers the overlay immediately after login. Reads use the cookie-based `createClient()` under RLS.
 - **Show only outstanding.** When only a subset of docs need (re)acceptance (e.g. one doc's version bumped), only those tabs render; the default tab is the first outstanding doc (Community Guidelines when present).
 - **Version string = `lastUpdated`.** Each `LegalDocument.lastUpdated` doubles as its version. The server resolves the version from the registry, never trusting a client-supplied version.
-- **Reuse existing content.** The four documents already exist as structured data in `components/legal/content.ts`; no need to fetch the awrightnetwork.com URLs. Reuse `LegalDocumentView` to render section text.
+- **Reuse existing content.** The four documents already exist as structured data in `components/legal/content.ts`; no need to fetch the awn-v0.vercel.app URLs. Reuse `LegalDocumentView` to render section text.
 
 ## Context
 

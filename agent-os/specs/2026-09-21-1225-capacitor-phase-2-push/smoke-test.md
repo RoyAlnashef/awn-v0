@@ -32,7 +32,7 @@
   - `APNS_USE_SANDBOX=true` while testing Xcode debug builds; `false` for TestFlight/App Store
   - `INTERNAL_API_SECRET`
   - `SUPABASE_SERVICE_ROLE_KEY`
-- [x] Supabase webhook: `notifications` **INSERT** → `POST https://awrightnetwork.com/api/push/dispatch` with header `x-internal-secret: <INTERNAL_API_SECRET>`
+- [x] Supabase webhook: `notifications` **INSERT** → `POST https://awn-v0.vercel.app/api/push/dispatch` with header `x-internal-secret: <INTERNAL_API_SECRET>`
 - [ ] Supabase webhook: `notifications` **UPDATE** → same URL + header (for aggregated DM / room mention/reply pushes)
 - [x] Deploy push routes to production (remote URL mode loads live site)
 

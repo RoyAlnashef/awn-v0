@@ -52,7 +52,7 @@ The print view is deliberately modeled as a **one-page professional CV**:
 
 - Skills (list with dividers)
 - Links (Reel / Website with full URLs)
-- Touring Passport URL (`awrightnetwork.com/crew/{handle}`)
+- Touring Passport URL (`awn-v0.vercel.app/crew/{handle}`)
 
 **Main column**
 
@@ -120,7 +120,7 @@ The broad `color: #111 !important` reset on all elements, then selective overrid
 
 ### 6. Hardcoded domain
 
-Print footer and sidebar hardcode `awrightnetwork.com/crew/{handle}` instead of using `metadataBase` or dynamic origin. This breaks on preview/staging domains.
+Print footer and sidebar hardcode `awn-v0.vercel.app/crew/{handle}` instead of using `metadataBase` or dynamic origin. This breaks on preview/staging domains.
 
 ### 7. Avatar dependency
 

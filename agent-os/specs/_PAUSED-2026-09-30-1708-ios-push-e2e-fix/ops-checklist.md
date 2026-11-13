@@ -1,6 +1,6 @@
 # iOS Push E2E — Ops Checklist (Xcode Debug)
 
-Complete these in Vercel and Supabase Dashboard. The native app loads production (`capacitor.config.ts` → `https://awrightnetwork.com`).
+Complete these in Vercel and Supabase Dashboard. The native app loads production (`capacitor.config.ts` → `https://awn-v0.vercel.app/`).
 
 ## Vercel environment
 
@@ -37,7 +37,7 @@ Verify token shape in Supabase: `endpoint` should be **64 hex characters** (32 b
 
 ## Supabase Database Webhooks
 
-Target: `POST https://awrightnetwork.com/api/push/dispatch`
+Target: `POST https://awn-v0.vercel.app/api/push/dispatch`
 
 Header: `x-internal-secret: <INTERNAL_API_SECRET>`
 
@@ -68,7 +68,7 @@ limit 10;
 
 ## iOS safe-area (cold start)
 
-Requires a **production deploy** of the web app (native shell loads `https://awrightnetwork.com`).
+Requires a **production deploy** of the web app (native shell loads `https://awn-v0.vercel.app/`).
 
 Top inset is **viewport-compensated** (`resolveIosHeaderInsetTop`): 34px when the webview origin is shifted up (cold launch), 0px on relaunch when origin is 0. Bottom stays 34px.
 

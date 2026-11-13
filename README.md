@@ -4,7 +4,7 @@ AWN is a private, invite-only professional network for touring live entertainmen
 
 It gives working crew a trusted place to signal availability, fill urgent callouts, share road knowledge, and build peer-verified credits. Crew stay free forever; employers pay for access to the network.
 
-Production: [https://awrightnetwork.com](https://awrightnetwork.com)
+Production: [https://awn-v0.vercel.app/](https://awn-v0.vercel.app/)
 
 This repo is the Next.js rebuild of AWN, focused on a modular codebase and a scalable design system.
 
@@ -114,7 +114,7 @@ Create `.env.local` from [`.env.example`](.env.example).
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_APP_URL` | App origin (`http://localhost:3000` locally; `https://awrightnetwork.com` in production) |
+| `NEXT_PUBLIC_APP_URL` | App origin (`http://localhost:3000` locally; `https://awn-v0.vercel.app/` in production) |
 
 ### Email
 
@@ -208,7 +208,7 @@ Storage buckets: `avatars`, `banners`, `resumes` (membership signup PDFs only).
 
 ## Mobile (Capacitor)
 
-Native iOS and Android shells use **remote URL mode** — they load the live production site at `https://awrightnetwork.com` rather than bundling the web app locally.
+Native iOS and Android shells use **remote URL mode** — they load the live production site at `https://awn-v0.vercel.app/` rather than bundling the web app locally.
 
 - App ID: `com.awrightworld.awn.app`
 - Config: [`capacitor.config.ts`](capacitor.config.ts)
@@ -218,7 +218,7 @@ After native project changes, run `pnpm cap:sync` before opening Xcode or Androi
 
 ## Deployment
 
-Hosted on Vercel. Set `NEXT_PUBLIC_APP_URL` to `https://awrightnetwork.com` in production environment variables.
+Hosted on Vercel. Set `NEXT_PUBLIC_APP_URL` to `https://awn-v0.vercel.app/` in production environment variables.
 
 ## Development notes
 

@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   // webDir is required by the CLI for project generation but is never synced at runtime.
   webDir: "out",
   server: {
-    url: "https://awrightnetwork.com",
+    url: "https://awn-v0.vercel.app/",
     cleartext: false,
     androidScheme: "https",
   },

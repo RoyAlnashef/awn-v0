@@ -1,9 +1,9 @@
 export const DEFAULT_EMAIL_FROM = "AWN <onboarding@resend.dev>"
 
-export const EMAIL_MARKETING_SITE_URL = "https://awrightnetwork.com/"
+export const EMAIL_MARKETING_SITE_URL = "https://awn-v0.vercel.app/"
 
 export const EMAIL_BRAND_LOGO_URL =
-  "https://awrightnetwork.com/apple-touch-icon.png"
+  "https://awn-v0.vercel.app/apple-touch-icon.png"
 
 export function getEmailFrom(): string {
   return process.env.EMAIL_FROM?.trim() || DEFAULT_EMAIL_FROM

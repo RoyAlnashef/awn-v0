@@ -2,7 +2,7 @@
 
 ## Scope
 
-Wire up Capacitor 7 in awn-v0 as a branded native shell that loads `https://awrightnetwork.com` via remote URL mode. This covers package installation, config creation, and fresh native project generation for both iOS and Android. No custom native code or push notification bridge — that is Phase 2.
+Wire up Capacitor 7 in awn-v0 as a branded native shell that loads `https://awn-v0.vercel.app/` via remote URL mode. This covers package installation, config creation, and fresh native project generation for both iOS and Android. No custom native code or push notification bridge — that is Phase 2.
 
 ## Decisions
 

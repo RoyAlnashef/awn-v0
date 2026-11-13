@@ -7,7 +7,7 @@
 - **Location:** `_misc/awn-old/capacitor.config.ts`
 - **Relevance:** The previous developer completed a fully functional Capacitor 7 integration. Native projects were generated and committed. App ID `com.awrightworld.awn.app` is established.
 - **Key patterns borrowed:**
-  - Remote URL mode (`server.url: 'https://awrightnetwork.com'`) — no static bundling
+  - Remote URL mode (`server.url: 'https://awn-v0.vercel.app/'`) — no static bundling
   - iOS background color `#0C0B09`, `scrollEnabled: false`, `contentInset: 'always'`
   - Android background color `#0C0B09`
   - StatusBar plugin config: `style: 'Dark'`, `backgroundColor: '#080807'`, `overlaysWebView: false`

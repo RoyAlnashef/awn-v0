@@ -2,7 +2,7 @@
 
 ## Context
 
-- Reference config: `_misc/awn-old/capacitor.config.ts` — remote URL mode loading `https://awrightnetwork.com`
+- Reference config: `_misc/awn-old/capacitor.config.ts` — remote URL mode loading `https://awn-v0.vercel.app/`
 - App ID: `com.awrightworld.awn.app` (preserving continuity)
 - Background color: `#0C0B09` (matches current v0 design)
 - awn-v0 is a clean slate — no Capacitor files exist yet
@@ -12,7 +12,7 @@
 
 ## Key Decisions
 
-- **Remote URL mode** — native shell loads `https://awrightnetwork.com`; Vercel deploys update the app instantly, no App Store resubmission needed
+- **Remote URL mode** — native shell loads `https://awn-v0.vercel.app/`; Vercel deploys update the app instantly, no App Store resubmission needed
 - **`webDir: 'out'`** set as placeholder (required by CLI, not used at runtime in remote URL mode)
 - **`@capacitor/cli`** goes in `devDependencies`; all other `@capacitor/*` in `dependencies`
 - Push Notifications config included in `capacitor.config.ts` now (plugin installed), but the JS bridge to call it is Phase 2 work
